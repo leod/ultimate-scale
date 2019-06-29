@@ -31,6 +31,13 @@ impl Sign {
             Sign::Neg => -1,
         }
     }
+
+    pub fn invert(&self) -> Sign {
+        match self {
+            Sign::Pos => Sign::Neg,
+            Sign::Neg => Sign::Pos,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
@@ -40,6 +47,10 @@ impl Dir3 {
     pub fn to_vector(&self) -> Vec3 {
         self.0.to_vector() * self.1.to_number()
     }
+
+    pub fn invert(&self) -> Dir3 {
+        Dir3(self.0, self.1.invert())
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
@@ -48,8 +59,8 @@ enum Block {
         from: Dir3,
         to: Dir3,
     },
-    Solid,
     Switch(Dir3),
+    Solid,
 }
 
 impl Block {
@@ -121,23 +132,46 @@ impl Machine {
         for (blip_id, blip) in self.blips.iter_mut() {
             blip.move_progress += 1;
 
+            let mut move_dir = None;
+
             if blip.move_progress == MOVE_TICKS_PER_NODE {
                 match self.blocks.at_pos(blip.pos) {
                     Some(Block::Pipe { from: _, to }) => {
-                        blip.pos += to.to_vector();
+                        move_dir = Some(*to);
                     },
                     Some(Block::Switch(dir)) => {
+                        move_dir = Some(*dir);
                     },
                     None => {
                         if blip.pos.z == 0 {
                             blips_to_remove.push(blip_id);
+                            continue;
                         } else {
-                            blip.pos.z -= 1;
+                            move_dir = Some(Dir3(Axis3::Z, Sign::Neg));
                         }
                     }
                     _ => (),
                 }
             }
+
+            if let Some(move_dir) = move_dir {
+                blip.pos += move_dir.to_vector();
+
+                let remove = match self.blocks.at_pos(blip.pos) {
+                    Some(Block::Pipe { from, to: _ }) => *from != move_dir.invert(),
+                    Some(Block::Switch(dir)) => *dir != move_dir,
+                    Some(Block::Solid) => true,
+                    _ => false,
+                };
+
+                if remove {
+                    blips_to_remove.push(blip_id);
+                }
+            }
+        }
+
+        for blip_id in blips_to_remove {
+            self.blips.remove(blip_id);
         }
     }
 }
