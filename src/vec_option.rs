@@ -43,8 +43,13 @@ impl<T> VecOption<T> {
 
     pub fn iter(&self) -> Iter<T> {
         Iter {
-            vec: self,
-            i: 0,
+            iter: self.data.iter(),
+        }
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        IterMut {
+            iter: self.data.iter_mut(),
         }
     }
 
@@ -52,19 +57,6 @@ impl<T> VecOption<T> {
         self.size
     }
 
-    fn next_used_index(&self, mut i: usize) -> Option<usize> {
-        while i < self.data.len() && self.data[i].is_none() {
-            i += 1;
-        }
-
-        if i < self.data.len() {
-            debug_assert!(self.data[i].is_some());
-
-            Some(i)
-        } else {
-            None
-        }
-    }
 }
 
 impl<T> Index<usize> for VecOption<T> {
@@ -82,17 +74,55 @@ impl<T> IndexMut<usize> for VecOption<T> {
 }
 
 pub struct Iter<'a, T> {
-    vec: &'a VecOption<T>,
-    i: usize,
+    iter: std::slice::Iter<'a, Option<T>>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<&'a T> {
-        if let Some(used_i) = self.vec.next_used_index(self.i) {
-            self.i = used_i + 1;
-            self.vec.data[used_i].as_ref()
+        let mut value = self.iter.next();
+
+        while {
+            if let Some(inner) = &value {
+                inner.is_none()
+            } else {
+                false
+            }
+        } {
+            value = self.iter.next();
+        }
+
+        if let Some(inner) = value {
+            inner.as_ref()
+        } else {
+            None
+        }
+    }
+}
+
+pub struct IterMut<'a, T: 'a> {
+    iter: std::slice::IterMut<'a, Option<T>>,
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<&'a mut T> {
+        let mut value = self.iter.next();
+
+        while {
+            if let Some(inner) = &value {
+                inner.is_none()
+            } else {
+                false
+            }
+        } {
+            value = self.iter.next();
+        }
+
+        if let Some(inner) = value {
+            inner.as_mut()
         } else {
             None
         }
