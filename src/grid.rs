@@ -12,8 +12,8 @@ pub struct Grid3<T> {
 
 impl<T: Default + Copy> Grid3<T> {
     pub fn new(size: Vec3) -> Grid3<T> {
+        assert!(size.x >= 0 && size.y >= 0 && size.z >= 0);
         let n = (size.x * size.y * size.z) as usize;
-        assert!(n >= 0);
 
         Grid3 {
             size,

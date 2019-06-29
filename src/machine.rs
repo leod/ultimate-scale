@@ -101,9 +101,9 @@ impl Blocks {
     }
 
     pub fn clear_state(&mut self) {
-        /*for block in self.data.iter_mut() {
+        for (_, block) in self.data.iter_mut() {
             block.clear_state();
-        }*/
+        }
     }
 }
 
