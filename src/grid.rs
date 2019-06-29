@@ -13,6 +13,8 @@ pub struct Grid3<T> {
 impl<T: Default + Copy> Grid3<T> {
     pub fn new(size: Vec3) -> Grid3<T> {
         let n = (size.x * size.y * size.z) as usize;
+        assert!(n >= 0);
+
         Grid3 {
             size,
             data: vec![Default::default(); n],
@@ -36,6 +38,14 @@ impl<T> Grid3<T> {
         p.x >= 0 && p.x < self.size.x &&
         p.y >= 0 && p.y < self.size.y &&
         p.z >= 0 && p.z < self.size.z
+    }
+
+    pub fn get(&self, p: Vec3) -> Option<&T> {
+        if self.is_valid_pos(p) {
+            Some(&self[p])
+        } else {
+            None
+        }
     }
 }
 

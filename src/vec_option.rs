@@ -1,18 +1,20 @@
+use std::iter::Enumerate;
 use std::ops::{Index, IndexMut};
 use std::collections::VecDeque;
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct VecOption<T> {
     data: Vec<Option<T>>,
-    size: usize,
     free: VecDeque<usize>,
+    size: usize,
 }
 
 impl<T> VecOption<T> {
     pub fn new() -> VecOption<T> {
         VecOption {
             data: Vec::new(),
-            size: 0,
             free: VecDeque::new(),
+            size: 0,
         }
     }
 
@@ -43,20 +45,25 @@ impl<T> VecOption<T> {
 
     pub fn iter(&self) -> Iter<T> {
         Iter {
-            iter: self.data.iter(),
+            iter: self.data.iter().enumerate(),
         }
     }
 
     pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut {
-            iter: self.data.iter_mut(),
+            iter: self.data.iter_mut().enumerate(),
         }
     }
 
     pub fn len(&self) -> usize {
         self.size
     }
-
+    
+    pub fn clear(&mut self) {
+        self.data.clear();
+        self.free.clear();
+        self.size = 0;
+    }
 }
 
 impl<T> Index<usize> for VecOption<T> {
@@ -74,27 +81,27 @@ impl<T> IndexMut<usize> for VecOption<T> {
 }
 
 pub struct Iter<'a, T> {
-    iter: std::slice::Iter<'a, Option<T>>,
+    iter: Enumerate<std::slice::Iter<'a, Option<T>>>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = &'a T;
+    type Item = (usize, &'a T);
 
-    fn next(&mut self) -> Option<&'a T> {
-        let mut value = self.iter.next();
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut elem = self.iter.next();
 
         while {
-            if let Some(inner) = &value {
-                inner.is_none()
+            if let Some(slot) = elem {
+                slot.1.is_none()
             } else {
                 false
             }
         } {
-            value = self.iter.next();
+            elem = self.iter.next();
         }
 
-        if let Some(inner) = value {
-            inner.as_ref()
+        if let Some(slot) = elem {
+            slot.1.as_ref().map(|value| (slot.0, value))
         } else {
             None
         }
@@ -102,27 +109,31 @@ impl<'a, T> Iterator for Iter<'a, T> {
 }
 
 pub struct IterMut<'a, T: 'a> {
-    iter: std::slice::IterMut<'a, Option<T>>,
+    iter: Enumerate<std::slice::IterMut<'a, Option<T>>>,
 }
 
 impl<'a, T> Iterator for IterMut<'a, T> {
-    type Item = &'a mut T;
+    type Item = (usize, &'a mut T);
 
-    fn next(&mut self) -> Option<&'a mut T> {
-        let mut value = self.iter.next();
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut elem = self.iter.next();
 
         while {
-            if let Some(inner) = &value {
-                inner.is_none()
+            if let Some(slot) = &elem {
+                slot.1.is_none()
             } else {
                 false
             }
         } {
-            value = self.iter.next();
+            elem = self.iter.next();
         }
 
-        if let Some(inner) = value {
-            inner.as_mut()
+        if let Some(slot) = elem {
+            if let (index, Some(value)) = slot {
+                Some((index, value))
+            } else {
+                None
+            }
         } else {
             None
         }
