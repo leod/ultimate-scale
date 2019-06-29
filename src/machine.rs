@@ -1,4 +1,4 @@
-use crate::grid::Grid3;
+use crate::grid::{Pos3, Grid3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 enum Axis {
@@ -26,7 +26,14 @@ enum Block {
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 struct BlockId(usize);
 
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+struct Blip {
+    pos: Pos3,
+}
+
+#[derive(PartialEq, Eq, Clone, Debug)]
 struct Machine {
     block_ids: Grid3<Option<BlockId>>,
     blocks: Vec<Block>,
+    blips: Vec<Blip>,
 }
