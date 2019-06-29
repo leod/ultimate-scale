@@ -5,3 +5,4 @@ authors = ["leod <subtle.frustration@proton.me>"]
 edition = "2018"
 
 [dependencies]
+nalgebra = "0.18"
