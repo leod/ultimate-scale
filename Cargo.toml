@@ -7,5 +7,8 @@ edition = "2018"
 [dependencies]
 nalgebra = "0.18"
 glium = "0.25"
+glutin = "0.21"
 num-traits = "0.2"
 num-derive = "0.2"
+log = "0.4"
+simple_logger = "1.0"
