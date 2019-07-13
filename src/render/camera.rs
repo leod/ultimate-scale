@@ -27,6 +27,8 @@ pub struct Config {
     pub left_key: VirtualKeyCode,
     pub backward_key: VirtualKeyCode,
     pub right_key: VirtualKeyCode,
+    pub zoom_in_key: VirtualKeyCode,
+    pub zoom_out_key: VirtualKeyCode,
 
     pub move_units_per_sec: f32,
 }
@@ -38,6 +40,8 @@ impl Default for Config {
             left_key: VirtualKeyCode::A,
             backward_key: VirtualKeyCode::S,
             right_key: VirtualKeyCode::D,
+            zoom_in_key: VirtualKeyCode::PageUp,
+            zoom_out_key: VirtualKeyCode::PageDown,
             move_units_per_sec: 1.0,
         }
     }
@@ -64,10 +68,26 @@ impl Input {
         let mut translation = na::Translation3::identity();
 
         if self.pressed_keys.contains(&self.config.forward_key) {
-            translation *= &na::Translation3::new(0.0, 0.0, speed);
+            translation *= &na::Translation3::new(0.0, -speed, 0.0);
         }
 
         if self.pressed_keys.contains(&self.config.backward_key) {
+            translation *= &na::Translation3::new(0.0, speed, 0.0);
+        }
+
+        if self.pressed_keys.contains(&self.config.left_key) {
+            translation *= &na::Translation3::new(speed, 0.0, 0.0);
+        }
+
+        if self.pressed_keys.contains(&self.config.right_key) {
+            translation *= &na::Translation3::new(-speed, 0.0, 0.0);
+        }
+
+        if self.pressed_keys.contains(&self.config.zoom_in_key) {
+            translation *= &na::Translation3::new(0.0, 0.0, speed);
+        }
+
+        if self.pressed_keys.contains(&self.config.zoom_out_key) {
             translation *= &na::Translation3::new(0.0, 0.0, -speed);
         }
 
