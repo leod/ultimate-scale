@@ -74,16 +74,23 @@ fn main() {
     });
 
     let mut previous_clock = Instant::now();
+    let mut elapsed_time: Duration = Default::default();
 
     while !quit {
         let now_clock = Instant::now();
         let frame_duration = now_clock - previous_clock;
         let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
+        elapsed_time += frame_duration;
         previous_clock = now_clock;
 
         let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
-        render_list.render(&resources, &camera, &mut target).unwrap();
+        render_list.render(
+            &resources,
+            &camera,
+            elapsed_time.as_fractional_secs() as f32,
+            &mut target
+        ).unwrap();
         target.finish().unwrap();
 
         events_loop.poll_events(|event| {

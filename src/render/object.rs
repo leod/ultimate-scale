@@ -5,9 +5,10 @@ use glium::{self, implement_vertex};
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex {
     pub position: [f32; 3],
+    pub normal: [f32; 3],
 }
 
-implement_vertex!(Vertex, position);
+implement_vertex!(Vertex, position, normal);
 
 pub(in crate::render) struct ObjectBuffers {
     pub vertices: glium::VertexBuffer<Vertex>,
@@ -69,7 +70,16 @@ impl Object {
                     [1.0, 0.0, 0.0],
                 ];
 
-                let vertices = positions.iter().map(|&p| Vertex { position: p })
+                let normals = vec![
+                    [0.0, 0.0, -1.0],
+                    [0.0, 0.0, -1.0],
+                    [0.0, 0.0, -1.0],
+                ];
+
+                let vertices = positions
+                    .iter()
+                    .zip(normals.iter())
+                    .map(|(&p, &n)| Vertex { position: p, normal: n })
                     .collect::<Vec<_>>();
 
                 let indices = vec![0, 1, 2];
@@ -122,7 +132,48 @@ impl Object {
                     [-1.0, -1.0,  1.0],
                 ];
 
-                let vertices = positions.iter().map(|&p| Vertex { position: p })
+                let normals = vec![
+                    // Front
+                    [ 0.0,  0.0,  1.0],
+                    [ 0.0,  0.0,  1.0],
+                    [ 0.0,  0.0,  1.0],
+                    [ 0.0,  0.0,  1.0],
+
+                    // Right
+                    [ 1.0,  0.0,  0.0],
+                    [ 1.0,  0.0,  0.0],
+                    [ 1.0,  0.0,  0.0],
+                    [ 1.0,  0.0,  0.0],
+
+                    // Back
+                    [ 0.0,  0.0, -1.0],
+                    [ 0.0,  0.0, -1.0],
+                    [ 0.0,  0.0, -1.0],
+                    [ 0.0,  0.0, -1.0],
+
+                    // Left
+                    [-1.0,  0.0,  0.0],
+                    [-1.0,  0.0,  0.0],
+                    [-1.0,  0.0,  0.0],
+                    [-1.0,  0.0,  0.0],
+
+                    // Top
+                    [ 0.0,  1.0,  0.0],
+                    [ 0.0,  1.0,  0.0],
+                    [ 0.0,  1.0,  0.0],
+                    [ 0.0,  1.0,  0.0],
+
+                    // Bottom
+                    [ 0.0, -1.0,  0.0],
+                    [ 0.0, -1.0,  0.0],
+                    [ 0.0, -1.0,  0.0],
+                    [ 0.0, -1.0,  0.0],
+                ];
+
+                let vertices = positions
+                    .iter()
+                    .zip(normals.iter())
+                    .map(|(&p, &n)| Vertex { position: p, normal: n })
                     .collect::<Vec<_>>();
 
                 let indices = vec![
