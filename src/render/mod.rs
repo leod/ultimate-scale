@@ -129,11 +129,11 @@ impl RenderList {
 
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
-            /*depth: glium::Depth {
+            depth: glium::Depth {
                 test: glium::DepthTest::IfLess,
                 write: true,
                 .. Default::default()
-            },*/
+            },
             .. Default::default()
         };
 
