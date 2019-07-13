@@ -52,19 +52,20 @@ impl Resources {
                 vertex: "
                     #version 140
 
-                    uniform mat4 mat_projection;
-                    uniform mat4 mat_view;
                     uniform mat4 mat_model;
+                    uniform mat4 mat_view;
+                    uniform mat4 mat_projection;
+
                     uniform vec4 color;
 
                     in vec3 position;
                     out vec4 v_color;
 
                     void main() {
-                        gl_Position = vec4(position, 1.0)
-                            * mat_model
+                        gl_Position = mat_projection
                             * mat_view
-                            * mat_projection;
+                            * mat_model
+                            * vec4(position, 1.0);
 
                         v_color = color;
                     }
@@ -127,10 +128,16 @@ impl RenderList {
         let mat_view: [[f32; 4]; 4] = camera.view.to_homogeneous().into();
 
         let params = glium::DrawParameters {
-            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullingDisabled,
-
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            /*depth: glium::Depth {
+                test: glium::DepthTest::IfLess,
+                write: true,
+                .. Default::default()
+            },*/
             .. Default::default()
         };
+
+        //let params = Default::default();
 
         for instance in &self.instances {
             let buffers = resources.get_object_buffers(instance.object);
@@ -138,9 +145,9 @@ impl RenderList {
             let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
             let color: [f32; 4] = instance.params.color.into();
             let uniforms = uniform! {
-                mat_projection: mat_projection,
-                mat_view: mat_view,
                 mat_model: mat_model, 
+                mat_view: mat_view,
+                mat_projection: mat_projection,
                 color: color,
             };
 

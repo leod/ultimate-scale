@@ -32,7 +32,7 @@ fn main() {
     simple_logger::init().unwrap();
 
     let config: Config = Default::default();
-    info!("Running with config {:?}", config);
+    info!("Running with config: {:?}", config);
 
     info!("Opening window");
     let mut events_loop = glutin::EventsLoop::new();
@@ -51,10 +51,10 @@ fn main() {
         config.window_size.width as f32 / config.window_size.height as f32,
         config.fov_degrees.to_radians() as f32,
         1.0,
-        1000.0,
+        10000.0,
     );
     let view = na::Isometry3::from_parts(
-        na::Translation::from(na::Vector3::new(0.0, 0.0, 3.0)),
+        na::Translation::from(na::Vector3::new(0.0, 0.0, -3.0)),
         na::UnitQuaternion::identity(),
     );
     let mut camera = render::camera::Camera::new(
@@ -64,6 +64,11 @@ fn main() {
     let mut camera_input = render::camera::Input::new(config.camera_input);
 
     render_list.add(render::Object::Cube, &render::InstanceParams {
+        transform: na::Translation::from(na::Vector3::new(3.0, 0.0, 0.0)).to_homogeneous(),
+        color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+    });
+
+    render_list.add(render::Object::Triangle, &render::InstanceParams {
         transform: na::Matrix4::identity(), 
         color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
     });
