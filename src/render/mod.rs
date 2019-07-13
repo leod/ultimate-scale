@@ -1,11 +1,12 @@
 mod machine;
 mod object;
+mod camera;
 
 use nalgebra as na;
-use glium::{self, program};
+use glium::{self, program, uniform};
+use num_traits::ToPrimitive;
 
-pub use object::{Object, Instance, InstanceParams};
-use object::ObjectBuffers;
+use object::{Object, ObjectBuffers, Instance, InstanceParams};
 
 pub struct Resources {
     object_buffers: Vec<ObjectBuffers>,
@@ -44,35 +45,52 @@ impl Resources {
             object_buffers.push(object.create_buffers(facade)?);
         }
 
-		let program = program!(facade,
-			140 => {
-				vertex: "
-					#version 140
-					uniform mat4 matrix;
-					in vec2 position;
-					in vec3 color;
-					out vec3 vColor;
-					void main() {
-						gl_Position = vec4(position, 0.0, 1.0) * matrix;
-						vColor = color;
-					}
-				",
+        let program = program!(facade,
+            140 => {
+                vertex: "
+                    #version 140
 
-				fragment: "
-					#version 140
-					in vec3 vColor;
-					out vec4 f_color;
-					void main() {
-						f_color = vec4(vColor, 1.0);
-					}
-				"
-			},
-		)?;
+                    uniform mat4 mat_projection;
+                    uniform mat4 mat_view;
+                    uniform mat4 mat_model;
+
+                    in vec2 position;
+                    in vec3 color;
+                    out vec3 v_color;
+
+                    void main() {
+                        gl_Position = vec4(position, 0.0, 1.0)
+                            * mat_projection
+                            * mat_view
+                            * mat_model;
+
+                        v_color = color;
+                    }
+                ",
+
+                fragment: "
+                    #version 140
+
+                    in vec3 v_color;
+                    out vec4 f_color;
+
+                    void main() {
+                        f_color = vec4(v_color, 1.0);
+                    }
+                "
+            },
+        )?;
 
         Ok(Resources {
-			object_buffers,
-			program
+            object_buffers,
+            program
         })
+    }
+
+    fn get_object_buffers(&self, object: Object) -> &ObjectBuffers {
+        // Safe to unwrap array access here, since we have initialized buffers
+        // for all objects
+        &self.object_buffers[object.to_usize().unwrap()]
     }
 }
 
@@ -91,10 +109,36 @@ impl RenderList {
     }
 
     pub fn render<S: glium::Surface>(
-        target: &S,
+        &self,
         resources: &Resources,
+        target: &mut S,
+        camera: &camera::Camera,
     ) -> Result<(), glium::DrawError> {
-        //target.draw(
+        // TODO: Could sort by object here to reduce state switching for large
+        // numbers of objects.
+
+        let mat_projection: [[f32; 4]; 4] = camera.projection.into();
+        let mat_view: [[f32; 4]; 4] = camera.view.to_homogeneous().into();
+
+        for instance in &self.instances {
+            let buffers = resources.get_object_buffers(instance.object);
+
+            let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
+            let uniforms = uniform! {
+                mat_projection: mat_projection,
+                mat_view: mat_view,
+                mat_model: mat_model, 
+            };
+
+            target.draw(
+                &buffers.vertices,
+                &buffers.indices,
+                &resources.program,
+                &uniforms,
+                &Default::default()
+            )?;
+        }
+
         Ok(())
     }
 }

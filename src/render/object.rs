@@ -3,15 +3,15 @@ use nalgebra as na;
 use glium::{self, implement_vertex};
 
 #[derive(Copy, Clone, Debug)]
-struct Vertex {
-    position: [f32; 3],
+pub struct Vertex {
+    pub position: [f32; 3],
 }
 
 implement_vertex!(Vertex, position);
 
 pub(in crate::render) struct ObjectBuffers {
-    vertices: glium::VertexBuffer<Vertex>,
-    indices: glium::IndexBuffer<u32>,
+    pub vertices: glium::VertexBuffer<Vertex>,
+    pub indices: glium::IndexBuffer<u32>,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
@@ -24,7 +24,7 @@ pub enum Object {
 
 #[derive(Clone, Debug)]
 pub struct InstanceParams {
-    transform: na::Matrix4<f32>,
+    pub transform: na::Matrix4<f32>,
 }
 
 #[derive(Clone, Debug)]
