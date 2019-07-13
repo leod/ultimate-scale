@@ -10,20 +10,25 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn from_projection(projection: na::Matrix4<f32>) -> Camera {
+    pub fn new(
+        projection: na::Matrix4<f32>,
+        view: na::Isometry3<f32>,
+    ) -> Camera {
         Camera {
             projection,
-            view: na::Isometry3::identity(),
+            view,
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Clone)]
 pub struct Config {
     pub forward_key: VirtualKeyCode,
     pub left_key: VirtualKeyCode,
-    pub back_key: VirtualKeyCode,
+    pub backward_key: VirtualKeyCode,
     pub right_key: VirtualKeyCode,
+
+    pub move_units_per_sec: f32,
 }
 
 impl Default for Config {
@@ -31,20 +36,42 @@ impl Default for Config {
         Config {
             forward_key: VirtualKeyCode::W,
             left_key: VirtualKeyCode::A,
-            back_key: VirtualKeyCode::S,
+            backward_key: VirtualKeyCode::S,
             right_key: VirtualKeyCode::D,
+            move_units_per_sec: 1.0,
         }
     }
 }
 
 pub struct Input {
+    config: Config,
     pressed_keys: HashSet<VirtualKeyCode>,
     modifiers_state: glutin::ModifiersState,
 }
 
 impl Input {
-    pub fn move_camera(&self, dt_secs: f32, camera: &mut Camera) {
+    pub fn new(config: Config) -> Input {
+        Input {
+            config,
+            pressed_keys: HashSet::new(),
+            modifiers_state: Default::default(),
+        }
+    }
 
+    pub fn move_camera(&self, dt_secs: f32, camera: &mut Camera) {
+        let speed = dt_secs * self.config.move_units_per_sec;
+
+        let mut translation = na::Translation3::identity();
+
+        if self.pressed_keys.contains(&self.config.forward_key) {
+            translation *= &na::Translation3::new(0.0, 0.0, speed);
+        }
+
+        if self.pressed_keys.contains(&self.config.backward_key) {
+            translation *= &na::Translation3::new(0.0, 0.0, -speed);
+        }
+
+        camera.view.append_translation_mut(&translation);
     }
 
     pub fn on_event(&mut self, event: &WindowEvent) {
