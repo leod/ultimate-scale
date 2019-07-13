@@ -16,6 +16,7 @@ pub(in crate::render) struct ObjectBuffers {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
 pub enum Object {
+    Triangle,
     Cube,
 
     /// Counter of the number of objects
@@ -61,6 +62,27 @@ impl Object {
         &self, facade: &F
     ) -> Result<ObjectBuffers, CreationError> {
         match self {
+            Object::Triangle => {
+                let positions = vec![
+                    [1.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0],
+                    [1.0, 0.0, 0.0],
+                ];
+
+                let vertices = positions.iter().map(|&p| Vertex { position: p })
+                    .collect::<Vec<_>>();
+
+                let indices = vec![0, 1, 2];
+
+                Ok(ObjectBuffers {
+                    vertices: glium::VertexBuffer::new(facade, &vertices)?,
+                    indices: glium::IndexBuffer::new(
+                        facade,
+                        glium::index::PrimitiveType::TrianglesList,
+                        &indices,
+                    )?,
+                })
+            }
             Object::Cube => {
                 let positions = vec![
                     // Front
@@ -88,7 +110,7 @@ impl Object {
                     [-1.0,  1.0, -1.0],
 
                     // Top
-                    [-1.0,  1.0,  1.0],
+                    [ 1.0,  1.0,  1.0],
                     [-1.0,  1.0,  1.0],
                     [-1.0,  1.0, -1.0],
                     [ 1.0,  1.0, -1.0],
