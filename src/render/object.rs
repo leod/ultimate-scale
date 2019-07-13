@@ -1,7 +1,8 @@
 use num_derive::{FromPrimitive, ToPrimitive};
+use nalgebra as na;
 use glium::{self, implement_vertex};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct Vertex {
     position: [f32; 3],
 }
@@ -13,12 +14,27 @@ pub(in crate::render) struct ObjectBuffers {
     indices: glium::IndexBuffer<u32>,
 }
 
-#[derive(FromPrimitive, ToPrimitive)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
 pub enum Object {
     Cube,
 
     /// Counter of the number of objects
     NumTypes,
+}
+
+#[derive(Clone, Debug)]
+pub struct InstanceParams {
+    transform: na::Matrix4<f32>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Instance {
+    pub object: Object,
+    pub params: InstanceParams,
+}
+
+impl Instance {
+
 }
 
 #[derive(Copy, Clone, Debug)]
