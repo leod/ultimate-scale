@@ -1,6 +1,6 @@
-mod machine;
-mod object;
-mod camera;
+pub mod machine;
+pub mod object;
+pub mod camera;
 
 use nalgebra as na;
 use glium::{self, program, uniform};
@@ -13,6 +13,7 @@ pub struct Resources {
     program: glium::Program,
 }
 
+#[derive(Debug)]
 pub enum CreationError {
     ObjectCreationError(object::CreationError),
     ProgramChooserCreationError(glium::program::ProgramChooserCreationError),
@@ -53,9 +54,9 @@ impl Resources {
                     uniform mat4 mat_projection;
                     uniform mat4 mat_view;
                     uniform mat4 mat_model;
+                    uniform vec4 color;
 
                     in vec2 position;
-                    in vec3 color;
                     out vec3 v_color;
 
                     void main() {
@@ -100,6 +101,10 @@ pub struct RenderList {
 }
 
 impl RenderList {
+    pub fn new() -> RenderList {
+        Default::default()
+    }
+
     pub fn add_instance(&mut self, instance: &Instance) {
         self.instances.push(instance.clone());
     }
@@ -111,8 +116,8 @@ impl RenderList {
     pub fn render<S: glium::Surface>(
         &self,
         resources: &Resources,
-        target: &mut S,
         camera: &camera::Camera,
+        target: &mut S,
     ) -> Result<(), glium::DrawError> {
         // TODO: Could sort by object here to reduce state switching for large
         // numbers of objects.
@@ -124,10 +129,12 @@ impl RenderList {
             let buffers = resources.get_object_buffers(instance.object);
 
             let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
+            let color: [f32; 4] = instance.params.color.into();
             let uniforms = uniform! {
                 mat_projection: mat_projection,
                 mat_view: mat_view,
                 mat_model: mat_model, 
+                color: color,
             };
 
             target.draw(
@@ -140,5 +147,9 @@ impl RenderList {
         }
 
         Ok(())
+    }
+
+    pub fn clear(&mut self) {
+        self.instances.clear();
     }
 }

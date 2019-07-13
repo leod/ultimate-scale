@@ -25,6 +25,7 @@ pub enum Object {
 #[derive(Clone, Debug)]
 pub struct InstanceParams {
     pub transform: na::Matrix4<f32>,
+    pub color: na::Vector4<f32>,
 }
 
 #[derive(Clone, Debug)]
