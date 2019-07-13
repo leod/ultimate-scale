@@ -6,7 +6,8 @@ use nalgebra as na;
 use glium::{self, program, uniform};
 use num_traits::ToPrimitive;
 
-use object::{Object, ObjectBuffers, Instance, InstanceParams};
+pub use object::{Object, Instance, InstanceParams};
+use object::ObjectBuffers;
 
 pub struct Resources {
     object_buffers: Vec<ObjectBuffers>,
@@ -56,14 +57,14 @@ impl Resources {
                     uniform mat4 mat_model;
                     uniform vec4 color;
 
-                    in vec2 position;
-                    out vec3 v_color;
+                    in vec3 position;
+                    out vec4 v_color;
 
                     void main() {
-                        gl_Position = vec4(position, 0.0, 1.0)
-                            * mat_projection
+                        gl_Position = vec4(position, 1.0)
+                            * mat_model
                             * mat_view
-                            * mat_model;
+                            * mat_projection;
 
                         v_color = color;
                     }
@@ -72,11 +73,11 @@ impl Resources {
                 fragment: "
                     #version 140
 
-                    in vec3 v_color;
+                    in vec4 v_color;
                     out vec4 f_color;
 
                     void main() {
-                        f_color = vec4(v_color, 1.0);
+                        f_color = v_color;
                     }
                 "
             },
@@ -122,8 +123,14 @@ impl RenderList {
         // TODO: Could sort by object here to reduce state switching for large
         // numbers of objects.
 
-        let mat_projection: [[f32; 4]; 4] = camera.projection.into();
+;       let mat_projection: [[f32; 4]; 4] = camera.projection.into();
         let mat_view: [[f32; 4]; 4] = camera.view.to_homogeneous().into();
+
+        let params = glium::DrawParameters {
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullingDisabled,
+
+            .. Default::default()
+        };
 
         for instance in &self.instances {
             let buffers = resources.get_object_buffers(instance.object);
@@ -142,7 +149,7 @@ impl RenderList {
                 &buffers.indices,
                 &resources.program,
                 &uniforms,
-                &Default::default()
+                &params,
             )?;
         }
 
