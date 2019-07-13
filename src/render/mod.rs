@@ -4,7 +4,7 @@ mod object;
 use nalgebra as na;
 use glium;
 
-pub use object::Object;
+pub use object::{Object, Instance, InstanceParams};
 use object::ObjectBuffers;
 
 pub struct Resources {
@@ -30,19 +30,17 @@ impl Resources {
     }
 }
 
-pub struct InstanceParams {
-    transform: na::Matrix4<f32>,
-}
-
-pub struct Instance {
-    object: Object,
-    params: InstanceParams,
-}
-
 #[derive(Default)]
 pub struct RenderList {
     instances: Vec<Instance>,
 }
 
 impl RenderList {
+    pub fn add_instance(&mut self, instance: &Instance) {
+        self.instances.push(instance.clone());
+    }
+
+    pub fn add(&mut self, object: Object, params: &InstanceParams) {
+        self.add_instance(&Instance { object, params: params.clone() });
+    }
 }
