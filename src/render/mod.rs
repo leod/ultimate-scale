@@ -59,6 +59,8 @@ impl Resources {
                     uniform vec4 color;
 
                     in vec3 position;
+                    in vec3 normal;
+                    out vec3 v_normal;
                     out vec4 v_color;
 
                     void main() {
@@ -67,18 +69,31 @@ impl Resources {
                             * mat_model
                             * vec4(position, 1.0);
 
+                        v_normal = normal;
                         v_color = color;
+
                     }
                 ",
 
                 fragment: "
                     #version 140
 
+                    uniform float M_PI = 3.1415926535;
+
+                    uniform float t;
+
+                    in vec3 v_normal;
                     in vec4 v_color;
                     out vec4 f_color;
 
                     void main() {
-                        f_color = v_color;
+
+                        vec3 lightdirA = vec3(sin(t/6.0), cos(t/6.0), 0.0); 
+                        vec3 lightdirB = vec3(sin(t/6.0 + M_PI), cos(t/6.0 + M_PI), 0.0); 
+                        float ambient = 0.2;
+                        float diffuseA = clamp(dot(lightdirA, v_normal), 0.0, 1.0);
+                        float diffuseB = clamp(dot(lightdirB, v_normal), 0.0, 1.0);
+                        f_color = (ambient + diffuseA + diffuseB) * v_color;
                     }
                 "
             },
@@ -119,12 +134,13 @@ impl RenderList {
         &self,
         resources: &Resources,
         camera: &camera::Camera,
+        elapsed_time_secs: f32,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         // TODO: Could sort by object here to reduce state switching for large
         // numbers of objects.
 
-;       let mat_projection: [[f32; 4]; 4] = camera.projection.into();
+        let mat_projection: [[f32; 4]; 4] = camera.projection.into();
         let mat_view: [[f32; 4]; 4] = camera.view.to_homogeneous().into();
 
         let params = glium::DrawParameters {
@@ -149,6 +165,7 @@ impl RenderList {
                 mat_view: mat_view,
                 mat_projection: mat_projection,
                 color: color,
+                t: elapsed_time_secs,
             };
 
             target.draw(
