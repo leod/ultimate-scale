@@ -1,5 +1,5 @@
+mod util;
 mod machine;
-mod vec_option;
 mod render;
 
 use std::thread;
