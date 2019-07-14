@@ -1,11 +1,12 @@
-mod grid;
+pub mod grid;
+pub mod exec;
 
-use crate::vec_option::VecOption;
+use crate::util::vec_option::VecOption;
 
 use grid::{Vec3, Grid3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
-enum Axis3 {
+pub enum Axis3 {
     X,
     Y,
     Z,
@@ -22,7 +23,7 @@ impl Axis3 {
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
-enum Sign {
+pub enum Sign {
     Pos,
     Neg,
 }
@@ -44,7 +45,7 @@ impl Sign {
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
-struct Dir3(Axis3, Sign);
+pub struct Dir3(Axis3, Sign);
 
 impl Dir3 {
     pub fn to_vector(&self) -> Vec3 {
@@ -57,7 +58,7 @@ impl Dir3 {
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
-enum Block {
+pub enum Block {
     Pipe {
         from: Dir3,
         to: Dir3,
@@ -67,24 +68,14 @@ enum Block {
 }
 
 impl Block {
-    pub fn clear_state(&mut self) {
-    }
 }
 
-type BlockId = usize;
-
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
-struct Blip {
-    pos: Vec3,
-    move_progress: usize,
-}
-
-const MOVE_TICKS_PER_NODE: usize = 10;
+pub type BlockId = usize;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-struct Blocks {
-    ids: Grid3<Option<BlockId>>,
-    data: VecOption<Block>,
+pub struct Blocks {
+    pub ids: Grid3<Option<BlockId>>,
+    pub data: VecOption<Block>,
 }
 
 impl Blocks {
@@ -102,79 +93,17 @@ impl Blocks {
             .and_then(|id| id.as_ref())
             .map(|&id| &self.data[id])
     }
-
-    pub fn clear_state(&mut self) {
-        for (_, block) in self.data.iter_mut() {
-            block.clear_state();
-        }
-    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-struct Machine {
-    blocks: Blocks,
-    blips: VecOption<Blip>,
+pub struct Machine {
+    pub(in crate::machine) blocks: Blocks,
 }
 
 impl Machine {
     pub fn new(size: Vec3) -> Machine {
         Machine {
             blocks: Blocks::new(size),
-            blips: VecOption::new(),
-        }
-    }
-
-    pub fn clear_state(&mut self) {
-        self.blocks.clear_state();
-        self.blips.clear();
-    }
-
-    pub fn run(&mut self) {
-        let mut blips_to_remove = Vec::<BlockId>::new();
-
-        for (blip_id, blip) in self.blips.iter_mut() {
-            blip.move_progress += 1;
-
-            let mut move_dir = None;
-
-            if blip.move_progress == MOVE_TICKS_PER_NODE {
-                match self.blocks.at_pos(blip.pos) {
-                    Some(Block::Pipe { from: _, to }) => {
-                        move_dir = Some(*to);
-                    },
-                    Some(Block::Switch(dir)) => {
-                        move_dir = Some(*dir);
-                    },
-                    None => {
-                        if blip.pos.z == 0 {
-                            blips_to_remove.push(blip_id);
-                            continue;
-                        } else {
-                            move_dir = Some(Dir3(Axis3::Z, Sign::Neg));
-                        }
-                    }
-                    _ => (),
-                }
-            }
-
-            if let Some(move_dir) = move_dir {
-                blip.pos += move_dir.to_vector();
-
-                let remove = match self.blocks.at_pos(blip.pos) {
-                    Some(Block::Pipe { from, to: _ }) => *from != move_dir.invert(),
-                    Some(Block::Switch(dir)) => *dir != move_dir,
-                    Some(Block::Solid) => true,
-                    _ => false,
-                };
-
-                if remove {
-                    blips_to_remove.push(blip_id);
-                }
-            }
-        }
-
-        for blip_id in blips_to_remove {
-            self.blips.remove(blip_id);
         }
     }
 }
