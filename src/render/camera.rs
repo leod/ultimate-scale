@@ -47,7 +47,7 @@ impl Default for Config {
             zoom_out_key: VirtualKeyCode::PageDown,
             fast_move_key: VirtualKeyCode::LShift,
             move_units_per_sec: 1.0,
-            fast_move_multiplier: 2.0,
+            fast_move_multiplier: 4.0,
         }
     }
 }

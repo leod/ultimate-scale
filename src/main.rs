@@ -61,19 +61,11 @@ fn main() {
         view,
     );
     let mut camera_input = render::camera::Input::new(config.camera_input);
-
-    render_list.add(render::Object::Cube, &render::InstanceParams {
-        transform: na::Translation::from(na::Vector3::new(3.0, 0.0, 0.0)).to_homogeneous(),
-        color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-    });
-
-    render_list.add(render::Object::Triangle, &render::InstanceParams {
-        transform: na::Matrix4::identity(), 
-        color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-    });
-
     let mut previous_clock = Instant::now();
     let mut elapsed_time: Duration = Default::default();
+
+    let grid_size = machine::grid::Vec3::new(30, 30, 8);
+    let machine = machine::Machine::new(grid_size);
 
     while !quit {
         let now_clock = Instant::now();
@@ -85,6 +77,18 @@ fn main() {
             camera: camera.clone(),
             elapsed_time_secs: elapsed_time.as_fractional_secs() as f32,
         };
+
+        render_list.clear();
+        render_list.add(render::Object::Cube, &render::InstanceParams {
+            transform: na::Translation::from(na::Vector3::new(3.0, 0.0, 0.0)).to_homogeneous(),
+            color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+        });
+
+        render_list.add(render::Object::Triangle, &render::InstanceParams {
+            transform: na::Matrix4::identity(), 
+            color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+        });
+        render::machine::render_xy_grid(&grid_size, &mut render_list);
 
         let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
