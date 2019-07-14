@@ -4,6 +4,7 @@ use std::collections::HashSet;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
+#[derive(Debug, Clone)]
 pub struct Camera {
     pub projection: na::Matrix4<f32>,
     pub view: na::Isometry3<f32>,
