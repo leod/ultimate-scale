@@ -95,7 +95,7 @@ impl Input {
         }
     }
 
-    pub fn move_camera(&self, dt_secs: f32, camera: &mut Camera) {
+    pub fn update(&self, dt_secs: f32, camera: &mut Camera) {
         let move_speed = dt_secs * self.config.move_units_per_sec *
             if self.pressed_keys.contains(&self.config.fast_move_key) {
                 self.config.fast_move_multiplier

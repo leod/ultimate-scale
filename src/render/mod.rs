@@ -7,6 +7,8 @@ use glium::{self, program, uniform};
 use num_traits::ToPrimitive;
 
 pub use object::{Object, Instance, InstanceParams};
+pub use camera::Camera;
+
 use object::ObjectBuffers;
 
 pub struct Resources {
