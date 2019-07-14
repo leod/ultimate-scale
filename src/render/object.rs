@@ -11,8 +11,33 @@ pub struct Vertex {
 implement_vertex!(Vertex, position, normal);
 
 pub(in crate::render) struct ObjectBuffers {
-    pub vertices: glium::VertexBuffer<Vertex>,
-    pub indices: glium::IndexBuffer<u32>,
+    pub vertex_buffer: glium::VertexBuffer<Vertex>,
+    pub index_buffer: glium::IndexBuffer<u32>,
+}
+
+impl ObjectBuffers {
+    pub fn from_slices<F: glium::backend::Facade>(
+        facade: &F,
+        primitive_type: glium::index::PrimitiveType,
+        positions: &[[f32; 3]],
+        normals: &[[f32; 3]],
+        indices: &[u32],
+    ) -> Result<ObjectBuffers, CreationError> {
+        let vertices = positions
+            .iter()
+            .zip(normals.iter())
+            .map(|(&p, &n)| Vertex { position: p, normal: n })
+            .collect::<Vec<_>>();
+
+        Ok(ObjectBuffers {
+            vertex_buffer: glium::VertexBuffer::new(facade, &vertices)?,
+            index_buffer: glium::IndexBuffer::new(
+                facade,
+                primitive_type,
+                indices,
+            )?,
+        })
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
@@ -85,22 +110,15 @@ impl Object {
                     [0.0, 0.0, -1.0],
                 ];
 
-                let vertices = positions
-                    .iter()
-                    .zip(normals.iter())
-                    .map(|(&p, &n)| Vertex { position: p, normal: n })
-                    .collect::<Vec<_>>();
-
                 let indices = vec![0, 1, 2];
 
-                Ok(ObjectBuffers {
-                    vertices: glium::VertexBuffer::new(facade, &vertices)?,
-                    indices: glium::IndexBuffer::new(
-                        facade,
-                        glium::index::PrimitiveType::TrianglesList,
-                        &indices,
-                    )?,
-                })
+                ObjectBuffers::from_slices(
+                    facade,
+                    glium::index::PrimitiveType::TrianglesList,
+                    &positions,
+                    &normals,
+                    &indices,
+                )
             }
             Object::Cube => {
                 let positions = vec![
@@ -179,12 +197,6 @@ impl Object {
                     [ 0.0, -1.0,  0.0],
                 ];
 
-                let vertices = positions
-                    .iter()
-                    .zip(normals.iter())
-                    .map(|(&p, &n)| Vertex { position: p, normal: n })
-                    .collect::<Vec<_>>();
-
                 let indices = vec![
                     // Front
                     0, 1, 2, 0, 2, 3,
@@ -205,14 +217,13 @@ impl Object {
                     20, 21, 22, 20, 22, 23,
                 ];
 
-                Ok(ObjectBuffers {
-                    vertices: glium::VertexBuffer::new(facade, &vertices)?,
-                    indices: glium::IndexBuffer::new(
-                        facade,
-                        glium::index::PrimitiveType::TrianglesList,
-                        &indices,
-                    )?,
-                })
+                ObjectBuffers::from_slices(
+                    facade,
+                    glium::index::PrimitiveType::TrianglesList,
+                    &positions,
+                    &normals,
+                    &indices,
+                )
             }
             Object::NumTypes => panic!("Object::NumTypes cannot be instantiated!"),
         }
