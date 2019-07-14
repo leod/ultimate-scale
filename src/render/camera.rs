@@ -29,8 +29,10 @@ pub struct Config {
     pub right_key: VirtualKeyCode,
     pub zoom_in_key: VirtualKeyCode,
     pub zoom_out_key: VirtualKeyCode,
+    pub fast_move_key: VirtualKeyCode,
 
     pub move_units_per_sec: f32,
+    pub fast_move_multiplier: f32,
 }
 
 impl Default for Config {
@@ -42,7 +44,9 @@ impl Default for Config {
             right_key: VirtualKeyCode::D,
             zoom_in_key: VirtualKeyCode::PageUp,
             zoom_out_key: VirtualKeyCode::PageDown,
+            fast_move_key: VirtualKeyCode::LShift,
             move_units_per_sec: 1.0,
+            fast_move_multiplier: 2.0,
         }
     }
 }
@@ -63,7 +67,12 @@ impl Input {
     }
 
     pub fn move_camera(&self, dt_secs: f32, camera: &mut Camera) {
-        let speed = dt_secs * self.config.move_units_per_sec;
+        let speed = dt_secs * self.config.move_units_per_sec *
+            if self.pressed_keys.contains(&self.config.fast_move_key) {
+                self.config.fast_move_multiplier
+            } else {
+                1.0
+            };
 
         let mut translation = na::Translation3::identity();
 
