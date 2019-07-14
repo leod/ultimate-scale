@@ -146,8 +146,8 @@ impl RenderList {
         // TODO: Could sort by object here to reduce state switching for large
         // numbers of objects.
 
-        let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
-        let mat_view: [[f32; 4]; 4] = context.camera.view_to_homogeneous().into();
+        let mat_projection: [[f32; 4]; 4] = context.camera.projection().into();
+        let mat_view: [[f32; 4]; 4] = context.camera.view().into();
 
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
