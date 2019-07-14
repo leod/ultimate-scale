@@ -106,4 +106,8 @@ impl Machine {
             blocks: Blocks::new(size),
         }
     }
+
+    pub fn size(&self) -> Vec3 {
+        self.blocks.ids.size()
+    }
 }

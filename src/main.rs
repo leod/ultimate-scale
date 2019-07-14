@@ -1,6 +1,7 @@
 mod util;
 mod machine;
 mod render;
+mod edit;
 
 use std::thread;
 use std::time::{Duration, Instant};
@@ -58,7 +59,7 @@ fn main() {
     let mut elapsed_time: Duration = Default::default();
 
     let grid_size = machine::grid::Vec3::new(30, 30, 8);
-    let machine = machine::Machine::new(grid_size);
+    let mut editor = edit::Editor::new(grid_size);
 
     while !quit {
         let now_clock = Instant::now();
@@ -92,6 +93,7 @@ fn main() {
             match event {
                 glutin::Event::WindowEvent { event, .. } => {
                     camera_input.on_event(&event);
+                    editor.on_event(&event);
 
                     match event {
                         glutin::WindowEvent::CloseRequested => {
@@ -107,7 +109,9 @@ fn main() {
         });
 
         let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
-        camera_input.move_camera(frame_duration_secs, &mut camera);
+        camera_input.update(frame_duration_secs, &mut camera);
+
+        editor.update(frame_duration_secs, &camera);
 
         thread::sleep(Duration::from_millis(10));
     }

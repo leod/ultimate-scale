@@ -47,6 +47,10 @@ impl<T> Grid3<T> {
             None
         }
     }
+
+    pub fn size(&self) -> Vec3 {
+        self.size
+    }
 }
 
 impl<T> Index<Vec3> for Grid3<T> {
