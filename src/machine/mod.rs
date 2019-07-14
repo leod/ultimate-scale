@@ -86,12 +86,20 @@ impl Blocks {
         }
     }
 
-    pub fn at_pos(&self, p: Vec3) -> Option<&Block> {
+    pub fn at_pos(&self, p: &Vec3) -> Option<&Block> {
         self
             .ids
             .get(p)
             .and_then(|id| id.as_ref())
             .map(|&id| &self.data[id])
+    }
+
+    pub fn ids(&self) -> &Grid3<Option<BlockId>> {
+        &self.ids
+    }
+
+    pub fn is_valid_pos(&self, p: &grid::Vec3) -> bool {
+        self.ids.is_valid_pos(p)
     }
 }
 
@@ -109,5 +117,9 @@ impl Machine {
 
     pub fn size(&self) -> Vec3 {
         self.blocks.ids.size()
+    }
+
+    pub fn blocks(&self) -> &Blocks {
+        &self.blocks
     }
 }

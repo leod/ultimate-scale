@@ -87,11 +87,13 @@ fn main() {
             transform: na::Matrix4::identity(), 
             color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
         });
-        render::machine::render_xy_grid(&grid_size, &mut render_list);
 
         let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
+
+        editor.render(&resources, &render_context, &mut target).unwrap();
         render_list.render(&resources, &render_context, &mut target).unwrap();
+
         target.finish().unwrap();
 
         events_loop.poll_events(|event| {
