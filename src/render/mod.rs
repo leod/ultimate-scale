@@ -175,8 +175,8 @@ impl RenderList {
             };
 
             target.draw(
-                &buffers.vertices,
-                &buffers.indices,
+                &buffers.vertex_buffer,
+                &buffers.index_buffer,
                 &resources.program,
                 &uniforms,
                 &params,
