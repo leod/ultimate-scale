@@ -28,11 +28,14 @@ pub fn render_line(line: &Line, out: &mut RenderList) {
 
     let transform = look_at.to_homogeneous() * na::Matrix4::new_nonuniform_scaling(&scaling);
 
-    out.add(Object::Cube, &InstanceParams {
-        transform,
-        color: line.color,
-        .. Default::default()
-    });
+    out.add(
+        Object::Cube,
+        &InstanceParams {
+            transform,
+            color: line.color,
+            .. Default::default()
+        },
+    );
 }
 
 pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
@@ -40,26 +43,26 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
     let color = na::Vector4::new(0.7, 0.7, 0.7, 1.0);
 
     for x in 0 .. size.x + 1 {
-        render_line(
-            &Line {
-                start: na::Point3::new(x as f32, 0.0, z),
-                end: na::Point3::new(x as f32, size.y as f32, z),
-                thickness,
+        let translation = na::Matrix4::new_translation(&na::Vector3::new(x as f32, 0.0, z));
+        let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::y() * (size.y as f32)));
+        out.add(
+            Object::LineY,
+            &InstanceParams {
+                transform: translation * scaling,
                 color,
-            },
-            out,
+            }, 
         );
     }
 
     for y in 0 .. size.y + 1 {
-        render_line(
-            &Line {
-                start: na::Point3::new(0.0, y as f32, z),
-                end: na::Point3::new(size.x as f32, y as f32, z),
-                thickness,
+        let translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, y as f32, z));
+        let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::x() * (size.x as f32)));
+        out.add(
+            Object::LineX,
+            &InstanceParams {
+                transform: translation * scaling,
                 color,
-            },
-            out,
+            }, 
         );
     }
 }
