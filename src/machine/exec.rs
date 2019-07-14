@@ -1,13 +1,13 @@
 use crate::util::vec_option::VecOption;
 
-use crate::machine::grid::Vec3;
+use crate::machine::grid::Point3;
 use crate::machine::{Axis3, Sign, Dir3, Block, BlockId, Machine};
 
 const MOVE_TICKS_PER_NODE: usize = 10;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Blip {
-    pub pos: Vec3,
+    pub pos: Point3,
     pub move_progress: usize,
 }
 

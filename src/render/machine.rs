@@ -35,7 +35,7 @@ pub fn render_line(line: &Line, out: &mut RenderList) {
     });
 }
 
-pub fn render_xy_grid(size: &grid::Vec3, z: f32, out: &mut RenderList) {
+pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
     let thickness = 0.01;
     let color = na::Vector4::new(0.7, 0.7, 0.7, 1.0);
 

@@ -3,7 +3,7 @@ pub mod exec;
 
 use crate::util::vec_option::VecOption;
 
-use grid::{Vec3, Grid3};
+use grid::{Vector3, Point3, Grid3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum Axis3 {
@@ -13,11 +13,11 @@ pub enum Axis3 {
 }
 
 impl Axis3 {
-    pub fn to_vector(&self) -> Vec3 {
+    pub fn to_vector(&self) -> Vector3 {
         match self {
-            Axis3::X => Vec3::new(1, 0, 0),
-            Axis3::Y => Vec3::new(0, 1, 0),
-            Axis3::Z => Vec3::new(0, 0, 1),
+            Axis3::X => Vector3::x(),
+            Axis3::Y => Vector3::y(),
+            Axis3::Z => Vector3::z(),
         }
     }
 }
@@ -48,7 +48,7 @@ impl Sign {
 pub struct Dir3(Axis3, Sign);
 
 impl Dir3 {
-    pub fn to_vector(&self) -> Vec3 {
+    pub fn to_vector(&self) -> Vector3 {
         self.0.to_vector() * self.1.to_number()
     }
 
@@ -79,14 +79,14 @@ pub struct Blocks {
 }
 
 impl Blocks {
-    pub fn new(size: Vec3) -> Blocks {
+    pub fn new(size: Vector3) -> Blocks {
         Blocks {
             ids: Grid3::new(size),
             data: VecOption::new(),
         }
     }
 
-    pub fn at_pos(&self, p: &Vec3) -> Option<&Block> {
+    pub fn at_pos(&self, p: &Point3) -> Option<&Block> {
         self
             .ids
             .get(p)
@@ -98,7 +98,7 @@ impl Blocks {
         &self.ids
     }
 
-    pub fn is_valid_pos(&self, p: &grid::Vec3) -> bool {
+    pub fn is_valid_pos(&self, p: &Point3) -> bool {
         self.ids.is_valid_pos(p)
     }
 }
@@ -109,13 +109,13 @@ pub struct Machine {
 }
 
 impl Machine {
-    pub fn new(size: Vec3) -> Machine {
+    pub fn new(size: Vector3) -> Machine {
         Machine {
             blocks: Blocks::new(size),
         }
     }
 
-    pub fn size(&self) -> Vec3 {
+    pub fn size(&self) -> Vector3 {
         self.blocks.ids.size()
     }
 
