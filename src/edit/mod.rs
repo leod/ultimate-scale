@@ -13,13 +13,13 @@ pub struct Editor {
     machine: Machine,
 
     mouse_window_pos: na::Point2<f32>,
-    mouse_grid_pos: Option<grid::Vec3>,
+    mouse_grid_pos: Option<grid::Point3>,
 
     render_list: RenderList,
 }
 
 impl Editor {
-    pub fn new(size: grid::Vec3) -> Editor {
+    pub fn new(size: grid::Vector3) -> Editor {
         Editor {
             machine: Machine::new(size),
             mouse_window_pos: na::Point2::origin(),
@@ -46,7 +46,7 @@ impl Editor {
         self.mouse_grid_pos =
             if let Some(ray_t) = intersection {
                 let ray_pos = ray.origin + ray_t * ray.velocity;
-                let grid_pos = grid::Vec3::new(
+                let grid_pos = grid::Point3::new(
                     ray_pos.x.floor() as isize,
                     ray_pos.y.floor() as isize,
                     0, // TODO
@@ -91,11 +91,11 @@ impl Editor {
         //render::machine::render_xy_grid(&self.machine.size(), 1.0, &mut self.render_list);
 
         if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-            let mouse_grid_pos: na::Vector3<f32> = na::convert(mouse_grid_pos);
+            let mouse_grid_pos: na::Point3<f32> = na::convert(mouse_grid_pos);
 
             self.render_list.add(Object::Cube, &InstanceParams {
                 transform: na::Matrix4::new_translation(
-                    &(mouse_grid_pos + na::Vector3::new(0.5, 0.5, 0.5))
+                    &(mouse_grid_pos.coords + na::Vector3::new(0.5, 0.5, 0.5))
                 ),
                 color: na::Vector4::new(0.9, 0.9, 0.9, 1.0),
                 .. Default::default()
