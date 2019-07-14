@@ -6,13 +6,13 @@ use glutin::{VirtualKeyCode, WindowEvent};
 
 #[derive(Debug, Clone)]
 pub struct Camera {
-    pub projection: na::Matrix4<f32>,
-    pub target: na::Vector3<f32>,
+    projection: na::Matrix4<f32>,
+    target: na::Point3<f32>,
 
-    pub min_distance: f32,
-    pub height: f32,
-    pub yaw_radians: f32,
-    pub pitch_radians: f32,
+    min_distance: f32,
+    height: f32,
+    yaw_radians: f32,
+    pitch_radians: f32,
 }
 
 impl Camera {
@@ -21,7 +21,7 @@ impl Camera {
     ) -> Camera {
         Camera {
             projection,
-            target: na::Vector3::new(0.0, 0.0, 0.0),
+            target: na::Point3::new(0.0, 0.0, 0.0),
             min_distance: 3.0,
             height: 3.0,
             yaw_radians: -std::f32::consts::PI / 2.0,
@@ -29,17 +29,26 @@ impl Camera {
         }
     }
 
-    pub fn view_to_homogeneous(&self) -> na::Matrix4<f32> {
-        let yaw_radians = self.yaw_radians;
-        let eye = self.target + na::Vector3::new(
-            self.min_distance * yaw_radians.cos(),
-            self.min_distance * yaw_radians.sin(),
-            self.height,
-        );
+    pub fn projection(&self) -> na::Matrix4<f32> {
+        self.projection
+    }
 
+    pub fn target(&self) -> na::Point3<f32> {
+        self.target        
+    }
+
+    pub fn view(&self) -> na::Matrix4<f32> {
         let up = na::Vector3::new(0.0, 0.0, 1.0);
 
-        na::Matrix4::look_at_rh(&na::Point3::from(eye), &na::Point3::from(self.target), &up)
+        na::Matrix4::look_at_rh(&self.eye(), &self.target, &up)
+    }
+
+    pub fn eye(&self) -> na::Point3<f32> {
+        self.target + na::Vector3::new(
+            self.min_distance * self.yaw_radians.cos(),
+            self.min_distance * self.yaw_radians.sin(),
+            self.height,
+        )
     }
 }
 
