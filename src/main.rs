@@ -47,14 +47,19 @@ fn main() {
     let mut quit = false;
     let mut render_list = render::RenderList::new();
 
+    let viewport = na::Vector2::new(
+        config.window_size.width as f32,
+        config.window_size.height as f32
+    );
     let projection = na::Perspective3::new(
-        config.window_size.width as f32 / config.window_size.height as f32,
+        viewport.x / viewport.y,
         config.fov_degrees.to_radians() as f32,
         1.0,
         10000.0,
     );
-    let mut camera = render::camera::Camera::new(projection.to_homogeneous());
+    let mut camera = render::camera::Camera::new(viewport, projection.to_homogeneous());
     let mut camera_input = render::camera::Input::new(config.camera_input);
+
     let mut previous_clock = Instant::now();
     let mut elapsed_time: Duration = Default::default();
 

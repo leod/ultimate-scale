@@ -1,3 +1,5 @@
+use log::debug;
+
 use nalgebra as na;
 
 use std::collections::HashSet;
@@ -6,6 +8,7 @@ use glutin::{VirtualKeyCode, WindowEvent};
 
 #[derive(Debug, Clone)]
 pub struct Camera {
+    viewport: na::Vector4<f32>,
     projection: na::Matrix4<f32>,
     target: na::Point3<f32>,
 
@@ -17,9 +20,11 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(
+        viewport: na::Vector2<f32>,
         projection: na::Matrix4<f32>,
     ) -> Camera {
         Camera {
+            viewport: na::Vector4::new(0.0, 0.0, viewport.x, viewport.y),
             projection,
             target: na::Point3::new(0.0, 0.0, 0.0),
             min_distance: 3.0,
@@ -49,6 +54,25 @@ impl Camera {
             self.min_distance * self.yaw_radians.sin(),
             self.height,
         )
+    }
+
+    pub fn unproject(&self, win: &na::Point3<f32>) -> na::Point3<f32> {
+        // As in:
+        // https://www.nalgebra.org/rustdoc_glm/src/nalgebra_glm/ext/matrix_projection.rs.html#163
+
+        let transform = (self.projection() * self.view())
+            .try_inverse()
+            .unwrap_or_else(na::Matrix4::zeros);
+
+        let point = na::Vector4::new(
+            2.0 * (win.x - self.viewport.x) / self.viewport.z - 1.0,
+            2.0 * (self.viewport.w - win.y - self.viewport.y) / self.viewport.w - 1.0,
+            2.0 * win.z - 1.0,
+            1.0,
+        );
+
+        let result = transform * point;
+        na::Point3::from_coordinates(result.fixed_rows::<na::U3>(0) / result.w)
     }
 }
 
