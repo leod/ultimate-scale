@@ -52,14 +52,7 @@ fn main() {
         1.0,
         10000.0,
     );
-    let view = na::Isometry3::from_parts(
-        na::Translation::from(na::Vector3::new(0.0, 0.0, -3.0)),
-        na::UnitQuaternion::identity(),
-    );
-    let mut camera = render::camera::Camera::new(
-        projection.to_homogeneous(),
-        view,
-    );
+    let mut camera = render::camera::Camera::new(projection.to_homogeneous());
     let mut camera_input = render::camera::Input::new(config.camera_input);
     let mut previous_clock = Instant::now();
     let mut elapsed_time: Duration = Default::default();
