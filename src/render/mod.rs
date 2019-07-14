@@ -89,7 +89,7 @@ impl Resources {
                     void main() {
 
                         vec3 lightdirA = vec3(sin(t/6.0), cos(t/6.0), 0.0); 
-                        vec3 lightdirB = vec3(sin(t/6.0 + M_PI), cos(t/6.0 + M_PI), 0.0); 
+                        vec3 lightdirB = vec3(sin(t/6.0 + M_PI/2.0), cos(t/6.0 + M_PI/2.0), 0.0); 
                         float ambient = 0.2;
                         float diffuseA = clamp(dot(lightdirA, v_normal), 0.0, 1.0);
                         float diffuseB = clamp(dot(lightdirB, v_normal), 0.0, 1.0);
@@ -110,6 +110,11 @@ impl Resources {
         // for all objects
         &self.object_buffers[object.to_usize().unwrap()]
     }
+}
+
+pub struct Context {
+    pub camera: camera::Camera,
+    pub elapsed_time_secs: f32,
 }
 
 #[derive(Default)]
@@ -133,15 +138,14 @@ impl RenderList {
     pub fn render<S: glium::Surface>(
         &self,
         resources: &Resources,
-        camera: &camera::Camera,
-        elapsed_time_secs: f32,
+        context: &Context,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         // TODO: Could sort by object here to reduce state switching for large
         // numbers of objects.
 
-        let mat_projection: [[f32; 4]; 4] = camera.projection.into();
-        let mat_view: [[f32; 4]; 4] = camera.view.to_homogeneous().into();
+        let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
+        let mat_view: [[f32; 4]; 4] = context.camera.view.to_homogeneous().into();
 
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
@@ -165,7 +169,7 @@ impl RenderList {
                 mat_view: mat_view,
                 mat_projection: mat_projection,
                 color: color,
-                t: elapsed_time_secs,
+                t: context.elapsed_time_secs,
             };
 
             target.draw(
