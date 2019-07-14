@@ -1,5 +1,8 @@
-use crate::grid::{Vec3, Grid3};
+mod grid;
+
 use crate::vec_option::VecOption;
+
+use grid::{Vec3, Grid3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 enum Axis3 {
