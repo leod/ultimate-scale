@@ -44,6 +44,9 @@ impl ObjectBuffers {
 pub enum Object {
     Triangle,
     Cube,
+    LineX,
+    LineY,
+    LineZ,
 
     /// Counter of the number of objects
     NumTypes,
@@ -223,6 +226,33 @@ impl Object {
                     &positions,
                     &normals,
                     &indices,
+                )
+            }
+            Object::LineX => {
+                ObjectBuffers::from_slices(
+                    facade,
+                    glium::index::PrimitiveType::LinesList,
+                    &[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]],
+                    &[[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]],
+                    &[0, 1],
+                )
+            }
+            Object::LineY => {
+                ObjectBuffers::from_slices(
+                    facade,
+                    glium::index::PrimitiveType::LinesList,
+                    &[[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]],
+                    &[[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]],
+                    &[0, 1],
+                )
+            }
+            Object::LineZ => {
+                ObjectBuffers::from_slices(
+                    facade,
+                    glium::index::PrimitiveType::LinesList,
+                    &[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]],
+                    &[[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]],
+                    &[0, 1],
                 )
             }
             Object::NumTypes => panic!("Object::NumTypes cannot be instantiated!"),
