@@ -7,8 +7,12 @@ use glutin::{VirtualKeyCode, WindowEvent};
 #[derive(Debug, Clone)]
 pub struct Camera {
     pub projection: na::Matrix4<f32>,
-    pub translation: na::Vector3<f32>,
-    pub rotation: na::UnitQuaternion<f32>,
+    pub target: na::Vector3<f32>,
+
+    pub min_distance: f32,
+    pub height: f32,
+    pub yaw_radians: f32,
+    pub pitch_radians: f32,
 }
 
 impl Camera {
@@ -17,13 +21,25 @@ impl Camera {
     ) -> Camera {
         Camera {
             projection,
-            translation: na::Vector3::new(0.0, 0.0, -3.0),
-            rotation: na::UnitQuaternion::identity(),
+            target: na::Vector3::new(0.0, 0.0, 0.0),
+            min_distance: 3.0,
+            height: 3.0,
+            yaw_radians: -std::f32::consts::PI / 2.0,
+            pitch_radians: -std::f32::consts::PI / 8.0,
         }
     }
 
     pub fn view_to_homogeneous(&self) -> na::Matrix4<f32> {
-        self.rotation.to_homogeneous() * na::Matrix4::new_translation(&self.translation) 
+        let yaw_radians = self.yaw_radians;
+        let eye = self.target + na::Vector3::new(
+            self.min_distance * yaw_radians.cos(),
+            self.min_distance * yaw_radians.sin(),
+            self.height,
+        );
+
+        let up = na::Vector3::new(0.0, 0.0, 1.0);
+
+        na::Matrix4::look_at_rh(&na::Point3::from(eye), &na::Point3::from(self.target), &up)
     }
 }
 
@@ -57,7 +73,7 @@ impl Default for Config {
             rotate_cw_key: VirtualKeyCode::E,
             rotate_ccw_key: VirtualKeyCode::Q,
             fast_move_key: VirtualKeyCode::LShift,
-            move_units_per_sec: 1.0,
+            move_units_per_sec: 2.0,
             fast_move_multiplier: 4.0,
             rotate_degrees_per_sec: 90.0,
         }
@@ -104,27 +120,26 @@ impl Input {
         }
 
         if self.pressed_keys.contains(&self.config.zoom_in_key) {
-            translation += &na::Vector3::new(0.0, 0.0, move_speed);
+            camera.height += move_speed;
         }
         if self.pressed_keys.contains(&self.config.zoom_out_key) {
-            translation += &na::Vector3::new(0.0, 0.0, -move_speed);
+            camera.height -= move_speed;
         }
 
-        camera.translation += camera.rotation.inverse().transform_vector(&translation);
+        let rotation_z = na::Rotation3::from_axis_angle(
+            &na::Vector3::z_axis(),
+            camera.yaw_radians - std::f32::consts::PI / 2.0,
+        );
+
+        camera.target += rotation_z.transform_vector(&translation);
 
         let rotation_speed = dt_secs * self.config.rotate_degrees_per_sec.to_radians();
 
         if self.pressed_keys.contains(&self.config.rotate_cw_key) {
-            camera.rotation *= na::UnitQuaternion::from_axis_angle(
-                &na::Vector3::z_axis(),
-                rotation_speed
-            );
+            camera.yaw_radians -= rotation_speed;
         }
         if self.pressed_keys.contains(&self.config.rotate_ccw_key) {
-            camera.rotation *= na::UnitQuaternion::from_axis_angle(
-                &na::Vector3::z_axis(),
-                -rotation_speed,
-            );
+            camera.yaw_radians += rotation_speed;
         }
     }
 

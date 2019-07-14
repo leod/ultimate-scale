@@ -17,7 +17,7 @@ pub fn render_line(line: &Line, out: &mut RenderList) {
     let look_at = na::Isometry3::face_towards(
         &center,
         &line.end,
-        &na::Vector3::z(),
+        &na::Vector3::z(), // TODO
     );
 
     let scaling = na::Vector3::new(
