@@ -35,15 +35,15 @@ pub fn render_line(line: &Line, out: &mut RenderList) {
     });
 }
 
-pub fn render_xy_grid(size: &grid::Vec3, out: &mut RenderList) {
-    let thickness = 0.02;
+pub fn render_xy_grid(size: &grid::Vec3, z: f32, out: &mut RenderList) {
+    let thickness = 0.01;
     let color = na::Vector4::new(0.7, 0.7, 0.7, 1.0);
 
     for x in 0 .. size.x + 1 {
         render_line(
             &Line {
-                start: na::Point3::new(x as f32, 0.0, 0.0),
-                end: na::Point3::new(x as f32, size.y as f32, 0.0),
+                start: na::Point3::new(x as f32, 0.0, z),
+                end: na::Point3::new(x as f32, size.y as f32, z),
                 thickness,
                 color,
             },
@@ -54,8 +54,8 @@ pub fn render_xy_grid(size: &grid::Vec3, out: &mut RenderList) {
     for y in 0 .. size.y + 1 {
         render_line(
             &Line {
-                start: na::Point3::new(0.0, y as f32, 0.0),
-                end: na::Point3::new(size.x as f32, y as f32, 0.0),
+                start: na::Point3::new(0.0, y as f32, z),
+                end: na::Point3::new(size.x as f32, y as f32, z),
                 thickness,
                 color,
             },

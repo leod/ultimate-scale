@@ -33,7 +33,7 @@ impl Exec {
             let mut move_dir = None;
 
             if blip.move_progress == MOVE_TICKS_PER_NODE {
-                match self.machine.blocks.at_pos(blip.pos) {
+                match self.machine.blocks.at_pos(&blip.pos) {
                     Some(Block::Pipe { from: _, to }) => {
                         move_dir = Some(*to);
                     },
@@ -55,7 +55,7 @@ impl Exec {
             if let Some(move_dir) = move_dir {
                 blip.pos += move_dir.to_vector();
 
-                let remove = match self.machine.blocks.at_pos(blip.pos) {
+                let remove = match self.machine.blocks.at_pos(&blip.pos) {
                     Some(Block::Pipe { from, to: _ }) => *from != move_dir.invert(),
                     Some(Block::Switch(dir)) => *dir != move_dir,
                     Some(Block::Solid) => true,
