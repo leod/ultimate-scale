@@ -1,4 +1,5 @@
 mod util;
+mod config;
 mod machine;
 mod render;
 mod edit;
@@ -11,32 +12,10 @@ use nalgebra as na;
 use glium::Surface;
 use floating_duration::TimeAsFloat;
 
-#[derive(Debug, Clone)]
-struct ViewConfig {
-    window_size: glutin::dpi::LogicalSize,
-    fov_degrees: f64,
-}
-
-impl Default for ViewConfig {
-    fn default() -> ViewConfig {
-        ViewConfig {
-            window_size: glutin::dpi::LogicalSize::new(1024.0, 768.0),
-            fov_degrees: 90.0,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-struct Config {
-    view: ViewConfig,
-    camera_input: render::camera::Config,
-    editor: edit::editor::Config,
-}
-
 fn main() {
     simple_logger::init().unwrap();
 
-    let config: Config = Default::default();
+    let config: config::Config = Default::default();
     info!("Running with config: {:?}", config);
 
     info!("Opening window");
@@ -62,7 +41,7 @@ fn main() {
         10000.0,
     );
     let mut camera = render::camera::Camera::new(viewport, projection.to_homogeneous());
-    let mut camera_input = render::camera::Input::new(config.camera_input);
+    let mut camera_input = render::camera::Input::new(config.camera);
 
     let mut previous_clock = Instant::now();
     let mut elapsed_time: Duration = Default::default();
@@ -95,7 +74,7 @@ fn main() {
             &render_context,
             &render_lists,
             &mut target,
-        );
+        ).unwrap();
 
         target.finish().unwrap();
 
