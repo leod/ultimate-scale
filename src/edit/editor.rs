@@ -26,7 +26,8 @@ impl Default for Config {
                 vec![
                     (VirtualKeyCode::Key1, Block::PipeXY),
                     (VirtualKeyCode::Key2, Block::PipeSplitXY),
-                    (VirtualKeyCode::Key3, Block::Solid),
+                    (VirtualKeyCode::Key3, Block::PipeBendXY),
+                    (VirtualKeyCode::Key4, Block::Solid),
                 ].into_iter().collect(),
             layer_keys:
                 vec![
@@ -249,7 +250,8 @@ impl Editor {
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32,
-            &mut self.render_list);
+            &mut self.render_list
+        );
 
         if let Some(mouse_grid_pos) = self.mouse_grid_pos {
             assert!(self.machine.is_valid_pos(&mouse_grid_pos));

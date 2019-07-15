@@ -155,6 +155,16 @@ pub fn render_block(
                 },
             );
         }
+        Block::PipeBendXY => {
+            out.add(
+                Object::PipeBend,
+                &InstanceParams {
+                    transform: transform.clone(),
+                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
+                    .. Default::default()
+                },
+            );
+        }
         Block::Solid => {
             out.add(
                 Object::Cube,
