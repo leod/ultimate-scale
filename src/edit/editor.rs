@@ -249,7 +249,7 @@ impl Editor {
         render::machine::render_machine(&self.machine, &mut self.render_list);
         render::machine::render_xy_grid(
             &self.machine.size(),
-            self.current_layer as f32,
+            self.current_layer as f32 + 0.01,
             &mut self.render_list
         );
 
