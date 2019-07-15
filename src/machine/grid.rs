@@ -80,6 +80,11 @@ impl Dir2 {
             Dir2(Axis2::Y, Sign::Pos) => Dir2(Axis2::X, Sign::Pos),
         }
     }
+
+    pub fn to_radians(&self) -> f32 {
+        let vector = self.to_vector();
+        (vector.y as f32).atan2(vector.x as f32)
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]

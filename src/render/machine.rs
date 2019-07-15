@@ -129,11 +129,11 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
 }
 
 pub fn render_block(
-    placed_block: &PlacedBlock,
+    block: &Block,
     transform: &na::Matrix4<f32>,
-    out: &mut RenderList
+    out: &mut RenderList,
 ) {
-    match placed_block.block {
+    match block {
         Block::Solid => {
             out.add(
                 Object::PipeSegment,
@@ -151,10 +151,15 @@ pub fn render_block(
 pub fn render_machine(machine: &Machine, out: &mut RenderList) {
     let half_vec = na::Vector3::new(0.5, 0.5, 0.5);
 
-    for (block_pos, block) in machine.iter_blocks() {
+    for (block_pos, placed_block) in machine.iter_blocks() {
         let block_coords: na::Vector3<f32> = na::convert(block_pos.coords);
-        let transform = na::Matrix4::new_translation(&(block_coords + half_vec));
 
-        render_block(block, &transform, out);
+        let angle_radians = placed_block.dir_xy.to_radians();
+        let rotation = na::Matrix4::new_rotation(angle_radians * na::Vector3::z());
+
+        let translation = na::Matrix4::new_translation(&(block_coords + half_vec));
+        let transform = translation * rotation;
+
+        render_block(&placed_block.block, &transform, out);
     }
 }

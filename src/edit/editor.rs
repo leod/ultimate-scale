@@ -100,7 +100,8 @@ impl Editor {
                     position.y as f32,
                 );
             }
-
+            WindowEvent::KeyboardInput { device_id: _, input } =>
+                self.on_keyboard_input(*input),
             WindowEvent::MouseInput {
                 device_id: _,
                 state,
@@ -109,6 +110,20 @@ impl Editor {
             } => self.on_mouse_input(*state, *button, *modifiers),
 
             _ => ()
+        }
+    }
+
+    fn on_keyboard_input(&mut self, input: glutin::KeyboardInput) {
+        if input.state == glutin::ElementState::Pressed {
+            if let Some(keycode) = input.virtual_keycode {
+                self.on_key_press(keycode);
+            }
+        }
+    }
+
+    fn on_key_press(&mut self, keycode: VirtualKeyCode) {
+        if keycode == self.config.rotate_block_key {
+            self.place_block.dir_xy = self.place_block.dir_xy.rotated_cw();
         }
     }
 
