@@ -79,6 +79,10 @@ impl Camera {
         self.target        
     }
 
+    pub fn set_target(&mut self, target: na::Point3<f32>) {
+        self.target = target;
+    }
+
     pub fn view(&self) -> na::Matrix4<f32> {
         let up = na::Vector3::new(0.0, 0.0, 1.0);
 

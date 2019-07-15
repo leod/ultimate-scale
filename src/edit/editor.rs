@@ -14,8 +14,8 @@ use crate::edit::Edit;
 #[derive(Debug, Clone)]
 pub struct Config {
     pub rotate_block_key: VirtualKeyCode,
-
     pub block_keys: HashMap<VirtualKeyCode, Block>,
+    pub layer_keys: HashMap<VirtualKeyCode, isize>,
 }
 
 impl Default for Config {
@@ -28,6 +28,13 @@ impl Default for Config {
                     (VirtualKeyCode::Key2, Block::PipeSplitXY),
                     (VirtualKeyCode::Key3, Block::Solid),
                 ].into_iter().collect(),
+            layer_keys:
+                vec![
+                    (VirtualKeyCode::F1, 0),
+                    (VirtualKeyCode::F2, 1),
+                    (VirtualKeyCode::F3, 2),
+                    (VirtualKeyCode::F4, 3),
+                ].into_iter().collect(),
         }
     }
 }
@@ -39,6 +46,7 @@ pub struct Editor {
 
     place_block: PlacedBlock,
 
+    current_layer: isize,
     mouse_window_pos: na::Point2<f32>,
     mouse_grid_pos: Option<grid::Point3>,
 
@@ -58,6 +66,7 @@ impl Editor {
                 dir_xy: grid::Dir2(grid::Axis2::X, grid::Sign::Pos),
                 block: Block::PipeXY,
             },
+            current_layer: 0,
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
             render_list: RenderList::new(),
@@ -71,9 +80,15 @@ impl Editor {
         edit.run(&mut self.machine);
     }
 
-    pub fn update(&mut self, dt_secs: f32, camera: &Camera) {
+    pub fn update(&mut self, dt_secs: f32, camera: &mut Camera) {
         self.update_mouse_grid_pos(camera);
         self.update_input();
+
+        camera.set_target(na::Point3::new(
+            camera.target().x,
+            camera.target().y,
+            self.current_layer as f32,
+        ));
     }
 
     fn update_mouse_grid_pos(&mut self, camera: &Camera) {
@@ -86,7 +101,11 @@ impl Editor {
             velocity: p_far - p_near,
         };
         let quad = Plane {
-            origin: na::Point3::origin(),
+            origin: na::Point3::new(
+                0.0,
+                0.0,
+                self.current_layer as f32,
+            ),
             direction_a: self.machine.size().x as f32 * na::Vector3::x(),
             direction_b: self.machine.size().y as f32 * na::Vector3::y(),
         };
@@ -98,7 +117,7 @@ impl Editor {
                 let grid_pos = grid::Point3::new(
                     ray_pos.x.floor() as isize,
                     ray_pos.y.floor() as isize,
-                    0, // TODO
+                    self.current_layer,
                 );
 
                 if self.machine.is_valid_pos(&grid_pos) {
@@ -183,6 +202,12 @@ impl Editor {
         if let Some(block) = self.config.block_keys.get(&keycode) {
             self.place_block.block = block.clone();
         }
+
+        if let Some(&layer) = self.config.layer_keys.get(&keycode) {
+            if self.machine.is_valid_layer(layer) {
+                self.current_layer = layer;
+            }
+        }
     }
 
     fn on_mouse_input(
@@ -221,7 +246,10 @@ impl Editor {
         );
 
         render::machine::render_machine(&self.machine, &mut self.render_list);
-        render::machine::render_xy_grid(&self.machine.size(), 0.0, &mut self.render_list);
+        render::machine::render_xy_grid(
+            &self.machine.size(),
+            self.current_layer as f32,
+            &mut self.render_list);
 
         if let Some(mouse_grid_pos) = self.mouse_grid_pos {
             assert!(self.machine.is_valid_pos(&mouse_grid_pos));
