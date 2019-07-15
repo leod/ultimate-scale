@@ -7,11 +7,8 @@ use grid::{Vector3, Point3, Dir3, Grid3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum Block {
-    Pipe {
-        from: Dir3,
-        to: Dir3,
-    },
-    Switch(Dir3),
+    PipeXY,
+    PipeSplitXY,
     Solid,
 }
 

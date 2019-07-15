@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
@@ -12,12 +14,20 @@ use crate::edit::Edit;
 #[derive(Debug, Clone)]
 pub struct Config {
     pub rotate_block_key: VirtualKeyCode,
+
+    pub block_keys: HashMap<VirtualKeyCode, Block>,
 }
 
 impl Default for Config {
     fn default() -> Config {
         Config {
             rotate_block_key: VirtualKeyCode::R,
+            block_keys:
+                vec![
+                    (VirtualKeyCode::Key1, Block::PipeXY),
+                    (VirtualKeyCode::Key2, Block::PipeSplitXY),
+                    (VirtualKeyCode::Key3, Block::Solid),
+                ].into_iter().collect(),
         }
     }
 }
@@ -43,7 +53,7 @@ impl Editor {
             machine: Machine::new(size),
             place_block: PlacedBlock {
                 dir_xy: grid::Dir2(grid::Axis2::X, grid::Sign::Pos),
-                block: Block::Solid,
+                block: Block::PipeXY,
             },
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
@@ -127,6 +137,10 @@ impl Editor {
         if keycode == self.config.rotate_block_key {
             self.place_block.dir_xy = self.place_block.dir_xy.rotated_cw();
         }
+
+        if let Some(block) = self.config.block_keys.get(&keycode) {
+            self.place_block.block = block.clone();
+        }
     }
 
     fn on_mouse_input(
@@ -194,7 +208,7 @@ impl Editor {
             render::machine::render_block(
                 &self.place_block.block, 
                 &block_transform,
-                Some(&na::Vector4::new(0.3, 0.5, 0.9, 0.5)),
+                Some(&na::Vector4::new(0.3, 0.5, 0.9, 0.7)),
                 &mut self.render_list_transparent,
             );
         }

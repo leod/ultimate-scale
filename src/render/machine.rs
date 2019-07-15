@@ -135,7 +135,7 @@ pub fn render_block(
     out: &mut RenderList,
 ) {
     match block {
-        Block::Solid => {
+        Block::PipeXY => {
             out.add(
                 Object::PipeSegment,
                 &InstanceParams {
@@ -145,7 +145,26 @@ pub fn render_block(
                 },
             );
         }
-        _ => (),
+        Block::PipeSplitXY => {
+            out.add(
+                Object::PipeSplit,
+                &InstanceParams {
+                    transform: transform.clone(),
+                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
+                    .. Default::default()
+                },
+            );
+        }
+        Block::Solid => {
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: transform.clone(),
+                    color: *color.unwrap_or(&na::Vector4::new(0.3, 0.9, 0.2, 1.0)),
+                    .. Default::default()
+                },
+            );
+        }
     }
 }
 
