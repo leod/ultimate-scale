@@ -132,10 +132,10 @@ pub fn render_block(block: &Block, transform: &na::Matrix4<f32>, out: &mut Rende
     match block {
         Block::Solid => {
             out.add(
-                Object::Cube,
+                Object::PipeSegment,
                 &InstanceParams {
                     transform: transform.clone(),
-                    color: na::Vector4::new(0.3, 0.9, 0.2, 1.0),
+                    color: na::Vector4::new(0.6, 0.6, 0.6, 1.0),
                     .. Default::default()
                 },
             );

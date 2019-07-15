@@ -174,13 +174,26 @@ impl RenderList {
                 t: context.elapsed_time_secs,
             };
 
-            target.draw(
-                &buffers.vertex_buffer,
-                &buffers.index_buffer,
-                &resources.program,
-                &uniforms,
-                &params,
-            )?;
+            match &buffers.index_buffer {
+                object::IndexBuffer::IndexBuffer(buffer) => {
+                    target.draw(
+                        &buffers.vertex_buffer,
+                        buffer,
+                        &resources.program,
+                        &uniforms,
+                        &params,
+                    )?;
+                }
+                object::IndexBuffer::NoIndices(buffer) => {
+                    target.draw(
+                        &buffers.vertex_buffer,
+                        buffer,
+                        &resources.program,
+                        &uniforms,
+                        &params,
+                    )?;
+                }
+            }
         }
 
         Ok(())

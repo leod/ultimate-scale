@@ -1,6 +1,24 @@
+use std::io;
+use std::path::Path;
+
+use log::info;
 use num_derive::{FromPrimitive, ToPrimitive};
 use nalgebra as na;
 use glium::{self, implement_vertex};
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
+pub enum Object {
+    Triangle,
+    Cube,
+    LineX,
+    LineY,
+    LineZ,
+
+    PipeSegment,
+
+    /// Counter of the number of objects
+    NumTypes,
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex {
@@ -10,9 +28,14 @@ pub struct Vertex {
 
 implement_vertex!(Vertex, position, normal);
 
+pub enum IndexBuffer {
+    IndexBuffer(glium::index::IndexBuffer<u32>),
+    NoIndices(glium::index::NoIndices),
+}
+
 pub(in crate::render) struct ObjectBuffers {
     pub vertex_buffer: glium::VertexBuffer<Vertex>,
-    pub index_buffer: glium::index::IndexBufferAny,
+    pub index_buffer: IndexBuffer,
 }
 
 impl ObjectBuffers {
@@ -31,25 +54,54 @@ impl ObjectBuffers {
 
         Ok(ObjectBuffers {
             vertex_buffer: glium::VertexBuffer::new(facade, &vertices)?,
-            index_buffer: glium::IndexBuffer::new(
+            index_buffer: IndexBuffer::IndexBuffer(glium::IndexBuffer::new(
                 facade,
                 primitive_type,
                 indices,
-            )?.into(),
+            )?),
         })
     }
-}
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
-pub enum Object {
-    Triangle,
-    Cube,
-    LineX,
-    LineY,
-    LineZ,
+    pub fn load_wavefront<F: glium::backend::Facade>(
+        facade: &F,
+		path: &Path,
+    ) -> Result<ObjectBuffers, CreationError> {
+        info!("Loading Wavefront .OBJ file: `{}'", path.display());
 
-    /// Counter of the number of objects
-    NumTypes,
+        // As in:
+        // https://github.com/glium/glium/blob/master/examples/support/mod.rs
+
+        let data = obj::Obj::load(path).unwrap();
+
+        let mut vertices = Vec::new();
+
+        for object in data.objects.iter() {
+            for polygon in object.groups.iter().flat_map(|g| g.polys.iter()) {
+                match polygon {
+                    &genmesh::Polygon::PolyTri(genmesh::Triangle { x: v1, y: v2, z: v3 }) => {
+                        for v in [v1, v2, v3].iter() {
+                            let position = data.position[v.0];
+                            let normal = v.2.map(|index| data.normal[index]);
+
+                            let normal = normal.unwrap_or([0.0, 0.0, 0.0]);
+
+                            vertices.push(Vertex {
+                                position: position,
+                                normal: normal,
+                            })
+                        }
+                    },
+                    _ => unimplemented!()
+                }
+            }
+        }
+
+        let vertex_buffer = glium::VertexBuffer::new(facade, &vertices).unwrap();
+        let primitive_type = glium::index::PrimitiveType::TrianglesList;
+        let index_buffer = IndexBuffer::NoIndices(glium::index::NoIndices(primitive_type));
+
+        Ok(ObjectBuffers { vertex_buffer, index_buffer })
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -77,10 +129,11 @@ impl Instance {
 
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug)]
 pub enum CreationError {
     VertexBufferCreationError(glium::vertex::BufferCreationError),
     IndexBufferCreationError(glium::index::BufferCreationError),
+	IOError(io::Error),
 }
 
 impl From<glium::vertex::BufferCreationError> for CreationError {
@@ -92,6 +145,12 @@ impl From<glium::vertex::BufferCreationError> for CreationError {
 impl From<glium::index::BufferCreationError> for CreationError {
     fn from(err: glium::index::BufferCreationError) -> CreationError {
         CreationError::IndexBufferCreationError(err)
+    }
+}
+
+impl From<io::Error> for CreationError {
+    fn from(err: io::Error) -> CreationError {
+        CreationError::IOError(err)
     }
 }
 
@@ -255,6 +314,8 @@ impl Object {
                     &[0, 1],
                 )
             }
+            Object::PipeSegment =>
+                ObjectBuffers::load_wavefront(facade, Path::new("resources/pipe_seg.obj")),
             Object::NumTypes => panic!("Object::NumTypes cannot be instantiated!"),
         }
     }
