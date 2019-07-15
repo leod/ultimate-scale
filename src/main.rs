@@ -123,7 +123,7 @@ fn main() {
         let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
         camera_input.update(frame_duration_secs, &mut camera);
 
-        editor.update(frame_duration_secs, &camera);
+        editor.update(frame_duration_secs, &mut camera);
 
         thread::sleep(Duration::from_millis(10));
     }

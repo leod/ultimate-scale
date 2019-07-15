@@ -84,6 +84,10 @@ impl Machine {
         self.blocks.ids.is_valid_pos(p)
     }
 
+    pub fn is_valid_layer(&self, layer: isize) -> bool {
+        layer >= 0 && layer < self.size().z
+    }
+
     pub fn get_block(&self, p: &Point3) -> Option<&PlacedBlock> {
         self.blocks.get(p)
     }
