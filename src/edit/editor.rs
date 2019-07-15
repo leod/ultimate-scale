@@ -7,7 +7,7 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::util::intersection::{ray_quad_intersection, Ray, Plane};
 use crate::machine::grid;
 use crate::machine::{Block, PlacedBlock, Machine};
-use crate::render::{self, Object, InstanceParams, Resources, Camera, RenderList};
+use crate::render::{self, Object, InstanceParams, Resources, Camera, RenderLists};
 
 use crate::edit::Edit;
 
@@ -51,9 +51,6 @@ pub struct Editor {
     mouse_window_pos: na::Point2<f32>,
     mouse_grid_pos: Option<grid::Point3>,
 
-    render_list: RenderList,
-    render_list_transparent: RenderList,
-
     left_mouse_button_pressed: bool,
     right_mouse_button_pressed: bool,
 }
@@ -70,8 +67,6 @@ impl Editor {
             current_layer: 0,
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
-            render_list: RenderList::new(),
-            render_list_transparent: RenderList::new(),
             left_mouse_button_pressed: false,
             right_mouse_button_pressed: false,
         }
@@ -226,15 +221,12 @@ impl Editor {
         }
     }
 
-    pub fn render<S: glium::Surface>(
+    pub fn render(
         &mut self,
         resources: &Resources,
         render_context: &render::Context,
-        target: &mut S,
+        out: &mut RenderLists,
     ) -> Result<(), glium::DrawError> {
-        self.render_list.clear();
-        self.render_list_transparent.clear();
-
         let grid_size: na::Vector3<f32> = na::convert(self.machine.size());
         render::machine::render_cuboid_wireframe(
             &render::machine::Cuboid {
@@ -243,14 +235,14 @@ impl Editor {
             },
             0.1,
             &na::Vector4::new(1.0, 1.0, 1.0, 1.0),
-            &mut self.render_list,
+            &mut out.solid,
         );
 
-        render::machine::render_machine(&self.machine, &mut self.render_list);
+        render::machine::render_machine(&self.machine, &mut out.solid);
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + 0.01,
-            &mut self.render_list
+            &mut out.solid,
         );
 
         if let Some(mouse_grid_pos) = self.mouse_grid_pos {
@@ -265,7 +257,7 @@ impl Editor {
                 },
                 0.015,
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                &mut self.render_list,
+                &mut out.solid,
             );
 
             let block_transform = render::machine::placed_block_transform(
@@ -276,26 +268,9 @@ impl Editor {
                 &self.place_block.block, 
                 &block_transform,
                 Some(&na::Vector4::new(0.3, 0.5, 0.9, 0.7)),
-                &mut self.render_list_transparent,
+                &mut out.transparent,
             );
         }
-        
-        self.render_list.render(
-            &resources,
-            &render_context,
-            &Default::default(),
-            target,
-        )?;
-
-        self.render_list_transparent.render(
-            &resources,
-            &render_context,
-            &glium::DrawParameters {
-                blend: glium::draw_parameters::Blend::alpha_blending(), 
-                .. Default::default()
-            },
-            target,
-        )?;
         
         Ok(())
     }

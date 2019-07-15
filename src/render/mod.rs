@@ -16,3 +16,20 @@ pub struct Context {
     pub camera: camera::Camera,
     pub elapsed_time_secs: f32,
 }
+
+#[derive(Default, Clone)]
+pub struct RenderLists {
+    pub solid: RenderList,
+    pub transparent: RenderList,
+}
+
+impl RenderLists {
+    pub fn new() -> RenderLists {
+        Default::default()
+    }
+
+    pub fn clear(&mut self) {
+        self.solid.clear();
+        self.transparent.clear();
+    }
+}

@@ -6,7 +6,7 @@ use crate::render::object::{self, Object, Instance, InstanceParams};
 use crate::render::resources::Resources;
 use crate::render::camera::Camera;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct RenderList {
     instances: Vec<Instance>,
 }

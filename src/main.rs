@@ -50,7 +50,6 @@ fn main() {
     let resources = render::Resources::create(&display).unwrap();
 
     let mut quit = false;
-    let mut render_list = render::RenderList::new();
 
     let viewport = na::Vector2::new(
         config.view.window_size.width as f32,
@@ -71,6 +70,8 @@ fn main() {
     let grid_size = machine::grid::Vector3::new(30, 30, 4);
     let mut editor = edit::Editor::new(config.editor, grid_size);
 
+    let mut render_lists = render::RenderLists::new();
+
     while !quit {
         let now_clock = Instant::now();
         let frame_duration = now_clock - previous_clock;
@@ -82,22 +83,27 @@ fn main() {
             elapsed_time_secs: elapsed_time.as_fractional_secs() as f32,
         };
 
-        render_list.clear();
-        /*render_list.add(render::Object::Cube, &render::InstanceParams {
-            transform: na::Translation::from(na::Vector3::new(3.0, 0.0, 0.0)).to_homogeneous(),
-            color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-        });
-
-        render_list.add(render::Object::Triangle, &render::InstanceParams {
-            transform: na::Matrix4::identity(), 
-            color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-        });*/
+        render_lists.clear();
 
         let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
-        editor.render(&resources, &render_context, &mut target).unwrap();
-        render_list.render(&resources, &render_context, &Default::default(), &mut target).unwrap();
+        editor.render(&resources, &render_context, &mut render_lists).unwrap();
+        render_lists.solid.render(
+            &resources,
+            &render_context,
+            &Default::default(),
+            &mut target
+        ).unwrap();
+        render_lists.transparent.render(
+            &resources,
+            &render_context,
+            &glium::DrawParameters {
+                blend: glium::draw_parameters::Blend::alpha_blending(), 
+                .. Default::default()
+            },
+            &mut target
+        ).unwrap();
 
         target.finish().unwrap();
 
