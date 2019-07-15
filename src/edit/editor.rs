@@ -208,6 +208,17 @@ impl Editor {
         self.render_list.clear();
         self.render_list_transparent.clear();
 
+        let grid_size: na::Vector3<f32> = na::convert(self.machine.size());
+        render::machine::render_cuboid_wireframe(
+            &render::machine::Cuboid {
+                center: na::Point3::from(grid_size / 2.0),
+                size: grid_size,
+            },
+            0.1,
+            &na::Vector4::new(1.0, 1.0, 1.0, 1.0),
+            &mut self.render_list,
+        );
+
         render::machine::render_machine(&self.machine, &mut self.render_list);
         render::machine::render_xy_grid(&self.machine.size(), 0.0, &mut self.render_list);
 

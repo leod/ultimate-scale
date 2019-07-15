@@ -68,7 +68,7 @@ fn main() {
     let mut previous_clock = Instant::now();
     let mut elapsed_time: Duration = Default::default();
 
-    let grid_size = machine::grid::Vector3::new(30, 30, 8);
+    let grid_size = machine::grid::Vector3::new(30, 30, 4);
     let mut editor = edit::Editor::new(config.editor, grid_size);
 
     while !quit {
