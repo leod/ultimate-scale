@@ -25,7 +25,7 @@ impl Exec {
     }
 
     pub fn update(&mut self) {
-        let mut blips_to_remove = Vec::<BlockId>::new();
+        /*let mut blips_to_remove = Vec::<BlockId>::new();
 
         for (blip_id, blip) in self.blips.iter_mut() {
             blip.move_progress += 1;
@@ -75,6 +75,6 @@ impl Exec {
 
         for blip_id in blips_to_remove {
             self.blips.remove(blip_id);
-        }
+        }*/
     }
 }

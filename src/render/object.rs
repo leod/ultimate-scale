@@ -15,6 +15,7 @@ pub enum Object {
     LineZ,
 
     PipeSegment,
+    PipeSplit,
 
     /// Counter of the number of objects
     NumTypes,
@@ -316,6 +317,8 @@ impl Object {
             }
             Object::PipeSegment =>
                 ObjectBuffers::load_wavefront(facade, Path::new("resources/pipe_seg.obj")),
+            Object::PipeSplit =>
+                ObjectBuffers::load_wavefront(facade, Path::new("resources/pipe_split.obj")),
             Object::NumTypes => panic!("Object::NumTypes cannot be instantiated!"),
         }
     }
