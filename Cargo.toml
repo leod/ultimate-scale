@@ -13,3 +13,5 @@ num-derive = "0.2"
 log = "0.4"
 simple_logger = "1.0"
 floating-duration = "0.1"
+obj = { version = "0.9", features = ["genmesh"] }
+genmesh = "0.6"
