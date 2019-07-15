@@ -97,7 +97,7 @@ fn main() {
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
         editor.render(&resources, &render_context, &mut target).unwrap();
-        render_list.render(&resources, &render_context, &mut target).unwrap();
+        render_list.render(&resources, &render_context, &Default::default(), &mut target).unwrap();
 
         target.finish().unwrap();
 

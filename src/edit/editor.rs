@@ -33,6 +33,7 @@ pub struct Editor {
     mouse_grid_pos: Option<grid::Point3>,
 
     render_list: RenderList,
+    render_list_transparent: RenderList,
 }
 
 impl Editor {
@@ -47,6 +48,7 @@ impl Editor {
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
             render_list: RenderList::new(),
+            render_list_transparent: RenderList::new(),
         }
     }
 
@@ -165,25 +167,54 @@ impl Editor {
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         self.render_list.clear();
+        self.render_list_transparent.clear();
 
         render::machine::render_machine(&self.machine, &mut self.render_list);
         render::machine::render_xy_grid(&self.machine.size(), 0.0, &mut self.render_list);
 
         if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-            let mouse_grid_pos: na::Point3<f32> = na::convert(mouse_grid_pos);
+            assert!(self.machine.is_valid_pos(&mouse_grid_pos));
+
+            let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
 
             render::machine::render_cuboid_wireframe(
                 &render::machine::Cuboid {
-                    center: mouse_grid_pos + na::Vector3::new(0.5, 0.5, 0.51),
+                    center: mouse_grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
                     size: na::Vector3::new(1.0, 1.0, 1.0),
                 },
                 0.015,
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
                 &mut self.render_list,
-            )
+            );
+
+            let block_transform = render::machine::placed_block_transform(
+                &mouse_grid_pos,
+                &self.place_block.dir_xy,
+            );
+            render::machine::render_block(
+                &self.place_block.block, 
+                &block_transform,
+                Some(&na::Vector4::new(0.3, 0.5, 0.9, 0.5)),
+                &mut self.render_list_transparent,
+            );
         }
         
-        self.render_list.render(&resources, &render_context, target)?;
+        self.render_list.render(
+            &resources,
+            &render_context,
+            &Default::default(),
+            target,
+        )?;
+
+        self.render_list_transparent.render(
+            &resources,
+            &render_context,
+            &glium::DrawParameters {
+                blend: glium::draw_parameters::Blend::alpha_blending(), 
+                .. Default::default()
+            },
+            target,
+        )?;
         
         Ok(())
     }
