@@ -3,59 +3,7 @@ pub mod exec;
 
 use crate::util::vec_option::{self, VecOption};
 
-use grid::{Vector3, Point3, Grid3};
-
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
-pub enum Axis3 {
-    X,
-    Y,
-    Z,
-}
-
-impl Axis3 {
-    pub fn to_vector(&self) -> Vector3 {
-        match self {
-            Axis3::X => Vector3::x(),
-            Axis3::Y => Vector3::y(),
-            Axis3::Z => Vector3::z(),
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
-pub enum Sign {
-    Pos,
-    Neg,
-}
-
-impl Sign {
-    pub fn to_number(&self) -> isize {
-        match self {
-            Sign::Pos => 1,
-            Sign::Neg => -1,
-        }
-    }
-
-    pub fn invert(&self) -> Sign {
-        match self {
-            Sign::Pos => Sign::Neg,
-            Sign::Neg => Sign::Pos,
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
-pub struct Dir3(Axis3, Sign);
-
-impl Dir3 {
-    pub fn to_vector(&self) -> Vector3 {
-        self.0.to_vector() * self.1.to_number()
-    }
-
-    pub fn invert(&self) -> Dir3 {
-        Dir3(self.0, self.1.invert())
-    }
-}
+use grid::{Vector3, Point3, Dir3, Grid3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum Block {
@@ -70,12 +18,18 @@ pub enum Block {
 impl Block {
 }
 
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct PlacedBlock {
+    pub dir_xy: grid::Dir2,
+    pub block: Block,
+}
+
 pub type BlockId = usize;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Blocks {
     pub ids: Grid3<Option<BlockId>>,
-    pub data: VecOption<(grid::Point3, Block)>,
+    pub data: VecOption<(Point3, PlacedBlock)>,
 }
 
 impl Blocks {
@@ -86,7 +40,7 @@ impl Blocks {
         }
     }
 
-    pub fn get(&self, p: &Point3) -> Option<&Block> {
+    pub fn get(&self, p: &Point3) -> Option<&PlacedBlock> {
         self
             .ids
             .get(p)
@@ -94,7 +48,7 @@ impl Blocks {
             .map(|&id| &self.data[id].1)
     }
 
-    pub fn remove(&mut self, p: &Point3) -> Option<Block> {
+    pub fn remove(&mut self, p: &Point3) -> Option<PlacedBlock> {
         if let Some(Some(id)) = self.ids.get(p).cloned() {
             self.ids[*p] = None;
             self.data.remove(id).map(|(id, block)| block)
@@ -103,7 +57,7 @@ impl Blocks {
         }
     }
 
-    pub fn set(&mut self, p: &Point3, block: Option<Block>) {
+    pub fn set(&mut self, p: &Point3, block: Option<PlacedBlock>) {
         self.remove(p);
 
         if let Some(block) = block {
@@ -133,15 +87,15 @@ impl Machine {
         self.blocks.ids.is_valid_pos(p)
     }
 
-    pub fn get_block(&self, p: &Point3) -> Option<&Block> {
+    pub fn get_block(&self, p: &Point3) -> Option<&PlacedBlock> {
         self.blocks.get(p)
     }
 
-    pub fn set_block(&mut self, p: &Point3, block: Option<Block>) {
+    pub fn set_block(&mut self, p: &Point3, block: Option<PlacedBlock>) {
         self.blocks.set(p, block);
     }
 
-    pub fn iter_blocks(&self) -> impl Iterator<Item=(grid::Point3, &Block)> {
+    pub fn iter_blocks(&self) -> impl Iterator<Item=(Point3, &PlacedBlock)> {
         self
             .blocks
             .data

@@ -1,12 +1,12 @@
 pub mod editor;
 
 use crate::machine::grid;
-use crate::machine::{Block, Machine};
+use crate::machine::{PlacedBlock, Machine};
 
 pub use editor::Editor;
 
 pub enum Edit {
-    SetBlock(grid::Point3, Option<Block>),
+    SetBlock(grid::Point3, Option<PlacedBlock>),
 }
 
 impl Edit {

@@ -1,7 +1,7 @@
 use crate::util::vec_option::VecOption;
 
-use crate::machine::grid::Point3;
-use crate::machine::{Axis3, Sign, Dir3, Block, BlockId, Machine};
+use crate::machine::grid::{Point3, Axis3, Sign, Dir3};
+use crate::machine::{Block, BlockId, Machine};
 
 const MOVE_TICKS_PER_NODE: usize = 10;
 
@@ -33,34 +33,39 @@ impl Exec {
             let mut move_dir = None;
 
             if blip.move_progress == MOVE_TICKS_PER_NODE {
-                match self.machine.blocks.get(&blip.pos) {
-                    Some(Block::Pipe { from: _, to }) => {
-                        move_dir = Some(*to);
-                    },
-                    Some(Block::Switch(dir)) => {
-                        move_dir = Some(*dir);
-                    },
-                    None => {
-                        if blip.pos.z == 0 {
-                            blips_to_remove.push(blip_id);
-                            continue;
-                        } else {
-                            move_dir = Some(Dir3(Axis3::Z, Sign::Neg));
-                        }
+                if let Some(placed_block) = self.machine.blocks.get(&blip.pos) {
+                    match placed_block.block {
+                        Block::Pipe { from: _, to } => {
+                            move_dir = Some(to);
+                        },
+                        Block::Switch(dir) => {
+                            move_dir = Some(dir);
+                        },
+                        _ => (),
                     }
-                    _ => (),
+                } else {
+                    if blip.pos.z == 0 {
+                        blips_to_remove.push(blip_id);
+                        continue;
+                    } else {
+                        move_dir = Some(Dir3(Axis3::Z, Sign::Neg));
+                    }
                 }
             }
 
             if let Some(move_dir) = move_dir {
                 blip.pos += move_dir.to_vector();
 
-                let remove = match self.machine.blocks.get(&blip.pos) {
-                    Some(Block::Pipe { from, to: _ }) => *from != move_dir.invert(),
-                    Some(Block::Switch(dir)) => *dir != move_dir,
-                    Some(Block::Solid) => true,
-                    _ => false,
-                };
+                let remove =
+                    if let Some(placed_block) = self.machine.blocks.get(&blip.pos) {
+                        match placed_block.block {
+                            Block::Pipe { from, to: _ } => from != move_dir.invert(),
+                            Block::Switch(dir) => dir != move_dir,
+                            Block::Solid => true,
+                        }
+                    } else {
+                        false
+                    };
 
                 if remove {
                     blips_to_remove.push(blip_id);

@@ -4,7 +4,7 @@ use glutin::{VirtualKeyCode, WindowEvent};
 
 use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::machine::grid;
-use crate::machine::{Block, Machine};
+use crate::machine::{Block, PlacedBlock, Machine};
 use crate::render::{self, Object, InstanceParams, Resources, Camera, RenderList};
 
 use crate::edit::Edit;
@@ -12,7 +12,7 @@ use crate::edit::Edit;
 pub struct Editor {
     machine: Machine,
 
-    place_block: Block,
+    place_block: PlacedBlock,
 
     mouse_window_pos: na::Point2<f32>,
     mouse_grid_pos: Option<grid::Point3>,
@@ -24,7 +24,10 @@ impl Editor {
     pub fn new(size: grid::Vector3) -> Editor {
         Editor {
             machine: Machine::new(size),
-            place_block: Block::Solid,
+            place_block: PlacedBlock {
+                dir_xy: grid::Dir2(grid::Axis2::X, grid::Sign::Pos),
+                block: Block::Solid,
+            },
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
             render_list: RenderList::new(),
