@@ -1,6 +1,7 @@
 use nalgebra as na;
 
 use crate::machine::grid;
+use crate::machine::{Machine, Block};
 
 use crate::render::{Object, InstanceParams, RenderList};
 
@@ -108,6 +109,7 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
             &InstanceParams {
                 transform: translation * scaling,
                 color,
+                .. Default::default()
             }, 
         );
     }
@@ -120,7 +122,35 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
             &InstanceParams {
                 transform: translation * scaling,
                 color,
+                .. Default::default()
             }, 
         );
+    }
+}
+
+pub fn render_block(block: &Block, transform: &na::Matrix4<f32>, out: &mut RenderList) {
+    match block {
+        Block::Solid => {
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: transform.clone(),
+                    color: na::Vector4::new(0.3, 0.9, 0.2, 1.0),
+                    .. Default::default()
+                },
+            );
+        }
+        _ => (),
+    }
+}
+
+pub fn render_machine(machine: &Machine, out: &mut RenderList) {
+    let half_vec = na::Vector3::new(0.5, 0.5, 0.5);
+
+    for (block_pos, block) in machine.iter_blocks() {
+        let block_coords: na::Vector3<f32> = na::convert(block_pos.coords);
+        let transform = na::Matrix4::new_translation(&(block_coords + half_vec));
+
+        render_block(block, &transform, out);
     }
 }
