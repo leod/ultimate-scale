@@ -189,6 +189,22 @@ pub fn placed_block_transform(pos: &grid::Point3, dir_xy: &grid::Dir2) -> na::Ma
 }
 
 pub fn render_machine(machine: &Machine, out: &mut RenderList) {
+    let floor_size = na::Vector3::new(
+        machine.size().x as f32,
+        machine.size().y as f32,
+        0.0
+    );
+
+    let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
+    out.add(
+        Object::Quad,
+        &InstanceParams {
+            transform: floor_transform,
+            color: na::Vector4::new(0.2, 0.2, 0.2, 1.0),
+            .. Default::default()
+        },
+    );
+
     for (block_pos, placed_block) in machine.iter_blocks() {
         let transform = placed_block_transform(&block_pos, &placed_block.dir_xy);
 

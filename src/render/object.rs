@@ -9,6 +9,7 @@ use glium::{self, implement_vertex};
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
 pub enum Object {
     Triangle,
+    Quad,
     Cube,
     LineX,
     LineY,
@@ -175,6 +176,34 @@ impl Object {
                 ];
 
                 let indices = vec![0, 1, 2];
+
+                ObjectBuffers::from_slices(
+                    facade,
+                    glium::index::PrimitiveType::TrianglesList,
+                    &positions,
+                    &normals,
+                    &indices,
+                )
+            }
+            Object::Quad => {
+                let positions = vec![
+                    [0.0, 0.0, 0.0],
+                    [1.0, 0.0, 0.0],
+                    [1.0, 1.0, 0.0],
+                    [0.0, 1.0, 0.0],
+                ];
+
+                let normals = vec![
+                    [0.0, 0.0, -1.0],
+                    [0.0, 0.0, -1.0],
+                    [0.0, 0.0, -1.0],
+                    [0.0, 0.0, -1.0],
+                ];
+
+                let indices = vec![
+                    0, 1, 2,
+                    2, 3, 0,
+                ];
 
                 ObjectBuffers::from_slices(
                     facade,
