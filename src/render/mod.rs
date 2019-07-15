@@ -141,6 +141,7 @@ impl RenderList {
         &self,
         resources: &Resources,
         context: &Context,
+        params: &glium::DrawParameters,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         // TODO: Could sort by object here to reduce state switching for large
@@ -156,7 +157,7 @@ impl RenderList {
                 write: true,
                 .. Default::default()
             },
-            .. Default::default()
+            .. params.clone()
         };
 
         //let params = Default::default();
