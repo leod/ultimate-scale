@@ -71,6 +71,15 @@ impl Dir2 {
     pub fn invert(&self) -> Dir2 {
         Dir2(self.0, self.1.invert())
     }
+
+    pub fn rotated_cw(&self) -> Dir2 {
+        match self {
+            Dir2(Axis2::X, Sign::Pos) => Dir2(Axis2::Y, Sign::Neg),
+            Dir2(Axis2::Y, Sign::Neg) => Dir2(Axis2::X, Sign::Neg),
+            Dir2(Axis2::X, Sign::Neg) => Dir2(Axis2::Y, Sign::Pos),
+            Dir2(Axis2::Y, Sign::Pos) => Dir2(Axis2::X, Sign::Pos),
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]

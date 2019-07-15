@@ -12,20 +12,25 @@ use glium::Surface;
 use floating_duration::TimeAsFloat;
 
 #[derive(Debug, Clone)]
-struct Config {
+struct ViewConfig {
     window_size: glutin::dpi::LogicalSize,
     fov_degrees: f64,
-    camera_input: render::camera::Config,
 }
 
-impl Default for Config {
-    fn default() -> Config {
-        Config {
+impl Default for ViewConfig {
+    fn default() -> ViewConfig {
+        ViewConfig {
             window_size: glutin::dpi::LogicalSize::new(1024.0, 768.0),
             fov_degrees: 90.0,
-            camera_input: Default::default(),
         }
     }
+}
+
+#[derive(Debug, Clone, Default)]
+struct Config {
+    view: ViewConfig,
+    camera_input: render::camera::Config,
+    editor: edit::editor::Config,
 }
 
 fn main() {
@@ -37,7 +42,7 @@ fn main() {
     info!("Opening window");
     let mut events_loop = glutin::EventsLoop::new();
     let window_builder = glutin::WindowBuilder::new()
-        .with_dimensions(config.window_size);
+        .with_dimensions(config.view.window_size);
     let context_builder = glutin::ContextBuilder::new();
     let display = glium::Display::new(window_builder, context_builder, &events_loop).unwrap();
 
@@ -48,12 +53,12 @@ fn main() {
     let mut render_list = render::RenderList::new();
 
     let viewport = na::Vector2::new(
-        config.window_size.width as f32,
-        config.window_size.height as f32
+        config.view.window_size.width as f32,
+        config.view.window_size.height as f32
     );
     let projection = na::Perspective3::new(
         viewport.x / viewport.y,
-        config.fov_degrees.to_radians() as f32,
+        config.view.fov_degrees.to_radians() as f32,
         0.1,
         10000.0,
     );
@@ -64,7 +69,7 @@ fn main() {
     let mut elapsed_time: Duration = Default::default();
 
     let grid_size = machine::grid::Vector3::new(30, 30, 8);
-    let mut editor = edit::Editor::new(grid_size);
+    let mut editor = edit::Editor::new(config.editor, grid_size);
 
     while !quit {
         let now_clock = Instant::now();

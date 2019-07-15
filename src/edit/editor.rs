@@ -9,7 +9,22 @@ use crate::render::{self, Object, InstanceParams, Resources, Camera, RenderList}
 
 use crate::edit::Edit;
 
+#[derive(Debug, Clone)]
+pub struct Config {
+    pub rotate_block_key: VirtualKeyCode,
+}
+
+impl Default for Config {
+    fn default() -> Config {
+        Config {
+            rotate_block_key: VirtualKeyCode::R,
+        }
+    }
+}
+
 pub struct Editor {
+    config: Config,
+
     machine: Machine,
 
     place_block: PlacedBlock,
@@ -21,8 +36,9 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub fn new(size: grid::Vector3) -> Editor {
+    pub fn new(config: Config, size: grid::Vector3) -> Editor {
         Editor {
+            config,
             machine: Machine::new(size),
             place_block: PlacedBlock {
                 dir_xy: grid::Dir2(grid::Axis2::X, grid::Sign::Pos),
