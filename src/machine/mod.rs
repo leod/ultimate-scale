@@ -9,6 +9,7 @@ use grid::{Vector3, Point3, Dir3, Grid3};
 pub enum Block {
     PipeXY,
     PipeSplitXY,
+    PipeBendXY,
     Solid,
 }
 
