@@ -33,3 +33,29 @@ impl RenderLists {
         self.transparent.clear();
     }
 }
+
+pub fn render_frame_straight<S: glium::Surface>(
+    resources: &Resources,
+    context: &Context,
+    render_lists: &RenderLists,
+    target: &mut S,
+) -> Result<(), glium::DrawError> {
+    render_lists.solid.render(
+        resources,
+        context,
+        &Default::default(),
+        target,
+    )?;
+
+    render_lists.transparent.render(
+        resources,
+        context,
+        &glium::DrawParameters {
+            blend: glium::draw_parameters::Blend::alpha_blending(), 
+            .. Default::default()
+        },
+        target,
+    )?;
+
+    Ok(())
+}

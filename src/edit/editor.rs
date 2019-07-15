@@ -221,12 +221,7 @@ impl Editor {
         }
     }
 
-    pub fn render(
-        &mut self,
-        resources: &Resources,
-        render_context: &render::Context,
-        out: &mut RenderLists,
-    ) -> Result<(), glium::DrawError> {
+    pub fn render(&mut self, out: &mut RenderLists) -> Result<(), glium::DrawError> {
         let grid_size: na::Vector3<f32> = na::convert(self.machine.size());
         render::machine::render_cuboid_wireframe(
             &render::machine::Cuboid {
