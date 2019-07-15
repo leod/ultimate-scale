@@ -54,7 +54,7 @@ fn main() {
     let projection = na::Perspective3::new(
         viewport.x / viewport.y,
         config.fov_degrees.to_radians() as f32,
-        1.0,
+        0.1,
         10000.0,
     );
     let mut camera = render::camera::Camera::new(viewport, projection.to_homogeneous());
@@ -78,7 +78,7 @@ fn main() {
         };
 
         render_list.clear();
-        render_list.add(render::Object::Cube, &render::InstanceParams {
+        /*render_list.add(render::Object::Cube, &render::InstanceParams {
             transform: na::Translation::from(na::Vector3::new(3.0, 0.0, 0.0)).to_homogeneous(),
             color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
         });
@@ -86,7 +86,7 @@ fn main() {
         render_list.add(render::Object::Triangle, &render::InstanceParams {
             transform: na::Matrix4::identity(), 
             color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-        });
+        });*/
 
         let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
