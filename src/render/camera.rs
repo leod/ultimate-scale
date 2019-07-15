@@ -26,9 +26,9 @@ impl Camera {
         Camera {
             viewport: na::Vector4::new(0.0, 0.0, viewport.x, viewport.y),
             projection,
-            target: na::Point3::new(0.0, 0.0, 0.0),
+            target: na::Point3::new(5.0, 5.0, 0.0),
             min_distance: 3.0,
-            height: 3.0,
+            height: 10.0,
             yaw_radians: -std::f32::consts::PI / 2.0,
             pitch_radians: -std::f32::consts::PI / 8.0,
         }
@@ -153,10 +153,10 @@ impl Input {
         }
 
         if self.pressed_keys.contains(&self.config.zoom_in_key) {
-            camera.height += move_speed;
+            camera.height -= move_speed;
         }
         if self.pressed_keys.contains(&self.config.zoom_out_key) {
-            camera.height -= move_speed;
+            camera.height += move_speed;
         }
 
         let rotation_z = na::Rotation3::from_axis_angle(
