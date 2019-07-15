@@ -44,6 +44,9 @@ pub struct Editor {
 
     render_list: RenderList,
     render_list_transparent: RenderList,
+
+    left_mouse_button_pressed: bool,
+    right_mouse_button_pressed: bool,
 }
 
 impl Editor {
@@ -59,6 +62,8 @@ impl Editor {
             mouse_grid_pos: None,
             render_list: RenderList::new(),
             render_list_transparent: RenderList::new(),
+            left_mouse_button_pressed: false,
+            right_mouse_button_pressed: false,
         }
     }
 
@@ -67,6 +72,11 @@ impl Editor {
     }
 
     pub fn update(&mut self, dt_secs: f32, camera: &Camera) {
+        self.update_mouse_grid_pos(camera);
+        self.update_input();
+    }
+
+    fn update_mouse_grid_pos(&mut self, camera: &Camera) {
         let p = self.mouse_window_pos;
         let p_near = camera.unproject(&na::Point3::new(p.x, p.y, -1.0));
         let p_far = camera.unproject(&na::Point3::new(p.x, p.y, 1.0));
@@ -97,7 +107,31 @@ impl Editor {
                 }
             } else {
                 None
+            };
+    }
+
+    fn update_input(&mut self) {
+        // TODO: Only perform edits if something would actually change
+
+        if self.left_mouse_button_pressed {
+            if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                let edit = Edit::SetBlock(
+                    mouse_grid_pos,
+                    Some(self.place_block.clone())
+                );
+                self.run_edit(edit);
             }
+        }
+
+        if self.right_mouse_button_pressed {
+            if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                let edit = Edit::SetBlock(
+                    mouse_grid_pos,
+                    None,
+                );
+                self.run_edit(edit);
+            }
+        }
     }
 
     pub fn on_event(&mut self, event: &WindowEvent) {
@@ -119,7 +153,14 @@ impl Editor {
                 state,
                 button,
                 modifiers,
-            } => self.on_mouse_input(*state, *button, *modifiers),
+            } =>
+                self.on_mouse_input(*state, *button, *modifiers),
+            WindowEvent::CursorMoved {
+                device_id: _,
+                position: _,
+                modifiers: _,
+            } => {
+            }
 
             _ => ()
         }
@@ -149,28 +190,12 @@ impl Editor {
         button: glutin::MouseButton,
         _modifiers: glutin::ModifiersState,
     ) {
-        if state == glutin::ElementState::Pressed {
-            match button {
-                glutin::MouseButton::Left => {
-                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = Edit::SetBlock(
-                            mouse_grid_pos,
-                            Some(self.place_block.clone())
-                        );
-                        self.run_edit(edit);
-                    }
-                }
-                glutin::MouseButton::Right => {
-                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = Edit::SetBlock(
-                            mouse_grid_pos,
-                            None
-                        );
-                        self.run_edit(edit);
-                    }
-                }
-                _ => (),
-            }
+        match button {
+            glutin::MouseButton::Left => 
+                self.left_mouse_button_pressed = (state == glutin::ElementState::Pressed),
+            glutin::MouseButton::Right =>
+                self.right_mouse_button_pressed = (state == glutin::ElementState::Pressed),
+            _ => (),
         }
     }
 
