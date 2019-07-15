@@ -4,7 +4,7 @@ use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
-use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
+use crate::util::intersection::{ray_quad_intersection, Ray, Plane};
 use crate::machine::grid;
 use crate::machine::{Block, PlacedBlock, Machine};
 use crate::render::{self, Object, InstanceParams, Resources, Camera, RenderList};
@@ -85,14 +85,15 @@ impl Editor {
             origin: camera.eye(),
             velocity: p_far - p_near,
         };
-        let aabb = AABB {
-            min: na::Point3::origin(),
-            max: na::Point3::new(self.machine.size().x as f32, self.machine.size().y as f32, 1.0),
+        let quad = Plane {
+            origin: na::Point3::origin(),
+            direction_a: self.machine.size().x as f32 * na::Vector3::x(),
+            direction_b: self.machine.size().y as f32 * na::Vector3::y(),
         };
 
-        let intersection = ray_aabb_intersection(&ray, &aabb);
+        let intersection = ray_quad_intersection(&ray, &quad);
         self.mouse_grid_pos =
-            if let Some(ray_t) = intersection {
+            if let Some((ray_t, _plane_pos)) = intersection {
                 let ray_pos = ray.origin + ray_t * ray.velocity;
                 let grid_pos = grid::Point3::new(
                     ray_pos.x.floor() as isize,
