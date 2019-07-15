@@ -158,7 +158,7 @@ impl From<io::Error> for CreationError {
 }
 
 impl Object {
-    pub(in crate::render) fn create_buffers<F: glium::backend::Facade>(
+    pub fn create_buffers<F: glium::backend::Facade>(
         &self, facade: &F
     ) -> Result<ObjectBuffers, CreationError> {
         match self {
