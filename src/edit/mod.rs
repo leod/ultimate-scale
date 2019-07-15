@@ -88,18 +88,19 @@ impl Editor {
         self.render_list.clear();
 
         render::machine::render_xy_grid(&self.machine.size(), 0.0, &mut self.render_list);
-        //render::machine::render_xy_grid(&self.machine.size(), 1.0, &mut self.render_list);
 
         if let Some(mouse_grid_pos) = self.mouse_grid_pos {
             let mouse_grid_pos: na::Point3<f32> = na::convert(mouse_grid_pos);
 
-            self.render_list.add(Object::Cube, &InstanceParams {
-                transform: na::Matrix4::new_translation(
-                    &(mouse_grid_pos.coords + na::Vector3::new(0.5, 0.5, 0.5))
-                ),
-                color: na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                .. Default::default()
-            });
+            render::machine::render_cuboid_wireframe(
+                &render::machine::Cuboid {
+                    center: mouse_grid_pos + na::Vector3::new(0.5, 0.5, 0.51),
+                    size: na::Vector3::new(1.0, 1.0, 1.0),
+                },
+                0.015,
+                &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                &mut self.render_list,
+            )
         }
         
         self.render_list.render(&resources, &render_context, target)?;
