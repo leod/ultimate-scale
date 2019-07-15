@@ -86,7 +86,7 @@ impl Blocks {
         }
     }
 
-    pub fn at_pos(&self, p: &Point3) -> Option<&Block> {
+    pub fn get(&self, p: &Point3) -> Option<&Block> {
         self
             .ids
             .get(p)
@@ -94,12 +94,22 @@ impl Blocks {
             .map(|&id| &self.data[id])
     }
 
-    pub fn ids(&self) -> &Grid3<Option<BlockId>> {
-        &self.ids
+    pub fn remove(&mut self, p: &Point3) -> Option<Block> {
+        if let Some(Some(id)) = self.ids.get(p).cloned() {
+            self.ids[*p] = None;
+            self.data.remove(id)
+        } else {
+            None
+        }
     }
 
-    pub fn is_valid_pos(&self, p: &Point3) -> bool {
-        self.ids.is_valid_pos(p)
+    pub fn set(&mut self, p: &Point3, block: Option<Block>) {
+        self.remove(p);
+
+        if let Some(block) = block {
+            let id = self.data.add(block);
+            self.ids[*p] = Some(id);
+        }
     }
 }
 
@@ -119,7 +129,15 @@ impl Machine {
         self.blocks.ids.size()
     }
 
-    pub fn blocks(&self) -> &Blocks {
-        &self.blocks
+    pub fn is_valid_pos(&self, p: &Point3) -> bool {
+        self.blocks.ids.is_valid_pos(p)
+    }
+
+    pub fn get_block(&self, p: &Point3) -> Option<&Block> {
+        self.blocks.get(p)
+    }
+
+    pub fn set_block(&mut self, p: &Point3, block: Option<Block>) {
+        self.blocks.set(p, block);
     }
 }
