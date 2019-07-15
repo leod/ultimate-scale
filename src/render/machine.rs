@@ -1,7 +1,7 @@
 use nalgebra as na;
 
 use crate::machine::grid;
-use crate::machine::{Machine, Block};
+use crate::machine::{Machine, Block, PlacedBlock};
 
 use crate::render::{Object, InstanceParams, RenderList};
 
@@ -128,8 +128,12 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
     }
 }
 
-pub fn render_block(block: &Block, transform: &na::Matrix4<f32>, out: &mut RenderList) {
-    match block {
+pub fn render_block(
+    placed_block: &PlacedBlock,
+    transform: &na::Matrix4<f32>,
+    out: &mut RenderList
+) {
+    match placed_block.block {
         Block::Solid => {
             out.add(
                 Object::PipeSegment,

@@ -2,8 +2,89 @@ use std::ops::{Index, IndexMut};
 
 use nalgebra as na;
 
+pub type Vector2 = na::Vector2<isize>;
 pub type Vector3 = na::Vector3<isize>;
 pub type Point3 = na::Point3<isize>;
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub enum Axis2 {
+    X,
+    Y,
+}
+
+impl Axis2 {
+    pub fn to_vector(&self) -> Vector2 {
+        match self {
+            Axis2::X => Vector2::x(),
+            Axis2::Y => Vector2::y(),
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub enum Axis3 {
+    X,
+    Y,
+    Z,
+}
+
+impl Axis3 {
+    pub fn to_vector(&self) -> Vector3 {
+        match self {
+            Axis3::X => Vector3::x(),
+            Axis3::Y => Vector3::y(),
+            Axis3::Z => Vector3::z(),
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub enum Sign {
+    Pos,
+    Neg,
+}
+
+impl Sign {
+    pub fn to_number(&self) -> isize {
+        match self {
+            Sign::Pos => 1,
+            Sign::Neg => -1,
+        }
+    }
+
+    pub fn invert(&self) -> Sign {
+        match self {
+            Sign::Pos => Sign::Neg,
+            Sign::Neg => Sign::Pos,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub struct Dir2(pub Axis2, pub Sign);
+
+impl Dir2 {
+    pub fn to_vector(&self) -> Vector2 {
+        self.0.to_vector() * self.1.to_number()
+    }
+
+    pub fn invert(&self) -> Dir2 {
+        Dir2(self.0, self.1.invert())
+    }
+}
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub struct Dir3(pub Axis3, pub Sign);
+
+impl Dir3 {
+    pub fn to_vector(&self) -> Vector3 {
+        self.0.to_vector() * self.1.to_number()
+    }
+
+    pub fn invert(&self) -> Dir3 {
+        Dir3(self.0, self.1.invert())
+    }
+}
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Grid3<T> {
