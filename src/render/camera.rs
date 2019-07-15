@@ -36,7 +36,7 @@ impl Default for Config {
             rotate_cw_key: VirtualKeyCode::E,
             rotate_ccw_key: VirtualKeyCode::Q,
             fast_move_key: VirtualKeyCode::LShift,
-            move_units_per_sec: 2.0,
+            move_units_per_sec: 4.0,
             fast_move_multiplier: 4.0,
             rotate_degrees_per_sec: 90.0,
         }
@@ -117,6 +117,10 @@ pub struct Input {
     config: Config,
     pressed_keys: HashSet<VirtualKeyCode>,
     modifiers_state: glutin::ModifiersState,
+
+    /// Height delta is changed when mouse wheel events are received, but
+    /// applied only later in the update function.
+    height_delta: f32,
 }
 
 impl Input {
@@ -125,17 +129,21 @@ impl Input {
             config,
             pressed_keys: HashSet::new(),
             modifiers_state: Default::default(),
+            height_delta: 0.0,
         }
     }
 
-    pub fn update(&self, dt_secs: f32, camera: &mut Camera) {
-        let move_speed = dt_secs * self.config.move_units_per_sec *
+    fn cur_move_speed_per_sec(&self) -> f32 {
+        self.config.move_units_per_sec *
             if self.pressed_keys.contains(&self.config.fast_move_key) {
                 self.config.fast_move_multiplier
             } else {
                 1.0
-            };
+            }
+    }
 
+    pub fn update(&mut self, dt_secs: f32, camera: &mut Camera) {
+        let move_speed = dt_secs * self.cur_move_speed_per_sec();
         let mut translation = na::Vector3::zeros();
 
         if self.pressed_keys.contains(&self.config.forward_key) {
@@ -158,6 +166,12 @@ impl Input {
         if self.pressed_keys.contains(&self.config.zoom_out_key) {
             camera.height += move_speed;
         }
+
+        // Apply height change from mouse wheel events
+        camera.height += self.height_delta;
+        self.height_delta = 0.0;
+
+        camera.height = camera.height.max(1.0).min(100.0);
 
         let rotation_z = na::Rotation3::from_axis_angle(
             &na::Vector3::z_axis(),
@@ -189,6 +203,22 @@ impl Input {
                 }
 
                 self.modifiers_state = input.modifiers;
+            }
+            WindowEvent::MouseWheel {
+                device_id: _,
+                delta,
+                phase: _,
+                modifiers: _,
+            } => {
+                let dt_secs = 0.5;
+                
+                // TODO: Not sure what the different types of delta mean here
+                let delta_float = match delta {
+                    glutin::MouseScrollDelta::LineDelta(_x, y) => *y,
+                    glutin::MouseScrollDelta::PixelDelta(pos) => pos.y as f32,
+                };
+
+                self.height_delta += dt_secs * self.cur_move_speed_per_sec() * delta_float;
             }
             _ => (),
         }
