@@ -88,22 +88,14 @@ fn main() {
         let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
-        editor.render(&resources, &render_context, &mut render_lists).unwrap();
-        render_lists.solid.render(
+        editor.render(&mut render_lists).unwrap();
+
+        render::render_frame_straight(
             &resources,
             &render_context,
-            &Default::default(),
-            &mut target
-        ).unwrap();
-        render_lists.transparent.render(
-            &resources,
-            &render_context,
-            &glium::DrawParameters {
-                blend: glium::draw_parameters::Blend::alpha_blending(), 
-                .. Default::default()
-            },
-            &mut target
-        ).unwrap();
+            &render_lists,
+            &mut target,
+        );
 
         target.finish().unwrap();
 
