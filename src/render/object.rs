@@ -36,7 +36,7 @@ pub enum IndexBuffer {
     NoIndices(glium::index::NoIndices),
 }
 
-pub(in crate::render) struct ObjectBuffers {
+pub struct ObjectBuffers {
     pub vertex_buffer: glium::VertexBuffer<Vertex>,
     pub index_buffer: IndexBuffer,
 }

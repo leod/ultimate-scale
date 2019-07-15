@@ -219,9 +219,9 @@ impl Editor {
     ) {
         match button {
             glutin::MouseButton::Left => 
-                self.left_mouse_button_pressed = (state == glutin::ElementState::Pressed),
+                self.left_mouse_button_pressed = state == glutin::ElementState::Pressed,
             glutin::MouseButton::Right =>
-                self.right_mouse_button_pressed = (state == glutin::ElementState::Pressed),
+                self.right_mouse_button_pressed = state == glutin::ElementState::Pressed,
             _ => (),
         }
     }
