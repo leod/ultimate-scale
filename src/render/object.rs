@@ -12,7 +12,7 @@ implement_vertex!(Vertex, position, normal);
 
 pub(in crate::render) struct ObjectBuffers {
     pub vertex_buffer: glium::VertexBuffer<Vertex>,
-    pub index_buffer: glium::IndexBuffer<u32>,
+    pub index_buffer: glium::index::IndexBufferAny,
 }
 
 impl ObjectBuffers {
@@ -35,7 +35,7 @@ impl ObjectBuffers {
                 facade,
                 primitive_type,
                 indices,
-            )?,
+            )?.into(),
         })
     }
 }

@@ -7,6 +7,43 @@ use std::collections::HashSet;
 use glutin::{VirtualKeyCode, WindowEvent};
 
 #[derive(Debug, Clone)]
+pub struct Config {
+    pub forward_key: VirtualKeyCode,
+    pub left_key: VirtualKeyCode,
+    pub backward_key: VirtualKeyCode,
+    pub right_key: VirtualKeyCode,
+    pub zoom_in_key: VirtualKeyCode,
+    pub zoom_out_key: VirtualKeyCode,
+    pub rotate_cw_key: VirtualKeyCode,
+    pub rotate_ccw_key: VirtualKeyCode,
+    pub fast_move_key: VirtualKeyCode,
+
+    pub move_units_per_sec: f32,
+    pub fast_move_multiplier: f32,
+
+    pub rotate_degrees_per_sec: f32,
+}
+
+impl Default for Config {
+    fn default() -> Config {
+        Config {
+            forward_key: VirtualKeyCode::W,
+            left_key: VirtualKeyCode::A,
+            backward_key: VirtualKeyCode::S,
+            right_key: VirtualKeyCode::D,
+            zoom_in_key: VirtualKeyCode::PageUp,
+            zoom_out_key: VirtualKeyCode::PageDown,
+            rotate_cw_key: VirtualKeyCode::E,
+            rotate_ccw_key: VirtualKeyCode::Q,
+            fast_move_key: VirtualKeyCode::LShift,
+            move_units_per_sec: 2.0,
+            fast_move_multiplier: 4.0,
+            rotate_degrees_per_sec: 90.0,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Camera {
     viewport: na::Vector4<f32>,
     projection: na::Matrix4<f32>,
@@ -73,43 +110,6 @@ impl Camera {
 
         let result = transform * point;
         na::Point3::from(result.fixed_rows::<na::U3>(0) / result.w)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Config {
-    pub forward_key: VirtualKeyCode,
-    pub left_key: VirtualKeyCode,
-    pub backward_key: VirtualKeyCode,
-    pub right_key: VirtualKeyCode,
-    pub zoom_in_key: VirtualKeyCode,
-    pub zoom_out_key: VirtualKeyCode,
-    pub rotate_cw_key: VirtualKeyCode,
-    pub rotate_ccw_key: VirtualKeyCode,
-    pub fast_move_key: VirtualKeyCode,
-
-    pub move_units_per_sec: f32,
-    pub fast_move_multiplier: f32,
-
-    pub rotate_degrees_per_sec: f32,
-}
-
-impl Default for Config {
-    fn default() -> Config {
-        Config {
-            forward_key: VirtualKeyCode::W,
-            left_key: VirtualKeyCode::A,
-            backward_key: VirtualKeyCode::S,
-            right_key: VirtualKeyCode::D,
-            zoom_in_key: VirtualKeyCode::PageUp,
-            zoom_out_key: VirtualKeyCode::PageDown,
-            rotate_cw_key: VirtualKeyCode::E,
-            rotate_ccw_key: VirtualKeyCode::Q,
-            fast_move_key: VirtualKeyCode::LShift,
-            move_units_per_sec: 2.0,
-            fast_move_multiplier: 4.0,
-            rotate_degrees_per_sec: 90.0,
-        }
     }
 }
 
