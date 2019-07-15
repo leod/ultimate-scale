@@ -7,8 +7,12 @@ use crate::machine::grid;
 use crate::machine::{Block, Machine};
 use crate::render::{self, Object, InstanceParams, Resources, Camera, RenderList};
 
+use crate::edit::Edit;
+
 pub struct Editor {
     machine: Machine,
+
+    place_block: Block,
 
     mouse_window_pos: na::Point2<f32>,
     mouse_grid_pos: Option<grid::Point3>,
@@ -20,10 +24,15 @@ impl Editor {
     pub fn new(size: grid::Vector3) -> Editor {
         Editor {
             machine: Machine::new(size),
+            place_block: Block::Solid,
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
             render_list: RenderList::new(),
         }
+    }
+
+    pub fn run_edit(&mut self, edit: Edit) {
+        edit.run(&mut self.machine);
     }
 
     pub fn update(&mut self, dt_secs: f32, camera: &Camera) {
@@ -73,7 +82,45 @@ impl Editor {
                 );
             }
 
+            WindowEvent::MouseInput {
+                device_id: _,
+                state,
+                button,
+                modifiers,
+            } => self.on_mouse_input(*state, *button, *modifiers),
+
             _ => ()
+        }
+    }
+
+    fn on_mouse_input(
+        &mut self,
+        state: glutin::ElementState,
+        button: glutin::MouseButton,
+        _modifiers: glutin::ModifiersState,
+    ) {
+        if state == glutin::ElementState::Pressed {
+            match button {
+                glutin::MouseButton::Left => {
+                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                        let edit = Edit::SetBlock(
+                            mouse_grid_pos,
+                            Some(self.place_block.clone())
+                        );
+                        self.run_edit(edit);
+                    }
+                }
+                glutin::MouseButton::Right => {
+                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                        let edit = Edit::SetBlock(
+                            mouse_grid_pos,
+                            None
+                        );
+                        self.run_edit(edit);
+                    }
+                }
+                _ => (),
+            }
         }
     }
 
@@ -85,6 +132,7 @@ impl Editor {
     ) -> Result<(), glium::DrawError> {
         self.render_list.clear();
 
+        render::machine::render_machine(&self.machine, &mut self.render_list);
         render::machine::render_xy_grid(&self.machine.size(), 0.0, &mut self.render_list);
 
         if let Some(mouse_grid_pos) = self.mouse_grid_pos {

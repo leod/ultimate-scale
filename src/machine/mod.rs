@@ -1,7 +1,7 @@
 pub mod grid;
 pub mod exec;
 
-use crate::util::vec_option::VecOption;
+use crate::util::vec_option::{self, VecOption};
 
 use grid::{Vector3, Point3, Grid3};
 
@@ -75,7 +75,7 @@ pub type BlockId = usize;
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Blocks {
     pub ids: Grid3<Option<BlockId>>,
-    pub data: VecOption<Block>,
+    pub data: VecOption<(grid::Point3, Block)>,
 }
 
 impl Blocks {
@@ -91,13 +91,13 @@ impl Blocks {
             .ids
             .get(p)
             .and_then(|id| id.as_ref())
-            .map(|&id| &self.data[id])
+            .map(|&id| &self.data[id].1)
     }
 
     pub fn remove(&mut self, p: &Point3) -> Option<Block> {
         if let Some(Some(id)) = self.ids.get(p).cloned() {
             self.ids[*p] = None;
-            self.data.remove(id)
+            self.data.remove(id).map(|(id, block)| block)
         } else {
             None
         }
@@ -107,7 +107,7 @@ impl Blocks {
         self.remove(p);
 
         if let Some(block) = block {
-            let id = self.data.add(block);
+            let id = self.data.add((*p, block));
             self.ids[*p] = Some(id);
         }
     }
@@ -139,5 +139,13 @@ impl Machine {
 
     pub fn set_block(&mut self, p: &Point3, block: Option<Block>) {
         self.blocks.set(p, block);
+    }
+
+    pub fn iter_blocks(&self) -> impl Iterator<Item=(grid::Point3, &Block)> {
+        self
+            .blocks
+            .data
+            .iter()
+            .map(|(_, &(pos, ref block))| (pos, block))
     }
 }

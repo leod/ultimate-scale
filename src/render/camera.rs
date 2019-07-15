@@ -72,7 +72,7 @@ impl Camera {
         );
 
         let result = transform * point;
-        na::Point3::from_coordinates(result.fixed_rows::<na::U3>(0) / result.w)
+        na::Point3::from(result.fixed_rows::<na::U3>(0) / result.w)
     }
 }
 
