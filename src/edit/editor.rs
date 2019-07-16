@@ -232,7 +232,7 @@ impl Editor {
             &mut out.solid,
         );
 
-        render::machine::render_machine(&self.machine, &mut out.solid);
+        render::machine::render_machine(&self.machine, out);
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + 0.01,

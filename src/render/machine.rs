@@ -3,7 +3,7 @@ use nalgebra as na;
 use crate::machine::grid;
 use crate::machine::{Machine, Block, PlacedBlock};
 
-use crate::render::{Object, InstanceParams, RenderList};
+use crate::render::{Object, InstanceParams, RenderList, RenderLists};
 
 #[derive(Clone, Debug)]
 pub struct Line {
@@ -188,7 +188,7 @@ pub fn placed_block_transform(pos: &grid::Point3, dir_xy: &grid::Dir2) -> na::Ma
     translation * rotation
 }
 
-pub fn render_machine(machine: &Machine, out: &mut RenderList) {
+pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
     let floor_size = na::Vector3::new(
         machine.size().x as f32,
         machine.size().y as f32,
@@ -196,7 +196,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderList) {
     );
 
     let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
-    out.add(
+    out.solid.add(
         Object::Quad,
         &InstanceParams {
             transform: floor_transform,
@@ -208,6 +208,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderList) {
     for (block_pos, placed_block) in machine.iter_blocks() {
         let transform = placed_block_transform(&block_pos, &placed_block.dir_xy);
 
-        render_block(&placed_block.block, &transform, None, out);
+        render_block(&placed_block.block, &transform, None, &mut out.solid_shadow);
+        render_block(&placed_block.block, &transform, None, &mut out.solid);
     }
 }
