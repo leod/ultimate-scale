@@ -184,7 +184,7 @@ impl Input {
         camera.height += self.height_delta;
         self.height_delta = 0.0;
 
-        //camera.height = camera.height.max(0.5).min(100.0);
+        camera.height = camera.height.max(0.5).min(100.0);
 
         let rotation_z = na::Rotation3::from_axis_angle(
             &na::Vector3::z_axis(),

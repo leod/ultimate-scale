@@ -16,8 +16,8 @@ impl Block {
     pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
         match self {
             Block::PipeXY =>
-                *dir == Dir3(Axis3::X, Sign::Pos)
-                || *dir == Dir3(Axis3::X, Sign::Neg),
+                *dir == Dir3(Axis3::Y, Sign::Pos)
+                || *dir == Dir3(Axis3::Y, Sign::Neg),
             Block::PipeSplitXY =>
                 *dir == Dir3(Axis3::X, Sign::Pos)
                 || *dir == Dir3(Axis3::X, Sign::Neg)
@@ -40,17 +40,38 @@ impl Block {
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct PlacedBlock {
-    pub dir_xy: grid::Dir2,
+    pub rotation_xy: usize,
     pub block: Block,
 }
 
 impl PlacedBlock {
-    pub fn rotate_dir(&self, dir: &Dir3) -> Dir3 {
-        dir.rotated_xy(&self.dir_xy)
+    pub fn rotate_cw(&mut self) {
+        self.rotation_xy += 1;
+        if self.rotation_xy == 4 {
+            self.rotation_xy = 0;
+        }
+    }
+
+    pub fn rotated_dir(&self, mut dir: Dir3) -> Dir3 {
+        for _ in 0 .. self.rotation_xy {
+            dir = dir.rotated_cw_xy();
+        }
+
+        dir
+    }
+
+    pub fn angle_xy_radians(&self) -> f32 {
+        match self.rotation_xy {
+            0 => 0.0,
+            1 => std::f32::consts::PI / 2.0,
+            2 => std::f32::consts::PI,
+            3 => 3.0 / 2.0 * std::f32::consts::PI,
+            _ => unreachable!(),
+        }
     }
 
     pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
-        self.block.has_wind_hole(&self.rotate_dir(&dir))
+        self.block.has_wind_hole(&self.rotated_dir(*dir))
     }
 }
 
@@ -63,6 +84,13 @@ pub struct Machine {
 }
 
 impl Machine {
+    pub fn empty() -> Machine {
+        Machine {
+            block_ids: Grid3::new(Vector3::new(0, 0, 0)),
+            block_data: VecOption::new(),
+        }
+    }
+
     pub fn new(size: Vector3) -> Machine {
         Machine {
             block_ids: Grid3::new(size),

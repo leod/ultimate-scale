@@ -70,7 +70,7 @@ impl Editor {
             exec_config,
             machine: Machine::new(size),
             place_block: PlacedBlock {
-                dir_xy: grid::Dir2(grid::Axis2::X, grid::Sign::Pos),
+                rotation_xy: 0,
                 block: Block::PipeXY,
             },
             current_layer: 0,
@@ -219,7 +219,7 @@ impl Editor {
 
     fn on_key_press(&mut self, keycode: VirtualKeyCode) {
         if keycode == self.config.rotate_block_key {
-            self.place_block.dir_xy = self.place_block.dir_xy.rotated_cw();
+            self.place_block.rotate_cw();
         }
 
         if let Some(block) = self.config.block_keys.get(&keycode) {
@@ -288,7 +288,7 @@ impl Editor {
 
             let block_transform = render::machine::placed_block_transform(
                 &mouse_grid_pos,
-                &self.place_block.dir_xy,
+                &self.place_block,
             );
             render::machine::render_block(
                 &self.place_block.block, 

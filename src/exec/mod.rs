@@ -2,12 +2,13 @@ pub mod view;
 
 use std::mem;
 
+use log::{warn, debug};
+
 use crate::util::vec_option::VecOption;
-
-pub use view::ExecView;
-
 use crate::machine::grid::{Point3, Axis3, Sign, Dir3, Grid3};
 use crate::machine::{Block, BlockIndex, Machine};
+
+pub use view::ExecView;
 
 const MOVE_TICKS_PER_NODE: usize = 10;
 
@@ -20,6 +21,12 @@ pub struct Blip {
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct WindState {
     pub flow_out: [bool; Dir3::NUM_INDICES],
+}
+
+impl WindState {
+    pub fn flow_out(&self, dir: &Dir3) -> bool {
+        self.flow_out[dir.to_index()]
+    }
 }
 
 pub struct Exec {
@@ -52,8 +59,10 @@ impl Exec {
     pub fn update(&mut self) {
         mem::swap(&mut self.wind_state, &mut self.old_wind_state);
 
-        for (index, (block_pos, placed_block)) in self.machine.iter_blocks_mut() {
+        for (index, (block_pos, placed_block)) in self.machine.block_data.iter_mut() {
             let wind_state = &mut self.wind_state[index];
+
+            debug!("have {:?} with {:?}", placed_block.block, wind_state);
             
             match placed_block.block {
                 Block::Solid => {
@@ -62,15 +71,30 @@ impl Exec {
                     }
                 }
                 Block::PipeXY => {
-                   let in_dir = placed_block.rotate_dir(&Dir3(Axis3::X, Sign::Neg));
-                   let in_pos = *block_pos + in_dir.to_vector();
+                    let in_dir_a = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Neg));
+                    let in_dir_b = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Pos));
 
-                   /*if let Some(in_block) = self.machine.get_block_at_pos(&in_pos) {
-                    
-                   }*/
+                    let in_pos_a = *block_pos + in_dir_a.to_vector();
+                    let in_pos_b = *block_pos + in_dir_b.to_vector();
+
+                    debug!("neighbor dirs: {:?} {:?}", in_dir_a, in_dir_b);
+
+                    if let Some(Some(in_block_id)) = self.machine.block_ids.get(&in_pos_a) {
+                        let in_wind_state = &self.old_wind_state[*in_block_id];
+                        wind_state.flow_out[in_dir_b.to_index()] = in_wind_state.flow_out(&in_dir_b);
+                    }
+
+                    if let Some(Some(in_block_id)) = self.machine.block_ids.get(&in_pos_b) {
+                        let in_wind_state = &self.old_wind_state[*in_block_id];
+                        wind_state.flow_out[in_dir_a.to_index()] = in_wind_state.flow_out(&in_dir_a);
+                    }
                 }
-                _ => unimplemented!(),
+                _ => warn!("Wind flow of {:?} is unimplemented!", placed_block.block),
             }
+        }
+
+        for (index, _) in self.machine.block_data.iter_mut() {
+            self.old_wind_state[index] = self.wind_state[index];
         }
     }
 
