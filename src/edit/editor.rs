@@ -63,6 +63,7 @@ impl Editor {
             place_block: PlacedBlock {
                 dir_xy: grid::Dir2(grid::Axis2::X, grid::Sign::Pos),
                 block: Block::PipeXY,
+                wind_state: Default::default(),
             },
             current_layer: 0,
             mouse_window_pos: na::Point2::origin(),

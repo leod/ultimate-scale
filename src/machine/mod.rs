@@ -16,10 +16,15 @@ pub enum Block {
 impl Block {
 }
 
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
+pub struct WindState {
+}
+
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct PlacedBlock {
     pub dir_xy: grid::Dir2,
     pub block: Block,
+    pub wind_state: WindState,
 }
 
 pub type BlockId = usize;
