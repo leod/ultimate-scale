@@ -1,6 +1,6 @@
 use crate::util::vec_option::VecOption;
 
-use crate::machine::grid::{Point3, Axis3, Sign, Dir3};
+use crate::machine::grid::{Point3, Axis3, Sign, Dir3, Grid3};
 use crate::machine::{Block, BlockId, Machine};
 
 const MOVE_TICKS_PER_NODE: usize = 10;
@@ -11,70 +11,35 @@ pub struct Blip {
     pub move_progress: usize,
 }
 
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
+pub struct WindState {
+    pub flow_out: [bool; Dir3::NUM_INDICES],
+}
+
 struct Exec {
     machine: Machine,
     blips: VecOption<Blip>,
+    wind_state: Grid3<Option<WindState>>,
 }
 
 impl Exec {
     pub fn new(machine: Machine) -> Exec {
+        let wind_state = Exec::initial_wind_state(&machine);
+
         Exec {
             machine,
             blips: VecOption::new(),
+            wind_state,
         }
     }
 
     pub fn update(&mut self) {
-        /*let mut blips_to_remove = Vec::<BlockId>::new();
-
-        for (blip_id, blip) in self.blips.iter_mut() {
-            blip.move_progress += 1;
-
-            let mut move_dir = None;
-
-            if blip.move_progress == MOVE_TICKS_PER_NODE {
-                if let Some(placed_block) = self.machine.blocks.get(&blip.pos) {
-                    match placed_block.block {
-                        Block::Pipe { from: _, to } => {
-                            move_dir = Some(to);
-                        },
-                        Block::Switch(dir) => {
-                            move_dir = Some(dir);
-                        },
-                        _ => (),
-                    }
-                } else {
-                    if blip.pos.z == 0 {
-                        blips_to_remove.push(blip_id);
-                        continue;
-                    } else {
-                        move_dir = Some(Dir3(Axis3::Z, Sign::Neg));
-                    }
-                }
-            }
-
-            if let Some(move_dir) = move_dir {
-                blip.pos += move_dir.to_vector();
-
-                let remove =
-                    if let Some(placed_block) = self.machine.blocks.get(&blip.pos) {
-                        match placed_block.block {
-                            Block::Pipe { from, to: _ } => from != move_dir.invert(),
-                            Block::Switch(dir) => dir != move_dir,
-                            Block::Solid => true,
-                        }
-                    } else {
-                        false
-                    };
-
-                if remove {
-                    blips_to_remove.push(blip_id);
-                }
-            }
+        for (block_pos, placed_block) in self.machine.iter_blocks_mut() {
+            //let x = self.machine.get_block(&block_pos);
         }
+    }
 
-        for blip_id in blips_to_remove {
-            self.blips.remove(blip_id);
-        }*/
+    fn initial_wind_state(machine: &Machine) -> Grid3<Option<WindState>> {
+        Grid3::new(machine.size())
     }
 }
