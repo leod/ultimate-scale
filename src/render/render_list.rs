@@ -31,16 +31,13 @@ impl RenderList {
         params: &glium::DrawParameters,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        // TODO: Could sort by object here to reduce state switching for large
-        // numbers of objects.
-
         let mat_projection: [[f32; 4]; 4] = context.camera.projection().into();
         let mat_view: [[f32; 4]; 4] = context.camera.view().into();
 
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
-                test: glium::DepthTest::IfLess,
+                test: glium::DepthTest::IfLessOrEqual,
                 write: true,
                 .. Default::default()
             },
@@ -60,26 +57,13 @@ impl RenderList {
                 t: context.elapsed_time_secs,
             };
 
-            match &buffers.index_buffer {
-                object::IndexBuffer::IndexBuffer(buffer) => {
-                    target.draw(
-                        &buffers.vertex_buffer,
-                        buffer,
-                        &resources.program,
-                        &uniforms,
-                        &params,
-                    )?;
-                }
-                object::IndexBuffer::NoIndices(buffer) => {
-                    target.draw(
-                        &buffers.vertex_buffer,
-                        buffer,
-                        &resources.program,
-                        &uniforms,
-                        &params,
-                    )?;
-                }
-            }
+            buffers.index_buffer.draw(
+                &buffers.vertex_buffer,
+                &resources.program,
+                &uniforms,
+                &params,
+                target,
+            );
         }
 
         Ok(())
