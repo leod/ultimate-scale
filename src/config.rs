@@ -1,6 +1,7 @@
 use crate::render::camera;
 use crate::render::shadow;
 use crate::edit::editor;
+use crate::exec;
 
 #[derive(Debug, Clone)]
 pub struct ViewConfig {
@@ -36,5 +37,6 @@ pub struct Config {
     pub view: ViewConfig,
     pub render: RenderConfig,
     pub editor: editor::Config,
+    pub exec: exec::view::Config,
 }
 

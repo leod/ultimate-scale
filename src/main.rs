@@ -3,6 +3,8 @@ mod config;
 mod machine;
 mod render;
 mod edit;
+mod exec;
+mod game_state;
 
 use std::thread;
 use std::time::{Duration, Instant};
@@ -11,6 +13,10 @@ use log::info;
 use nalgebra as na;
 use glium::Surface;
 use floating_duration::TimeAsFloat;
+
+use edit::Editor;
+use exec::Exec;
+use game_state::GameState;
 
 fn main() {
     simple_logger::init().unwrap();
@@ -44,17 +50,16 @@ fn main() {
     let mut edit_camera_view = render::camera::EditCameraView::new();
     let mut camera_input = render::camera::Input::new(config.camera);
 
-    let mut previous_clock = Instant::now();
-    let mut elapsed_time: Duration = Default::default();
-
-    let grid_size = machine::grid::Vector3::new(30, 30, 4);
-    let mut editor = edit::Editor::new(config.editor, grid_size);
-
     let mut render_lists = render::RenderLists::new();
-
     let mut shadow_mapping = config.render.shadow_mapping
         .as_ref()
         .map(|config| render::shadow::ShadowMapping::create(&display, config).unwrap());
+
+    let grid_size = machine::grid::Vector3::new(30, 30, 4);
+    let mut game_state = GameState::Editor(Editor::new(config.editor, grid_size));
+
+    let mut previous_clock = Instant::now();
+    let mut elapsed_time: Duration = Default::default();
 
     while !quit {
         let now_clock = Instant::now();
@@ -72,7 +77,13 @@ fn main() {
         let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
-        editor.render(&mut render_lists).unwrap();
+        match &mut game_state {
+            GameState::Editor(editor) =>
+                editor.render(&mut render_lists).unwrap(),
+            GameState::Exec { .. } => {
+
+            }
+        }
 
         if let Some(shadow_mapping) = &mut shadow_mapping {
             shadow_mapping.render_frame(
@@ -97,7 +108,12 @@ fn main() {
             match event {
                 glutin::Event::WindowEvent { event, .. } => {
                     camera_input.on_event(&event);
-                    editor.on_event(&event);
+
+                    match &mut game_state {
+                        GameState::Editor(editor) =>
+                            editor.on_event(&event),
+                        _ => (),
+                    }
 
                     match event {
                         glutin::WindowEvent::CloseRequested => {
@@ -116,7 +132,11 @@ fn main() {
         camera_input.update(frame_duration_secs, &mut edit_camera_view);
         camera.view = edit_camera_view.view();
 
-        editor.update(frame_duration_secs, &camera, &mut edit_camera_view);
+        match &mut game_state {
+            GameState::Editor(editor) =>
+                editor.update(frame_duration_secs, &camera, &mut edit_camera_view),
+            _ => (),
+        }
 
         thread::sleep(Duration::from_millis(10));
     }
