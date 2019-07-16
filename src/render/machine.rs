@@ -200,7 +200,8 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
         Object::Quad,
         &InstanceParams {
             transform: floor_transform,
-            color: na::Vector4::new(0.2, 0.2, 0.2, 1.0),
+            //color: na::Vector4::new(0.1608, 0.4235, 0.5725, 1.0),
+            color: na::Vector4::new(0.33, 0.64, 0.82, 1.0),
             .. Default::default()
         },
     );

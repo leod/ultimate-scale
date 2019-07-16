@@ -124,22 +124,18 @@ impl ShadowMapping {
                 in vec3 position;
                 in vec3 normal;
 
+                out vec4 v_world_pos;
+                out vec3 v_world_normal;
                 out vec4 v_shadow_coord;
-                out float v_luminosity;
 
                 void main() {
-                    vec4 world_pos = mat_model * vec4(position, 1.0);
+                    v_world_pos = mat_model * vec4(position, 1.0);
 
                     gl_Position = mat_projection
                         * mat_view
-                        * world_pos;
+                        * v_world_pos;
  
-                    vec3 world_normal = transpose(inverse(mat3(mat_model))) * normal;
-                    v_luminosity = max(
-                        dot(normalize(world_normal), normalize(world_pos.xyz - light_pos)),
-                        0.3
-                    );
-
+                    v_world_normal = transpose(inverse(mat3(mat_model))) * normal; //transpose(inverse(mat3(mat_model))) * normal;
                     v_shadow_coord = mat_light_bias_mvp * vec4(position + 0.02*normal, 1.0);
                 }
             ",
@@ -152,8 +148,9 @@ impl ShadowMapping {
                 uniform vec3 light_pos;
                 uniform vec4 color;
 
+                in vec4 v_world_pos;
+                in vec3 v_world_normal;
                 in vec4 v_shadow_coord;
-                in float v_luminosity;
 
                 out vec4 f_color;
 
@@ -176,10 +173,20 @@ impl ShadowMapping {
                 void main() {
                     vec3 light_color = vec3(1, 1, 1);
 
-                    f_color = vec4(
-                        max(shadow_calculation(v_shadow_coord) * v_luminosity, 0.05) * color.rgb * light_color,
-                        1.0
+                    float ambient = 0.1;
+
+                    float diffuse = max(
+                        dot(
+                            normalize(v_world_normal),
+                            normalize(light_pos - v_world_pos.xyz)
+                        ),
+                        0.05
                     );
+
+                    float shadow = shadow_calculation(v_shadow_coord);
+
+                    f_color = vec4((ambient + shadow * diffuse) * color.rgb, 1.0);
+                    //f_color = diffuse * color;
                 }
             ",
 
@@ -276,7 +283,7 @@ impl ShadowMapping {
             &self.shadow_texture,
         ).unwrap();
 
-        let t = context.elapsed_time_secs / 6.0;
+        let t = context.elapsed_time_secs / 2.0;
         self.light_pos.x = 15.0 + 20.0 * t.cos();
         self.light_pos.y = 15.0 + 20.0 * t.sin();
 
@@ -369,7 +376,7 @@ impl ShadowMapping {
         }
 
         // Render debug texture
-        {
+        /*{
             let sampler = glium::uniforms::Sampler::new(&self.shadow_texture)
                 .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
                 .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
@@ -388,7 +395,7 @@ impl ShadowMapping {
                     &Default::default(),
                 )
                 .unwrap();
-        }
+        }*/
 
         // Render transparent objects
         render_lists.transparent.render(
