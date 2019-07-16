@@ -135,8 +135,9 @@ impl ShadowMapping {
                         * mat_view
                         * v_world_pos;
  
-                    v_world_normal = transpose(inverse(mat3(mat_model))) * normal; //transpose(inverse(mat3(mat_model))) * normal;
-                    v_shadow_coord = mat_light_bias_mvp * vec4(position + 0.02*normal, 1.0);
+                    v_world_normal = transpose(inverse(mat3(mat_model))) * normal;
+                    //v_shadow_coord = mat_light_bias_mvp * vec4(position + 0.02*normal, 1.0);
+                    v_shadow_coord = mat_light_bias_mvp * vec4(position, 1.0);
                 }
             ",
 
@@ -155,19 +156,28 @@ impl ShadowMapping {
                 out vec4 f_color;
 
                 float shadow_calculation(vec4 pos_light_space) {
+                    vec3 light_dir = -normalize(vec3(light_pos - v_world_pos.xyz));
+                    float bias = max(0.05 * (1.0 - dot(v_world_normal, light_dir)), 0.01);
+                    //float bias = 0.0;
+
                     vec3 proj_coords = pos_light_space.xyz / pos_light_space.w;
 
                     proj_coords = proj_coords * 0.5 + 0.5;
 
+                    if (proj_coords.z > 1.0)
+                        return 1.0;
+
                     if (proj_coords.x < 0.0 || proj_coords.x > 1.0 || proj_coords.y < 0.0 || proj_coords.y > 1.0) {
-                        return 0.0;
+                        return 1.0;
                     }
 
                     float closest_depth = texture(shadow_map, proj_coords.xy).r;
                     float current_depth = proj_coords.z;
 
-                    float shadow = current_depth > closest_depth ? 0.0 : 1.0;
-                    return shadow;
+                    if (current_depth > closest_depth + bias)
+                        return 0.0; 
+
+                    return current_depth > closest_depth + bias ? 0.0 : 1.0;
                 }
 
                 void main() {
@@ -186,6 +196,7 @@ impl ShadowMapping {
                     float shadow = shadow_calculation(v_shadow_coord);
 
                     f_color = vec4((ambient + shadow * diffuse) * color.rgb, 1.0);
+                    f_color = vec4(shadow * color.rgb, 1.0);
                     //f_color = diffuse * color;
                 }
             ",
