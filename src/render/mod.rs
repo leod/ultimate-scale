@@ -6,7 +6,7 @@ pub mod machine;
 pub mod shadow;
 
 pub use object::{Object, Instance, InstanceParams};
-pub use camera::Camera;
+pub use camera::{Camera, EditCameraView};
 pub use resources::Resources;
 pub use render_list::RenderList;
 

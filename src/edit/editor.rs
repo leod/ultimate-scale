@@ -7,7 +7,7 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::util::intersection::{ray_quad_intersection, Ray, Plane};
 use crate::machine::grid;
 use crate::machine::{Block, PlacedBlock, Machine};
-use crate::render::{self, Camera, RenderLists};
+use crate::render::{self, Camera, EditCameraView, RenderLists};
 
 use crate::edit::Edit;
 
@@ -76,24 +76,29 @@ impl Editor {
         edit.run(&mut self.machine);
     }
 
-    pub fn update(&mut self, dt_secs: f32, camera: &mut Camera) {
-        self.update_mouse_grid_pos(camera);
+    pub fn update(
+        &mut self,
+        dt_secs: f32,
+        camera: &Camera,
+        edit_camera_view: &mut EditCameraView,
+    ) {
+        self.update_mouse_grid_pos(camera, edit_camera_view);
         self.update_input();
 
-        camera.set_target(na::Point3::new(
-            camera.target().x,
-            camera.target().y,
+        edit_camera_view.set_target(na::Point3::new(
+            edit_camera_view.target().x,
+            edit_camera_view.target().y,
             self.current_layer as f32,
         ));
     }
 
-    fn update_mouse_grid_pos(&mut self, camera: &Camera) {
+    fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
         let p = self.mouse_window_pos;
         let p_near = camera.unproject(&na::Point3::new(p.x, p.y, -1.0));
         let p_far = camera.unproject(&na::Point3::new(p.x, p.y, 1.0));
 
         let ray = Ray {
-            origin: camera.eye(),
+            origin: edit_camera_view.eye(),
             velocity: p_far - p_near,
         };
         let quad = Plane {

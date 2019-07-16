@@ -41,6 +41,7 @@ fn main() {
         10000.0,
     );
     let mut camera = render::camera::Camera::new(viewport, projection.to_homogeneous());
+    let mut edit_camera_view = render::camera::EditCameraView::new();
     let mut camera_input = render::camera::Input::new(config.camera);
 
     let mut previous_clock = Instant::now();
@@ -98,9 +99,10 @@ fn main() {
         });
 
         let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
-        camera_input.update(frame_duration_secs, &mut camera);
+        camera_input.update(frame_duration_secs, &mut edit_camera_view);
+        camera.view = edit_camera_view.view();
 
-        editor.update(frame_duration_secs, &mut camera);
+        editor.update(frame_duration_secs, &camera, &mut edit_camera_view);
 
         thread::sleep(Duration::from_millis(10));
     }

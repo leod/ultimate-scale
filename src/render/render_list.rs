@@ -31,8 +31,8 @@ impl RenderList {
         params: &glium::DrawParameters,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        let mat_projection: [[f32; 4]; 4] = context.camera.projection().into();
-        let mat_view: [[f32; 4]; 4] = context.camera.view().into();
+        let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
+        let mat_view: [[f32; 4]; 4] = context.camera.view.into();
 
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
@@ -63,7 +63,7 @@ impl RenderList {
                 &uniforms,
                 &params,
                 target,
-            );
+            )?;
         }
 
         Ok(())
