@@ -1,8 +1,11 @@
 use log::info;
 
+use nalgebra as na;
+
 use glutin::{VirtualKeyCode, WindowEvent};
 
-use crate::machine::Machine;
+use crate::machine::{Block, Machine};
+use crate::machine::grid::{Axis3, Sign, Dir3};
 use crate::exec::Exec;
 use crate::edit::Editor;
 use crate::game_state::GameState;
@@ -85,5 +88,49 @@ impl ExecView {
             0.01,
             &mut out.solid,
         );
+
+        let block_data = &self.exec.machine().block_data;
+        let wind_state = self.exec.wind_state();
+
+        for (index, (block_pos, placed_block)) in block_data.iter() {
+            let block_wind_state = &wind_state[index];
+
+            match placed_block.block {
+                Block::PipeXY => {
+                    let arrow_dir = {
+                        let in_dir_a = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Neg));
+                        let in_dir_b = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Pos));
+
+                        match (block_wind_state.flow_out(&in_dir_a),
+                               block_wind_state.flow_out(&in_dir_b)) {
+                            (true, true) => Some(na::Vector3::z()),
+                            (true, false) => Some(in_dir_a.to_vector()),
+                            (false, true) => Some(in_dir_b.to_vector()),
+                            (false, false) => None,
+                        }
+                    };
+
+                    if let Some(arrow_dir) = arrow_dir {
+                        let block_pos_float: na::Point3<f32> = na::convert(*block_pos);
+                        let arrow_dir_float: na::Vector3<f32> = na::convert(arrow_dir);
+
+                        let start = block_pos_float + na::Vector3::new(0.5, 0.5, 0.5);
+                        let end = start + arrow_dir_float;
+
+                        render::machine::render_arrow(
+                            &render::machine::Line {
+                                start,
+                                end,
+                                thickness: 0.05,
+                                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+                            },
+                            0.0,
+                            &mut out.solid,
+                        );
+                    }
+                }
+                _ => (),
+            }
+        }
     }
 }

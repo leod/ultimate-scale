@@ -178,8 +178,28 @@ pub fn render_block(
     }
 }
 
-pub fn placed_block_transform(pos: &grid::Point3, dir_xy: &grid::Dir2) -> na::Matrix4<f32> {
-    let angle_radians = dir_xy.to_radians();
+pub fn render_arrow(line: &Line, roll: f32, out: &mut RenderList) {
+    render_line(line, out);
+
+    // TODO
+    let head_transform = na::Matrix4::face_towards(
+        &line.end,
+        &(line.end + (line.end - line.start)),
+        &na::Vector3::z(),
+    ) * na::Matrix4::new_scaling(0.1);
+
+    out.add(
+        Object::Triangle, 
+        &InstanceParams {
+            transform: head_transform,
+            color: line.color,
+            .. Default::default()
+        },
+    );
+}
+
+pub fn placed_block_transform(pos: &grid::Point3, placed_block: &PlacedBlock) -> na::Matrix4<f32> {
+    let angle_radians = placed_block.angle_xy_radians();
     let rotation = na::Matrix4::new_rotation(angle_radians * na::Vector3::z());
 
     let coords: na::Vector3<f32> = na::convert(pos.coords);
@@ -207,7 +227,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
     );
 
     for (_index, (block_pos, placed_block)) in machine.iter_blocks() {
-        let transform = placed_block_transform(&block_pos, &placed_block.dir_xy);
+        let transform = placed_block_transform(&block_pos, &placed_block);
 
         render_block(&placed_block.block, &transform, None, &mut out.solid_shadow);
         render_block(&placed_block.block, &transform, None, &mut out.solid);

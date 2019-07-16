@@ -191,13 +191,13 @@ impl Dir3 {
 
     }
 
-    pub fn rotated_xy(&self, dir_xy: &Dir2) -> Dir3 {
-        let mut x_pos = Dir2(Axis2::X, Sign::Pos);
+    pub fn rotated_xy(&self, dir_y: &Dir2) -> Dir3 {
+        let mut y_pos = Dir2(Axis2::Y, Sign::Pos);
         let mut rot = *self;
 
-        while x_pos != *dir_xy {
+        while y_pos != *dir_y {
             rot = rot.rotated_cw_xy(); 
-            x_pos = x_pos.rotated_cw();
+            y_pos = y_pos.rotated_cw();
         }
 
         rot

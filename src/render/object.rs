@@ -200,9 +200,9 @@ impl Object {
         match self {
             Object::Triangle => {
                 let positions = vec![
-                    [1.0, 1.0, 0.0],
-                    [0.0, 0.0, 0.0],
-                    [1.0, 0.0, 0.0],
+                    [0.0, -0.5, 0.0],
+                    [0.0,  0.5, 0.0],
+                    [1.0,  0.0, 0.0],
                 ];
 
                 let normals = vec![
