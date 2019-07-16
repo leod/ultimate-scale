@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use log::info;
+
 use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
@@ -8,12 +10,15 @@ use crate::util::intersection::{ray_quad_intersection, Ray, Plane};
 use crate::machine::grid;
 use crate::machine::{Block, PlacedBlock, Machine};
 use crate::render::{self, Camera, EditCameraView, RenderLists};
+use crate::game_state::GameState;
+use crate::exec::{self, ExecView};
 
 use crate::edit::Edit;
 
 #[derive(Debug, Clone)]
 pub struct Config {
     pub rotate_block_key: VirtualKeyCode,
+    pub start_exec_key: VirtualKeyCode,
     pub block_keys: HashMap<VirtualKeyCode, Block>,
     pub layer_keys: HashMap<VirtualKeyCode, isize>,
 }
@@ -22,6 +27,7 @@ impl Default for Config {
     fn default() -> Config {
         Config {
             rotate_block_key: VirtualKeyCode::R,
+            start_exec_key: VirtualKeyCode::Space,
             block_keys:
                 vec![
                     (VirtualKeyCode::Key1, Block::PipeXY),
@@ -42,6 +48,7 @@ impl Default for Config {
 
 pub struct Editor {
     config: Config,
+    exec_config: exec::view::Config,
 
     machine: Machine,
 
@@ -53,12 +60,14 @@ pub struct Editor {
 
     left_mouse_button_pressed: bool,
     right_mouse_button_pressed: bool,
+    start_exec: bool,
 }
 
 impl Editor {
-    pub fn new(config: Config, size: grid::Vector3) -> Editor {
+    pub fn new(config: Config, exec_config: exec::view::Config, size: grid::Vector3) -> Editor {
         Editor {
             config,
+            exec_config,
             machine: Machine::new(size),
             place_block: PlacedBlock {
                 dir_xy: grid::Dir2(grid::Axis2::X, grid::Sign::Pos),
@@ -69,6 +78,7 @@ impl Editor {
             mouse_grid_pos: None,
             left_mouse_button_pressed: false,
             right_mouse_button_pressed: false,
+            start_exec: false,
         }
     }
 
@@ -81,11 +91,11 @@ impl Editor {
     }
 
     pub fn update(
-        &mut self,
+        mut self,
         dt_secs: f32,
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
-    ) {
+    ) -> GameState {
         self.update_mouse_grid_pos(camera, edit_camera_view);
         self.update_input();
 
@@ -94,6 +104,20 @@ impl Editor {
             edit_camera_view.target().y,
             self.current_layer as f32,
         ));
+
+        if !self.start_exec {
+            GameState::Edit(self)
+        } else {
+            info!("Starting exec");
+
+            self.start_exec = false;
+
+            let exec_view = ExecView::new(self.exec_config.clone(), self.machine.clone());
+            GameState::Exec {
+                exec_view,
+                editor: self,
+            }
+        }
     }
 
     fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
@@ -206,6 +230,10 @@ impl Editor {
             if self.machine.is_valid_layer(layer) {
                 self.current_layer = layer;
             }
+        }
+
+        if keycode == self.config.start_exec_key {
+            self.start_exec = true;
         }
     }
 

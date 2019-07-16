@@ -63,4 +63,12 @@ impl Exec {
 
         vec![Default::default(); machine.num_blocks()]
     }
+
+    pub fn machine(&self) -> &Machine {
+        &self.machine
+    }
+
+    pub fn wind_state(&self) -> &Vec<WindState> {
+        &self.wind_state
+    }
 }

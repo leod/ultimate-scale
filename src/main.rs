@@ -56,7 +56,7 @@ fn main() {
         .map(|config| render::shadow::ShadowMapping::create(&display, config).unwrap());
 
     let grid_size = machine::grid::Vector3::new(30, 30, 4);
-    let mut game_state = GameState::Editor(Editor::new(config.editor, grid_size));
+    let mut game_state = GameState::Edit(Editor::new(config.editor, config.exec, grid_size));
 
     let mut previous_clock = Instant::now();
     let mut elapsed_time: Duration = Default::default();
@@ -78,11 +78,10 @@ fn main() {
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
         match &mut game_state {
-            GameState::Editor(editor) =>
+            GameState::Edit(editor) =>
                 editor.render(&mut render_lists).unwrap(),
-            GameState::Exec { .. } => {
-
-            }
+            GameState::Exec { exec_view, editor: _ } => 
+                exec_view.render(&mut render_lists),
         }
 
         if let Some(shadow_mapping) = &mut shadow_mapping {
@@ -110,9 +109,10 @@ fn main() {
                     camera_input.on_event(&event);
 
                     match &mut game_state {
-                        GameState::Editor(editor) =>
+                        GameState::Edit(editor) =>
                             editor.on_event(&event),
-                        _ => (),
+                        GameState::Exec { exec_view, editor: _ } =>
+                            exec_view.on_event(&event),
                     }
 
                     match event {
@@ -132,11 +132,12 @@ fn main() {
         camera_input.update(frame_duration_secs, &mut edit_camera_view);
         camera.view = edit_camera_view.view();
 
-        match &mut game_state {
-            GameState::Editor(editor) =>
+        game_state = match game_state {
+            GameState::Edit(editor) =>
                 editor.update(frame_duration_secs, &camera, &mut edit_camera_view),
-            _ => (),
-        }
+            GameState::Exec { exec_view, editor } =>
+                exec_view.update(frame_duration_secs, editor),
+        };
 
         thread::sleep(Duration::from_millis(10));
     }
