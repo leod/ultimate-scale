@@ -18,6 +18,7 @@ pub struct Context {
 #[derive(Default, Clone)]
 pub struct RenderLists {
     pub solid: RenderList,
+    pub solid_shadow: RenderList,
     pub transparent: RenderList,
 }
 
@@ -28,6 +29,7 @@ impl RenderLists {
 
     pub fn clear(&mut self) {
         self.solid.clear();
+        self.solid_shadow.clear();
         self.transparent.clear();
     }
 }

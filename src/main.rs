@@ -52,7 +52,7 @@ fn main() {
 
     let mut render_lists = render::RenderLists::new();
 
-    let shadow_mapping = config.render.shadow_mapping
+    let mut shadow_mapping = config.render.shadow_mapping
         .as_ref()
         .map(|config| render::shadow::ShadowMapping::create(&display, config).unwrap());
 
@@ -74,7 +74,7 @@ fn main() {
 
         editor.render(&mut render_lists).unwrap();
 
-        if let Some(shadow_mapping) = &shadow_mapping {
+        if let Some(shadow_mapping) = &mut shadow_mapping {
             shadow_mapping.render_frame(
                 &display,
                 &resources,

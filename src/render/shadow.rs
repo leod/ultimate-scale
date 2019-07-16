@@ -5,7 +5,7 @@ use log::info;
 
 use nalgebra as na;
 
-use glium::{uniform, Surface};
+use glium::{uniform, implement_vertex, Surface};
 
 use crate::config::ViewConfig;
 
@@ -54,10 +54,14 @@ pub struct ShadowMapping {
 
     shadow_map_program: glium::Program,
     render_program: glium::Program,
+	debug_shadow_map_program: glium::Program,
     shadow_texture: glium::texture::DepthTexture2d,
 
     light_pos: na::Point3<f32>,
     light_center: na::Point3<f32>,
+
+    debug_vertex_buffer: glium::VertexBuffer<DebugVertex>,
+    debug_index_buffer: glium::IndexBuffer<u16>,
 }
 
 impl ShadowMapping {
@@ -115,21 +119,28 @@ impl ShadowMapping {
                 uniform mat4 mat_view;
                 uniform mat4 mat_projection;
                 uniform mat4 mat_light_bias_mvp;
+                uniform vec3 light_pos;
                 
                 in vec3 position;
                 in vec3 normal;
 
                 out vec4 v_shadow_coord;
-                out vec4 v_model_normal;
+                out float v_luminosity;
 
                 void main() {
+                    vec4 world_pos = mat_model * vec4(position, 1.0);
+
                     gl_Position = mat_projection
                         * mat_view
-                        * mat_model
-                        * vec4(position, 1.0);
+                        * world_pos;
+ 
+                    vec3 world_normal = mat3(mat_model) * normal;
+                    v_luminosity = max(
+                        dot(normalize(world_normal), normalize(world_pos.xyz - light_pos)),
+                        0.0
+                    );
 
                     v_shadow_coord = mat_light_bias_mvp * vec4(position, 1.0);
-                    v_model_normal = normalize(mat_model * vec4(normal, 1.0));
                 }
             ",
 
@@ -142,18 +153,12 @@ impl ShadowMapping {
                 uniform vec4 color;
 
                 in vec4 v_shadow_coord;
-                in vec4 v_model_normal;
+                in float v_luminosity;
 
                 out vec4 f_color;
 
                 void main() {
                     vec3 light_color = vec3(1, 1, 1);
-
-                    float luminosity = max(
-                        dot(normalize(v_model_normal.xyz), normalize(light_pos)),
-                        0.0
-                    );
-
                     float visibility = texture(
                         shadow_map,
                         vec3(
@@ -163,9 +168,23 @@ impl ShadowMapping {
                     );
 
                     f_color = vec4(
-                        max(luminosity * visibility, 0.05) * color.rgb * light_color,
+                        max(v_luminosity * visibility, 0.05) * color.rgb * light_color,
                         1.0
                     );
+                    f_color = 
+                        vec4(
+                            v_shadow_coord.xy,
+                            v_shadow_coord.z / v_shadow_coord.w,
+                            1.0
+                        );
+                    /*f_color = vec4(
+                        max(v_luminosity, 0.05) * color.rgb * light_color,
+                        1.0
+                    );*/
+                    /*f_color = vec4(
+                        visibility * color.rgb * light_color,
+                        1.0
+                    );*/
                 }
             ",
 
@@ -178,18 +197,65 @@ impl ShadowMapping {
             config.shadow_map_size.y,
         )?;
 
+        let debug_vertex_buffer = glium::VertexBuffer::new(
+            facade,
+            &[
+                DebugVertex::new([0.25, -1.0], [0.0, 0.0]),
+                DebugVertex::new([0.25, -0.25], [0.0, 1.0]),
+                DebugVertex::new([1.0, -0.25], [1.0, 1.0]),
+                DebugVertex::new([1.0, -1.0], [1.0, 0.0]),
+            ],
+        ).unwrap(); // TODO: unwrap
+
+        let debug_index_buffer = glium::IndexBuffer::new(
+            facade,
+            glium::index::PrimitiveType::TrianglesList,
+            &[0u16, 1, 2, 0, 2, 3],
+        ).unwrap(); // TODO: unwrap
+
+        let debug_shadow_map_program = glium::Program::from_source(
+            facade,
+
+            // Vertex Shader
+            "
+                #version 140
+                in vec2 position;
+                in vec2 tex_coords;
+                out vec2 v_tex_coords;
+                void main() {
+                    gl_Position = vec4(position, 0.0, 1.0);
+                    v_tex_coords = tex_coords;
+                }
+            ",
+
+            // Fragement Shader
+            "
+                #version 140
+                uniform sampler2D tex;
+                in vec2 v_tex_coords;
+                out vec4 f_color;
+                void main() {
+                    f_color = vec4(texture(tex, v_tex_coords).rgb, 1.0);
+                }
+            ",
+            None
+        )?;
+
         Ok(ShadowMapping {
             config: config.clone(),
             shadow_map_program,
             render_program,
             shadow_texture,
+            debug_vertex_buffer,
+            debug_index_buffer,
+            debug_shadow_map_program,
             light_pos: na::Point3::new(10.0, 10.0, 5.0),
             light_center: na::Point3::new(0.0, 0.0, 0.0),
         })
     }
 
     fn light_projection(&self) -> na::Matrix4<f32> {
-        let w = 4.0;
+        let w = 8.0;
         na::Matrix4::new_orthographic(-w, w, -w, w, -10.0, 20.0)
     }
 
@@ -202,7 +268,7 @@ impl ShadowMapping {
     }
 
     pub fn render_frame<F: glium::backend::Facade, S: glium::Surface>(
-        &self,
+        &mut self,
         facade: &F,
         resources: &Resources,
         context: &Context,
@@ -214,6 +280,9 @@ impl ShadowMapping {
             facade,
             &self.shadow_texture,
         ).unwrap();
+
+        self.light_pos.x = 20.0 * context.elapsed_time_secs.cos();
+        self.light_pos.y = 20.0 * context.elapsed_time_secs.sin();
 
         let light_projection = self.light_projection();
         let light_view = self.light_view();
@@ -235,7 +304,7 @@ impl ShadowMapping {
             shadow_target.clear_color(1.0, 1.0, 1.0, 1.0);
             shadow_target.clear_depth(1.0);
 
-            render_lists.solid.render_with_program(
+            render_lists.solid_shadow.render_with_program(
                 resources,
                 &light_context,
                 &Default::default(),
@@ -275,6 +344,7 @@ impl ShadowMapping {
                 let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
                 let mat_light_bias_mvp: [[f32; 4]; 4] = light_bias_mvp.into();
                 let color: [f32; 4] = instance.params.color.into();
+                let light_pos: [f32; 3] = self.light_pos.coords.into();
 
                 let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
                     .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
@@ -288,6 +358,7 @@ impl ShadowMapping {
                     mat_light_bias_mvp: mat_light_bias_mvp,
                     color: color,
                     t: context.elapsed_time_secs,
+                    light_pos: light_pos,
                     shadow_map: shadow_map,
                 };
 
@@ -300,6 +371,28 @@ impl ShadowMapping {
                     target,
                 )?;
             }
+        }
+
+        // Render debug texture
+        {
+            let sampler = glium::uniforms::Sampler::new(&self.shadow_texture)
+                .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
+                .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
+
+            let uniforms = uniform! {
+                tex: sampler,
+            };
+
+            target.clear_depth(1.0);
+            target
+                .draw(
+                    &self.debug_vertex_buffer,
+                    &self.debug_index_buffer,
+                    &self.debug_shadow_map_program,
+                    &uniforms,
+                    &Default::default(),
+                )
+                .unwrap();
         }
 
         // Render transparent objects
@@ -316,3 +409,20 @@ impl ShadowMapping {
         Ok(())
     }
 }
+
+#[derive(Clone, Copy, Debug)]
+struct DebugVertex {
+    position: [f32; 2],
+    tex_coords: [f32; 2],
+}
+
+impl DebugVertex {
+    pub fn new(position: [f32; 2], tex_coords: [f32; 2]) -> DebugVertex {
+        Self {
+            position,
+            tex_coords,
+        }
+    }
+}
+
+implement_vertex!(DebugVertex, position, tex_coords);
