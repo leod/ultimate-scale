@@ -118,7 +118,7 @@ impl ShadowMapping {
                 uniform mat4 mat_model;
                 uniform mat4 mat_view;
                 uniform mat4 mat_projection;
-                uniform mat4 mat_light_bias_mvp;
+                uniform mat4 mat_light_mvp;
                 uniform vec3 light_pos;
                 
                 in vec3 position;
@@ -136,8 +136,8 @@ impl ShadowMapping {
                         * v_world_pos;
  
                     v_world_normal = transpose(inverse(mat3(mat_model))) * normal;
-                    //v_shadow_coord = mat_light_bias_mvp * vec4(position + 0.02*normal, 1.0);
-                    v_shadow_coord = mat_light_bias_mvp * vec4(position, 1.0);
+                    //v_shadow_coord = mat_light_mvp * vec4(position + 0.02*normal, 1.0);
+                    v_shadow_coord = mat_light_mvp * vec4(position, 1.0);
                 }
             ",
 
@@ -329,13 +329,6 @@ impl ShadowMapping {
 
         // Render scene from the camera's point of view
         {
-            let bias_matrix = na::Matrix4::new(
-                0.5, 0.0, 0.0, 0.0,
-                0.0, 0.5, 0.0, 0.0,
-                0.0, 0.0, 0.5, 0.0,
-                0.5, 0.5, 0.5, 1.0,
-            );
-
             let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
             let mat_view: [[f32; 4]; 4] = context.camera.view.into();
 
@@ -350,13 +343,12 @@ impl ShadowMapping {
             };
 
             for instance in &render_lists.solid.instances {
-                let light_bias_mvp = na::Matrix4::<f32>::identity()//bias_matrix
-                    * light_projection
+                let light_mvp = light_projection
                     * light_view
                     * instance.params.transform;
 
                 let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
-                let mat_light_bias_mvp: [[f32; 4]; 4] = light_bias_mvp.into();
+                let mat_light_mvp: [[f32; 4]; 4] = light_mvp.into();
                 let color: [f32; 4] = instance.params.color.into();
                 let light_pos: [f32; 3] = self.light_pos.coords.into();
 
@@ -368,7 +360,7 @@ impl ShadowMapping {
                     mat_model: mat_model, 
                     mat_view: mat_view,
                     mat_projection: mat_projection,
-                    mat_light_bias_mvp: mat_light_bias_mvp,
+                    mat_light_mvp: mat_light_mvp,
                     color: color,
                     t: context.elapsed_time_secs,
                     light_pos: light_pos,
