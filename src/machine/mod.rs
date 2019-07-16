@@ -45,121 +45,97 @@ pub struct PlacedBlock {
 }
 
 impl PlacedBlock {
+    pub fn rotate_dir(&self, dir: &Dir3) -> Dir3 {
+        dir.rotated_xy(&self.dir_xy)
+    }
+
     pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
-        self.block.has_wind_hole(&dir.rotated_xy(&self.dir_xy))
+        self.block.has_wind_hole(&self.rotate_dir(&dir))
     }
 }
 
-pub type BlockId = usize;
-
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub struct Blocks {
-    pub ids: Grid3<Option<BlockId>>,
-    pub data: VecOption<(Point3, PlacedBlock)>,
-}
-
-impl Blocks {
-    pub fn new(size: Vector3) -> Blocks {
-        Blocks {
-            ids: Grid3::new(size),
-            data: VecOption::new(),
-        }
-    }
-
-    pub fn get(&self, p: &Point3) -> Option<&PlacedBlock> {
-        self
-            .ids
-            .get(p)
-            .and_then(|id| id.as_ref())
-            .map(|&id| &self.data[id].1)
-    }
-
-    pub fn remove(&mut self, p: &Point3) -> Option<PlacedBlock> {
-        if let Some(Some(id)) = self.ids.get(p).cloned() {
-            self.ids[*p] = None;
-            self.data.remove(id).map(|(id, block)| block)
-        } else {
-            None
-        }
-    }
-
-    pub fn set(&mut self, p: &Point3, block: Option<PlacedBlock>) {
-        self.remove(p);
-
-        if let Some(block) = block {
-            let id = self.data.add((*p, block));
-            self.ids[*p] = Some(id);
-        }
-    }
-
-    pub fn gc(&mut self) {
-        self.data.gc();
-
-        for (index, (grid_pos, _)) in self.data.iter() {
-            self.ids[*grid_pos] = Some(index);
-        }
-    }
-
-    pub fn is_contiguous(&self) -> bool {
-        self.data.num_free() == 0
-    }
-}
+pub type BlockIndex = usize;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Machine {
-    pub(in crate::machine) blocks: Blocks,
+    pub block_ids: Grid3<Option<BlockIndex>>,
+    pub block_data: VecOption<(Point3, PlacedBlock)>,
 }
 
 impl Machine {
     pub fn new(size: Vector3) -> Machine {
         Machine {
-            blocks: Blocks::new(size),
+            block_ids: Grid3::new(size),
+            block_data: VecOption::new(),
         }
     }
 
     pub fn size(&self) -> Vector3 {
-        self.blocks.ids.size()
+        self.block_ids.size()
     }
 
     pub fn is_valid_pos(&self, p: &Point3) -> bool {
-        self.blocks.ids.is_valid_pos(p)
+        self.block_ids.is_valid_pos(p)
     }
 
     pub fn is_valid_layer(&self, layer: isize) -> bool {
         layer >= 0 && layer < self.size().z
     }
 
-    pub fn get_block(&self, p: &Point3) -> Option<&PlacedBlock> {
-        self.blocks.get(p)
+    pub fn get_block_at_pos(&self, p: &Point3) -> Option<(BlockIndex, &PlacedBlock)> {
+        self
+            .block_ids
+            .get(p)
+            .and_then(|id| id.as_ref())
+            .map(|&id| (id, &self.block_data[id].1))
     }
 
-    pub fn set_block(&mut self, p: &Point3, block: Option<PlacedBlock>) {
-        self.blocks.set(p, block);
+    pub fn block_at_index(&self, index: BlockIndex) -> &(Point3, PlacedBlock) {
+        &self.block_data[index]
+    }
+
+    pub fn set_block_at_pos(&mut self, p: &Point3, block: Option<PlacedBlock>) {
+        self.remove_at_pos(p);
+
+        if let Some(block) = block {
+            let id = self.block_data.add((*p, block));
+            self.block_ids[*p] = Some(id);
+        }
+    }
+
+    pub fn remove_at_pos(&mut self, p: &Point3) -> Option<(BlockIndex, PlacedBlock)> {
+        if let Some(Some(id)) = self.block_ids.get(p).cloned() {
+            self.block_ids[*p] = None;
+            self.block_data.remove(id).map(|(data_pos, block)| {
+                assert!(data_pos == *p);
+                (id, block)
+            })
+        } else {
+            None
+        }
     }
 
     pub fn iter_blocks(&self) -> impl Iterator<Item=(usize, &(Point3, PlacedBlock))> {
-        self
-            .blocks
-            .data
-            .iter()
+        self.block_data.iter()
     }
 
     pub fn iter_blocks_mut(&mut self) -> impl Iterator<Item=(usize, &mut (Point3, PlacedBlock))> {
-        self
-            .blocks
-            .data
-            .iter_mut()
+        self.block_data.iter_mut()
     }
 
     pub fn gc(&mut self) {
-        self.blocks.gc();
+        self.block_data.gc();
+
+        for (index, (grid_pos, _)) in self.block_data.iter() {
+            self.block_ids[*grid_pos] = Some(index);
+        }
     }
 
     pub fn is_contiguous(&self) -> bool {
-        self.blocks.is_contiguous()
+        self.block_data.num_free() == 0
     }
 
     pub fn num_blocks(&self) -> usize {
-        self.blocks.data.len()
+        self.block_data.len()
     }
 }

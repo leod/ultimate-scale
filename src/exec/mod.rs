@@ -7,7 +7,7 @@ use crate::util::vec_option::VecOption;
 pub use view::ExecView;
 
 use crate::machine::grid::{Point3, Axis3, Sign, Dir3, Grid3};
-use crate::machine::{Block, BlockId, Machine};
+use crate::machine::{Block, BlockIndex, Machine};
 
 const MOVE_TICKS_PER_NODE: usize = 10;
 
@@ -62,7 +62,12 @@ impl Exec {
                     }
                 }
                 Block::PipeXY => {
+                   let in_dir = placed_block.rotate_dir(&Dir3(Axis3::X, Sign::Neg));
+                   let in_pos = *block_pos + in_dir.to_vector();
+
+                   /*if let Some(in_block) = self.machine.get_block_at_pos(&in_pos) {
                     
+                   }*/
                 }
                 _ => unimplemented!(),
             }
