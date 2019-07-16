@@ -45,10 +45,14 @@ impl Default for Config {
 
 #[derive(Debug, Clone)]
 pub struct Camera {
-    viewport: na::Vector4<f32>,
-    projection: na::Matrix4<f32>,
-    target: na::Point3<f32>,
+    pub viewport: na::Vector4<f32>,
+    pub projection: na::Matrix4<f32>,
+    pub view: na::Matrix4<f32>,
+}
 
+#[derive(Debug, Clone)]
+pub struct EditCameraView {
+    target: na::Point3<f32>,
     min_distance: f32,
     height: f32,
     yaw_radians: f32,
@@ -63,16 +67,39 @@ impl Camera {
         Camera {
             viewport: na::Vector4::new(0.0, 0.0, viewport.x, viewport.y),
             projection,
+            view: na::Matrix4::identity(),
+        }
+    }
+
+    pub fn unproject(&self, win: &na::Point3<f32>) -> na::Point3<f32> {
+        // As in:
+        // https://www.nalgebra.org/rustdoc_glm/src/nalgebra_glm/ext/matrix_projection.rs.html#163
+
+        let transform = (self.projection * self.view)
+            .try_inverse()
+            .unwrap_or_else(na::Matrix4::zeros);
+
+        let point = na::Vector4::new(
+            2.0 * (win.x - self.viewport.x) / self.viewport.z - 1.0,
+            2.0 * (self.viewport.w - win.y - self.viewport.y) / self.viewport.w - 1.0,
+            2.0 * win.z - 1.0,
+            1.0,
+        );
+
+        let result = transform * point;
+        na::Point3::from(result.fixed_rows::<na::U3>(0) / result.w)
+    }
+}
+
+impl EditCameraView {
+    pub fn new() -> EditCameraView {
+        EditCameraView {
             target: na::Point3::new(5.0, 5.0, 0.0),
             min_distance: 3.0,
             height: 10.0,
             yaw_radians: -std::f32::consts::PI / 2.0,
             pitch_radians: -std::f32::consts::PI / 8.0,
         }
-    }
-
-    pub fn projection(&self) -> na::Matrix4<f32> {
-        self.projection
     }
 
     pub fn target(&self) -> na::Point3<f32> {
@@ -96,26 +123,8 @@ impl Camera {
             self.height,
         )
     }
-
-    pub fn unproject(&self, win: &na::Point3<f32>) -> na::Point3<f32> {
-        // As in:
-        // https://www.nalgebra.org/rustdoc_glm/src/nalgebra_glm/ext/matrix_projection.rs.html#163
-
-        let transform = (self.projection() * self.view())
-            .try_inverse()
-            .unwrap_or_else(na::Matrix4::zeros);
-
-        let point = na::Vector4::new(
-            2.0 * (win.x - self.viewport.x) / self.viewport.z - 1.0,
-            2.0 * (self.viewport.w - win.y - self.viewport.y) / self.viewport.w - 1.0,
-            2.0 * win.z - 1.0,
-            1.0,
-        );
-
-        let result = transform * point;
-        na::Point3::from(result.fixed_rows::<na::U3>(0) / result.w)
-    }
 }
+
 
 pub struct Input {
     config: Config,
@@ -146,7 +155,7 @@ impl Input {
             }
     }
 
-    pub fn update(&mut self, dt_secs: f32, camera: &mut Camera) {
+    pub fn update(&mut self, dt_secs: f32, camera: &mut EditCameraView) {
         let move_speed = dt_secs * self.cur_move_speed_per_sec();
         let mut translation = na::Vector3::zeros();
 
