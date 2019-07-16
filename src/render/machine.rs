@@ -192,7 +192,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
     let floor_size = na::Vector3::new(
         machine.size().x as f32,
         machine.size().y as f32,
-        0.0
+        1.0
     );
 
     let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
