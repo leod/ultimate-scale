@@ -2,7 +2,7 @@ pub mod grid;
 
 use crate::util::vec_option::{self, VecOption};
 
-use grid::{Vector3, Point3, Dir3, Grid3};
+use grid::{Vector3, Point3, Axis3, Sign, Dir3, Grid3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum Block {
@@ -13,12 +13,41 @@ pub enum Block {
 }
 
 impl Block {
+    pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
+        match self {
+            Block::PipeXY =>
+                *dir == Dir3(Axis3::X, Sign::Pos)
+                || *dir == Dir3(Axis3::X, Sign::Neg),
+            Block::PipeSplitXY =>
+                *dir == Dir3(Axis3::X, Sign::Pos)
+                || *dir == Dir3(Axis3::X, Sign::Neg)
+                || *dir == Dir3(Axis3::Y, Sign::Pos),
+            Block::PipeBendXY =>
+                *dir == Dir3(Axis3::X, Sign::Pos)
+                || *dir == Dir3(Axis3::Y, Sign::Pos),
+            Block::Solid =>
+                true,
+        }
+    }
+
+    pub fn allows_flow(&self) -> bool {
+        match self {
+            Block::Solid => false,
+            _ => true,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct PlacedBlock {
     pub dir_xy: grid::Dir2,
     pub block: Block,
+}
+
+impl PlacedBlock {
+    pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
+        self.block.has_wind_hole(&dir.rotated_xy(&self.dir_xy))
+    }
 }
 
 pub type BlockId = usize;
