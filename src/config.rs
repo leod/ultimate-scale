@@ -17,9 +17,17 @@ impl Default for ViewConfig {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct RenderConfig {
-    shadow_mapping: Option<shadow::Config>,
+    pub shadow_mapping: Option<shadow::Config>,
+}
+
+impl Default for RenderConfig {
+    fn default() -> RenderConfig {
+        RenderConfig {
+            shadow_mapping: Some(Default::default()),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default)]
