@@ -1,6 +1,10 @@
+pub mod view;
+
 use std::mem;
 
 use crate::util::vec_option::VecOption;
+
+pub use view::ExecView;
 
 use crate::machine::grid::{Point3, Axis3, Sign, Dir3, Grid3};
 use crate::machine::{Block, BlockId, Machine};
@@ -18,7 +22,7 @@ pub struct WindState {
     pub flow_out: [bool; Dir3::NUM_INDICES],
 }
 
-struct Exec {
+pub struct Exec {
     machine: Machine,
     blips: VecOption<Blip>,
     
