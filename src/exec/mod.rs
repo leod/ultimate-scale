@@ -43,10 +43,10 @@ pub struct Exec {
 
 impl Exec {
     pub fn new(mut machine: Machine) -> Exec {
+        machine.gc();
+
         let wind_state = Exec::initial_wind_state(&machine);
         let old_wind_state = wind_state.clone();
-
-        machine.gc();
 
         Exec {
             machine,
