@@ -89,6 +89,25 @@ impl Exec {
                         wind_state.flow_out[in_dir_a.to_index()] = in_wind_state.flow_out(&in_dir_a);
                     }
                 }
+                Block::PipeBendXY => {
+                    let in_dir_a = placed_block.rotated_dir(Dir3(Axis3::X, Sign::Neg));
+                    let in_dir_b = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Pos));
+
+                    let in_pos_a = *block_pos + in_dir_a.to_vector();
+                    let in_pos_b = *block_pos + in_dir_b.to_vector();
+
+                    debug!("neighbor dirs: {:?}={:?} {:?}={:?}", in_dir_a, in_dir_a.to_vector(), in_dir_b, in_dir_b.to_vector());
+
+                    if let Some(Some(in_block_id)) = self.machine.block_ids.get(&in_pos_a) {
+                        let in_wind_state = &self.old_wind_state[*in_block_id];
+                        wind_state.flow_out[in_dir_b.to_index()] = in_wind_state.flow_out(&in_dir_a.invert());
+                    }
+
+                    if let Some(Some(in_block_id)) = self.machine.block_ids.get(&in_pos_b) {
+                        let in_wind_state = &self.old_wind_state[*in_block_id];
+                        wind_state.flow_out[in_dir_a.to_index()] = in_wind_state.flow_out(&in_dir_b.invert());
+                    }
+                }
                 _ => warn!("Wind flow of {:?} is unimplemented!", placed_block.block),
             }
         }
