@@ -19,7 +19,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Config {
         Config {
-            shadow_map_size: na::Vector2::new(1024, 1024),
+            shadow_map_size: na::Vector2::new(4096, 4096),
         }
     }
 }
@@ -140,7 +140,7 @@ impl ShadowMapping {
                         0.3
                     );
 
-                    v_shadow_coord = mat_light_bias_mvp * vec4(position, 1.0);
+                    v_shadow_coord = mat_light_bias_mvp * vec4(position + 0.02*normal, 1.0);
                 }
             ",
 
@@ -251,7 +251,7 @@ impl ShadowMapping {
 
     fn light_projection(&self) -> na::Matrix4<f32> {
         let w = 20.0;
-        na::Matrix4::new_orthographic(-w, w, -w, w, -10.0, 200.0)
+        na::Matrix4::new_orthographic(-w, w, -w, w, 10.0, 50.0)
     }
 
     fn light_view(&self) -> na::Matrix4<f32> {
