@@ -64,6 +64,21 @@ impl<T> VecOption<T> {
         self.free.clear();
         self.size = 0;
     }
+
+    pub fn num_free(&self) -> usize {
+        let num = self.free.len();
+
+        debug_assert!(num == self.data.iter().filter(|x| x.is_none()).count());
+
+        num
+    }
+}
+
+impl<T: Clone> VecOption<T> {
+    pub fn gc(&mut self) {
+        self.data = self.data.iter().filter(|x| x.is_some()).map(|x| x.clone()).collect();
+        self.free.clear();
+    }
 }
 
 impl<T> Index<usize> for VecOption<T> {
