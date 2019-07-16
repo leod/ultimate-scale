@@ -1,10 +1,10 @@
 use crate::edit::Editor;
-use crate::exec::Exec;
+use crate::exec::ExecView;
 
 pub enum GameState {
-    Editor(Editor),
+    Edit(Editor),
     Exec {
-        exec: Exec,
+        exec_view: ExecView,
         editor: Editor,
     },
 }
