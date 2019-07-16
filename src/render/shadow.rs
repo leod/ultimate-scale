@@ -156,8 +156,8 @@ impl ShadowMapping {
                 out vec4 f_color;
 
                 float shadow_calculation(vec4 pos_light_space) {
-                    vec3 light_dir = -normalize(vec3(light_pos - v_world_pos.xyz));
-                    float bias = max(0.05 * (1.0 - dot(v_world_normal, light_dir)), 0.01);
+                    vec3 light_dir = normalize(vec3(light_pos - v_world_pos.xyz));
+                    float bias = max(0.005 * (1.0 - dot(v_world_normal, light_dir)), 0.0005);
                     //float bias = 0.0;
 
                     vec3 proj_coords = pos_light_space.xyz / pos_light_space.w;
@@ -196,8 +196,6 @@ impl ShadowMapping {
                     float shadow = shadow_calculation(v_shadow_coord);
 
                     f_color = vec4((ambient + shadow * diffuse) * color.rgb, 1.0);
-                    f_color = vec4(shadow * color.rgb, 1.0);
-                    //f_color = diffuse * color;
                 }
             ",
 
