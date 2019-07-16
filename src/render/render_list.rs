@@ -8,7 +8,7 @@ use crate::render::camera::Camera;
 
 #[derive(Default, Clone)]
 pub struct RenderList {
-    instances: Vec<Instance>,
+    pub instances: Vec<Instance>,
 }
 
 impl RenderList {
@@ -24,11 +24,12 @@ impl RenderList {
         self.add_instance(&Instance { object, params: params.clone() });
     }
 
-    pub fn render<S: glium::Surface>(
+    pub fn render_with_program<S: glium::Surface>(
         &self,
         resources: &Resources,
         context: &Context,
         params: &glium::DrawParameters,
+        program: &glium::Program,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
@@ -59,7 +60,7 @@ impl RenderList {
 
             buffers.index_buffer.draw(
                 &buffers.vertex_buffer,
-                &resources.program,
+                &program,
                 &uniforms,
                 &params,
                 target,
@@ -67,6 +68,16 @@ impl RenderList {
         }
 
         Ok(())
+    }
+
+    pub fn render<S: glium::Surface>(
+        &self,
+        resources: &Resources,
+        context: &Context,
+        params: &glium::DrawParameters,
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
+        self.render_with_program(resources, context, params, &resources.program, target)
     }
 
     pub fn clear(&mut self) {
