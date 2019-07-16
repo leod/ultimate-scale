@@ -16,15 +16,10 @@ pub enum Block {
 impl Block {
 }
 
-#[derive(PartialEq, Eq, Clone, Debug, Default)]
-pub struct WindState {
-}
-
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct PlacedBlock {
     pub dir_xy: grid::Dir2,
     pub block: Block,
-    pub wind_state: WindState,
 }
 
 pub type BlockId = usize;
@@ -108,5 +103,13 @@ impl Machine {
             .data
             .iter()
             .map(|(_, &(pos, ref block))| (pos, block))
+    }
+
+    pub fn iter_blocks_mut(&mut self) -> impl Iterator<Item=(Point3, &mut PlacedBlock)> {
+        self
+            .blocks
+            .data
+            .iter_mut()
+            .map(|(_, &mut (pos, ref mut block))| (pos, block))
     }
 }

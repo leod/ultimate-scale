@@ -13,10 +13,19 @@ pub enum Axis2 {
 }
 
 impl Axis2 {
+    pub const NUM_INDICES: usize = 2;
+
     pub fn to_vector(&self) -> Vector2 {
         match self {
             Axis2::X => Vector2::x(),
             Axis2::Y => Vector2::y(),
+        }
+    }
+
+    pub fn to_index(&self) -> usize {
+        match self {
+            Axis2::X => 0,
+            Axis2::Y => 1,
         }
     }
 }
@@ -29,11 +38,21 @@ pub enum Axis3 {
 }
 
 impl Axis3 {
+    pub const NUM_INDICES: usize = 3;
+
     pub fn to_vector(&self) -> Vector3 {
         match self {
             Axis3::X => Vector3::x(),
             Axis3::Y => Vector3::y(),
             Axis3::Z => Vector3::z(),
+        }
+    }
+
+    pub fn to_index(&self) -> usize {
+        match self {
+            Axis3::X => 0,
+            Axis3::Y => 1,
+            Axis3::Z => 2,
         }
     }
 }
@@ -45,6 +64,8 @@ pub enum Sign {
 }
 
 impl Sign {
+    pub const NUM_INDICES: usize = 2;
+
     pub fn to_number(&self) -> isize {
         match self {
             Sign::Pos => 1,
@@ -58,12 +79,21 @@ impl Sign {
             Sign::Neg => Sign::Pos,
         }
     }
+
+    pub fn to_index(&self) -> usize {
+        match self {
+            Sign::Pos => 0,
+            Sign::Neg => 1,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Dir2(pub Axis2, pub Sign);
 
 impl Dir2 {
+    pub const NUM_INDICES: usize = Axis2::NUM_INDICES * Sign::NUM_INDICES;
+
     pub fn to_vector(&self) -> Vector2 {
         self.0.to_vector() * self.1.to_number()
     }
@@ -85,18 +115,28 @@ impl Dir2 {
         let vector = self.to_vector();
         (vector.y as f32).atan2(vector.x as f32)
     }
+
+    pub fn to_index(&self) -> usize {
+        self.0.to_index() * Sign::NUM_INDICES + self.1.to_index()
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Dir3(pub Axis3, pub Sign);
 
 impl Dir3 {
+    pub const NUM_INDICES: usize = Axis3::NUM_INDICES * Sign::NUM_INDICES;
+
     pub fn to_vector(&self) -> Vector3 {
         self.0.to_vector() * self.1.to_number()
     }
 
     pub fn invert(&self) -> Dir3 {
         Dir3(self.0, self.1.invert())
+    }
+
+    pub fn to_index(&self) -> usize {
+        self.0.to_index() * Sign::NUM_INDICES + self.1.to_index()
     }
 }
 
