@@ -1,3 +1,5 @@
+use log::info;
+
 use glutin::{VirtualKeyCode, WindowEvent};
 
 use crate::machine::Machine;
@@ -10,6 +12,7 @@ use crate::render::{self, RenderLists};
 pub struct Config {
     pub pause_resume_key: VirtualKeyCode,
     pub stop_key: VirtualKeyCode,
+    pub frame_key: VirtualKeyCode,
 }
 
 impl Default for Config {
@@ -17,6 +20,7 @@ impl Default for Config {
         Config {
             pause_resume_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
+            frame_key: VirtualKeyCode::F,
         }
     }
 }
@@ -44,6 +48,7 @@ impl ExecView {
                 editor: editor,
             }
         } else {
+            info!("Stopping exec, returning to editor");
             GameState::Edit(editor)
         }
     }
@@ -67,6 +72,9 @@ impl ExecView {
     fn on_key_press(&mut self, keycode: VirtualKeyCode) {
         if keycode == self.config.stop_key {
             self.stop_exec = true;
+        } else if keycode == self.config.frame_key {
+            info!("Running single frame");
+            self.exec.update();
         }
     }
 
