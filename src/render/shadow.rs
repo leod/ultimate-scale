@@ -136,8 +136,8 @@ impl ShadowMapping {
                         * v_world_pos;
  
                     v_world_normal = transpose(inverse(mat3(mat_model))) * normal;
-                    //v_shadow_coord = mat_light_mvp * vec4(position + 0.02*normal, 1.0);
-                    v_shadow_coord = mat_light_mvp * vec4(position, 1.0);
+                    v_shadow_coord = mat_light_mvp * vec4(position + 0.02*normal, 1.0);
+                    //v_shadow_coord = mat_light_mvp * vec4(position, 1.0);
                 }
             ",
 
@@ -157,8 +157,8 @@ impl ShadowMapping {
 
                 float shadow_calculation(vec4 pos_light_space) {
                     vec3 light_dir = normalize(vec3(light_pos - v_world_pos.xyz));
-                    float bias = max(0.005 * (1.0 - dot(v_world_normal, light_dir)), 0.0005);
-                    //float bias = 0.0;
+                    //float bias = max(0.0055 * (1.0 - dot(v_world_normal, light_dir)), 0.005);
+                    float bias = 0.0;
 
                     vec3 proj_coords = pos_light_space.xyz / pos_light_space.w;
 
@@ -173,9 +173,6 @@ impl ShadowMapping {
 
                     float closest_depth = texture(shadow_map, proj_coords.xy).r;
                     float current_depth = proj_coords.z;
-
-                    if (current_depth > closest_depth + bias)
-                        return 0.0; 
 
                     return current_depth > closest_depth + bias ? 0.0 : 1.0;
                 }
