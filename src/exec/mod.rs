@@ -53,7 +53,19 @@ impl Exec {
         mem::swap(&mut self.wind_state, &mut self.old_wind_state);
 
         for (index, (block_pos, placed_block)) in self.machine.iter_blocks_mut() {
-            self.old_wind_state[index] = self.wind_state[index];
+            let wind_state = &mut self.wind_state[index];
+            
+            match placed_block.block {
+                Block::Solid => {
+                    for index in 0 .. Dir3::NUM_INDICES {
+                        wind_state.flow_out[index] = true;
+                    }
+                }
+                Block::PipeXY => {
+                    
+                }
+                _ => unimplemented!(),
+            }
         }
     }
 

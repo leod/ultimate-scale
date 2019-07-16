@@ -14,6 +14,10 @@ pub enum Axis2 {
 
 impl Axis2 {
     pub const NUM_INDICES: usize = 2;
+    pub const ALL: [Axis2; Self::NUM_INDICES] = [
+        Axis2::X,
+        Axis2::Y,
+    ];
 
     pub fn to_vector(&self) -> Vector2 {
         match self {
@@ -28,6 +32,20 @@ impl Axis2 {
             Axis2::Y => 1,
         }
     }
+
+    pub fn embed(&self) -> Axis3 {
+        match self {
+            Axis2::X => Axis3::X,
+            Axis2::Y => Axis3::Y,
+        }
+    }
+
+    pub fn next(&self) -> Axis2 {
+        match self {
+            Axis2::X => Axis2::Y,
+            Axis2::Y => Axis2::X,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
@@ -39,6 +57,11 @@ pub enum Axis3 {
 
 impl Axis3 {
     pub const NUM_INDICES: usize = 3;
+    pub const ALL: [Axis3; Self::NUM_INDICES] = [
+        Axis3::X,
+        Axis3::Y,
+        Axis3::Z,
+    ];
 
     pub fn to_vector(&self) -> Vector3 {
         match self {
@@ -103,12 +126,13 @@ impl Dir2 {
     }
 
     pub fn rotated_cw(&self) -> Dir2 {
-        match self {
-            Dir2(Axis2::X, Sign::Pos) => Dir2(Axis2::Y, Sign::Neg),
-            Dir2(Axis2::Y, Sign::Neg) => Dir2(Axis2::X, Sign::Neg),
-            Dir2(Axis2::X, Sign::Neg) => Dir2(Axis2::Y, Sign::Pos),
-            Dir2(Axis2::Y, Sign::Pos) => Dir2(Axis2::X, Sign::Pos),
-        }
+        let sign =
+            match self.0 {
+                Axis2::X => self.1.invert(),
+                Axis2::Y => self.1,
+            };
+
+        Dir2(self.0.next(), sign)
     }
 
     pub fn to_radians(&self) -> f32 {
@@ -119,6 +143,10 @@ impl Dir2 {
     pub fn to_index(&self) -> usize {
         self.0.to_index() * Sign::NUM_INDICES + self.1.to_index()
     }
+
+    pub fn embed(&self) -> Dir3 {
+        Dir3(self.0.embed(), self.1)
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
@@ -126,6 +154,14 @@ pub struct Dir3(pub Axis3, pub Sign);
 
 impl Dir3 {
     pub const NUM_INDICES: usize = Axis3::NUM_INDICES * Sign::NUM_INDICES;
+    pub const ALL: [Dir3; Self::NUM_INDICES] = [
+        Dir3(Axis3::X, Sign::Pos),
+        Dir3(Axis3::X, Sign::Neg),
+        Dir3(Axis3::Y, Sign::Pos),
+        Dir3(Axis3::Y, Sign::Neg),
+        Dir3(Axis3::Z, Sign::Pos),
+        Dir3(Axis3::Z, Sign::Neg),
+    ];
 
     pub fn to_vector(&self) -> Vector3 {
         self.0.to_vector() * self.1.to_number()
@@ -137,6 +173,34 @@ impl Dir3 {
 
     pub fn to_index(&self) -> usize {
         self.0.to_index() * Sign::NUM_INDICES + self.1.to_index()
+    }
+
+    pub fn rotated_cw_xy(&self) -> Dir3 {
+        let axis =
+            match self.0 {
+                Axis3::X => Axis3::Y,
+                Axis3::Y => Axis3::X,
+                Axis3::Z => Axis3::Z,
+            };
+        let sign =
+            match self.0 {
+                Axis3::X => self.1.invert(),
+                Axis3::Y | Axis3::Z => self.1,
+            };
+        Dir3(axis, sign)
+
+    }
+
+    pub fn rotated_xy(&self, dir_xy: &Dir2) -> Dir3 {
+        let mut x_pos = Dir2(Axis2::X, Sign::Pos);
+        let mut rot = *self;
+
+        while x_pos != *dir_xy {
+            rot = rot.rotated_cw_xy(); 
+            x_pos = x_pos.rotated_cw();
+        }
+
+        rot
     }
 }
 
