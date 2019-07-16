@@ -180,7 +180,7 @@ impl ShadowMapping {
                 void main() {
                     vec3 light_color = vec3(1, 1, 1);
 
-                    float ambient = 0.1;
+                    float ambient = 0.5;
 
                     float diffuse = max(
                         dot(
@@ -257,7 +257,7 @@ impl ShadowMapping {
             debug_vertex_buffer,
             debug_index_buffer,
             debug_shadow_map_program,
-            light_pos: na::Point3::new(10.0, 10.0, 15.0),
+            light_pos: na::Point3::new(10.0, 10.0, 20.0),
             light_center: na::Point3::new(15.0, 15.0, 0.0),
         })
     }
@@ -289,7 +289,7 @@ impl ShadowMapping {
             &self.shadow_texture,
         ).unwrap();
 
-        let t = context.elapsed_time_secs / 2.0;
+        let t = context.elapsed_time_secs / 48.0;
         self.light_pos.x = 15.0 + 20.0 * t.cos();
         self.light_pos.y = 15.0 + 20.0 * t.sin();
 

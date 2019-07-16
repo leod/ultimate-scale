@@ -63,6 +63,18 @@ impl Blocks {
             self.ids[*p] = Some(id);
         }
     }
+
+    pub fn gc(&mut self) {
+        self.data.gc();
+
+        for (index, (grid_pos, _)) in self.data.iter() {
+            self.ids[*grid_pos] = Some(index);
+        }
+    }
+
+    pub fn is_contiguous(&self) -> bool {
+        self.data.num_free() == 0
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -97,19 +109,29 @@ impl Machine {
         self.blocks.set(p, block);
     }
 
-    pub fn iter_blocks(&self) -> impl Iterator<Item=(Point3, &PlacedBlock)> {
+    pub fn iter_blocks(&self) -> impl Iterator<Item=(usize, &(Point3, PlacedBlock))> {
         self
             .blocks
             .data
             .iter()
-            .map(|(_, &(pos, ref block))| (pos, block))
     }
 
-    pub fn iter_blocks_mut(&mut self) -> impl Iterator<Item=(Point3, &mut PlacedBlock)> {
+    pub fn iter_blocks_mut(&mut self) -> impl Iterator<Item=(usize, &mut (Point3, PlacedBlock))> {
         self
             .blocks
             .data
             .iter_mut()
-            .map(|(_, &mut (pos, ref mut block))| (pos, block))
+    }
+
+    pub fn gc(&mut self) {
+        self.blocks.gc();
+    }
+
+    pub fn is_contiguous(&self) -> bool {
+        self.blocks.is_contiguous()
+    }
+
+    pub fn num_blocks(&self) -> usize {
+        self.blocks.data.len()
     }
 }

@@ -72,6 +72,10 @@ impl Editor {
         }
     }
 
+    pub fn machine(&self) -> &Machine {
+        &self.machine
+    }
+
     pub fn run_edit(&mut self, edit: Edit) {
         edit.run(&mut self.machine);
     }

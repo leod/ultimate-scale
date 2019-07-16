@@ -206,7 +206,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
         },
     );
 
-    for (block_pos, placed_block) in machine.iter_blocks() {
+    for (_index, (block_pos, placed_block)) in machine.iter_blocks() {
         let transform = placed_block_transform(&block_pos, &placed_block.dir_xy);
 
         render_block(&placed_block.block, &transform, None, &mut out.solid_shadow);
