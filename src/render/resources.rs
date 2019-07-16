@@ -1,3 +1,5 @@
+use log::info;
+
 use glium::program;
 use num_traits::ToPrimitive;
 
@@ -41,6 +43,7 @@ impl Resources {
             object_buffers.push(object.create_buffers(facade)?);
         }
 
+        info!("Creating straight render program");
         let program = program!(facade,
             140 => {
                 vertex: "

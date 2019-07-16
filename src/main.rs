@@ -52,6 +52,10 @@ fn main() {
 
     let mut render_lists = render::RenderLists::new();
 
+    let shadow_mapping = config.render.shadow_mapping
+        .as_ref()
+        .map(|config| render::shadow::ShadowMapping::create(&display, config).unwrap());
+
     while !quit {
         let now_clock = Instant::now();
         let frame_duration = now_clock - previous_clock;
@@ -70,12 +74,22 @@ fn main() {
 
         editor.render(&mut render_lists).unwrap();
 
-        render::render_frame_straight(
-            &resources,
-            &render_context,
-            &render_lists,
-            &mut target,
-        ).unwrap();
+        if let Some(shadow_mapping) = &shadow_mapping {
+            shadow_mapping.render_frame(
+                &display,
+                &resources,
+                &render_context,
+                &render_lists,
+                &mut target,
+            ).unwrap();
+        } else {
+            render::render_frame_straight(
+                &resources,
+                &render_context,
+                &render_lists,
+                &mut target,
+            ).unwrap();
+        }
 
         target.finish().unwrap();
 

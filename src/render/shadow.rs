@@ -1,6 +1,8 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
 
+use log::info;
+
 use nalgebra as na;
 
 use glium::{uniform, Surface};
@@ -47,7 +49,7 @@ impl From<glium::framebuffer::ValidationError> for CreationError {
     }
 }
 
-struct ShadowMapping {
+pub struct ShadowMapping {
     config: Config,
 
     shadow_map_program: glium::Program,
@@ -64,6 +66,7 @@ impl ShadowMapping {
         config: &Config,
     ) -> Result<ShadowMapping, CreationError> {
         // Shaders for creating the shadow map from light source's perspective
+        info!("Creating shadow map program");
         let shadow_map_program = glium::Program::from_source(
             facade,
 
@@ -75,7 +78,7 @@ impl ShadowMapping {
                 uniform mat4 mat_view;
                 uniform mat4 mat_projection;
 
-                in vec4 position;
+                in vec3 position;
 
                 void main() {
                     gl_Position = mat_projection
@@ -100,20 +103,21 @@ impl ShadowMapping {
         )?;
 
         // Shaders for rendering the shadowed scene
+        info!("Creating shadow render program");
         let render_program = glium::Program::from_source(
             facade,
 
             // Vertex shader
             "
-                #version 330
+                #version 330 core
 
                 uniform mat4 mat_model;
                 uniform mat4 mat_view;
                 uniform mat4 mat_projection;
                 uniform mat4 mat_light_bias_mvp;
                 
-                in vec4 position;
-                in vec4 normal;
+                in vec3 position;
+                in vec3 normal;
 
                 out vec4 v_shadow_coord;
                 out vec4 v_model_normal;
@@ -124,17 +128,17 @@ impl ShadowMapping {
                         * mat_model
                         * vec4(position, 1.0);
 
-                    v_shadow_coord = mat_light_bias_mvp * position;
-                    v_model_normal = normalize(mat_model * normal);
+                    v_shadow_coord = mat_light_bias_mvp * vec4(position, 1.0);
+                    v_model_normal = normalize(mat_model * vec4(normal, 1.0));
                 }
             ",
 
             // Fragment shader
             "
-                #version 
+                #version 330 core
 
                 uniform sampler2DShadow shadow_map;
-                uniform vec4 light_pos;
+                uniform vec3 light_pos;
                 uniform vec4 color;
 
                 in vec4 v_shadow_coord;
@@ -146,20 +150,20 @@ impl ShadowMapping {
                     vec3 light_color = vec3(1, 1, 1);
 
                     float luminosity = max(
-                        dot(normalize(model_normal.xyz), normalize(light_pos)),
+                        dot(normalize(v_model_normal.xyz), normalize(light_pos)),
                         0.0
                     );
 
                     float visibility = texture(
                         shadow_map,
                         vec3(
-                            shadow_coord.xy,
-                            shadow_coord.z / shadow_coord.w
+                            v_shadow_coord.xy,
+                            v_shadow_coord.z / v_shadow_coord.w
                         )
                     );
 
                     f_color = vec4(
-                        max(luminosity * visibility, 0.05) * color * light_color,
+                        max(luminosity * visibility, 0.05) * color.rgb * light_color,
                         1.0
                     );
                 }
