@@ -134,10 +134,10 @@ impl ShadowMapping {
                         * mat_view
                         * world_pos;
  
-                    vec3 world_normal = mat3(mat_model) * normal;
+                    vec3 world_normal = transpose(inverse(mat3(mat_model))) * normal;
                     v_luminosity = max(
                         dot(normalize(world_normal), normalize(world_pos.xyz - light_pos)),
-                        0.0
+                        0.3
                     );
 
                     v_shadow_coord = mat_light_bias_mvp * vec4(position, 1.0);
@@ -148,7 +148,7 @@ impl ShadowMapping {
             "
                 #version 330 core
 
-                uniform sampler2DShadow shadow_map;
+                uniform sampler2D shadow_map;
                 uniform vec3 light_pos;
                 uniform vec4 color;
 
@@ -157,34 +157,29 @@ impl ShadowMapping {
 
                 out vec4 f_color;
 
+                float shadow_calculation(vec4 pos_light_space) {
+                    vec3 proj_coords = pos_light_space.xyz / pos_light_space.w;
+
+                    proj_coords = proj_coords * 0.5 + 0.5;
+
+                    if (proj_coords.x < 0.0 || proj_coords.x > 1.0 || proj_coords.y < 0.0 || proj_coords.y > 1.0) {
+                        return 0.0;
+                    }
+
+                    float closest_depth = texture(shadow_map, proj_coords.xy).r;
+                    float current_depth = proj_coords.z;
+
+                    float shadow = current_depth > closest_depth ? 0.0 : 1.0;
+                    return shadow;
+                }
+
                 void main() {
                     vec3 light_color = vec3(1, 1, 1);
-                    float visibility = texture(
-                        shadow_map,
-                        vec3(
-                            v_shadow_coord.xy,
-                            v_shadow_coord.z / v_shadow_coord.w
-                        )
-                    );
 
                     f_color = vec4(
-                        max(v_luminosity * visibility, 0.05) * color.rgb * light_color,
+                        max(shadow_calculation(v_shadow_coord) * v_luminosity, 0.05) * color.rgb * light_color,
                         1.0
                     );
-                    f_color = 
-                        vec4(
-                            v_shadow_coord.xy,
-                            v_shadow_coord.z / v_shadow_coord.w,
-                            1.0
-                        );
-                    /*f_color = vec4(
-                        max(v_luminosity, 0.05) * color.rgb * light_color,
-                        1.0
-                    );*/
-                    /*f_color = vec4(
-                        visibility * color.rgb * light_color,
-                        1.0
-                    );*/
                 }
             ",
 
@@ -249,14 +244,14 @@ impl ShadowMapping {
             debug_vertex_buffer,
             debug_index_buffer,
             debug_shadow_map_program,
-            light_pos: na::Point3::new(10.0, 10.0, 5.0),
-            light_center: na::Point3::new(0.0, 0.0, 0.0),
+            light_pos: na::Point3::new(10.0, 10.0, 15.0),
+            light_center: na::Point3::new(15.0, 15.0, 0.0),
         })
     }
 
     fn light_projection(&self) -> na::Matrix4<f32> {
-        let w = 8.0;
-        na::Matrix4::new_orthographic(-w, w, -w, w, -10.0, 20.0)
+        let w = 20.0;
+        na::Matrix4::new_orthographic(-w, w, -w, w, -10.0, 200.0)
     }
 
     fn light_view(&self) -> na::Matrix4<f32> {
@@ -281,8 +276,9 @@ impl ShadowMapping {
             &self.shadow_texture,
         ).unwrap();
 
-        self.light_pos.x = 20.0 * context.elapsed_time_secs.cos();
-        self.light_pos.y = 20.0 * context.elapsed_time_secs.sin();
+        let t = context.elapsed_time_secs / 6.0;
+        self.light_pos.x = 15.0 + 20.0 * t.cos();
+        self.light_pos.y = 15.0 + 20.0 * t.sin();
 
         let light_projection = self.light_projection();
         let light_view = self.light_view();
@@ -336,7 +332,7 @@ impl ShadowMapping {
             };
 
             for instance in &render_lists.solid.instances {
-                let light_bias_mvp = bias_matrix
+                let light_bias_mvp = na::Matrix4::<f32>::identity()//bias_matrix
                     * light_projection
                     * light_view
                     * instance.params.transform;
@@ -348,8 +344,7 @@ impl ShadowMapping {
 
                 let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
                     .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
-                    .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest)
-                    .depth_texture_comparison(Some(glium::uniforms::DepthTextureComparison::LessOrEqual));
+                    .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
 
                 let uniforms = uniform! {
                     mat_model: mat_model, 
