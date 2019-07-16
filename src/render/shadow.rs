@@ -5,7 +5,7 @@ use nalgebra as na;
 
 use crate::config::ViewConfig;
 
-use crate::render::{RenderLists, Resources, Context};
+use crate::render::{RenderLists, Camera, Resources, Context};
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -24,6 +24,7 @@ impl Default for Config {
 pub enum CreationError {
     TextureCreationError(glium::texture::TextureCreationError),
     ProgramCreationError(glium::program::ProgramCreationError),
+    FrameBufferValidationError(glium::framebuffer::ValidationError),
 }
 
 impl From<glium::texture::TextureCreationError> for CreationError {
@@ -38,13 +39,21 @@ impl From<glium::program::ProgramCreationError> for CreationError {
     }
 }
 
+impl From<glium::framebuffer::ValidationError> for CreationError {
+    fn from(err: glium::framebuffer::ValidationError) -> CreationError {
+        CreationError::FrameBufferValidationError(err)
+    }
+}
+
 struct ShadowMapping {
     config: Config,
 
     shadow_map_program: glium::Program,
     render_program: glium::Program,
-
     shadow_texture: glium::texture::DepthTexture2d,
+
+    light_pos: na::Point3<f32>,
+    light_center: na::Point3<f32>,
 }
 
 impl ShadowMapping {
@@ -168,17 +177,65 @@ impl ShadowMapping {
             shadow_map_program,
             render_program,
             shadow_texture,
+            light_pos: na::Point3::new(10.0, 10.0, 5.0),
+            light_center: na::Point3::new(0.0, 0.0, 0.0),
         })
     }
 
-    pub fn render_frame<S: glium::Surface>(
+    pub fn render_frame<F: glium::backend::Facade, S: glium::Surface>(
         &self,
+        facade: &F,
         resources: &Resources,
         context: &Context,
         render_lists: &RenderLists,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
+        // TODO: unwrap
+        let shadow_target = glium::framebuffer::SimpleFrameBuffer::depth_only(
+            facade,
+            &self.shadow_texture,
+        ).unwrap();
+
         // Render scene from the light's point of view into depth buffer
+        {
+            let w = 4.0;
+            let light_projection = na::Matrix4::new_orthographic(-w, w, -w, w, -10.0, 20.0);
+            let light_view = na::Matrix4::look_at_rh(
+                &self.light_pos,
+                &self.light_center,
+                &na::Vector3::new(0.0, 0.0, 1.0),
+            );
+
+            let camera = Camera {
+                viewport: na::Vector4::new(0.0, 0.0, 0.0, 0.0), // dummy value
+                projection: light_projection,
+                view: light_view,
+            };
+
+            shadow_target.clear_color(1.0, 1.0, 1.0, 1.0);
+            shadow_target.clear_depth(1.0);
+
+            render_lists.solid.render_with_program(
+                resources,
+                context,
+                &Default::default(),
+                &self.shadow_map_program,
+                &mut shadow_target,   
+            )?;
+        }
+
+        //
+
+        // Render transparent objects
+        render_lists.transparent.render(
+            resources,
+            context,
+            &glium::DrawParameters {
+                blend: glium::draw_parameters::Blend::alpha_blending(), 
+                .. Default::default()
+            },
+            target,
+        )?;
 
         Ok(())
     }
