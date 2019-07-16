@@ -7,7 +7,7 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::util::intersection::{ray_quad_intersection, Ray, Plane};
 use crate::machine::grid;
 use crate::machine::{Block, PlacedBlock, Machine};
-use crate::render::{self, Object, InstanceParams, Resources, Camera, RenderLists};
+use crate::render::{self, Camera, RenderLists};
 
 use crate::edit::Edit;
 
@@ -171,12 +171,6 @@ impl Editor {
                 modifiers,
             } =>
                 self.on_mouse_input(*state, *button, *modifiers),
-            WindowEvent::CursorMoved {
-                device_id: _,
-                position: _,
-                modifiers: _,
-            } => {
-            }
 
             _ => ()
         }

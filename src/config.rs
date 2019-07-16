@@ -1,4 +1,5 @@
 use crate::render::camera;
+use crate::render::shadow;
 use crate::edit::editor;
 
 #[derive(Debug, Clone)]
@@ -17,9 +18,15 @@ impl Default for ViewConfig {
 }
 
 #[derive(Debug, Clone, Default)]
+pub struct RenderConfig {
+    shadow_mapping: Option<shadow::Config>,
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct Config {
-    pub view: ViewConfig,
     pub camera: camera::Config,
+    pub view: ViewConfig,
+    pub render: RenderConfig,
     pub editor: editor::Config,
 }
 

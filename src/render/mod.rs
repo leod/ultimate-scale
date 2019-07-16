@@ -3,9 +3,7 @@ pub mod resources;
 pub mod camera;
 pub mod render_list;
 pub mod machine;
-
-use nalgebra as na;
-use glium::{self, uniform};
+pub mod shadow;
 
 pub use object::{Object, Instance, InstanceParams};
 pub use camera::Camera;
