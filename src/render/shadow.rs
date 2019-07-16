@@ -3,6 +3,8 @@
 
 use nalgebra as na;
 
+use glium::{uniform, Surface};
+
 use crate::config::ViewConfig;
 
 use crate::render::{RenderLists, Camera, Resources, Context};
@@ -108,7 +110,7 @@ impl ShadowMapping {
                 uniform mat4 mat_model;
                 uniform mat4 mat_view;
                 uniform mat4 mat_projection;
-                uniform mat4 mat_depth_bias_mvp;
+                uniform mat4 mat_light_bias_mvp;
                 
                 in vec4 position;
                 in vec4 normal;
@@ -122,7 +124,7 @@ impl ShadowMapping {
                         * mat_model
                         * vec4(position, 1.0);
 
-                    v_shadow_coord = mat_depth_bias_mvp * position;
+                    v_shadow_coord = mat_light_bias_mvp * position;
                     v_model_normal = normalize(mat_model * normal);
                 }
             ",
@@ -182,6 +184,19 @@ impl ShadowMapping {
         })
     }
 
+    fn light_projection(&self) -> na::Matrix4<f32> {
+        let w = 4.0;
+        na::Matrix4::new_orthographic(-w, w, -w, w, -10.0, 20.0)
+    }
+
+    fn light_view(&self) -> na::Matrix4<f32> {
+        na::Matrix4::look_at_rh(
+            &self.light_pos,
+            &self.light_center,
+            &na::Vector3::new(0.0, 0.0, 1.0),
+        )
+    }
+
     pub fn render_frame<F: glium::backend::Facade, S: glium::Surface>(
         &self,
         facade: &F,
@@ -191,25 +206,26 @@ impl ShadowMapping {
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         // TODO: unwrap
-        let shadow_target = glium::framebuffer::SimpleFrameBuffer::depth_only(
+        let mut shadow_target = glium::framebuffer::SimpleFrameBuffer::depth_only(
             facade,
             &self.shadow_texture,
         ).unwrap();
 
+        let light_projection = self.light_projection();
+        let light_view = self.light_view();
+
         // Render scene from the light's point of view into depth buffer
         {
             let w = 4.0;
-            let light_projection = na::Matrix4::new_orthographic(-w, w, -w, w, -10.0, 20.0);
-            let light_view = na::Matrix4::look_at_rh(
-                &self.light_pos,
-                &self.light_center,
-                &na::Vector3::new(0.0, 0.0, 1.0),
-            );
-
             let camera = Camera {
                 viewport: na::Vector4::new(0.0, 0.0, 0.0, 0.0), // dummy value
                 projection: light_projection,
                 view: light_view,
+            };
+
+            let light_context = Context {
+                camera,
+                .. *context
             };
 
             shadow_target.clear_color(1.0, 1.0, 1.0, 1.0);
@@ -217,14 +233,70 @@ impl ShadowMapping {
 
             render_lists.solid.render_with_program(
                 resources,
-                context,
+                &light_context,
                 &Default::default(),
                 &self.shadow_map_program,
                 &mut shadow_target,   
             )?;
         }
 
-        //
+        // Render scene from the camera's point of view
+        {
+            let bias_matrix = na::Matrix4::new(
+                0.5, 0.0, 0.0, 0.0,
+                0.0, 0.5, 0.0, 0.0,
+                0.0, 0.0, 0.5, 0.0,
+                0.5, 0.5, 0.5, 1.0,
+            );
+
+            let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
+            let mat_view: [[f32; 4]; 4] = context.camera.view.into();
+
+            let params = glium::DrawParameters {
+                backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+                depth: glium::Depth {
+                    test: glium::DepthTest::IfLessOrEqual,
+                    write: true,
+                    .. Default::default()
+                },
+                .. Default::default()
+            };
+
+            for instance in &render_lists.solid.instances {
+                let light_bias_mvp = bias_matrix
+                    * light_projection
+                    * light_view
+                    * instance.params.transform;
+
+                let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
+                let mat_light_bias_mvp: [[f32; 4]; 4] = light_bias_mvp.into();
+                let color: [f32; 4] = instance.params.color.into();
+
+                let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
+                    .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
+                    .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest)
+                    .depth_texture_comparison(Some(glium::uniforms::DepthTextureComparison::LessOrEqual));
+
+                let uniforms = uniform! {
+                    mat_model: mat_model, 
+                    mat_view: mat_view,
+                    mat_projection: mat_projection,
+                    mat_light_bias_mvp: mat_light_bias_mvp,
+                    color: color,
+                    t: context.elapsed_time_secs,
+                    shadow_map: shadow_map,
+                };
+
+                let buffers = resources.get_object_buffers(instance.object);
+                buffers.index_buffer.draw(
+                    &buffers.vertex_buffer,
+                    &self.render_program,
+                    &uniforms,
+                    &params,
+                    target,
+                )?;
+            }
+        }
 
         // Render transparent objects
         render_lists.transparent.render(
