@@ -63,9 +63,9 @@ impl Exec {
         // Make the machine's blocks contiguous in memory.
         machine.gc();
 
-        let wind_state = Exec::initial_block_state(&machine);
+        let wind_state = Self::initial_block_state(&machine);
         let old_wind_state = wind_state.clone();
-        let blip_state = Exec::initial_block_state(&machine);
+        let blip_state = Self::initial_block_state(&machine);
         let old_blip_state = blip_state.clone();
 
         Exec {
@@ -97,6 +97,9 @@ impl Exec {
 
         for index in 0..self.blip_state.len() {
             self.old_blip_state[index] = self.blip_state[index];
+
+            //self.old_blip_state[index] = self.blip_state[index];
+            self.blip_state[index].blip_index = None;
         }
 
         for (block_index, (block_pos, placed_block)) in self.machine.block_data.iter() {
@@ -110,6 +113,14 @@ impl Exec {
             );
         }
 
+        Self::update_blips(
+            &self.machine.block_ids,
+            &self.wind_state,
+            &self.old_blip_state, 
+            &mut self.blip_state, 
+            &mut self.blips,
+        );
+
         for (block_index, (block_pos, placed_block)) in self.machine.block_data.iter_mut() {
             Self::update_block_blip_state(
                 block_index,
@@ -117,7 +128,6 @@ impl Exec {
                 placed_block,
                 &self.machine.block_ids,
                 &self.wind_state,
-                &self.old_blip_state,
                 &mut self.blip_state,
                 &mut self.blips,
             );
@@ -155,9 +165,11 @@ impl Exec {
                     .map(|dir| old_wind_state[block_index].wind_in(*dir))
                     .any(|b| b);
 
+                debug!("wind holes {:?}, rot {}", placed_block.wind_holes(), placed_block.rotation_xy);
                 for dir in &placed_block.wind_holes() {
                     let neighbor_pos = *block_pos + dir.to_vector();
 
+                    debug!("check wind guy {:?} at {:?}", block_pos, neighbor_pos);
                     if let Some(Some(neighbor_index)) = block_ids.get(&neighbor_pos) {
                         let neighbor_in_flow = if any_in {
                             !old_wind_state[block_index].wind_in[dir.to_index()]
@@ -179,7 +191,6 @@ impl Exec {
         placed_block: &mut PlacedBlock,
         block_ids: &Grid3<Option<BlockIndex>>,
         wind_state: &[WindState],
-        old_blip_state: &[BlipState],
         blip_state: &mut Vec<BlipState>,
         blips: &mut VecOption<Blip>,
     ) {
@@ -188,7 +199,6 @@ impl Exec {
                 let output_dir = placed_block.rotated_dir_xy(Dir3::X_POS);
                 let output_pos = *block_pos + output_dir.to_vector();
 
-                debug!("looking at {:?}", output_pos);
                 if let Some(Some(output_index)) = block_ids.get(&output_pos) {
                     if blip_state[*output_index].blip_index.is_none() {
                         debug!("spawning blip at {:?}", output_pos);
@@ -203,6 +213,98 @@ impl Exec {
             }
             _ => {
 
+            }
+        }
+    }
+
+    fn update_blips(
+        block_ids: &Grid3<Option<BlockIndex>>,
+        wind_state: &[WindState],
+        old_blip_state: &[BlipState],
+        blip_state: &mut Vec<BlipState>,
+        blips: &mut VecOption<Blip>,
+    ) {
+        let mut remove_indices = Vec::new();
+
+        for (blip_index, blip) in blips.iter_mut() {
+            let block_index = block_ids.get(&blip.pos);
+
+            if let Some(Some(block_index)) = block_index {
+                debug!(
+                    "blip at {:?}: {:?} vs {:?}",
+                    blip.pos,
+                    old_blip_state[*block_index].blip_index,
+                    blip_index,
+                );
+                assert!(old_blip_state[*block_index].blip_index == Some(blip_index));
+
+                // In block. Check in flow of neighboring blocks.
+                // Take the first match for now -- will need to 
+                // change this somehow for e.g. switches
+                let out_dir = Dir3::ALL
+                    .iter()
+                    .map(|dir| {
+                        // TODO: At some point, we'll need to precompute neighbor
+                        // indices.
+                        let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
+                        let wind_in = if let Some(Some(neighbor_index)) = neighbor_index {
+                            wind_state[*neighbor_index].wind_in(dir.invert())
+                        } else {
+                            false
+                        };
+
+                        (*dir, wind_in)
+                    })
+                    .find(|(_dir, b)| *b)
+                    .map(|(dir, _b)| dir);
+
+                let new_pos = if let Some(out_dir) = out_dir {
+                    blip.pos + out_dir.to_vector()
+                } else {
+                    blip.pos
+                };
+
+                let new_block_index = block_ids.get(&new_pos);
+
+                if let Some(Some(new_block_index)) = new_block_index {
+                    blip.pos = new_pos;
+                    debug!("moving blip {} from {:?} to {:?}", blip_index, blip.pos, new_pos);
+
+                    if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
+                        // We cannot have two blips in the same block. Note
+                        // that if more than two blips move into the same
+                        // block, the same blip will be added multiple times
+                        // into `remove_indices`. This is fine, since we don't
+                        // spawn any blips in this function, so the indices
+                        // stay valid.
+                        debug!("{} bumped into {}, removing", blip_index, new_block_blip_index);
+                        remove_indices.push(blip_index);
+                        remove_indices.push(new_block_blip_index);
+                    } else {
+                        blip_state[*new_block_index].blip_index = Some(blip_index);
+                    }
+                } else {
+                    // Out of bounds
+                    remove_indices.push(blip_index);
+                }
+            } else {
+                // Out of bounds.
+                // TODO: Can this happen?
+                remove_indices.push(blip_index);
+            };
+        }
+
+        for remove_index in remove_indices {
+            if blips.contains(remove_index) {
+                let pos = blips[remove_index].pos;
+
+                debug!("removing blip {} at pos {:?}", remove_index, pos);
+
+                if let Some(Some(block_index)) = block_ids.get(&pos) {
+                    blip_state[*block_index].blip_index = None;
+                }
+
+                blips.remove(remove_index);
             }
         }
     }

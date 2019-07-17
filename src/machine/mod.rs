@@ -60,9 +60,25 @@ impl PlacedBlock {
         }
     }
 
+    pub fn rotate_ccw(&mut self) {
+        if self.rotation_xy == 0 {
+            self.rotation_xy = 3;
+        } else {
+            self.rotation_xy -= 1;
+        }
+    }
+
     pub fn rotated_dir_xy(&self, mut dir: Dir3) -> Dir3 {
         for _ in 0..self.rotation_xy {
             dir = dir.rotated_cw_xy();
+        }
+
+        dir
+    }
+
+    pub fn rotated_dir_ccw_xy(&self, mut dir: Dir3) -> Dir3 {
+        for _ in 0..self.rotation_xy {
+            dir = dir.rotated_ccw_xy();
         }
 
         dir
@@ -73,7 +89,7 @@ impl PlacedBlock {
     }
 
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole(self.rotated_dir_xy(dir))
+        self.block.has_wind_hole(self.rotated_dir_ccw_xy(dir))
     }
 
     pub fn wind_holes(&self) -> Vec<Dir3> {
