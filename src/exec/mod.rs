@@ -3,7 +3,7 @@ pub mod view;
 use log::debug;
 
 use crate::machine::grid::{Dir3, Grid3, Point3};
-use crate::machine::{Block, BlockIndex, Machine, PlacedBlock, BlipKind};
+use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock};
 use crate::util::vec_option::VecOption;
 
 pub use view::ExecView;
@@ -116,8 +116,8 @@ impl Exec {
         Self::update_blips(
             &self.machine.block_ids,
             &self.wind_state,
-            &self.old_blip_state, 
-            &mut self.blip_state, 
+            &self.old_blip_state,
+            &mut self.blip_state,
             &mut self.blips,
         );
 
@@ -165,7 +165,11 @@ impl Exec {
                     .map(|dir| old_wind_state[block_index].wind_in(*dir))
                     .any(|b| b);
 
-                debug!("wind holes {:?}, rot {}", placed_block.wind_holes(), placed_block.rotation_xy);
+                debug!(
+                    "wind holes {:?}, rot {}",
+                    placed_block.wind_holes(),
+                    placed_block.rotation_xy
+                );
                 for dir in &placed_block.wind_holes() {
                     let neighbor_pos = *block_pos + dir.to_vector();
 
@@ -211,9 +215,7 @@ impl Exec {
                     }
                 }
             }
-            _ => {
-
-            }
+            _ => {}
         }
     }
 
@@ -232,14 +234,12 @@ impl Exec {
             if let Some(Some(block_index)) = block_index {
                 debug!(
                     "blip at {:?}: {:?} vs {:?}",
-                    blip.pos,
-                    old_blip_state[*block_index].blip_index,
-                    blip_index,
+                    blip.pos, old_blip_state[*block_index].blip_index, blip_index,
                 );
                 assert!(old_blip_state[*block_index].blip_index == Some(blip_index));
 
                 // In block. Check in flow of neighboring blocks.
-                // Take the first match for now -- will need to 
+                // Take the first match for now -- will need to
                 // change this somehow for e.g. switches
                 let out_dir = Dir3::ALL
                     .iter()
@@ -268,7 +268,10 @@ impl Exec {
 
                 if let Some(Some(new_block_index)) = new_block_index {
                     blip.pos = new_pos;
-                    debug!("moving blip {} from {:?} to {:?}", blip_index, blip.pos, new_pos);
+                    debug!(
+                        "moving blip {} from {:?} to {:?}",
+                        blip_index, blip.pos, new_pos
+                    );
 
                     if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
                         // We cannot have two blips in the same block. Note
@@ -277,7 +280,10 @@ impl Exec {
                         // into `remove_indices`. This is fine, since we don't
                         // spawn any blips in this function, so the indices
                         // stay valid.
-                        debug!("{} bumped into {}, removing", blip_index, new_block_blip_index);
+                        debug!(
+                            "{} bumped into {}, removing",
+                            blip_index, new_block_blip_index
+                        );
                         remove_indices.push(blip_index);
                         remove_indices.push(new_block_blip_index);
                     } else {

@@ -58,10 +58,7 @@ impl ExecView {
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::KeyboardInput {
-                input,
-                ..
-            } => self.on_keyboard_input(*input),
+            WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(*input),
             _ => (),
         }
     }
@@ -142,14 +139,14 @@ impl ExecView {
     fn render_blips(&self, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
             let center = render::machine::block_center(&blip.pos); //+ 0.2f32 * na::Vector3::z();
-            let transform = na::Matrix4::new_translation(&center.coords)
-                * na::Matrix4::new_scaling(0.3);
+            let transform =
+                na::Matrix4::new_translation(&center.coords) * na::Matrix4::new_scaling(0.3);
             let instance = render::Instance {
                 object: render::Object::Cube,
                 params: render::InstanceParams {
                     color: na::Vector4::new(0.0, 1.0, 0.0, 1.0),
                     transform,
-                    .. Default::default()
+                    ..Default::default()
                 },
             };
 
