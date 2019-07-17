@@ -1,6 +1,6 @@
 pub mod grid;
 
-use crate::util::vec_option::{self, VecOption};
+use crate::util::vec_option::VecOption;
 
 use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
 
@@ -13,16 +13,16 @@ pub enum Block {
 }
 
 impl Block {
-    pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
+    pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         match self {
-            Block::PipeXY => *dir == Dir3(Axis3::Y, Sign::Neg) || *dir == Dir3(Axis3::Y, Sign::Pos),
+            Block::PipeXY => dir == Dir3(Axis3::Y, Sign::Neg) || dir == Dir3(Axis3::Y, Sign::Pos),
             Block::PipeSplitXY => {
-                *dir == Dir3(Axis3::Y, Sign::Neg)
-                    || *dir == Dir3(Axis3::Y, Sign::Pos)
-                    || *dir == Dir3(Axis3::X, Sign::Pos)
+                dir == Dir3(Axis3::Y, Sign::Neg)
+                    || dir == Dir3(Axis3::Y, Sign::Pos)
+                    || dir == Dir3(Axis3::X, Sign::Pos)
             }
             Block::PipeBendXY => {
-                *dir == Dir3(Axis3::X, Sign::Neg) || *dir == Dir3(Axis3::Y, Sign::Pos)
+                dir == Dir3(Axis3::X, Sign::Neg) || dir == Dir3(Axis3::Y, Sign::Pos)
             }
             Block::Solid => true,
         }
@@ -62,8 +62,8 @@ impl PlacedBlock {
         std::f32::consts::PI / 2.0 * self.rotation_xy as f32
     }
 
-    pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
-        self.block.has_wind_hole(&self.rotated_dir_xy(*dir))
+    pub fn has_wind_hole(&self, dir: Dir3) -> bool {
+        self.block.has_wind_hole(self.rotated_dir_xy(dir))
     }
 
     pub fn wind_holes(&self) -> Vec<Dir3> {
@@ -72,8 +72,8 @@ impl PlacedBlock {
 
         (&Dir3::ALL)
             .iter()
-            .filter(|dir| self.has_wind_hole(dir))
-            .map(|dir| *dir)
+            .filter(|dir| self.has_wind_hole(**dir))
+            .copied()
             .collect()
     }
 }

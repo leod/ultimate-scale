@@ -1,8 +1,6 @@
 use glium::uniform;
-use nalgebra as na;
 
-use crate::render::camera::Camera;
-use crate::render::object::{self, Instance, InstanceParams, Object};
+use crate::render::object::{Instance, InstanceParams, Object};
 use crate::render::resources::Resources;
 use crate::render::Context;
 

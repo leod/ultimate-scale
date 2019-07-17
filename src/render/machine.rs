@@ -98,7 +98,7 @@ pub fn render_cuboid_wireframe(
 pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
     let color = na::Vector4::new(0.7, 0.7, 0.7, 1.0);
 
-    for x in 0..size.x + 1 {
+    for x in 0..=size.x {
         let translation = na::Matrix4::new_translation(&na::Vector3::new(x as f32, 0.0, z));
         let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::y() * (size.y as f32)));
         out.add(
@@ -111,7 +111,7 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
         );
     }
 
-    for y in 0..size.y + 1 {
+    for y in 0..=size.y {
         let translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, y as f32, z));
         let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::x() * (size.x as f32)));
         out.add(
@@ -136,7 +136,7 @@ pub fn render_block(
             out.add(
                 Object::PipeSegment,
                 &InstanceParams {
-                    transform: transform.clone(),
+                    transform: *transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
                     ..Default::default()
                 },
@@ -146,7 +146,7 @@ pub fn render_block(
             out.add(
                 Object::PipeSplit,
                 &InstanceParams {
-                    transform: transform.clone(),
+                    transform: *transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
                     ..Default::default()
                 },
@@ -156,7 +156,7 @@ pub fn render_block(
             out.add(
                 Object::PipeBend,
                 &InstanceParams {
-                    transform: transform.clone(),
+                    transform: *transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
                     ..Default::default()
                 },
@@ -166,7 +166,7 @@ pub fn render_block(
             out.add(
                 Object::Cube,
                 &InstanceParams {
-                    transform: transform.clone(),
+                    transform: *transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.3, 0.9, 0.2, 1.0)),
                     ..Default::default()
                 },
