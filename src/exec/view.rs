@@ -44,11 +44,11 @@ impl ExecView {
         }
     }
 
-    pub fn update(mut self, dt_secs: f32, editor: Editor) -> GameState {
+    pub fn update(self, dt_secs: f32, editor: Editor) -> GameState {
         if !self.stop_exec {
             GameState::Exec {
                 exec_view: self,
-                editor: editor,
+                editor,
             }
         } else {
             info!("Stopping exec, returning to editor");
@@ -59,8 +59,8 @@ impl ExecView {
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::KeyboardInput {
-                device_id: _,
                 input,
+                ..
             } => self.on_keyboard_input(*input),
             _ => (),
         }
@@ -100,8 +100,8 @@ impl ExecView {
                         let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
 
                         match (
-                            block_wind_state.flow_in(&in_dir_a),
-                            block_wind_state.flow_in(&in_dir_b),
+                            block_wind_state.flow_in(in_dir_a),
+                            block_wind_state.flow_in(in_dir_b),
                         ) {
                             (true, true) => Some(na::Vector3::z()),
                             (true, false) => Some(in_dir_a.to_vector()),

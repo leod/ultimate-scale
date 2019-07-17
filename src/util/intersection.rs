@@ -86,9 +86,9 @@ pub fn ray_aabb_intersection(ray: &Ray, aabb: &AABB) -> Option<f32> {
         t_min = tz_min;
     }
 
-    if tz_max < t_max {
+    /*if tz_max < t_max {
         t_max = tz_max;
-    }
+    }*/
 
-    return Some(t_min);
+    Some(t_min)
 }

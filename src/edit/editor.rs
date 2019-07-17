@@ -177,21 +177,20 @@ impl Editor {
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::CursorMoved {
-                device_id: _,
                 position,
-                modifiers: _,
+                ..
             } => {
                 self.mouse_window_pos = na::Point2::new(position.x as f32, position.y as f32);
             }
             WindowEvent::KeyboardInput {
-                device_id: _,
                 input,
+                ..
             } => self.on_keyboard_input(*input),
             WindowEvent::MouseInput {
-                device_id: _,
                 state,
                 button,
                 modifiers,
+                ..
             } => self.on_mouse_input(*state, *button, *modifiers),
 
             _ => (),
@@ -212,7 +211,7 @@ impl Editor {
         }
 
         if let Some(block) = self.config.block_keys.get(&keycode) {
-            self.place_block.block = block.clone();
+            self.place_block.block = *block;
         }
 
         if let Some(&layer) = self.config.layer_keys.get(&keycode) {

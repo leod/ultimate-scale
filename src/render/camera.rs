@@ -1,5 +1,3 @@
-use log::debug;
-
 use nalgebra as na;
 
 use std::collections::HashSet;
@@ -203,8 +201,8 @@ impl Input {
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::KeyboardInput {
-                device_id: _,
                 input,
+                ..
             } => {
                 if let Some(keycode) = input.virtual_keycode {
                     match input.state {
@@ -216,10 +214,8 @@ impl Input {
                 self.modifiers_state = input.modifiers;
             }
             WindowEvent::MouseWheel {
-                device_id: _,
                 delta,
-                phase: _,
-                modifiers: _,
+                ..
             } => {
                 let dt_secs = 0.5;
 

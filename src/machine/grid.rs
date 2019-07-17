@@ -16,28 +16,28 @@ impl Axis2 {
     pub const NUM_INDICES: usize = 2;
     pub const ALL: [Axis2; Self::NUM_INDICES] = [Axis2::X, Axis2::Y];
 
-    pub fn to_vector(&self) -> Vector2 {
+    pub fn to_vector(self) -> Vector2 {
         match self {
             Axis2::X => Vector2::x(),
             Axis2::Y => Vector2::y(),
         }
     }
 
-    pub fn to_index(&self) -> usize {
+    pub fn to_index(self) -> usize {
         match self {
             Axis2::X => 0,
             Axis2::Y => 1,
         }
     }
 
-    pub fn embed(&self) -> Axis3 {
+    pub fn embed(self) -> Axis3 {
         match self {
             Axis2::X => Axis3::X,
             Axis2::Y => Axis3::Y,
         }
     }
 
-    pub fn next(&self) -> Axis2 {
+    pub fn next(self) -> Axis2 {
         match self {
             Axis2::X => Axis2::Y,
             Axis2::Y => Axis2::X,
@@ -56,7 +56,7 @@ impl Axis3 {
     pub const NUM_INDICES: usize = 3;
     pub const ALL: [Axis3; Self::NUM_INDICES] = [Axis3::X, Axis3::Y, Axis3::Z];
 
-    pub fn to_vector(&self) -> Vector3 {
+    pub fn to_vector(self) -> Vector3 {
         match self {
             Axis3::X => Vector3::x(),
             Axis3::Y => Vector3::y(),
@@ -64,7 +64,7 @@ impl Axis3 {
         }
     }
 
-    pub fn to_index(&self) -> usize {
+    pub fn to_index(self) -> usize {
         match self {
             Axis3::X => 0,
             Axis3::Y => 1,
@@ -82,21 +82,21 @@ pub enum Sign {
 impl Sign {
     pub const NUM_INDICES: usize = 2;
 
-    pub fn to_number(&self) -> isize {
+    pub fn to_number(self) -> isize {
         match self {
             Sign::Pos => 1,
             Sign::Neg => -1,
         }
     }
 
-    pub fn invert(&self) -> Sign {
+    pub fn invert(self) -> Sign {
         match self {
             Sign::Pos => Sign::Neg,
             Sign::Neg => Sign::Pos,
         }
     }
 
-    pub fn to_index(&self) -> usize {
+    pub fn to_index(self) -> usize {
         match self {
             Sign::Pos => 0,
             Sign::Neg => 1,
@@ -110,15 +110,15 @@ pub struct Dir2(pub Axis2, pub Sign);
 impl Dir2 {
     pub const NUM_INDICES: usize = Axis2::NUM_INDICES * Sign::NUM_INDICES;
 
-    pub fn to_vector(&self) -> Vector2 {
+    pub fn to_vector(self) -> Vector2 {
         self.0.to_vector() * self.1.to_number()
     }
 
-    pub fn invert(&self) -> Dir2 {
+    pub fn invert(self) -> Dir2 {
         Dir2(self.0, self.1.invert())
     }
 
-    pub fn rotated_cw(&self) -> Dir2 {
+    pub fn rotated_cw(self) -> Dir2 {
         let sign = match self.0 {
             Axis2::X => self.1.invert(),
             Axis2::Y => self.1,
@@ -127,16 +127,16 @@ impl Dir2 {
         Dir2(self.0.next(), sign)
     }
 
-    pub fn to_radians(&self) -> f32 {
+    pub fn to_radians(self) -> f32 {
         let vector = self.to_vector();
         (vector.y as f32).atan2(vector.x as f32)
     }
 
-    pub fn to_index(&self) -> usize {
+    pub fn to_index(self) -> usize {
         self.0.to_index() * Sign::NUM_INDICES + self.1.to_index()
     }
 
-    pub fn embed(&self) -> Dir3 {
+    pub fn embed(self) -> Dir3 {
         Dir3(self.0.embed(), self.1)
     }
 }
@@ -155,19 +155,19 @@ impl Dir3 {
         Dir3(Axis3::Z, Sign::Neg),
     ];
 
-    pub fn to_vector(&self) -> Vector3 {
+    pub fn to_vector(self) -> Vector3 {
         self.0.to_vector() * self.1.to_number()
     }
 
-    pub fn invert(&self) -> Dir3 {
+    pub fn invert(self) -> Dir3 {
         Dir3(self.0, self.1.invert())
     }
 
-    pub fn to_index(&self) -> usize {
+    pub fn to_index(self) -> usize {
         self.0.to_index() * Sign::NUM_INDICES + self.1.to_index()
     }
 
-    pub fn rotated_cw_xy(&self) -> Dir3 {
+    pub fn rotated_cw_xy(self) -> Dir3 {
         let axis = match self.0 {
             Axis3::X => Axis3::Y,
             Axis3::Y => Axis3::X,
@@ -233,13 +233,13 @@ impl<T> Grid3<T> {
 impl<T> Index<Point3> for Grid3<T> {
     type Output = T;
 
-    fn index<'a>(&'a self, p: Point3) -> &'a T {
+    fn index(&self, p: Point3) -> &T {
         &self.data[self.node_index(&p)]
     }
 }
 
 impl<T> IndexMut<Point3> for Grid3<T> {
-    fn index_mut<'a>(&'a mut self, p: Point3) -> &'a mut T {
+    fn index_mut(&mut self, p: Point3) -> &mut T {
         let index = self.node_index(&p);
         &mut self.data[index]
     }

@@ -15,7 +15,6 @@ use log::info;
 use nalgebra as na;
 
 use edit::Editor;
-use exec::Exec;
 use game_state::GameState;
 
 fn main() {
@@ -82,7 +81,7 @@ fn main() {
             GameState::Edit(editor) => editor.render(&mut render_lists).unwrap(),
             GameState::Exec {
                 exec_view,
-                editor: _,
+                ..
             } => exec_view.render(&mut render_lists),
         }
 
@@ -111,7 +110,7 @@ fn main() {
                     GameState::Edit(editor) => editor.on_event(&event),
                     GameState::Exec {
                         exec_view,
-                        editor: _,
+                        ..
                     } => exec_view.on_event(&event),
                 }
 

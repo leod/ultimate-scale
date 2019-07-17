@@ -6,8 +6,6 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::config::ViewConfig;
-
 use crate::render::{Camera, Context, RenderLists, Resources};
 
 #[derive(Debug, Clone)]
@@ -293,7 +291,6 @@ impl ShadowMapping {
 
         // Render scene from the light's point of view into depth buffer
         {
-            let w = 4.0;
             let camera = Camera {
                 viewport: na::Vector4::new(0.0, 0.0, 0.0, 0.0), // dummy value
                 projection: light_projection,

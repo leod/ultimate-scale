@@ -2,9 +2,9 @@ pub mod view;
 
 use std::mem;
 
-use log::{debug, warn};
+use log::debug;
 
-use crate::machine::grid::{Axis3, Dir3, Grid3, Point3, Sign};
+use crate::machine::grid::{Dir3, Grid3, Point3};
 use crate::machine::{Block, BlockIndex, Machine, PlacedBlock};
 use crate::util::vec_option::VecOption;
 
@@ -24,7 +24,7 @@ pub struct WindState {
 }
 
 impl WindState {
-    pub fn flow_in(&self, dir: &Dir3) -> bool {
+    pub fn flow_in(&self, dir: Dir3) -> bool {
         self.flow_in[dir.to_index()]
     }
 }
@@ -53,7 +53,7 @@ impl Exec {
             machine,
             blips: VecOption::new(),
             wind_state,
-            old_wind_state: old_wind_state,
+            old_wind_state,
         }
     }
 
@@ -78,7 +78,7 @@ impl Exec {
 
     pub fn update_block(
         block_ids: &Grid3<Option<BlockIndex>>,
-        old_wind_state: &Vec<WindState>,
+        old_wind_state: &[WindState],
         block_index: usize,
         block_pos: &Point3,
         placed_block: &mut PlacedBlock,
@@ -106,7 +106,7 @@ impl Exec {
                 let any_in = placed_block
                     .wind_holes()
                     .iter()
-                    .map(|dir| old_wind_state[block_index].flow_in(dir))
+                    .map(|dir| old_wind_state[block_index].flow_in(*dir))
                     .any(|b| b);
 
                 debug!("in flow: {}", any_in);

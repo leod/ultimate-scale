@@ -80,7 +80,7 @@ impl<T: Clone> VecOption<T> {
             .data
             .iter()
             .filter(|x| x.is_some())
-            .map(|x| x.clone())
+            .cloned()
             .collect();
         self.free.clear();
     }
@@ -89,13 +89,13 @@ impl<T: Clone> VecOption<T> {
 impl<T> Index<usize> for VecOption<T> {
     type Output = T;
 
-    fn index<'a>(&'a self, index: usize) -> &'a T {
+    fn index(&self, index: usize) -> &T {
         self.data[index].as_ref().unwrap()
     }
 }
 
 impl<T> IndexMut<usize> for VecOption<T> {
-    fn index_mut<'a>(&'a mut self, index: usize) -> &'a mut T {
+    fn index_mut(&mut self, index: usize) -> &mut T {
         self.data[index].as_mut().unwrap()
     }
 }

@@ -109,7 +109,7 @@ impl ObjectBuffers {
         for object in data.objects.iter() {
             for polygon in object.groups.iter().flat_map(|g| g.polys.iter()) {
                 match polygon {
-                    &genmesh::Polygon::PolyTri(genmesh::Triangle {
+                    genmesh::Polygon::PolyTri(genmesh::Triangle {
                         x: v1,
                         y: v2,
                         z: v3,
@@ -121,8 +121,8 @@ impl ObjectBuffers {
                             let normal = normal.unwrap_or([0.0, 0.0, 0.0]);
 
                             vertices.push(Vertex {
-                                position: position,
-                                normal: normal,
+                                position,
+                                normal,
                             })
                         }
                     }
@@ -193,7 +193,7 @@ impl From<io::Error> for CreationError {
 impl Object {
     #[rustfmt::skip]
     pub fn create_buffers<F: glium::backend::Facade>(
-        &self, facade: &F
+        self, facade: &F
     ) -> Result<ObjectBuffers, CreationError> {
         match self {
             Object::Triangle => {
