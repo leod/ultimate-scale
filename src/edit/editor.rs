@@ -187,7 +187,7 @@ impl Editor {
             WindowEvent::KeyboardInput {
                 input,
                 ..
-            } => self.on_keyboard_input(*input),
+            } => self.on_keyboard_input(input),
             WindowEvent::MouseInput {
                 state,
                 button,
@@ -199,17 +199,21 @@ impl Editor {
         }
     }
 
-    fn on_keyboard_input(&mut self, input: glutin::KeyboardInput) {
+    fn on_keyboard_input(&mut self, input: &glutin::KeyboardInput) {
         if input.state == glutin::ElementState::Pressed {
             if let Some(keycode) = input.virtual_keycode {
-                self.on_key_press(keycode);
+                self.on_key_press(keycode, &input.modifiers);
             }
         }
     }
 
-    fn on_key_press(&mut self, keycode: VirtualKeyCode) {
+    fn on_key_press(&mut self, keycode: VirtualKeyCode, modifiers: &glutin::ModifiersState) {
         if keycode == self.config.rotate_block_key {
-            self.place_block.rotate_cw();
+            if !modifiers.shift {
+                self.place_block.rotate_cw();
+            } else {
+                self.place_block.rotate_ccw();
+            }
         }
 
         if let Some(block) = self.config.block_keys.get(&keycode) {
