@@ -1,7 +1,5 @@
 pub mod view;
 
-use std::mem;
-
 use log::debug;
 
 use crate::machine::grid::{Dir3, Grid3, Point3};
@@ -22,7 +20,6 @@ pub struct BlipMovement {
 pub struct Blip {
     pub kind: BlipKind,
     pub pos: Point3,
-    pub movement: Option<BlipMovement>,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
@@ -36,12 +33,12 @@ impl WindState {
     }
 }
 
+pub type BlipIndex = usize;
+
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct BlipState {
-    pub blip: Option<BlipIndex>,
+    pub blip_index: Option<BlipIndex>,
 }
-
-pub type BlipIndex = usize;
 
 pub struct Exec {
     machine: Machine,
@@ -81,6 +78,18 @@ impl Exec {
         }
     }
 
+    pub fn machine(&self) -> &Machine {
+        &self.machine
+    }
+
+    pub fn wind_state(&self) -> &[WindState] {
+        &self.wind_state
+    }
+
+    pub fn blips(&self) -> &VecOption<Blip> {
+        &self.blips
+    }
+
     pub fn update(&mut self) {
         for index in 0..self.wind_state.len() {
             self.old_wind_state[index] = self.wind_state[index];
@@ -108,7 +117,9 @@ impl Exec {
                 placed_block,
                 &self.machine.block_ids,
                 &self.wind_state,
+                &self.old_blip_state,
                 &mut self.blip_state,
+                &mut self.blips,
             );
         }
     }
@@ -122,7 +133,7 @@ impl Exec {
         wind_state: &mut Vec<WindState>,
     ) {
         debug!(
-            "have {:?} with {:?}",
+            "wind: {:?} with {:?}",
             placed_block.block, old_wind_state[block_index]
         );
 
@@ -138,15 +149,11 @@ impl Exec {
                 }
             }
             _ => {
-                debug!("wind holes: {:?}", placed_block.wind_holes());
-
                 let any_in = placed_block
                     .wind_holes()
                     .iter()
                     .map(|dir| old_wind_state[block_index].wind_in(*dir))
                     .any(|b| b);
-
-                debug!("in flow: {}", any_in);
 
                 for dir in &placed_block.wind_holes() {
                     let neighbor_pos = *block_pos + dir.to_vector();
@@ -157,8 +164,6 @@ impl Exec {
                         } else {
                             false
                         };
-
-                        debug!("flow to {:?}: {}", dir, neighbor_in_flow);
 
                         wind_state[*neighbor_index].wind_in[dir.invert().to_index()] =
                             neighbor_in_flow;
@@ -174,8 +179,32 @@ impl Exec {
         placed_block: &mut PlacedBlock,
         block_ids: &Grid3<Option<BlockIndex>>,
         wind_state: &[WindState],
+        old_blip_state: &[BlipState],
         blip_state: &mut Vec<BlipState>,
+        blips: &mut VecOption<Blip>,
     ) {
+        match placed_block.block {
+            Block::BlipSpawn(kind) => {
+                let output_dir = placed_block.rotated_dir_xy(Dir3::X_POS);
+                let output_pos = *block_pos + output_dir.to_vector();
+
+                debug!("looking at {:?}", output_pos);
+                if let Some(Some(output_index)) = block_ids.get(&output_pos) {
+                    if blip_state[*output_index].blip_index.is_none() {
+                        debug!("spawning blip at {:?}", output_pos);
+
+                        let blip = Blip {
+                            kind: kind,
+                            pos: output_pos,
+                        };
+                        blip_state[*output_index].blip_index = Some(blips.add(blip));
+                    }
+                }
+            }
+            _ => {
+
+            }
+        }
     }
 
     fn initial_block_state<T: Default + Copy>(machine: &Machine) -> Vec<T> {
@@ -185,13 +214,5 @@ impl Exec {
         assert!(machine.is_contiguous());
 
         vec![Default::default(); machine.num_blocks()]
-    }
-
-    pub fn machine(&self) -> &Machine {
-        &self.machine
-    }
-
-    pub fn wind_state(&self) -> &Vec<WindState> {
-        &self.wind_state
     }
 }

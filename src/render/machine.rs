@@ -176,7 +176,7 @@ pub fn render_block(
                 },
             );
         }
-        Block::BlipSpawn => {
+        Block::BlipSpawn(_kind) => {
             let cube_transform = 
                 translation
                 * transform
