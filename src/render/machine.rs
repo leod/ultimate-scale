@@ -177,8 +177,7 @@ pub fn render_block(
             );
         }
         Block::BlipSpawn(_kind) => {
-            let cube_transform = 
-                translation
+            let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
@@ -193,8 +192,7 @@ pub fn render_block(
 
             let output_dir = Dir2::X_POS;
 
-            let output_transform =
-                translation
+            let output_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
                 * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
@@ -298,7 +296,21 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
         let transform = placed_block_transform(&placed_block);
         let center = block_center(&block_pos);
 
-        render_block(&placed_block.block, &center, &transform, None, 1.0, &mut out.solid_shadow);
-        render_block(&placed_block.block, &center, &transform, None, 1.0, &mut out.solid);
+        render_block(
+            &placed_block.block,
+            &center,
+            &transform,
+            None,
+            1.0,
+            &mut out.solid_shadow,
+        );
+        render_block(
+            &placed_block.block,
+            &center,
+            &transform,
+            None,
+            1.0,
+            &mut out.solid,
+        );
     }
 }

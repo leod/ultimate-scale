@@ -120,10 +120,7 @@ impl ObjectBuffers {
 
                             let normal = normal.unwrap_or([0.0, 0.0, 0.0]);
 
-                            vertices.push(Vertex {
-                                position,
-                                normal,
-                            })
+                            vertices.push(Vertex { position, normal })
                         }
                     }
                     _ => unimplemented!(),

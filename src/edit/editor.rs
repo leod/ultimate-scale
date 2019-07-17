@@ -9,7 +9,7 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::exec::{self, ExecView};
 use crate::game_state::GameState;
 use crate::machine::grid;
-use crate::machine::{Block, BlipKind, Machine, PlacedBlock};
+use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 use crate::render::{self, Camera, EditCameraView, RenderLists};
 use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
@@ -178,16 +178,10 @@ impl Editor {
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::CursorMoved {
-                position,
-                ..
-            } => {
+            WindowEvent::CursorMoved { position, .. } => {
                 self.mouse_window_pos = na::Point2::new(position.x as f32, position.y as f32);
             }
-            WindowEvent::KeyboardInput {
-                input,
-                ..
-            } => self.on_keyboard_input(input),
+            WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(input),
             WindowEvent::MouseInput {
                 state,
                 button,
@@ -283,8 +277,7 @@ impl Editor {
             );
 
             let block_center = render::machine::block_center(&mouse_grid_pos);
-            let block_transform =
-                render::machine::placed_block_transform(&self.place_block);
+            let block_transform = render::machine::placed_block_transform(&self.place_block);
             render::machine::render_block(
                 &self.place_block.block,
                 &block_center,

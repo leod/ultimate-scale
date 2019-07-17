@@ -79,10 +79,7 @@ fn main() {
 
         match &mut game_state {
             GameState::Edit(editor) => editor.render(&mut render_lists).unwrap(),
-            GameState::Exec {
-                exec_view,
-                ..
-            } => exec_view.render(&mut render_lists),
+            GameState::Exec { exec_view, .. } => exec_view.render(&mut render_lists),
         }
 
         if let Some(shadow_mapping) = &mut shadow_mapping {
@@ -108,10 +105,7 @@ fn main() {
 
                 match &mut game_state {
                     GameState::Edit(editor) => editor.on_event(&event),
-                    GameState::Exec {
-                        exec_view,
-                        ..
-                    } => exec_view.on_event(&event),
+                    GameState::Exec { exec_view, .. } => exec_view.on_event(&event),
                 }
 
                 match event {

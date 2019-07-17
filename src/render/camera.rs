@@ -200,10 +200,7 @@ impl Input {
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::KeyboardInput {
-                input,
-                ..
-            } => {
+            WindowEvent::KeyboardInput { input, .. } => {
                 if let Some(keycode) = input.virtual_keycode {
                     match input.state {
                         glutin::ElementState::Pressed => self.pressed_keys.insert(keycode),
@@ -213,10 +210,7 @@ impl Input {
 
                 self.modifiers_state = input.modifiers;
             }
-            WindowEvent::MouseWheel {
-                delta,
-                ..
-            } => {
+            WindowEvent::MouseWheel { delta, .. } => {
                 let dt_secs = 0.5;
 
                 // TODO: Not sure what the different types of delta mean here

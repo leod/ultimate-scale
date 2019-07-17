@@ -80,12 +80,7 @@ impl<T> VecOption<T> {
 
 impl<T: Clone> VecOption<T> {
     pub fn gc(&mut self) {
-        self.data = self
-            .data
-            .iter()
-            .filter(|x| x.is_some())
-            .cloned()
-            .collect();
+        self.data = self.data.iter().filter(|x| x.is_some()).cloned().collect();
         self.free.clear();
     }
 }
