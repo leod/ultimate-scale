@@ -132,6 +132,15 @@ impl Dir2 {
         Dir2(self.0.next(), sign)
     }
 
+    pub fn rotated_ccw(self) -> Dir2 {
+        let sign = match self.0 {
+            Axis2::X => self.1,
+            Axis2::Y => self.1.invert(),
+        };
+
+        Dir2(self.0.next(), sign)
+    }
+
     pub fn to_radians(self) -> f32 {
         let vector = self.to_vector();
         (vector.y as f32).atan2(vector.x as f32)
@@ -189,6 +198,19 @@ impl Dir3 {
         let sign = match self.0 {
             Axis3::X => self.1.invert(),
             Axis3::Y | Axis3::Z => self.1,
+        };
+        Dir3(axis, sign)
+    }
+
+    pub fn rotated_ccw_xy(self) -> Dir3 {
+        let axis = match self.0 {
+            Axis3::X => Axis3::Y,
+            Axis3::Y => Axis3::X,
+            Axis3::Z => Axis3::Z,
+        };
+        let sign = match self.0 {
+            Axis3::Y => self.1.invert(),
+            Axis3::X | Axis3::Z => self.1,
         };
         Dir3(axis, sign)
     }

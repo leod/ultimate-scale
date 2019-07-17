@@ -72,6 +72,10 @@ impl<T> VecOption<T> {
 
         num
     }
+
+    pub fn contains(&self, index: usize) -> bool {
+        index < self.data.len() && self.data[index].is_some()
+    }
 }
 
 impl<T: Clone> VecOption<T> {
