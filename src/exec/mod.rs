@@ -13,19 +13,25 @@ pub use view::ExecView;
 const MOVE_TICKS_PER_NODE: usize = 10;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub struct BlipMovement {
+    dir: Dir3,
+    progress: usize,
+}
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Blip {
     pub pos: Point3,
-    pub move_progress: usize,
+    pub movement: Option<BlipMovement>,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct WindState {
-    pub flow_in: [bool; Dir3::NUM_INDICES],
+    pub wind_in: [bool; Dir3::NUM_INDICES],
 }
 
 impl WindState {
-    pub fn flow_in(&self, dir: Dir3) -> bool {
-        self.flow_in[dir.to_index()]
+    pub fn wind_in(&self, dir: Dir3) -> bool {
+        self.wind_in[dir.to_index()]
     }
 }
 
@@ -96,7 +102,7 @@ impl Exec {
                     let neighbor_index = block_ids.get(&neighbor_pos);
 
                     if let Some(Some(neighbor_index)) = neighbor_index {
-                        wind_state[*neighbor_index].flow_in[dir.invert().to_index()] = true;
+                        wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = true;
                     }
                 }
             }
@@ -106,7 +112,7 @@ impl Exec {
                 let any_in = placed_block
                     .wind_holes()
                     .iter()
-                    .map(|dir| old_wind_state[block_index].flow_in(*dir))
+                    .map(|dir| old_wind_state[block_index].wind_in(*dir))
                     .any(|b| b);
 
                 debug!("in flow: {}", any_in);
@@ -116,14 +122,14 @@ impl Exec {
 
                     if let Some(Some(neighbor_index)) = block_ids.get(&neighbor_pos) {
                         let neighbor_in_flow = if any_in {
-                            !old_wind_state[block_index].flow_in[dir.to_index()]
+                            !old_wind_state[block_index].wind_in[dir.to_index()]
                         } else {
                             false
                         };
 
                         debug!("flow to {:?}: {}", dir, neighbor_in_flow);
 
-                        wind_state[*neighbor_index].flow_in[dir.invert().to_index()] =
+                        wind_state[*neighbor_index].wind_in[dir.invert().to_index()] =
                             neighbor_in_flow;
                     }
                 }

@@ -30,8 +30,8 @@ impl Default for Config {
             start_exec_key: VirtualKeyCode::Space,
             block_keys: vec![
                 (VirtualKeyCode::Key1, Block::PipeXY),
-                (VirtualKeyCode::Key2, Block::PipeSplitXY),
-                (VirtualKeyCode::Key3, Block::PipeBendXY),
+                (VirtualKeyCode::Key2, Block::PipeBendXY),
+                (VirtualKeyCode::Key3, Block::PipeSplitXY),
                 (VirtualKeyCode::Key4, Block::Solid),
             ]
             .into_iter()
@@ -281,7 +281,7 @@ impl Editor {
             render::machine::render_block(
                 &self.place_block.block,
                 &block_transform,
-                Some(&na::Vector4::new(0.3, 0.5, 0.9, 0.7)),
+                Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
                 &mut out.transparent,
             );
         }
