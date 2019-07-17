@@ -101,8 +101,8 @@ impl ExecView {
                         let in_dir_a = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Neg));
                         let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
 
-                        match (block_wind_state.flow_out(&in_dir_a),
-                               block_wind_state.flow_out(&in_dir_b)) {
+                        match (block_wind_state.flow_in(&in_dir_a),
+                               block_wind_state.flow_in(&in_dir_b)) {
                             (true, true) => Some(na::Vector3::z()),
                             (true, false) => Some(in_dir_a.to_vector()),
                             (false, true) => Some(in_dir_b.to_vector()),

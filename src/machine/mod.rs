@@ -16,14 +16,14 @@ impl Block {
     pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
         match self {
             Block::PipeXY =>
-                *dir == Dir3(Axis3::Y, Sign::Pos)
-                || *dir == Dir3(Axis3::Y, Sign::Neg),
-            Block::PipeSplitXY =>
-                *dir == Dir3(Axis3::X, Sign::Pos)
-                || *dir == Dir3(Axis3::X, Sign::Neg)
+                *dir == Dir3(Axis3::Y, Sign::Neg)
                 || *dir == Dir3(Axis3::Y, Sign::Pos),
+            Block::PipeSplitXY =>
+                *dir == Dir3(Axis3::Y, Sign::Neg)
+                || *dir == Dir3(Axis3::Y, Sign::Pos)
+                || *dir == Dir3(Axis3::X, Sign::Pos),
             Block::PipeBendXY =>
-                *dir == Dir3(Axis3::X, Sign::Pos)
+                *dir == Dir3(Axis3::X, Sign::Neg)
                 || *dir == Dir3(Axis3::Y, Sign::Pos),
             Block::Solid =>
                 true,
@@ -61,11 +61,22 @@ impl PlacedBlock {
     }
 
     pub fn angle_xy_radians(&self) -> f32 {
-        -std::f32::consts::PI / 2.0 * self.rotation_xy as f32
+        std::f32::consts::PI / 2.0 * self.rotation_xy as f32
     }
 
     pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
         self.block.has_wind_hole(&self.rotated_dir_xy(*dir))
+    }
+
+    pub fn wind_holes(&self) -> Vec<Dir3> {
+        // TODO: This could return an iterator to simplify optimizations
+        // (or we could use generators, but they don't seem to be stable yet).
+
+        (&Dir3::ALL)
+            .iter()
+            .filter(|dir| self.has_wind_hole(dir))
+            .map(|dir| *dir)
+            .collect()
     }
 }
 

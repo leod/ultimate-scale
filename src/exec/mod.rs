@@ -6,7 +6,7 @@ use log::{warn, debug};
 
 use crate::util::vec_option::VecOption;
 use crate::machine::grid::{Point3, Axis3, Sign, Dir3, Grid3};
-use crate::machine::{Block, BlockIndex, Machine};
+use crate::machine::{Block, PlacedBlock, BlockIndex, Machine};
 
 pub use view::ExecView;
 
@@ -20,12 +20,12 @@ pub struct Blip {
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct WindState {
-    pub flow_out: [bool; Dir3::NUM_INDICES],
+    pub flow_in: [bool; Dir3::NUM_INDICES],
 }
 
 impl WindState {
-    pub fn flow_out(&self, dir: &Dir3) -> bool {
-        self.flow_out[dir.to_index()]
+    pub fn flow_in(&self, dir: &Dir3) -> bool {
+        self.flow_in[dir.to_index()]
     }
 }
 
@@ -33,7 +33,7 @@ pub struct Exec {
     machine: Machine,
     blips: VecOption<Blip>,
     
-    /// Wind state for each block, indexed by BlockId
+    /// Wind state for each block, indexed by BlockIndex
     wind_state: Vec<WindState>,
 
     /// Wind state from the previous tick, used for double
@@ -43,6 +43,7 @@ pub struct Exec {
 
 impl Exec {
     pub fn new(mut machine: Machine) -> Exec {
+        // Make the machine's blocks contiguous in memory.
         machine.gc();
 
         let wind_state = Exec::initial_wind_state(&machine);
@@ -59,57 +60,15 @@ impl Exec {
     pub fn update(&mut self) {
         mem::swap(&mut self.wind_state, &mut self.old_wind_state);
 
-        for (index, (block_pos, placed_block)) in self.machine.block_data.iter_mut() {
-            let wind_state = &mut self.wind_state[index];
-
-            debug!("have {:?} with {:?}", placed_block.block, wind_state);
-            
-            match placed_block.block {
-                Block::Solid => {
-                    for index in 0 .. Dir3::NUM_INDICES {
-                        wind_state.flow_out[index] = true;
-                    }
-                }
-                Block::PipeXY => {
-                    let in_dir_a = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Neg));
-                    let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
-
-                    let in_pos_a = *block_pos + in_dir_a.to_vector();
-                    let in_pos_b = *block_pos + in_dir_b.to_vector();
-
-                    debug!("neighbor dirs: {:?} {:?}", in_dir_a, in_dir_b);
-
-                    if let Some(Some(in_block_id)) = self.machine.block_ids.get(&in_pos_a) {
-                        let in_wind_state = &self.old_wind_state[*in_block_id];
-                        wind_state.flow_out[in_dir_b.to_index()] = in_wind_state.flow_out(&in_dir_b);
-                    }
-
-                    if let Some(Some(in_block_id)) = self.machine.block_ids.get(&in_pos_b) {
-                        let in_wind_state = &self.old_wind_state[*in_block_id];
-                        wind_state.flow_out[in_dir_a.to_index()] = in_wind_state.flow_out(&in_dir_a);
-                    }
-                }
-                Block::PipeBendXY => {
-                    let in_dir_a = placed_block.rotated_dir_xy(Dir3(Axis3::X, Sign::Neg));
-                    let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
-
-                    let in_pos_a = *block_pos + in_dir_a.to_vector();
-                    let in_pos_b = *block_pos + in_dir_b.to_vector();
-
-                    debug!("neighbor dirs: {:?}={:?} {:?}={:?}", in_dir_a, in_dir_a.to_vector(), in_dir_b, in_dir_b.to_vector());
-
-                    if let Some(Some(in_block_id)) = self.machine.block_ids.get(&in_pos_a) {
-                        let in_wind_state = &self.old_wind_state[*in_block_id];
-                        wind_state.flow_out[in_dir_b.to_index()] = in_wind_state.flow_out(&in_dir_a.invert());
-                    }
-
-                    if let Some(Some(in_block_id)) = self.machine.block_ids.get(&in_pos_b) {
-                        let in_wind_state = &self.old_wind_state[*in_block_id];
-                        wind_state.flow_out[in_dir_a.to_index()] = in_wind_state.flow_out(&in_dir_b.invert());
-                    }
-                }
-                _ => warn!("Wind flow of {:?} is unimplemented!", placed_block.block),
-            }
+        for (block_index, (block_pos, placed_block)) in self.machine.block_data.iter_mut() {
+            Self::update_block(
+                &self.machine.block_ids,
+                &self.old_wind_state,
+                block_index,
+                block_pos,
+                placed_block,
+                &mut self.wind_state,
+            );
         }
 
         for (index, _) in self.machine.block_data.iter_mut() {
@@ -117,8 +76,65 @@ impl Exec {
         }
     }
 
+    pub fn update_block(
+        block_ids: &Grid3<Option<BlockIndex>>,
+        old_wind_state: &Vec<WindState>,
+        block_index: usize,
+        block_pos: &Point3,
+        placed_block: &mut PlacedBlock,
+        wind_state: &mut Vec<WindState>,
+    ) {
+        debug!("have {:?} with {:?}", placed_block.block, old_wind_state[block_index]);
+        
+        match placed_block.block {
+            Block::Solid => {
+                for dir in &Dir3::ALL {
+                    let neighbor_pos = *block_pos + dir.to_vector();
+                    let neighbor_index = block_ids.get(&neighbor_pos);
+
+                    if let Some(Some(neighbor_index)) = neighbor_index {
+                        wind_state[*neighbor_index]
+                            .flow_in[dir.invert().to_index()] = true;
+                    }
+                }
+            }
+            _ => {
+                debug!("wind holes: {:?}", placed_block.wind_holes());
+
+                let any_in = placed_block
+                    .wind_holes()
+                    .iter()
+                    .map(|dir| old_wind_state[block_index].flow_in(dir))
+                    .any(|b| b);
+
+                debug!("in flow: {}", any_in);
+
+                for dir in &placed_block.wind_holes() {
+                    let neighbor_pos = *block_pos + dir.to_vector();
+
+                    if let Some(Some(neighbor_index)) = block_ids.get(&neighbor_pos) {
+                        let neighbor_in_flow =
+                            if any_in {
+                                !old_wind_state[block_index].flow_in[dir.to_index()]
+                            } else {
+                                false
+                            };
+
+                        debug!("flow to {:?}: {}", dir, neighbor_in_flow);
+
+                        wind_state[*neighbor_index]
+                            .flow_in[dir.invert().to_index()] = neighbor_in_flow;
+                    }
+                }
+            }
+        }
+
+    }
+
     fn initial_wind_state(machine: &Machine) -> Vec<WindState> {
-        // We assume that the machine's blocks are contiguous in memory
+        // We assume that the machine's blocks are contiguous in memory, so that
+        // we can store wind state as a Vec, instead of wasting memory or cycles
+        // on VecOption while executing.
         assert!(machine.is_contiguous());
 
         vec![Default::default(); machine.num_blocks()]
