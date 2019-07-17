@@ -52,7 +52,7 @@ impl PlacedBlock {
         }
     }
 
-    pub fn rotated_dir(&self, mut dir: Dir3) -> Dir3 {
+    pub fn rotated_dir_xy(&self, mut dir: Dir3) -> Dir3 {
         for _ in 0 .. self.rotation_xy {
             dir = dir.rotated_cw_xy();
         }
@@ -61,17 +61,11 @@ impl PlacedBlock {
     }
 
     pub fn angle_xy_radians(&self) -> f32 {
-        match self.rotation_xy {
-            0 => 0.0,
-            1 => std::f32::consts::PI / 2.0,
-            2 => std::f32::consts::PI,
-            3 => 3.0 / 2.0 * std::f32::consts::PI,
-            _ => unreachable!(),
-        }
+        -std::f32::consts::PI / 2.0 * self.rotation_xy as f32
     }
 
     pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
-        self.block.has_wind_hole(&self.rotated_dir(*dir))
+        self.block.has_wind_hole(&self.rotated_dir_xy(*dir))
     }
 }
 

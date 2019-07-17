@@ -98,8 +98,8 @@ impl ExecView {
             match placed_block.block {
                 Block::PipeXY => {
                     let arrow_dir = {
-                        let in_dir_a = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Neg));
-                        let in_dir_b = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Pos));
+                        let in_dir_a = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Neg));
+                        let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
 
                         match (block_wind_state.flow_out(&in_dir_a),
                                block_wind_state.flow_out(&in_dir_b)) {
@@ -121,7 +121,7 @@ impl ExecView {
                             &render::machine::Line {
                                 start,
                                 end,
-                                thickness: 0.05,
+                                thickness: 0.2,
                                 color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
                             },
                             0.0,
