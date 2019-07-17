@@ -174,13 +174,13 @@ impl ShadowMapping {
                     float closest_depth = texture(shadow_map, proj_coords.xy).r;
                     float current_depth = proj_coords.z;
 
-                    return current_depth > closest_depth + bias ? 0.0 : 1.0;
+                    return current_depth > closest_depth + bias ? 0.5 : 1.0;
                 }
 
                 void main() {
                     vec3 light_color = vec3(1, 1, 1);
 
-                    float ambient = 0.5;
+                    float ambient = 0.3;
 
                     float diffuse = max(
                         dot(
