@@ -16,7 +16,7 @@ pub enum Block {
     PipeBendXY,
     PipeSplitXY,
     WindSource,
-    BlipSpawn,
+    BlipSpawn(BlipKind),
     Solid,
 }
 
@@ -33,7 +33,7 @@ impl Block {
                     || dir == Dir3(Axis3::X, Sign::Pos)
             }
             Block::WindSource => true,
-            Block::BlipSpawn => false,
+            Block::BlipSpawn(_kind) => false,
             Block::Solid => false,
         }
     }
@@ -69,7 +69,7 @@ impl PlacedBlock {
     }
 
     pub fn angle_xy_radians(&self) -> f32 {
-        std::f32::consts::PI / 2.0 * self.rotation_xy as f32
+        -std::f32::consts::PI / 2.0 * self.rotation_xy as f32
     }
 
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {

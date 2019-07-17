@@ -9,7 +9,7 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::exec::{self, ExecView};
 use crate::game_state::GameState;
 use crate::machine::grid;
-use crate::machine::{Block, Machine, PlacedBlock};
+use crate::machine::{Block, BlipKind, Machine, PlacedBlock};
 use crate::render::{self, Camera, EditCameraView, RenderLists};
 use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
@@ -33,7 +33,7 @@ impl Default for Config {
                 (VirtualKeyCode::Key2, Block::PipeBendXY),
                 (VirtualKeyCode::Key3, Block::PipeSplitXY),
                 (VirtualKeyCode::Key4, Block::WindSource),
-                (VirtualKeyCode::Key5, Block::BlipSpawn),
+                (VirtualKeyCode::Key5, Block::BlipSpawn(BlipKind::A)),
                 (VirtualKeyCode::Key6, Block::Solid),
             ]
             .into_iter()

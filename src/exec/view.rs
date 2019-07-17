@@ -87,6 +87,11 @@ impl ExecView {
         render::machine::render_machine(&self.exec.machine(), out);
         render::machine::render_xy_grid(&self.exec.machine().size(), 0.01, &mut out.solid);
 
+        self.render_blocks(out);
+        self.render_blips(out);
+    }
+
+    fn render_blocks(&self, out: &mut RenderLists) {
         let block_data = &self.exec.machine().block_data;
         let wind_state = self.exec.wind_state();
 
@@ -114,7 +119,7 @@ impl ExecView {
                         let block_pos_float: na::Point3<f32> = na::convert(*block_pos);
                         let arrow_dir_float: na::Vector3<f32> = na::convert(arrow_dir);
 
-                        let start = block_pos_float + na::Vector3::new(0.5, 0.5, 0.5);
+                        let start = block_pos_float + na::Vector3::new(0.5, 0.5, 0.3);
                         let end = start + arrow_dir_float;
 
                         render::machine::render_arrow(
@@ -131,6 +136,25 @@ impl ExecView {
                 }
                 _ => (),
             }
+        }
+    }
+
+    fn render_blips(&self, out: &mut RenderLists) {
+        for (_index, blip) in self.exec.blips().iter() {
+            let center = render::machine::block_center(&blip.pos); //+ 0.2f32 * na::Vector3::z();
+            let transform = na::Matrix4::new_translation(&center.coords)
+                * na::Matrix4::new_scaling(0.3);
+            let instance = render::Instance {
+                object: render::Object::Cube,
+                params: render::InstanceParams {
+                    color: na::Vector4::new(0.0, 1.0, 0.0, 1.0),
+                    transform,
+                    .. Default::default()
+                },
+            };
+
+            out.solid.add_instance(&instance);
+            out.solid_shadow.add_instance(&instance);
         }
     }
 }
