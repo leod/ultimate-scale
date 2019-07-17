@@ -60,10 +60,7 @@ pub struct EditCameraView {
 }
 
 impl Camera {
-    pub fn new(
-        viewport: na::Vector2<f32>,
-        projection: na::Matrix4<f32>,
-    ) -> Camera {
+    pub fn new(viewport: na::Vector2<f32>, projection: na::Matrix4<f32>) -> Camera {
         Camera {
             viewport: na::Vector4::new(0.0, 0.0, viewport.x, viewport.y),
             projection,
@@ -103,7 +100,7 @@ impl EditCameraView {
     }
 
     pub fn target(&self) -> na::Point3<f32> {
-        self.target        
+        self.target
     }
 
     pub fn set_target(&mut self, target: na::Point3<f32>) {
@@ -117,14 +114,14 @@ impl EditCameraView {
     }
 
     pub fn eye(&self) -> na::Point3<f32> {
-        self.target + na::Vector3::new(
-            self.min_distance * self.yaw_radians.cos(),
-            self.min_distance * self.yaw_radians.sin(),
-            self.height,
-        )
+        self.target
+            + na::Vector3::new(
+                self.min_distance * self.yaw_radians.cos(),
+                self.min_distance * self.yaw_radians.sin(),
+                self.height,
+            )
     }
 }
-
 
 pub struct Input {
     config: Config,
@@ -147,8 +144,8 @@ impl Input {
     }
 
     fn cur_move_speed_per_sec(&self) -> f32 {
-        self.config.move_units_per_sec *
-            if self.pressed_keys.contains(&self.config.fast_move_key) {
+        self.config.move_units_per_sec
+            * if self.pressed_keys.contains(&self.config.fast_move_key) {
                 self.config.fast_move_multiplier
             } else {
                 1.0
@@ -205,13 +202,14 @@ impl Input {
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::KeyboardInput { device_id: _, input } => {
+            WindowEvent::KeyboardInput {
+                device_id: _,
+                input,
+            } => {
                 if let Some(keycode) = input.virtual_keycode {
                     match input.state {
-                        glutin::ElementState::Pressed =>
-                            self.pressed_keys.insert(keycode),
-                        glutin::ElementState::Released =>
-                            self.pressed_keys.remove(&keycode),
+                        glutin::ElementState::Pressed => self.pressed_keys.insert(keycode),
+                        glutin::ElementState::Released => self.pressed_keys.remove(&keycode),
                     };
                 }
 
@@ -224,7 +222,7 @@ impl Input {
                 modifiers: _,
             } => {
                 let dt_secs = 0.5;
-                
+
                 // TODO: Not sure what the different types of delta mean here
                 let delta_float = match delta {
                     glutin::MouseScrollDelta::LineDelta(_x, y) => *y,

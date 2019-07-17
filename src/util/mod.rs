@@ -1,2 +1,2 @@
-pub mod vec_option;
 pub mod intersection;
+pub mod vec_option;

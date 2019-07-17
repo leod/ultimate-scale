@@ -1,14 +1,14 @@
-pub mod object;
-pub mod resources;
 pub mod camera;
-pub mod render_list;
 pub mod machine;
+pub mod object;
+pub mod render_list;
+pub mod resources;
 pub mod shadow;
 
-pub use object::{Object, Instance, InstanceParams};
 pub use camera::{Camera, EditCameraView};
-pub use resources::Resources;
+pub use object::{Instance, InstanceParams, Object};
 pub use render_list::RenderList;
+pub use resources::Resources;
 
 pub struct Context {
     pub camera: camera::Camera,
@@ -40,19 +40,16 @@ pub fn render_frame_straight<S: glium::Surface>(
     render_lists: &RenderLists,
     target: &mut S,
 ) -> Result<(), glium::DrawError> {
-    render_lists.solid.render(
-        resources,
-        context,
-        &Default::default(),
-        target,
-    )?;
+    render_lists
+        .solid
+        .render(resources, context, &Default::default(), target)?;
 
     render_lists.transparent.render(
         resources,
         context,
         &glium::DrawParameters {
-            blend: glium::draw_parameters::Blend::alpha_blending(), 
-            .. Default::default()
+            blend: glium::draw_parameters::Blend::alpha_blending(),
+            ..Default::default()
         },
         target,
     )?;

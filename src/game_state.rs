@@ -3,9 +3,5 @@ use crate::exec::ExecView;
 
 pub enum GameState {
     Edit(Editor),
-    Exec {
-        exec_view: ExecView,
-        editor: Editor,
-    },
+    Exec { exec_view: ExecView, editor: Editor },
 }
-

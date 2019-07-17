@@ -1,10 +1,10 @@
-use nalgebra as na;
 use glium::uniform;
+use nalgebra as na;
 
-use crate::render::Context;
-use crate::render::object::{self, Object, Instance, InstanceParams};
-use crate::render::resources::Resources;
 use crate::render::camera::Camera;
+use crate::render::object::{self, Instance, InstanceParams, Object};
+use crate::render::resources::Resources;
+use crate::render::Context;
 
 #[derive(Default, Clone)]
 pub struct RenderList {
@@ -21,7 +21,10 @@ impl RenderList {
     }
 
     pub fn add(&mut self, object: Object, params: &InstanceParams) {
-        self.add_instance(&Instance { object, params: params.clone() });
+        self.add_instance(&Instance {
+            object,
+            params: params.clone(),
+        });
     }
 
     pub fn render_with_program<S: glium::Surface>(
@@ -40,9 +43,9 @@ impl RenderList {
             depth: glium::Depth {
                 test: glium::DepthTest::IfLessOrEqual,
                 write: true,
-                .. Default::default()
+                ..Default::default()
             },
-            .. params.clone()
+            ..params.clone()
         };
 
         for instance in &self.instances {
@@ -51,7 +54,7 @@ impl RenderList {
             let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
             let color: [f32; 4] = instance.params.color.into();
             let uniforms = uniform! {
-                mat_model: mat_model, 
+                mat_model: mat_model,
                 mat_view: mat_view,
                 mat_projection: mat_projection,
                 color: color,

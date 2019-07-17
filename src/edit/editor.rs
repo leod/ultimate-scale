@@ -6,12 +6,12 @@ use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
-use crate::util::intersection::{ray_quad_intersection, Ray, Plane};
-use crate::machine::grid;
-use crate::machine::{Block, PlacedBlock, Machine};
-use crate::render::{self, Camera, EditCameraView, RenderLists};
-use crate::game_state::GameState;
 use crate::exec::{self, ExecView};
+use crate::game_state::GameState;
+use crate::machine::grid;
+use crate::machine::{Block, Machine, PlacedBlock};
+use crate::render::{self, Camera, EditCameraView, RenderLists};
+use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
 use crate::edit::Edit;
 
@@ -28,20 +28,22 @@ impl Default for Config {
         Config {
             rotate_block_key: VirtualKeyCode::R,
             start_exec_key: VirtualKeyCode::Space,
-            block_keys:
-                vec![
-                    (VirtualKeyCode::Key1, Block::PipeXY),
-                    (VirtualKeyCode::Key2, Block::PipeSplitXY),
-                    (VirtualKeyCode::Key3, Block::PipeBendXY),
-                    (VirtualKeyCode::Key4, Block::Solid),
-                ].into_iter().collect(),
-            layer_keys:
-                vec![
-                    (VirtualKeyCode::F1, 0),
-                    (VirtualKeyCode::F2, 1),
-                    (VirtualKeyCode::F3, 2),
-                    (VirtualKeyCode::F4, 3),
-                ].into_iter().collect(),
+            block_keys: vec![
+                (VirtualKeyCode::Key1, Block::PipeXY),
+                (VirtualKeyCode::Key2, Block::PipeSplitXY),
+                (VirtualKeyCode::Key3, Block::PipeBendXY),
+                (VirtualKeyCode::Key4, Block::Solid),
+            ]
+            .into_iter()
+            .collect(),
+            layer_keys: vec![
+                (VirtualKeyCode::F1, 0),
+                (VirtualKeyCode::F2, 1),
+                (VirtualKeyCode::F3, 2),
+                (VirtualKeyCode::F4, 3),
+            ]
+            .into_iter()
+            .collect(),
         }
     }
 }
@@ -130,33 +132,28 @@ impl Editor {
             velocity: p_far - p_near,
         };
         let quad = Plane {
-            origin: na::Point3::new(
-                0.0,
-                0.0,
-                self.current_layer as f32,
-            ),
+            origin: na::Point3::new(0.0, 0.0, self.current_layer as f32),
             direction_a: self.machine.size().x as f32 * na::Vector3::x(),
             direction_b: self.machine.size().y as f32 * na::Vector3::y(),
         };
 
         let intersection = ray_quad_intersection(&ray, &quad);
-        self.mouse_grid_pos =
-            if let Some((ray_t, _plane_pos)) = intersection {
-                let ray_pos = ray.origin + ray_t * ray.velocity;
-                let grid_pos = grid::Point3::new(
-                    ray_pos.x.floor() as isize,
-                    ray_pos.y.floor() as isize,
-                    self.current_layer,
-                );
+        self.mouse_grid_pos = if let Some((ray_t, _plane_pos)) = intersection {
+            let ray_pos = ray.origin + ray_t * ray.velocity;
+            let grid_pos = grid::Point3::new(
+                ray_pos.x.floor() as isize,
+                ray_pos.y.floor() as isize,
+                self.current_layer,
+            );
 
-                if self.machine.is_valid_pos(&grid_pos) {
-                    Some(grid_pos)
-                } else {
-                    None
-                }
+            if self.machine.is_valid_pos(&grid_pos) {
+                Some(grid_pos)
             } else {
                 None
-            };
+            }
+        } else {
+            None
+        };
     }
 
     fn update_input(&mut self) {
@@ -164,20 +161,14 @@ impl Editor {
 
         if self.left_mouse_button_pressed {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                let edit = Edit::SetBlock(
-                    mouse_grid_pos,
-                    Some(self.place_block.clone())
-                );
+                let edit = Edit::SetBlock(mouse_grid_pos, Some(self.place_block.clone()));
                 self.run_edit(edit);
             }
         }
 
         if self.right_mouse_button_pressed {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                let edit = Edit::SetBlock(
-                    mouse_grid_pos,
-                    None,
-                );
+                let edit = Edit::SetBlock(mouse_grid_pos, None);
                 self.run_edit(edit);
             }
         }
@@ -190,22 +181,20 @@ impl Editor {
                 position,
                 modifiers: _,
             } => {
-                self.mouse_window_pos = na::Point2::new(
-                    position.x as f32,
-                    position.y as f32,
-                );
+                self.mouse_window_pos = na::Point2::new(position.x as f32, position.y as f32);
             }
-            WindowEvent::KeyboardInput { device_id: _, input } =>
-                self.on_keyboard_input(*input),
+            WindowEvent::KeyboardInput {
+                device_id: _,
+                input,
+            } => self.on_keyboard_input(*input),
             WindowEvent::MouseInput {
                 device_id: _,
                 state,
                 button,
                 modifiers,
-            } =>
-                self.on_mouse_input(*state, *button, *modifiers),
+            } => self.on_mouse_input(*state, *button, *modifiers),
 
-            _ => ()
+            _ => (),
         }
     }
 
@@ -244,10 +233,12 @@ impl Editor {
         _modifiers: glutin::ModifiersState,
     ) {
         match button {
-            glutin::MouseButton::Left => 
-                self.left_mouse_button_pressed = state == glutin::ElementState::Pressed,
-            glutin::MouseButton::Right =>
-                self.right_mouse_button_pressed = state == glutin::ElementState::Pressed,
+            glutin::MouseButton::Left => {
+                self.left_mouse_button_pressed = state == glutin::ElementState::Pressed
+            }
+            glutin::MouseButton::Right => {
+                self.right_mouse_button_pressed = state == glutin::ElementState::Pressed
+            }
             _ => (),
         }
     }
@@ -286,18 +277,16 @@ impl Editor {
                 &mut out.solid,
             );
 
-            let block_transform = render::machine::placed_block_transform(
-                &mouse_grid_pos,
-                &self.place_block,
-            );
+            let block_transform =
+                render::machine::placed_block_transform(&mouse_grid_pos, &self.place_block);
             render::machine::render_block(
-                &self.place_block.block, 
+                &self.place_block.block,
                 &block_transform,
                 Some(&na::Vector4::new(0.3, 0.5, 0.9, 0.7)),
                 &mut out.transparent,
             );
         }
-        
+
         Ok(())
     }
 }

@@ -20,17 +20,10 @@ pub struct AABB {
 
 /// Determine the intersection between a ray and a plane.
 /// The results are the ray's time of impact as well as the coordinates of the
-/// intersection in terms of the plane's `direction_a` and `direction_b`, or 
+/// intersection in terms of the plane's `direction_a` and `direction_b`, or
 /// `None` if the plane is ill-defined.
-pub fn ray_plane_intersection(
-    ray: &Ray,
-    plane: &Plane,
-) -> Option<(f32, na::Vector2<f32>)> {
-    let matrix = na::Matrix3::from_columns(&[
-        ray.velocity,
-        -plane.direction_a,
-        -plane.direction_b,
-    ]);
+pub fn ray_plane_intersection(ray: &Ray, plane: &Plane) -> Option<(f32, na::Vector2<f32>)> {
+    let matrix = na::Matrix3::from_columns(&[ray.velocity, -plane.direction_a, -plane.direction_b]);
 
     let inverse = matrix.try_inverse()?;
     let solution = inverse * (plane.origin - ray.origin);
@@ -38,10 +31,7 @@ pub fn ray_plane_intersection(
     Some((solution.x, na::Vector2::new(solution.y, solution.z)))
 }
 
-pub fn ray_quad_intersection(
-    ray: &Ray,
-    plane: &Plane,
-) -> Option<(f32, na::Vector2<f32>)> {
+pub fn ray_quad_intersection(ray: &Ray, plane: &Plane) -> Option<(f32, na::Vector2<f32>)> {
     let (ray_t, plane_pos) = ray_plane_intersection(ray, plane)?;
 
     if plane_pos.x >= 0.0 && plane_pos.x <= 1.0 && plane_pos.y >= 0.0 && plane_pos.y <= 1.0 {
@@ -51,10 +41,7 @@ pub fn ray_quad_intersection(
     }
 }
 
-pub fn ray_aabb_intersection(
-    ray: &Ray,
-    aabb: &AABB,
-) -> Option<f32> {
+pub fn ray_aabb_intersection(ray: &Ray, aabb: &AABB) -> Option<f32> {
     // As in:
     // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
 

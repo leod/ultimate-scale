@@ -1,6 +1,6 @@
+use std::collections::VecDeque;
 use std::iter::Enumerate;
 use std::ops::{Index, IndexMut};
-use std::collections::VecDeque;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct VecOption<T> {
@@ -19,7 +19,7 @@ impl<T> VecOption<T> {
     }
 
     pub fn add(&mut self, value: T) -> usize {
-        self.size += 1;    
+        self.size += 1;
 
         if let Some(index) = self.free.pop_front() {
             debug_assert!(self.data[index].is_none());
@@ -58,7 +58,7 @@ impl<T> VecOption<T> {
     pub fn len(&self) -> usize {
         self.size
     }
-    
+
     pub fn clear(&mut self) {
         self.data.clear();
         self.free.clear();
@@ -76,7 +76,12 @@ impl<T> VecOption<T> {
 
 impl<T: Clone> VecOption<T> {
     pub fn gc(&mut self) {
-        self.data = self.data.iter().filter(|x| x.is_some()).map(|x| x.clone()).collect();
+        self.data = self
+            .data
+            .iter()
+            .filter(|x| x.is_some())
+            .map(|x| x.clone())
+            .collect();
         self.free.clear();
     }
 }

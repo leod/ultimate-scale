@@ -2,7 +2,7 @@ pub mod grid;
 
 use crate::util::vec_option::{self, VecOption};
 
-use grid::{Vector3, Point3, Axis3, Sign, Dir3, Grid3};
+use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum Block {
@@ -15,18 +15,16 @@ pub enum Block {
 impl Block {
     pub fn has_wind_hole(&self, dir: &Dir3) -> bool {
         match self {
-            Block::PipeXY =>
+            Block::PipeXY => *dir == Dir3(Axis3::Y, Sign::Neg) || *dir == Dir3(Axis3::Y, Sign::Pos),
+            Block::PipeSplitXY => {
                 *dir == Dir3(Axis3::Y, Sign::Neg)
-                || *dir == Dir3(Axis3::Y, Sign::Pos),
-            Block::PipeSplitXY =>
-                *dir == Dir3(Axis3::Y, Sign::Neg)
-                || *dir == Dir3(Axis3::Y, Sign::Pos)
-                || *dir == Dir3(Axis3::X, Sign::Pos),
-            Block::PipeBendXY =>
-                *dir == Dir3(Axis3::X, Sign::Neg)
-                || *dir == Dir3(Axis3::Y, Sign::Pos),
-            Block::Solid =>
-                true,
+                    || *dir == Dir3(Axis3::Y, Sign::Pos)
+                    || *dir == Dir3(Axis3::X, Sign::Pos)
+            }
+            Block::PipeBendXY => {
+                *dir == Dir3(Axis3::X, Sign::Neg) || *dir == Dir3(Axis3::Y, Sign::Pos)
+            }
+            Block::Solid => true,
         }
     }
 
@@ -53,7 +51,7 @@ impl PlacedBlock {
     }
 
     pub fn rotated_dir_xy(&self, mut dir: Dir3) -> Dir3 {
-        for _ in 0 .. self.rotation_xy {
+        for _ in 0..self.rotation_xy {
             dir = dir.rotated_cw_xy();
         }
 
@@ -116,8 +114,7 @@ impl Machine {
     }
 
     pub fn get_block_at_pos(&self, p: &Point3) -> Option<(BlockIndex, &PlacedBlock)> {
-        self
-            .block_ids
+        self.block_ids
             .get(p)
             .and_then(|id| id.as_ref())
             .map(|&id| (id, &self.block_data[id].1))
@@ -148,11 +145,11 @@ impl Machine {
         }
     }
 
-    pub fn iter_blocks(&self) -> impl Iterator<Item=(usize, &(Point3, PlacedBlock))> {
+    pub fn iter_blocks(&self) -> impl Iterator<Item = (usize, &(Point3, PlacedBlock))> {
         self.block_data.iter()
     }
 
-    pub fn iter_blocks_mut(&mut self) -> impl Iterator<Item=(usize, &mut (Point3, PlacedBlock))> {
+    pub fn iter_blocks_mut(&mut self) -> impl Iterator<Item = (usize, &mut (Point3, PlacedBlock))> {
         self.block_data.iter_mut()
     }
 
