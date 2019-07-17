@@ -38,8 +38,10 @@ impl WindState {
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct BlipState {
-    pub blip: Option<Blip>,
+    pub blip: Option<BlipIndex>,
 }
+
+pub type BlipIndex = usize;
 
 pub struct Exec {
     machine: Machine,
@@ -54,6 +56,9 @@ pub struct Exec {
 
     /// Blip state for each block, indexed by BlockIndex
     blip_state: Vec<BlipState>,
+
+    /// Blip state from the previous tick
+    old_blip_state: Vec<BlipState>,
 }
 
 impl Exec {
@@ -64,6 +69,7 @@ impl Exec {
         let wind_state = Exec::initial_block_state(&machine);
         let old_wind_state = wind_state.clone();
         let blip_state = Exec::initial_block_state(&machine);
+        let old_blip_state = blip_state.clone();
 
         Exec {
             machine,
@@ -71,11 +77,18 @@ impl Exec {
             wind_state,
             old_wind_state,
             blip_state,
+            old_blip_state,
         }
     }
 
     pub fn update(&mut self) {
-        mem::swap(&mut self.wind_state, &mut self.old_wind_state);
+        for index in 0..self.wind_state.len() {
+            self.old_wind_state[index] = self.wind_state[index];
+        }
+
+        for index in 0..self.blip_state.len() {
+            self.old_blip_state[index] = self.blip_state[index];
+        }
 
         for (block_index, (block_pos, placed_block)) in self.machine.block_data.iter() {
             Self::update_block_wind_state(
@@ -97,10 +110,6 @@ impl Exec {
                 &self.wind_state,
                 &mut self.blip_state,
             );
-        }
-
-        for (index, _) in self.machine.block_data.iter_mut() {
-            self.old_wind_state[index] = self.wind_state[index];
         }
     }
 
