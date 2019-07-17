@@ -71,8 +71,8 @@ impl Exec {
                     }
                 }
                 Block::PipeXY => {
-                    let in_dir_a = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Neg));
-                    let in_dir_b = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Pos));
+                    let in_dir_a = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Neg));
+                    let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
 
                     let in_pos_a = *block_pos + in_dir_a.to_vector();
                     let in_pos_b = *block_pos + in_dir_b.to_vector();
@@ -90,8 +90,8 @@ impl Exec {
                     }
                 }
                 Block::PipeBendXY => {
-                    let in_dir_a = placed_block.rotated_dir(Dir3(Axis3::X, Sign::Neg));
-                    let in_dir_b = placed_block.rotated_dir(Dir3(Axis3::Y, Sign::Pos));
+                    let in_dir_a = placed_block.rotated_dir_xy(Dir3(Axis3::X, Sign::Neg));
+                    let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
 
                     let in_pos_a = *block_pos + in_dir_a.to_vector();
                     let in_pos_b = *block_pos + in_dir_b.to_vector();

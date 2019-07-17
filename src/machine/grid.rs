@@ -190,18 +190,6 @@ impl Dir3 {
         Dir3(axis, sign)
 
     }
-
-    pub fn rotated_xy(&self, dir_y: &Dir2) -> Dir3 {
-        let mut y_pos = Dir2(Axis2::Y, Sign::Pos);
-        let mut rot = *self;
-
-        while y_pos != *dir_y {
-            rot = rot.rotated_cw_xy(); 
-            y_pos = y_pos.rotated_cw();
-        }
-
-        rot
-    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
