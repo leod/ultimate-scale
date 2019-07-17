@@ -1,15 +1,14 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
-
 use log::info;
 
 use nalgebra as na;
 
-use glium::{uniform, implement_vertex, Surface};
+use glium::{implement_vertex, uniform, Surface};
 
 use crate::config::ViewConfig;
 
-use crate::render::{RenderLists, Camera, Resources, Context};
+use crate::render::{Camera, Context, RenderLists, Resources};
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -54,7 +53,7 @@ pub struct ShadowMapping {
 
     shadow_map_program: glium::Program,
     render_program: glium::Program,
-	debug_shadow_map_program: glium::Program,
+    debug_shadow_map_program: glium::Program,
     shadow_texture: glium::texture::DepthTexture2d,
 
     light_pos: na::Point3<f32>,
@@ -73,7 +72,6 @@ impl ShadowMapping {
         info!("Creating shadow map program");
         let shadow_map_program = glium::Program::from_source(
             facade,
-
             // Vertex shader
             "
                 #version 330 core
@@ -91,7 +89,6 @@ impl ShadowMapping {
                         * vec4(position, 1.0);
                 }
             ",
-
             // Fragment shader
             "
                 #version 330 core
@@ -102,8 +99,7 @@ impl ShadowMapping {
                     f_fragment_depth = gl_FragCoord.z;
                 }
             ",
-
-            None
+            None,
         )?;
 
         // Shaders for rendering the shadowed scene
@@ -213,17 +209,18 @@ impl ShadowMapping {
                 DebugVertex::new([1.0, -0.25], [1.0, 1.0]),
                 DebugVertex::new([1.0, -1.0], [1.0, 0.0]),
             ],
-        ).unwrap(); // TODO: unwrap
+        )
+        .unwrap(); // TODO: unwrap
 
         let debug_index_buffer = glium::IndexBuffer::new(
             facade,
             glium::index::PrimitiveType::TrianglesList,
             &[0u16, 1, 2, 0, 2, 3],
-        ).unwrap(); // TODO: unwrap
+        )
+        .unwrap(); // TODO: unwrap
 
         let debug_shadow_map_program = glium::Program::from_source(
             facade,
-
             // Vertex Shader
             "
                 #version 140
@@ -235,7 +232,6 @@ impl ShadowMapping {
                     v_tex_coords = tex_coords;
                 }
             ",
-
             // Fragement Shader
             "
                 #version 140
@@ -246,7 +242,7 @@ impl ShadowMapping {
                     f_color = vec4(texture(tex, v_tex_coords).rgb, 1.0);
                 }
             ",
-            None
+            None,
         )?;
 
         Ok(ShadowMapping {
@@ -284,10 +280,9 @@ impl ShadowMapping {
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         // TODO: unwrap
-        let mut shadow_target = glium::framebuffer::SimpleFrameBuffer::depth_only(
-            facade,
-            &self.shadow_texture,
-        ).unwrap();
+        let mut shadow_target =
+            glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)
+                .unwrap();
 
         let t = context.elapsed_time_secs / 48.0;
         self.light_pos.x = 15.0 + 20.0 * t.cos();
@@ -305,10 +300,7 @@ impl ShadowMapping {
                 view: light_view,
             };
 
-            let light_context = Context {
-                camera,
-                .. *context
-            };
+            let light_context = Context { camera, ..*context };
 
             shadow_target.clear_color(1.0, 1.0, 1.0, 1.0);
             shadow_target.clear_depth(1.0);
@@ -318,7 +310,7 @@ impl ShadowMapping {
                 &light_context,
                 &Default::default(),
                 &self.shadow_map_program,
-                &mut shadow_target,   
+                &mut shadow_target,
             )?;
         }
 
@@ -332,15 +324,13 @@ impl ShadowMapping {
                 depth: glium::Depth {
                     test: glium::DepthTest::IfLessOrEqual,
                     write: true,
-                    .. Default::default()
+                    ..Default::default()
                 },
-                .. Default::default()
+                ..Default::default()
             };
 
             for instance in &render_lists.solid.instances {
-                let light_mvp = light_projection
-                    * light_view
-                    * instance.params.transform;
+                let light_mvp = light_projection * light_view * instance.params.transform;
 
                 let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
                 let mat_light_mvp: [[f32; 4]; 4] = light_mvp.into();
@@ -352,7 +342,7 @@ impl ShadowMapping {
                     .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
 
                 let uniforms = uniform! {
-                    mat_model: mat_model, 
+                    mat_model: mat_model,
                     mat_view: mat_view,
                     mat_projection: mat_projection,
                     mat_light_mvp: mat_light_mvp,
@@ -400,8 +390,8 @@ impl ShadowMapping {
             resources,
             context,
             &glium::DrawParameters {
-                blend: glium::draw_parameters::Blend::alpha_blending(), 
-                .. Default::default()
+                blend: glium::draw_parameters::Blend::alpha_blending(),
+                ..Default::default()
             },
             target,
         )?;

@@ -2,11 +2,11 @@ pub mod view;
 
 use std::mem;
 
-use log::{warn, debug};
+use log::{debug, warn};
 
+use crate::machine::grid::{Axis3, Dir3, Grid3, Point3, Sign};
+use crate::machine::{Block, BlockIndex, Machine, PlacedBlock};
 use crate::util::vec_option::VecOption;
-use crate::machine::grid::{Point3, Axis3, Sign, Dir3, Grid3};
-use crate::machine::{Block, PlacedBlock, BlockIndex, Machine};
 
 pub use view::ExecView;
 
@@ -32,7 +32,7 @@ impl WindState {
 pub struct Exec {
     machine: Machine,
     blips: VecOption<Blip>,
-    
+
     /// Wind state for each block, indexed by BlockIndex
     wind_state: Vec<WindState>,
 
@@ -84,8 +84,11 @@ impl Exec {
         placed_block: &mut PlacedBlock,
         wind_state: &mut Vec<WindState>,
     ) {
-        debug!("have {:?} with {:?}", placed_block.block, old_wind_state[block_index]);
-        
+        debug!(
+            "have {:?} with {:?}",
+            placed_block.block, old_wind_state[block_index]
+        );
+
         match placed_block.block {
             Block::Solid => {
                 for dir in &Dir3::ALL {
@@ -93,8 +96,7 @@ impl Exec {
                     let neighbor_index = block_ids.get(&neighbor_pos);
 
                     if let Some(Some(neighbor_index)) = neighbor_index {
-                        wind_state[*neighbor_index]
-                            .flow_in[dir.invert().to_index()] = true;
+                        wind_state[*neighbor_index].flow_in[dir.invert().to_index()] = true;
                     }
                 }
             }
@@ -113,22 +115,20 @@ impl Exec {
                     let neighbor_pos = *block_pos + dir.to_vector();
 
                     if let Some(Some(neighbor_index)) = block_ids.get(&neighbor_pos) {
-                        let neighbor_in_flow =
-                            if any_in {
-                                !old_wind_state[block_index].flow_in[dir.to_index()]
-                            } else {
-                                false
-                            };
+                        let neighbor_in_flow = if any_in {
+                            !old_wind_state[block_index].flow_in[dir.to_index()]
+                        } else {
+                            false
+                        };
 
                         debug!("flow to {:?}: {}", dir, neighbor_in_flow);
 
-                        wind_state[*neighbor_index]
-                            .flow_in[dir.invert().to_index()] = neighbor_in_flow;
+                        wind_state[*neighbor_index].flow_in[dir.invert().to_index()] =
+                            neighbor_in_flow;
                     }
                 }
             }
         }
-
     }
 
     fn initial_wind_state(machine: &Machine) -> Vec<WindState> {

@@ -4,11 +4,11 @@ use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
-use crate::machine::{Block, Machine};
-use crate::machine::grid::{Axis3, Sign, Dir3};
-use crate::exec::Exec;
 use crate::edit::Editor;
+use crate::exec::Exec;
 use crate::game_state::GameState;
+use crate::machine::grid::{Axis3, Dir3, Sign};
+use crate::machine::{Block, Machine};
 use crate::render::{self, RenderLists};
 
 #[derive(Debug, Clone)]
@@ -46,7 +46,7 @@ impl ExecView {
 
     pub fn update(mut self, dt_secs: f32, editor: Editor) -> GameState {
         if !self.stop_exec {
-            GameState::Exec { 
+            GameState::Exec {
                 exec_view: self,
                 editor: editor,
             }
@@ -58,9 +58,11 @@ impl ExecView {
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::KeyboardInput { device_id: _, input } =>
-                self.on_keyboard_input(*input),
-            _ => ()
+            WindowEvent::KeyboardInput {
+                device_id: _,
+                input,
+            } => self.on_keyboard_input(*input),
+            _ => (),
         }
     }
 
@@ -83,11 +85,7 @@ impl ExecView {
 
     pub fn render(&mut self, out: &mut RenderLists) {
         render::machine::render_machine(&self.exec.machine(), out);
-        render::machine::render_xy_grid(
-            &self.exec.machine().size(),
-            0.01,
-            &mut out.solid,
-        );
+        render::machine::render_xy_grid(&self.exec.machine().size(), 0.01, &mut out.solid);
 
         let block_data = &self.exec.machine().block_data;
         let wind_state = self.exec.wind_state();
@@ -101,8 +99,10 @@ impl ExecView {
                         let in_dir_a = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Neg));
                         let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
 
-                        match (block_wind_state.flow_in(&in_dir_a),
-                               block_wind_state.flow_in(&in_dir_b)) {
+                        match (
+                            block_wind_state.flow_in(&in_dir_a),
+                            block_wind_state.flow_in(&in_dir_b),
+                        ) {
                             (true, true) => Some(na::Vector3::z()),
                             (true, false) => Some(in_dir_a.to_vector()),
                             (false, true) => Some(in_dir_b.to_vector()),

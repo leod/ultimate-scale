@@ -3,7 +3,7 @@ use log::info;
 use glium::program;
 use num_traits::ToPrimitive;
 
-use crate::render::object::{self, ObjectBuffers, Object};
+use crate::render::object::{self, Object, ObjectBuffers};
 
 pub struct Resources {
     pub object_buffers: Vec<ObjectBuffers>,
@@ -29,14 +29,12 @@ impl From<glium::program::ProgramChooserCreationError> for CreationError {
 }
 
 impl Resources {
-    pub fn create<F: glium::backend::Facade>(
-        facade: &F,
-    ) -> Result<Resources, CreationError> {
+    pub fn create<F: glium::backend::Facade>(facade: &F) -> Result<Resources, CreationError> {
         // Unfortunately, it doesn't seem easy to use enum_map here,
         // since we need to check for errors in creating buffers
         let mut object_buffers = Vec::new();
 
-        for i in 0 .. Object::NumTypes as u32 {
+        for i in 0..Object::NumTypes as u32 {
             // Safe to unwrap here, since we iterate within the range
             let object: Object = num_traits::FromPrimitive::from_u32(i).unwrap();
 
@@ -98,7 +96,7 @@ impl Resources {
 
         Ok(Resources {
             object_buffers,
-            program
+            program,
         })
     }
 
@@ -108,4 +106,3 @@ impl Resources {
         &self.object_buffers[object.to_usize().unwrap()]
     }
 }
-

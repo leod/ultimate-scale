@@ -1,18 +1,18 @@
-mod util;
 mod config;
-mod machine;
-mod render;
 mod edit;
 mod exec;
 mod game_state;
+mod machine;
+mod render;
+mod util;
 
 use std::thread;
 use std::time::{Duration, Instant};
 
+use floating_duration::TimeAsFloat;
+use glium::Surface;
 use log::info;
 use nalgebra as na;
-use glium::Surface;
-use floating_duration::TimeAsFloat;
 
 use edit::Editor;
 use exec::Exec;
@@ -26,8 +26,7 @@ fn main() {
 
     info!("Opening window");
     let mut events_loop = glutin::EventsLoop::new();
-    let window_builder = glutin::WindowBuilder::new()
-        .with_dimensions(config.view.window_size);
+    let window_builder = glutin::WindowBuilder::new().with_dimensions(config.view.window_size);
     let context_builder = glutin::ContextBuilder::new();
     let display = glium::Display::new(window_builder, context_builder, &events_loop).unwrap();
 
@@ -38,7 +37,7 @@ fn main() {
 
     let viewport = na::Vector2::new(
         config.view.window_size.width as f32,
-        config.view.window_size.height as f32
+        config.view.window_size.height as f32,
     );
     let projection = na::Perspective3::new(
         viewport.x / viewport.y,
@@ -51,7 +50,9 @@ fn main() {
     let mut camera_input = render::camera::Input::new(config.camera);
 
     let mut render_lists = render::RenderLists::new();
-    let mut shadow_mapping = config.render.shadow_mapping
+    let mut shadow_mapping = config
+        .render
+        .shadow_mapping
         .as_ref()
         .map(|config| render::shadow::ShadowMapping::create(&display, config).unwrap());
 
@@ -78,54 +79,52 @@ fn main() {
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
         match &mut game_state {
-            GameState::Edit(editor) =>
-                editor.render(&mut render_lists).unwrap(),
-            GameState::Exec { exec_view, editor: _ } => 
-                exec_view.render(&mut render_lists),
+            GameState::Edit(editor) => editor.render(&mut render_lists).unwrap(),
+            GameState::Exec {
+                exec_view,
+                editor: _,
+            } => exec_view.render(&mut render_lists),
         }
 
         if let Some(shadow_mapping) = &mut shadow_mapping {
-            shadow_mapping.render_frame(
-                &display,
-                &resources,
-                &render_context,
-                &render_lists,
-                &mut target,
-            ).unwrap();
+            shadow_mapping
+                .render_frame(
+                    &display,
+                    &resources,
+                    &render_context,
+                    &render_lists,
+                    &mut target,
+                )
+                .unwrap();
         } else {
-            render::render_frame_straight(
-                &resources,
-                &render_context,
-                &render_lists,
-                &mut target,
-            ).unwrap();
+            render::render_frame_straight(&resources, &render_context, &render_lists, &mut target)
+                .unwrap();
         }
 
         target.finish().unwrap();
 
-        events_loop.poll_events(|event| {
-            match event {
-                glutin::Event::WindowEvent { event, .. } => {
-                    camera_input.on_event(&event);
+        events_loop.poll_events(|event| match event {
+            glutin::Event::WindowEvent { event, .. } => {
+                camera_input.on_event(&event);
 
-                    match &mut game_state {
-                        GameState::Edit(editor) =>
-                            editor.on_event(&event),
-                        GameState::Exec { exec_view, editor: _ } =>
-                            exec_view.on_event(&event),
-                    }
-
-                    match event {
-                        glutin::WindowEvent::CloseRequested => {
-                            info!("Quitting");
-
-                            quit = true;
-                        }
-                        _ => (),
-                    }
+                match &mut game_state {
+                    GameState::Edit(editor) => editor.on_event(&event),
+                    GameState::Exec {
+                        exec_view,
+                        editor: _,
+                    } => exec_view.on_event(&event),
                 }
-                _ => (),
+
+                match event {
+                    glutin::WindowEvent::CloseRequested => {
+                        info!("Quitting");
+
+                        quit = true;
+                    }
+                    _ => (),
+                }
             }
+            _ => (),
         });
 
         let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
@@ -133,10 +132,10 @@ fn main() {
         camera.view = edit_camera_view.view();
 
         game_state = match game_state {
-            GameState::Edit(editor) =>
-                editor.update(frame_duration_secs, &camera, &mut edit_camera_view),
-            GameState::Exec { exec_view, editor } =>
-                exec_view.update(frame_duration_secs, editor),
+            GameState::Edit(editor) => {
+                editor.update(frame_duration_secs, &camera, &mut edit_camera_view)
+            }
+            GameState::Exec { exec_view, editor } => exec_view.update(frame_duration_secs, editor),
         };
 
         thread::sleep(Duration::from_millis(10));

@@ -14,10 +14,7 @@ pub enum Axis2 {
 
 impl Axis2 {
     pub const NUM_INDICES: usize = 2;
-    pub const ALL: [Axis2; Self::NUM_INDICES] = [
-        Axis2::X,
-        Axis2::Y,
-    ];
+    pub const ALL: [Axis2; Self::NUM_INDICES] = [Axis2::X, Axis2::Y];
 
     pub fn to_vector(&self) -> Vector2 {
         match self {
@@ -57,11 +54,7 @@ pub enum Axis3 {
 
 impl Axis3 {
     pub const NUM_INDICES: usize = 3;
-    pub const ALL: [Axis3; Self::NUM_INDICES] = [
-        Axis3::X,
-        Axis3::Y,
-        Axis3::Z,
-    ];
+    pub const ALL: [Axis3; Self::NUM_INDICES] = [Axis3::X, Axis3::Y, Axis3::Z];
 
     pub fn to_vector(&self) -> Vector3 {
         match self {
@@ -126,11 +119,10 @@ impl Dir2 {
     }
 
     pub fn rotated_cw(&self) -> Dir2 {
-        let sign =
-            match self.0 {
-                Axis2::X => self.1.invert(),
-                Axis2::Y => self.1,
-            };
+        let sign = match self.0 {
+            Axis2::X => self.1.invert(),
+            Axis2::Y => self.1,
+        };
 
         Dir2(self.0.next(), sign)
     }
@@ -176,19 +168,16 @@ impl Dir3 {
     }
 
     pub fn rotated_cw_xy(&self) -> Dir3 {
-        let axis =
-            match self.0 {
-                Axis3::X => Axis3::Y,
-                Axis3::Y => Axis3::X,
-                Axis3::Z => Axis3::Z,
-            };
-        let sign =
-            match self.0 {
-                Axis3::X => self.1.invert(),
-                Axis3::Y | Axis3::Z => self.1,
-            };
+        let axis = match self.0 {
+            Axis3::X => Axis3::Y,
+            Axis3::Y => Axis3::X,
+            Axis3::Z => Axis3::Z,
+        };
+        let sign = match self.0 {
+            Axis3::X => self.1.invert(),
+            Axis3::Y | Axis3::Z => self.1,
+        };
         Dir3(axis, sign)
-
     }
 }
 
@@ -214,18 +203,18 @@ impl<T> Grid3<T> {
     pub fn node_index(&self, p: &Point3) -> usize {
         debug_assert!(self.is_valid_pos(p));
 
-        let index =
-            p.x +
-            p.y * self.size.x +
-            p.z * self.size.x * self.size.y;
-        
+        let index = p.x + p.y * self.size.x + p.z * self.size.x * self.size.y;
+
         index as usize
     }
 
     pub fn is_valid_pos(&self, p: &Point3) -> bool {
-        p.x >= 0 && p.x < self.size.x &&
-        p.y >= 0 && p.y < self.size.y &&
-        p.z >= 0 && p.z < self.size.z
+        p.x >= 0
+            && p.x < self.size.x
+            && p.y >= 0
+            && p.y < self.size.y
+            && p.z >= 0
+            && p.z < self.size.z
     }
 
     pub fn get(&self, p: &Point3) -> Option<&T> {

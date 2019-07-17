@@ -1,10 +1,10 @@
 use std::io;
 use std::path::Path;
 
-use log::info;
-use num_derive::{FromPrimitive, ToPrimitive};
-use nalgebra as na;
 use glium::{self, implement_vertex};
+use log::info;
+use nalgebra as na;
+use num_derive::{FromPrimitive, ToPrimitive};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
 pub enum Object {
@@ -45,28 +45,17 @@ impl IndexBuffer {
         draw_parameters: &glium::DrawParameters,
         target: &mut S,
     ) -> Result<(), glium::DrawError>
-    where V: glium::vertex::MultiVerticesSource<'a>,
-          U: glium::uniforms::Uniforms,
-          S: glium::Surface,
+    where
+        V: glium::vertex::MultiVerticesSource<'a>,
+        U: glium::uniforms::Uniforms,
+        S: glium::Surface,
     {
         match &self {
             IndexBuffer::IndexBuffer(buffer) => {
-                target.draw(
-                    vertex_buffer,
-                    buffer,
-                    program,
-                    uniforms,
-                    draw_parameters,
-                )
+                target.draw(vertex_buffer, buffer, program, uniforms, draw_parameters)
             }
             IndexBuffer::NoIndices(buffer) => {
-                target.draw(
-                    vertex_buffer,
-                    buffer,
-                    program,
-                    uniforms,
-                    draw_parameters,
-                )
+                target.draw(vertex_buffer, buffer, program, uniforms, draw_parameters)
             }
         }
     }
@@ -88,7 +77,10 @@ impl ObjectBuffers {
         let vertices = positions
             .iter()
             .zip(normals.iter())
-            .map(|(&p, &n)| Vertex { position: p, normal: n })
+            .map(|(&p, &n)| Vertex {
+                position: p,
+                normal: n,
+            })
             .collect::<Vec<_>>();
 
         Ok(ObjectBuffers {
@@ -103,7 +95,7 @@ impl ObjectBuffers {
 
     pub fn load_wavefront<F: glium::backend::Facade>(
         facade: &F,
-		path: &Path,
+        path: &Path,
     ) -> Result<ObjectBuffers, CreationError> {
         info!("Loading Wavefront .OBJ file: `{}'", path.display());
 
@@ -117,7 +109,11 @@ impl ObjectBuffers {
         for object in data.objects.iter() {
             for polygon in object.groups.iter().flat_map(|g| g.polys.iter()) {
                 match polygon {
-                    &genmesh::Polygon::PolyTri(genmesh::Triangle { x: v1, y: v2, z: v3 }) => {
+                    &genmesh::Polygon::PolyTri(genmesh::Triangle {
+                        x: v1,
+                        y: v2,
+                        z: v3,
+                    }) => {
                         for v in [v1, v2, v3].iter() {
                             let position = data.position[v.0];
                             let normal = v.2.map(|index| data.normal[index]);
@@ -129,8 +125,8 @@ impl ObjectBuffers {
                                 normal: normal,
                             })
                         }
-                    },
-                    _ => unimplemented!()
+                    }
+                    _ => unimplemented!(),
                 }
             }
         }
@@ -139,7 +135,10 @@ impl ObjectBuffers {
         let primitive_type = glium::index::PrimitiveType::TrianglesList;
         let index_buffer = IndexBuffer::NoIndices(glium::index::NoIndices(primitive_type));
 
-        Ok(ObjectBuffers { vertex_buffer, index_buffer })
+        Ok(ObjectBuffers {
+            vertex_buffer,
+            index_buffer,
+        })
     }
 }
 
@@ -164,15 +163,13 @@ pub struct Instance {
     pub params: InstanceParams,
 }
 
-impl Instance {
-
-}
+impl Instance {}
 
 #[derive(Debug)]
 pub enum CreationError {
     VertexBufferCreationError(glium::vertex::BufferCreationError),
     IndexBufferCreationError(glium::index::BufferCreationError),
-	IOError(io::Error),
+    IOError(io::Error),
 }
 
 impl From<glium::vertex::BufferCreationError> for CreationError {
@@ -194,6 +191,7 @@ impl From<io::Error> for CreationError {
 }
 
 impl Object {
+    #[rustfmt::skip]
     pub fn create_buffers<F: glium::backend::Facade>(
         &self, facade: &F
     ) -> Result<ObjectBuffers, CreationError> {
@@ -329,7 +327,7 @@ impl Object {
                 let indices = vec![
                     // Front
                     0, 1, 2, 0, 2, 3,
-                    
+
                     // Right
                     4, 5, 6, 4, 6, 7,
 

@@ -1,7 +1,7 @@
 pub mod editor;
 
 use crate::machine::grid;
-use crate::machine::{PlacedBlock, Machine};
+use crate::machine::{Machine, PlacedBlock};
 
 pub use editor::Editor;
 
@@ -10,7 +10,7 @@ pub enum Edit {
 }
 
 impl Edit {
-    pub fn run(&self, machine: &mut Machine) -> Edit { 
+    pub fn run(&self, machine: &mut Machine) -> Edit {
         match self {
             Edit::SetBlock(p, block) => {
                 let previous_block = machine

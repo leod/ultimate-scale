@@ -1,9 +1,9 @@
 use nalgebra as na;
 
 use crate::machine::grid;
-use crate::machine::{Machine, Block, PlacedBlock};
+use crate::machine::{Block, Machine, PlacedBlock};
 
-use crate::render::{Object, InstanceParams, RenderList, RenderLists};
+use crate::render::{InstanceParams, Object, RenderList, RenderLists};
 
 #[derive(Clone, Debug)]
 pub struct Line {
@@ -21,11 +21,7 @@ pub fn render_line(line: &Line, out: &mut RenderList) {
     // This will roll the line somewhat, works nicely for the cuboid wireframe
     let up = d.cross(&na::Vector3::x()) + d.cross(&na::Vector3::y()) + d.cross(&na::Vector3::z());
 
-    let look_at = na::Isometry3::face_towards(
-        &center,
-        &line.end,
-        &up,
-    );
+    let look_at = na::Isometry3::face_towards(&center, &line.end, &up);
 
     let scaling = na::Vector3::new(
         line.thickness,
@@ -40,7 +36,7 @@ pub fn render_line(line: &Line, out: &mut RenderList) {
         &InstanceParams {
             transform,
             color: line.color,
-            .. Default::default()
+            ..Default::default()
         },
     );
 }
@@ -59,6 +55,7 @@ impl Cuboid {
     }
 }
 
+#[rustfmt::skip]
 pub fn render_cuboid_wireframe(
     cuboid: &Cuboid,
     thickness: f32,
@@ -101,7 +98,7 @@ pub fn render_cuboid_wireframe(
 pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
     let color = na::Vector4::new(0.7, 0.7, 0.7, 1.0);
 
-    for x in 0 .. size.x + 1 {
+    for x in 0..size.x + 1 {
         let translation = na::Matrix4::new_translation(&na::Vector3::new(x as f32, 0.0, z));
         let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::y() * (size.y as f32)));
         out.add(
@@ -109,12 +106,12 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
             &InstanceParams {
                 transform: translation * scaling,
                 color,
-                .. Default::default()
-            }, 
+                ..Default::default()
+            },
         );
     }
 
-    for y in 0 .. size.y + 1 {
+    for y in 0..size.y + 1 {
         let translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, y as f32, z));
         let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::x() * (size.x as f32)));
         out.add(
@@ -122,8 +119,8 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
             &InstanceParams {
                 transform: translation * scaling,
                 color,
-                .. Default::default()
-            }, 
+                ..Default::default()
+            },
         );
     }
 }
@@ -141,7 +138,7 @@ pub fn render_block(
                 &InstanceParams {
                     transform: transform.clone(),
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
-                    .. Default::default()
+                    ..Default::default()
                 },
             );
         }
@@ -151,7 +148,7 @@ pub fn render_block(
                 &InstanceParams {
                     transform: transform.clone(),
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
-                    .. Default::default()
+                    ..Default::default()
                 },
             );
         }
@@ -161,7 +158,7 @@ pub fn render_block(
                 &InstanceParams {
                     transform: transform.clone(),
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
-                    .. Default::default()
+                    ..Default::default()
                 },
             );
         }
@@ -171,7 +168,7 @@ pub fn render_block(
                 &InstanceParams {
                     transform: transform.clone(),
                     color: *color.unwrap_or(&na::Vector4::new(0.3, 0.9, 0.2, 1.0)),
-                    .. Default::default()
+                    ..Default::default()
                 },
             );
         }
@@ -189,11 +186,11 @@ pub fn render_arrow(line: &Line, roll: f32, out: &mut RenderList) {
     ) * na::Matrix4::new_scaling(0.1);
 
     out.add(
-        Object::Triangle, 
+        Object::Triangle,
         &InstanceParams {
             transform: head_transform,
             color: line.color,
-            .. Default::default()
+            ..Default::default()
         },
     );
 }
@@ -209,11 +206,7 @@ pub fn placed_block_transform(pos: &grid::Point3, placed_block: &PlacedBlock) ->
 }
 
 pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
-    let floor_size = na::Vector3::new(
-        machine.size().x as f32,
-        machine.size().y as f32,
-        1.0
-    );
+    let floor_size = na::Vector3::new(machine.size().x as f32, machine.size().y as f32, 1.0);
 
     let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
     out.solid.add(
@@ -222,7 +215,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
             transform: floor_transform,
             //color: na::Vector4::new(0.1608, 0.4235, 0.5725, 1.0),
             color: na::Vector4::new(0.33, 0.64, 0.82, 1.0),
-            .. Default::default()
+            ..Default::default()
         },
     );
 
