@@ -32,7 +32,8 @@ impl Default for Config {
                 (VirtualKeyCode::Key1, Block::PipeXY),
                 (VirtualKeyCode::Key2, Block::PipeBendXY),
                 (VirtualKeyCode::Key3, Block::PipeSplitXY),
-                (VirtualKeyCode::Key4, Block::Solid),
+                (VirtualKeyCode::Key4, Block::WindSource),
+                (VirtualKeyCode::Key5, Block::Solid),
             ]
             .into_iter()
             .collect(),
@@ -281,7 +282,9 @@ impl Editor {
             render::machine::render_block(
                 &self.place_block.block,
                 &block_transform,
-                Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
+                //Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
+                None,
+                0.8,
                 &mut out.transparent,
             );
         }

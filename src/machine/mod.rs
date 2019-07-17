@@ -5,10 +5,17 @@ use crate::util::vec_option::VecOption;
 use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub enum BlipKind {
+    A,
+    B,
+}
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum Block {
     PipeXY,
-    PipeSplitXY,
     PipeBendXY,
+    PipeSplitXY,
+    WindSource,
     Solid,
 }
 
@@ -16,15 +23,16 @@ impl Block {
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         match self {
             Block::PipeXY => dir == Dir3(Axis3::Y, Sign::Neg) || dir == Dir3(Axis3::Y, Sign::Pos),
+            Block::PipeBendXY => {
+                dir == Dir3(Axis3::X, Sign::Neg) || dir == Dir3(Axis3::Y, Sign::Pos)
+            }
             Block::PipeSplitXY => {
                 dir == Dir3(Axis3::Y, Sign::Neg)
                     || dir == Dir3(Axis3::Y, Sign::Pos)
                     || dir == Dir3(Axis3::X, Sign::Pos)
             }
-            Block::PipeBendXY => {
-                dir == Dir3(Axis3::X, Sign::Neg) || dir == Dir3(Axis3::Y, Sign::Pos)
-            }
-            Block::Solid => true,
+            Block::WindSource => true,
+            Block::Solid => false,
         }
     }
 

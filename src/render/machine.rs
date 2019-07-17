@@ -129,6 +129,7 @@ pub fn render_block(
     block: &Block,
     transform: &na::Matrix4<f32>,
     color: Option<&na::Vector4<f32>>,
+    alpha: f32,
     out: &mut RenderList,
 ) {
     match block {
@@ -137,17 +138,7 @@ pub fn render_block(
                 Object::PipeSegment,
                 &InstanceParams {
                     transform: *transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
-                    ..Default::default()
-                },
-            );
-        }
-        Block::PipeSplitXY => {
-            out.add(
-                Object::PipeSplit,
-                &InstanceParams {
-                    transform: *transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
+                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
                     ..Default::default()
                 },
             );
@@ -157,7 +148,27 @@ pub fn render_block(
                 Object::PipeBend,
                 &InstanceParams {
                     transform: *transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, 1.0)),
+                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
+                    ..Default::default()
+                },
+            );
+        }
+        Block::PipeSplitXY => {
+            out.add(
+                Object::PipeSplit,
+                &InstanceParams {
+                    transform: *transform,
+                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
+                    ..Default::default()
+                },
+            );
+        }
+        Block::WindSource => {
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: *transform,
+                    color: *color.unwrap_or(&na::Vector4::new(1.0, 0.0, 0.0, alpha)),
                     ..Default::default()
                 },
             );
@@ -167,7 +178,7 @@ pub fn render_block(
                 Object::Cube,
                 &InstanceParams {
                     transform: *transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.3, 0.9, 0.2, 1.0)),
+                    color: *color.unwrap_or(&na::Vector4::new(0.3, 0.9, 0.2, alpha)),
                     ..Default::default()
                 },
             );
@@ -222,7 +233,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
     for (_index, (block_pos, placed_block)) in machine.iter_blocks() {
         let transform = placed_block_transform(&block_pos, &placed_block);
 
-        render_block(&placed_block.block, &transform, None, &mut out.solid_shadow);
-        render_block(&placed_block.block, &transform, None, &mut out.solid);
+        render_block(&placed_block.block, &transform, None, 1.0, &mut out.solid_shadow);
+        render_block(&placed_block.block, &transform, None, 1.0, &mut out.solid);
     }
 }
