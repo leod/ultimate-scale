@@ -16,6 +16,7 @@ pub enum Block {
     PipeBendXY,
     PipeSplitXY,
     WindSource,
+    BlipSpawn,
     Solid,
 }
 
@@ -32,6 +33,7 @@ impl Block {
                     || dir == Dir3(Axis3::X, Sign::Pos)
             }
             Block::WindSource => true,
+            Block::BlipSpawn => false,
             Block::Solid => false,
         }
     }

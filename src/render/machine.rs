@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::machine::grid;
+use crate::machine::grid::{self, Dir2};
 use crate::machine::{Block, Machine, PlacedBlock};
 
 use crate::render::{InstanceParams, Object, RenderList, RenderLists};
@@ -127,17 +127,20 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
 
 pub fn render_block(
     block: &Block,
+    center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: Option<&na::Vector4<f32>>,
     alpha: f32,
     out: &mut RenderList,
 ) {
+    let translation = na::Matrix4::new_translation(&center.coords);
+
     match block {
         Block::PipeXY => {
             out.add(
                 Object::PipeSegment,
                 &InstanceParams {
-                    transform: *transform,
+                    transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
                     ..Default::default()
                 },
@@ -147,7 +150,7 @@ pub fn render_block(
             out.add(
                 Object::PipeBend,
                 &InstanceParams {
-                    transform: *transform,
+                    transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
                     ..Default::default()
                 },
@@ -157,7 +160,7 @@ pub fn render_block(
             out.add(
                 Object::PipeSplit,
                 &InstanceParams {
-                    transform: *transform,
+                    transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
                     ..Default::default()
                 },
@@ -167,17 +170,79 @@ pub fn render_block(
             out.add(
                 Object::Cube,
                 &InstanceParams {
-                    transform: *transform,
+                    transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(1.0, 0.0, 0.0, alpha)),
                     ..Default::default()
                 },
             );
         }
+        Block::BlipSpawn => {
+            let cube_transform = 
+                translation
+                * transform
+                * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0))
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: cube_transform,
+                    color: *color.unwrap_or(&na::Vector4::new(0.0, 1.0, 0.0, alpha)),
+                    ..Default::default()
+                },
+            );
+
+            let output_dir = Dir2::X_POS;
+
+            let output_transform =
+                translation
+                * transform
+                * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
+                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.3, 0.3));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: output_transform,
+                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                    ..Default::default()
+                },
+            );
+
+            /*let output_transform =
+                translation
+                * transform
+                * na::Matrix4::new_translation(&na::Vector3::new(0.6, 0.0, 0.0))
+                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.3, 0.5, 0.5));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: output_transform,
+                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                    ..Default::default()
+                },
+            );
+
+            let output_transform =
+                translation
+                * transform
+                * na::Matrix4::new_translation(&na::Vector3::new(0.7, 0.0, 0.0))
+                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.3, 0.3, 0.3));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: output_transform,
+                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                    ..Default::default()
+                },
+            );*/
+        }
         Block::Solid => {
             out.add(
                 Object::Cube,
                 &InstanceParams {
-                    transform: *transform,
+                    transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.3, 0.9, 0.2, alpha)),
                     ..Default::default()
                 },
@@ -206,14 +271,13 @@ pub fn render_arrow(line: &Line, roll: f32, out: &mut RenderList) {
     );
 }
 
-pub fn placed_block_transform(pos: &grid::Point3, placed_block: &PlacedBlock) -> na::Matrix4<f32> {
-    let angle_radians = placed_block.angle_xy_radians();
-    let rotation = na::Matrix4::new_rotation(angle_radians * na::Vector3::z());
+pub fn block_center(pos: &grid::Point3) -> na::Point3<f32> {
+    let coords_float: na::Vector3<f32> = na::convert(pos.coords);
+    na::Point3::from(coords_float) + na::Vector3::new(0.5, 0.5, 0.5)
+}
 
-    let coords: na::Vector3<f32> = na::convert(pos.coords);
-    let translation = na::Matrix4::new_translation(&(coords + na::Vector3::new(0.5, 0.5, 0.5)));
-
-    translation * rotation
+pub fn placed_block_transform(placed_block: &PlacedBlock) -> na::Matrix4<f32> {
+    na::Matrix4::new_rotation(placed_block.angle_xy_radians() * na::Vector3::z())
 }
 
 pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
@@ -231,9 +295,10 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
     );
 
     for (_index, (block_pos, placed_block)) in machine.iter_blocks() {
-        let transform = placed_block_transform(&block_pos, &placed_block);
+        let transform = placed_block_transform(&placed_block);
+        let center = block_center(&block_pos);
 
-        render_block(&placed_block.block, &transform, None, 1.0, &mut out.solid_shadow);
-        render_block(&placed_block.block, &transform, None, 1.0, &mut out.solid);
+        render_block(&placed_block.block, &center, &transform, None, 1.0, &mut out.solid_shadow);
+        render_block(&placed_block.block, &center, &transform, None, 1.0, &mut out.solid);
     }
 }

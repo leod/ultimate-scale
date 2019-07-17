@@ -110,6 +110,11 @@ pub struct Dir2(pub Axis2, pub Sign);
 impl Dir2 {
     pub const NUM_INDICES: usize = Axis2::NUM_INDICES * Sign::NUM_INDICES;
 
+    pub const X_POS: Dir2 = Dir2(Axis2::X, Sign::Pos);
+    pub const X_NEG: Dir2 = Dir2(Axis2::X, Sign::Neg);
+    pub const Y_POS: Dir2 = Dir2(Axis2::Y, Sign::Pos);
+    pub const Y_NEG: Dir2 = Dir2(Axis2::Y, Sign::Neg);
+
     pub fn to_vector(self) -> Vector2 {
         self.0.to_vector() * self.1.to_number()
     }
@@ -146,13 +151,21 @@ pub struct Dir3(pub Axis3, pub Sign);
 
 impl Dir3 {
     pub const NUM_INDICES: usize = Axis3::NUM_INDICES * Sign::NUM_INDICES;
+
+    pub const X_POS: Dir3 = Dir3(Axis3::X, Sign::Pos);
+    pub const X_NEG: Dir3 = Dir3(Axis3::X, Sign::Neg);
+    pub const Y_POS: Dir3 = Dir3(Axis3::Y, Sign::Pos);
+    pub const Y_NEG: Dir3 = Dir3(Axis3::Y, Sign::Neg);
+    pub const Z_POS: Dir3 = Dir3(Axis3::Z, Sign::Pos);
+    pub const Z_NEG: Dir3 = Dir3(Axis3::Z, Sign::Neg);
+
     pub const ALL: [Dir3; Self::NUM_INDICES] = [
-        Dir3(Axis3::X, Sign::Pos),
-        Dir3(Axis3::X, Sign::Neg),
-        Dir3(Axis3::Y, Sign::Pos),
-        Dir3(Axis3::Y, Sign::Neg),
-        Dir3(Axis3::Z, Sign::Pos),
-        Dir3(Axis3::Z, Sign::Neg),
+        Dir3::X_POS,
+        Dir3::X_NEG,
+        Dir3::Y_POS,
+        Dir3::Y_NEG,
+        Dir3::Z_POS,
+        Dir3::Z_NEG,
     ];
 
     pub fn to_vector(self) -> Vector3 {

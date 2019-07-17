@@ -33,7 +33,8 @@ impl Default for Config {
                 (VirtualKeyCode::Key2, Block::PipeBendXY),
                 (VirtualKeyCode::Key3, Block::PipeSplitXY),
                 (VirtualKeyCode::Key4, Block::WindSource),
-                (VirtualKeyCode::Key5, Block::Solid),
+                (VirtualKeyCode::Key5, Block::BlipSpawn),
+                (VirtualKeyCode::Key6, Block::Solid),
             ]
             .into_iter()
             .collect(),
@@ -277,10 +278,12 @@ impl Editor {
                 &mut out.solid,
             );
 
+            let block_center = render::machine::block_center(&mouse_grid_pos);
             let block_transform =
-                render::machine::placed_block_transform(&mouse_grid_pos, &self.place_block);
+                render::machine::placed_block_transform(&self.place_block);
             render::machine::render_block(
                 &self.place_block.block,
+                &block_center,
                 &block_transform,
                 //Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
                 None,
