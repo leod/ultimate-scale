@@ -194,7 +194,7 @@ impl ExecView {
             let instance = render::Instance {
                 object: render::Object::Cube,
                 params: render::InstanceParams {
-                    color: na::Vector4::new(0.0, 1.0, 0.0, 1.0),
+                    color: na::Vector4::new(0.0, 0.5, 0.0, 1.0),
                     transform,
                     ..Default::default()
                 },
@@ -207,7 +207,7 @@ impl ExecView {
                 position: pos,
                 attenuation: na::Vector3::new(0.8, 0.00125, 0.0000001),
                 color: na::Vector3::new(0.0, 1.0, 0.0),
-                radius: 1.5,
+                radius: 1.0,
             });
         }
     }
