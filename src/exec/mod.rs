@@ -241,103 +241,17 @@ impl Exec {
             let block_index = block_ids.get(&blip.pos);
 
             if let Some(Some(block_index)) = block_index {
-                debug!(
-                    "blip at {:?}: {:?} vs {:?}",
-                    blip.pos, old_blip_state[*block_index].blip_index, blip_index,
+                Self::update_blip(
+                    *block_index,
+                    blip_index,
+                    blip,
+                    block_ids,
+                    wind_state,
+                    old_blip_state,
+                    blip_state,
+                    block_data,
+                    &mut remove_indices,
                 );
-                assert!(old_blip_state[*block_index].blip_index == Some(blip_index));
-                assert!(block_data[*block_index].0 == blip.pos);
-
-                let block = block_data[*block_index].1.clone();
-
-                // To determine movement, check in flow of neighboring blocks
-                let out_dir = Dir3::ALL.iter().find(|dir| {
-                    // TODO: At some point, we'll need to precompute neighbor
-                    //       indices.
-
-                    let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
-                    let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
-                        wind_state[*neighbor_index].wind_in(dir.invert())
-                            && block_data[*neighbor_index].1.has_move_hole(dir.invert())
-                    } else {
-                        false
-                    };
-
-                    neighbor_in && block.has_move_hole(**dir)
-                });
-
-                let new_pos = if let Some(out_dir) = out_dir {
-                    // Apply effects of leaving the current block
-                    match block.block {
-                        Block::PipeSplitXY { open_move_hole_y } => {
-                            block_data[*block_index].1.block = Block::PipeSplitXY {
-                                open_move_hole_y: open_move_hole_y.invert(),
-                            };
-                        }
-                        _ => (),
-                    }
-
-                    blip.pos + out_dir.to_vector()
-                } else {
-                    blip.pos
-                };
-
-                let new_block_index = block_ids.get(&new_pos);
-
-                if let Some(Some(new_block_index)) = new_block_index {
-                    blip.pos = new_pos;
-                    debug!(
-                        "moving blip {} from {:?} to {:?}",
-                        blip_index, blip.pos, new_pos
-                    );
-
-                    // Apply effects of entering the current block
-                    let new_placed_block = &mut block_data[*new_block_index].1;
-                    let remove = match new_placed_block.block.clone() {
-                        Block::BlipDuplicator { .. } => {
-                            // TODO: Resolve possible race condition in blip
-                            //       duplicator.  If two blips of different
-                            //       kind race into the duplicator, the output
-                            //       kind depends on the order of blip 
-                            //       evaluation.
-                            new_placed_block.block = Block::BlipDuplicator {
-                                activated: Some(blip.kind),
-                            };
-                            true
-                        }
-                        Block::BlipWindSource { activated } => {
-                            new_placed_block.block = Block::BlipWindSource {
-                                activated: true,
-                            };
-                            true
-                        }
-                        _ => false,
-                    };
-
-                    if !remove {
-                        if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
-                            // We cannot have two blips in the same block. Note
-                            // that if more than two blips move into the same
-                            // block, the same blip will be added multiple times
-                            // into `remove_indices`. This is fine, since we don't
-                            // spawn any blips in this function, so the indices
-                            // stay valid.
-                            debug!(
-                                "{} bumped into {}, removing",
-                                blip_index, new_block_blip_index
-                            );
-                            remove_indices.push(blip_index);
-                            remove_indices.push(new_block_blip_index);
-                        } else {
-                            blip_state[*new_block_index].blip_index = Some(blip_index);
-                        }
-                    } else {
-                        remove_indices.push(blip_index);
-                    }
-                } else {
-                    // Out of bounds
-                    remove_indices.push(blip_index);
-                }
             } else {
                 // Out of bounds.
                 // TODO: Can this happen?
@@ -357,6 +271,120 @@ impl Exec {
 
                 blips.remove(remove_index);
             }
+        }
+    }
+
+    fn update_blip(
+        block_index: usize,
+        blip_index: usize,
+        blip: &mut Blip,
+        block_ids: &Grid3<Option<BlockIndex>>,
+        wind_state: &[WindState],
+        old_blip_state: &[BlipState],
+        blip_state: &mut Vec<BlipState>,
+        block_data: &mut VecOption<(Point3, PlacedBlock)>,
+        remove_indices: &mut Vec<BlipIndex>,
+    ) {
+        debug!(
+            "blip at {:?}: {:?} vs {:?}",
+            blip.pos, old_blip_state[block_index].blip_index, blip_index,
+        );
+        assert!(old_blip_state[block_index].blip_index == Some(blip_index));
+        assert!(block_data[block_index].0 == blip.pos);
+
+        let block = block_data[block_index].1.clone();
+
+        // To determine movement, check in flow of neighboring blocks
+        let out_dir = Dir3::ALL.iter().find(|dir| {
+            // TODO: At some point, we'll need to precompute neighbor
+            //       indices.
+
+            let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
+            let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
+                wind_state[*neighbor_index].wind_in(dir.invert())
+                    && block_data[*neighbor_index].1.has_move_hole(dir.invert())
+            } else {
+                false
+            };
+
+            neighbor_in && block.has_move_hole(**dir)
+        });
+
+        let new_pos = if let Some(out_dir) = out_dir {
+            // Apply effects of leaving the current block
+            match block.block {
+                Block::PipeSplitXY { open_move_hole_y } => {
+                    block_data[block_index].1.block = Block::PipeSplitXY {
+                        open_move_hole_y: open_move_hole_y.invert(),
+                    };
+                }
+                _ => (),
+            }
+
+            blip.pos + out_dir.to_vector()
+        } else {
+            blip.pos
+        };
+
+        let new_block_index = block_ids.get(&new_pos);
+
+        if let Some(Some(new_block_index)) = new_block_index {
+            blip.pos = new_pos;
+            debug!(
+                "moving blip {} from {:?} to {:?}",
+                blip_index, blip.pos, new_pos
+            );
+
+            // Apply effects of entering the new block
+            let new_placed_block = &mut block_data[*new_block_index].1;
+            let remove = match new_placed_block.block.clone() {
+                Block::BlipDuplicator { .. } => {
+                    // TODO: Resolve possible race condition in blip
+                    //       duplicator.  If two blips of different
+                    //       kind race into the duplicator, the output
+                    //       kind depends on the order of blip 
+                    //       evaluation.
+                    new_placed_block.block = Block::BlipDuplicator {
+                        activated: Some(blip.kind),
+                    };
+                    true
+                }
+                Block::BlipWindSource { activated } => {
+                    new_placed_block.block = Block::BlipWindSource {
+                        activated: true,
+                    };
+                    true
+                }
+                _ => false,
+            };
+
+            if remove {
+                // Effect of new block causes blip to be removed
+                remove_indices.push(blip_index);
+                return;
+            }
+
+            if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
+                // We cannot have two blips in the same block. Note
+                // that if more than two blips move into the same
+                // block, the same blip will be added multiple times
+                // into `remove_indices`. This is fine, since we don't
+                // spawn any blips in this function, so the indices
+                // stay valid.
+                debug!(
+                    "{} bumped into {}, removing",
+                    blip_index, new_block_blip_index
+                );
+
+                remove_indices.push(new_block_blip_index);
+                remove_indices.push(blip_index);
+            } else {
+                blip_state[*new_block_index].blip_index = Some(blip_index);
+            }
+        } else {
+            // We are on the grid, but there is no block at our position
+            // -> remove blip
+            remove_indices.push(blip_index);
         }
     }
 
