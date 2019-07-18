@@ -31,10 +31,27 @@ impl Default for Config {
             block_keys: vec![
                 (VirtualKeyCode::Key1, Block::PipeXY),
                 (VirtualKeyCode::Key2, Block::PipeBendXY),
-                (VirtualKeyCode::Key3, Block::PipeSplitXY { open_move_hole_y: grid::Sign::Pos }),
+                (
+                    VirtualKeyCode::Key3,
+                    Block::PipeSplitXY {
+                        open_move_hole_y: grid::Sign::Pos,
+                    },
+                ),
                 (VirtualKeyCode::Key4, Block::WindSource),
-                (VirtualKeyCode::Key5, Block::BlipSpawn { kind: BlipKind::A, num_spawns: None }),
-                (VirtualKeyCode::Key6, Block::BlipSpawn { kind: BlipKind::A, num_spawns: Some(1) }),
+                (
+                    VirtualKeyCode::Key5,
+                    Block::BlipSpawn {
+                        kind: BlipKind::A,
+                        num_spawns: None,
+                    },
+                ),
+                (
+                    VirtualKeyCode::Key6,
+                    Block::BlipSpawn {
+                        kind: BlipKind::A,
+                        num_spawns: Some(1),
+                    },
+                ),
                 (VirtualKeyCode::Key9, Block::Solid),
             ]
             .into_iter()

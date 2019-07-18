@@ -196,18 +196,17 @@ pub fn render_block(
             );
 
             let output_dir = Dir2::X_POS;
-            let output_size = if num_spawns.is_some() {
-                0.15
-            } else {
-                0.3
-            };
+            let output_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
 
             let output_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
                 * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, output_size,
-                                                                        output_size));
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                    1.0,
+                    output_size,
+                    output_size,
+                ));
             out.add(
                 Object::Cube,
                 &InstanceParams {
