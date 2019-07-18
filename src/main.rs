@@ -28,7 +28,7 @@ fn perspective_matrix(config: &config::ViewConfig, window_size: &glutin::dpi::Lo
 }
 
 fn main() {
-    simple_logger::init().unwrap();
+    simple_logger::init_with_level(log::Level::Info).unwrap();
 
     let config: config::Config = Default::default();
     info!("Running with config: {:?}", config);
@@ -144,7 +144,7 @@ fn main() {
             GameState::Edit(editor) => {
                 editor.update(frame_duration_secs, &camera, &mut edit_camera_view)
             }
-            GameState::Exec { exec_view, editor } => exec_view.update(frame_duration_secs, editor),
+            GameState::Exec { exec_view, editor } => exec_view.update(frame_duration, editor),
         };
 
         thread::sleep(Duration::from_millis(10));

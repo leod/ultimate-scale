@@ -142,7 +142,7 @@ impl Editor {
 
             self.start_exec = false;
 
-            let exec_view = ExecView::new(self.exec_config.clone(), self.machine.clone());
+            let exec_view = ExecView::new(&self.exec_config, self.machine.clone());
             GameState::Exec {
                 exec_view,
                 editor: self,
