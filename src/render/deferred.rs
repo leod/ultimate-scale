@@ -23,7 +23,7 @@ pub struct DeferredShading {
 
     scene_program: glium::Program,
     light_program: glium::Program,
-    //composition_program: glium::Program,
+    composition_program: glium::Program,
 
     quad_vertex_buffer: glium::VertexBuffer<QuadVertex>,
     quad_index_buffer: glium::IndexBuffer<u16>,
@@ -161,6 +161,47 @@ impl DeferredShading {
             None,
         )?;
 
+        info!("Creating deferred composition program");
+        let composition_program = glium::Program::from_source(
+            facade,
+            // Vertex shader
+            "
+                #version 140
+
+                uniform mat4 mat_orthogonal;
+
+                in vec4 position;
+                in vec2 tex_coord;
+
+                smooth out vec2 frag_tex_coord;
+
+                void main() {
+                    frag_tex_coord = tex_coord;
+
+                    gl_Position = mat_orthogonal * position;
+                }
+            ",
+            // Fragment shader
+            "
+                #version 140
+
+                uniform sampler2D color_texture;
+                uniform sampler2D lighting_texture;
+
+                smooth in vec2 frag_tex_coord;
+
+                out vec4 f_color;
+
+                void main() {
+                    vec3 color_value = texture(color_texture, frag_tex_coord).rgb;
+                    vec3 lighting_value = texture(lighting_texture, frag_tex_coord).rgb;
+
+                    f_color = vec4(color_value * lighting_value, 1.0);
+                }
+            ",
+            None,
+        )?;
+
         let quad_vertex_buffer = glium::VertexBuffer::new(
             facade,
             &[
@@ -187,7 +228,7 @@ impl DeferredShading {
             light_texture,
             scene_program,
             light_program,
-            //composition_program,
+            composition_program,
             quad_vertex_buffer,
             quad_index_buffer,
         })
