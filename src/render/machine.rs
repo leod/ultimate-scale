@@ -270,6 +270,46 @@ pub fn render_block(
                 },
             );
         }
+        Block::BlipWindSource { activated } => {
+            let cube_color = if *activated {
+                na::Vector4::new(0.5, 0.0, 0.0, alpha)
+            } else {
+                na::Vector4::new(1.0, 0.0, 0.0, alpha)
+            };
+            let cube_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 1.0));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: cube_transform,
+                    color: *color.unwrap_or(&cube_color),
+                    ..Default::default()
+                },
+            );
+
+            let input_dir = Dir2::Y_NEG;
+            let input_size = 0.6;
+
+            let input_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&na::Vector3::new(0.0, -0.3, 0.0))
+                * na::Matrix4::new_rotation(input_dir.to_radians() * na::Vector3::z())
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                    0.9,
+                    input_size,
+                    input_size,
+                ));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: input_transform,
+                    color: *color.unwrap_or(&na::Vector4::new(0.0, 1.0, 0.0, alpha)),
+                    ..Default::default()
+                },
+            );
+        }
         Block::Solid => {
             out.add(
                 Object::Cube,

@@ -53,6 +53,7 @@ impl Default for Config {
                     },
                 ),
                 (VirtualKeyCode::Key7, Block::BlipDuplicator { activated: None }),
+                (VirtualKeyCode::Key8, Block::BlipWindSource { activated: false }),
                 (VirtualKeyCode::Key9, Block::Solid),
             ]
             .into_iter()

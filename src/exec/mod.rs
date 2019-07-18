@@ -102,14 +102,14 @@ impl Exec {
             self.blip_state[index].blip_index = None;
         }
 
-        for (block_index, (block_pos, placed_block)) in self.machine.block_data.iter() {
+        for (block_index, (block_pos, placed_block)) in self.machine.block_data.iter_mut() {
             Self::update_block_wind_state(
                 block_index,
                 block_pos,
-                placed_block,
                 &self.machine.block_ids,
                 &self.old_wind_state,
                 &mut self.wind_state,
+                placed_block,
             );
         }
 
@@ -138,26 +138,43 @@ impl Exec {
     fn update_block_wind_state(
         block_index: usize,
         block_pos: &Point3,
-        placed_block: &PlacedBlock,
         block_ids: &Grid3<Option<BlockIndex>>,
         old_wind_state: &[WindState],
         wind_state: &mut Vec<WindState>,
+        placed_block: &mut PlacedBlock,
     ) {
         debug!(
             "wind: {:?} with {:?}",
             placed_block.block, old_wind_state[block_index]
         );
 
+        let dir_y_neg = placed_block.rotated_dir_xy(Dir3::Y_NEG);
+
         match placed_block.block {
             Block::WindSource => {
                 for dir in &Dir3::ALL {
                     let neighbor_pos = *block_pos + dir.to_vector();
                     let neighbor_index = block_ids.get(&neighbor_pos);
-
                     if let Some(Some(neighbor_index)) = neighbor_index {
                         wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = true;
                     }
                 }
+            }
+            Block::BlipWindSource { ref mut activated } => {
+                for dir in &Dir3::ALL {
+                    if *dir == dir_y_neg {
+                        // Don't put wind in the direction of our blip button
+                        continue;
+                    }
+
+                    let neighbor_pos = *block_pos + dir.to_vector();
+                    let neighbor_index = block_ids.get(&neighbor_pos);
+                    if let Some(Some(neighbor_index)) = neighbor_index {
+                        wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = *activated;
+                    }
+                }
+
+                *activated = false;
             }
             _ => {
                 let any_in = placed_block
@@ -285,6 +302,12 @@ impl Exec {
                             //       evaluation.
                             new_placed_block.block = Block::BlipDuplicator {
                                 activated: Some(blip.kind),
+                            };
+                            true
+                        }
+                        Block::BlipWindSource { activated } => {
+                            new_placed_block.block = Block::BlipWindSource {
+                                activated: true,
                             };
                             true
                         }
