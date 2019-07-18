@@ -141,7 +141,7 @@ pub fn render_block(
                 Object::PipeSegment,
                 &InstanceParams {
                     transform: translation * transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
+                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
                 },
             );
@@ -151,7 +151,7 @@ pub fn render_block(
                 Object::PipeBend,
                 &InstanceParams {
                     transform: translation * transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
+                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
                 },
             );
@@ -161,7 +161,7 @@ pub fn render_block(
                 Object::PipeSplit,
                 &InstanceParams {
                     transform: translation * transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.6, 0.6, 0.6, alpha)),
+                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
                 },
             );
@@ -215,36 +215,6 @@ pub fn render_block(
                     ..Default::default()
                 },
             );
-
-            /*let output_transform =
-                translation
-                * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.6, 0.0, 0.0))
-                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.3, 0.5, 0.5));
-            out.add(
-                Object::Cube,
-                &InstanceParams {
-                    transform: output_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
-                    ..Default::default()
-                },
-            );
-
-            let output_transform =
-                translation
-                * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.7, 0.0, 0.0))
-                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.3, 0.3, 0.3));
-            out.add(
-                Object::Cube,
-                &InstanceParams {
-                    transform: output_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
-                    ..Default::default()
-                },
-            );*/
         }
         Block::Solid => {
             out.add(
