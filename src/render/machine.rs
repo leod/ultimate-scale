@@ -176,7 +176,12 @@ pub fn render_block(
                 },
             );
         }
-        Block::BlipSpawn(_kind) => {
+        Block::BlipSpawn { kind, num_spawns } => {
+            let cube_color = if num_spawns.is_some() {
+                na::Vector4::new(0.0, 0.5, 0.0, alpha)
+            } else {
+                na::Vector4::new(0.0, 1.0, 0.0, alpha)
+            };
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0))
@@ -185,18 +190,24 @@ pub fn render_block(
                 Object::Cube,
                 &InstanceParams {
                     transform: cube_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.0, 1.0, 0.0, alpha)),
+                    color: *color.unwrap_or(&cube_color),
                     ..Default::default()
                 },
             );
 
             let output_dir = Dir2::X_POS;
+            let output_size = if num_spawns.is_some() {
+                0.15
+            } else {
+                0.3
+            };
 
             let output_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
                 * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.3, 0.3));
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, output_size,
+                                                                        output_size));
             out.add(
                 Object::Cube,
                 &InstanceParams {
