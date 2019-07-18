@@ -28,7 +28,7 @@ impl Default for Config {
             pause_resume_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
             frame_key: VirtualKeyCode::F,
-            default_ticks_per_sec: 8.0,
+            default_ticks_per_sec: 2.0,
         }
     }
 }
@@ -178,9 +178,19 @@ impl ExecView {
 
     fn render_blips(&self, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
+            if blip.old_pos.is_none() {
+                // Workaround for the fact that we use old blip positions but 
+                // render new machine state
+                continue;
+            }
+
             let center = render::machine::block_center(&blip.pos);
+            let old_center = render::machine::block_center(&blip.old_pos.unwrap());
+
+            let pos = old_center + self.tick_timer.progress() * (center - old_center);
+
             let transform =
-                na::Matrix4::new_translation(&center.coords) * na::Matrix4::new_scaling(0.3);
+                na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(0.3);
             let instance = render::Instance {
                 object: render::Object::Cube,
                 params: render::InstanceParams {
