@@ -118,6 +118,7 @@ impl Exec {
             &self.wind_state,
             &self.old_blip_state,
             &mut self.blip_state,
+            &mut self.machine.block_data,
             &mut self.blips,
         );
 
@@ -224,6 +225,7 @@ impl Exec {
         wind_state: &[WindState],
         old_blip_state: &[BlipState],
         blip_state: &mut Vec<BlipState>,
+        block_data: &mut VecOption<(Point3, PlacedBlock)>,
         blips: &mut VecOption<Blip>,
     ) {
         let mut remove_indices = Vec::new();
@@ -237,28 +239,38 @@ impl Exec {
                     blip.pos, old_blip_state[*block_index].blip_index, blip_index,
                 );
                 assert!(old_blip_state[*block_index].blip_index == Some(blip_index));
+                assert!(block_data[*block_index].0 == blip.pos);
 
-                // In block. Check in flow of neighboring blocks.
-                // Take the first match for now -- will need to
-                // change this somehow for e.g. switches
+                let block = &mut block_data[*block_index].1;
+
+                // To determine movement, check in flow of neighboring blocks
                 let out_dir = Dir3::ALL
                     .iter()
-                    .map(|dir| {
+                    .find(|dir| {
                         // TODO: At some point, we'll need to precompute neighbor
-                        // indices.
+                        //       indices.
+
                         let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
-                        let wind_in = if let Some(Some(neighbor_index)) = neighbor_index {
+                        let neighbor_wind_in = if let Some(Some(neighbor_index)) = neighbor_index {
                             wind_state[*neighbor_index].wind_in(dir.invert())
                         } else {
                             false
                         };
 
-                        (*dir, wind_in)
-                    })
-                    .find(|(_dir, b)| *b)
-                    .map(|(dir, _b)| dir);
+                        neighbor_wind_in && block.has_move_hole(**dir)
+                    });
 
                 let new_pos = if let Some(out_dir) = out_dir {
+                    // Apply effects of leaving the current block
+                    match block.block.clone() {
+                        Block::PipeSplitXY { open_move_hole_y } => {
+                            block.block = Block::PipeSplitXY { 
+                                open_move_hole_y: open_move_hole_y.invert(),
+                            };
+                        }
+                        _ => (),
+                    }
+
                     blip.pos + out_dir.to_vector()
                 } else {
                     blip.pos
