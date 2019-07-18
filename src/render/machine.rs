@@ -216,6 +216,60 @@ pub fn render_block(
                 },
             );
         }
+        Block::BlipDuplicator { .. } => {
+            let cube_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: cube_transform,
+                    color: *color.unwrap_or(&na::Vector4::new(0.0, 1.0, 0.0, alpha)),
+                    ..Default::default()
+                },
+            );
+
+            let output_dir = Dir2::X_POS;
+            let output_size = 0.3;
+            let output_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
+                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                    1.0,
+                    output_size,
+                    output_size,
+                ));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: output_transform,
+                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                    ..Default::default()
+                },
+            );
+
+            let output_dir = Dir2::X_NEG;
+            let output_size = 0.3;
+            let output_transform = translation
+                * transform
+                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
+                * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                    1.0,
+                    output_size,
+                    output_size,
+                ));
+            out.add(
+                Object::Cube,
+                &InstanceParams {
+                    transform: output_transform,
+                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                    ..Default::default()
+                },
+            );
+        }
         Block::Solid => {
             out.add(
                 Object::Cube,

@@ -52,6 +52,7 @@ impl Default for Config {
                         num_spawns: Some(1),
                     },
                 ),
+                (VirtualKeyCode::Key7, Block::BlipDuplicator { activated: None }),
                 (VirtualKeyCode::Key9, Block::Solid),
             ]
             .into_iter()

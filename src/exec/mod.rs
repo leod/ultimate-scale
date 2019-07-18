@@ -84,7 +84,7 @@ impl Exec {
 
     pub fn wind_state(&self) -> &[WindState] {
         &self.wind_state
-    }
+    } 
 
     pub fn blips(&self) -> &VecOption<Blip> {
         &self.blips
@@ -190,43 +190,23 @@ impl Exec {
         }
     }
 
-    fn update_block_blip_state(
-        block_index: usize,
-        block_pos: &Point3,
-        placed_block: &mut PlacedBlock,
+    fn try_spawn_blip(
+        kind: BlipKind,
+        pos: &Point3,
         block_ids: &Grid3<Option<BlockIndex>>,
-        wind_state: &[WindState],
         blip_state: &mut Vec<BlipState>,
         blips: &mut VecOption<Blip>,
     ) {
-        let dir_x_pos = placed_block.rotated_dir_xy(Dir3::X_POS);
+        if let Some(Some(output_index)) = block_ids.get(&pos) {
+            if blip_state[*output_index].blip_index.is_none() {
+                debug!("spawning blip at {:?}", pos);
 
-        match placed_block.block {
-            Block::BlipSpawn {
-                kind,
-                ref mut num_spawns,
-            } => {
-                let do_spawn = num_spawns.map_or(true, |n| n > 0);
-
-                if do_spawn {
-                    let output_pos = *block_pos + dir_x_pos.to_vector();
-
-                    if let Some(Some(output_index)) = block_ids.get(&output_pos) {
-                        if blip_state[*output_index].blip_index.is_none() {
-                            debug!("spawning blip at {:?}", output_pos);
-
-                            let blip = Blip {
-                                kind: kind,
-                                pos: output_pos,
-                            };
-                            blip_state[*output_index].blip_index = Some(blips.add(blip));
-                        }
-                    }
-
-                    *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
-                }
+                let blip = Blip {
+                    kind: kind,
+                    pos: *pos,
+                };
+                blip_state[*output_index].blip_index = Some(blips.add(blip));
             }
-            _ => {}
         }
     }
 
@@ -251,7 +231,7 @@ impl Exec {
                 assert!(old_blip_state[*block_index].blip_index == Some(blip_index));
                 assert!(block_data[*block_index].0 == blip.pos);
 
-                let block = &mut block_data[*block_index].1;
+                let block = block_data[*block_index].1.clone();
 
                 // To determine movement, check in flow of neighboring blocks
                 let out_dir = Dir3::ALL.iter().find(|dir| {
@@ -259,20 +239,21 @@ impl Exec {
                     //       indices.
 
                     let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
-                    let neighbor_wind_in = if let Some(Some(neighbor_index)) = neighbor_index {
+                    let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
                         wind_state[*neighbor_index].wind_in(dir.invert())
+                            && block_data[*neighbor_index].1.has_move_hole(dir.invert())
                     } else {
                         false
                     };
 
-                    neighbor_wind_in && block.has_move_hole(**dir)
+                    neighbor_in && block.has_move_hole(**dir)
                 });
 
                 let new_pos = if let Some(out_dir) = out_dir {
                     // Apply effects of leaving the current block
-                    match block.block.clone() {
+                    match block.block {
                         Block::PipeSplitXY { open_move_hole_y } => {
-                            block.block = Block::PipeSplitXY {
+                            block_data[*block_index].1.block = Block::PipeSplitXY {
                                 open_move_hole_y: open_move_hole_y.invert(),
                             };
                         }
@@ -293,21 +274,42 @@ impl Exec {
                         blip_index, blip.pos, new_pos
                     );
 
-                    if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
-                        // We cannot have two blips in the same block. Note
-                        // that if more than two blips move into the same
-                        // block, the same blip will be added multiple times
-                        // into `remove_indices`. This is fine, since we don't
-                        // spawn any blips in this function, so the indices
-                        // stay valid.
-                        debug!(
-                            "{} bumped into {}, removing",
-                            blip_index, new_block_blip_index
-                        );
-                        remove_indices.push(blip_index);
-                        remove_indices.push(new_block_blip_index);
+                    // Apply effects of entering the current block
+                    let new_placed_block = &mut block_data[*new_block_index].1;
+                    let remove = match new_placed_block.block.clone() {
+                        Block::BlipDuplicator { .. } => {
+                            // TODO: Resolve possible race condition in blip
+                            //       duplicator.  If two blips of different
+                            //       kind race into the duplicator, the output
+                            //       kind depends on the order of blip 
+                            //       evaluation.
+                            new_placed_block.block = Block::BlipDuplicator {
+                                activated: Some(blip.kind),
+                            };
+                            true
+                        }
+                        _ => false,
+                    };
+
+                    if !remove {
+                        if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
+                            // We cannot have two blips in the same block. Note
+                            // that if more than two blips move into the same
+                            // block, the same blip will be added multiple times
+                            // into `remove_indices`. This is fine, since we don't
+                            // spawn any blips in this function, so the indices
+                            // stay valid.
+                            debug!(
+                                "{} bumped into {}, removing",
+                                blip_index, new_block_blip_index
+                            );
+                            remove_indices.push(blip_index);
+                            remove_indices.push(new_block_blip_index);
+                        } else {
+                            blip_state[*new_block_index].blip_index = Some(blip_index);
+                        }
                     } else {
-                        blip_state[*new_block_index].blip_index = Some(blip_index);
+                        remove_indices.push(blip_index);
                     }
                 } else {
                     // Out of bounds
@@ -332,6 +334,54 @@ impl Exec {
 
                 blips.remove(remove_index);
             }
+        }
+    }
+
+    fn update_block_blip_state(
+        block_index: usize,
+        block_pos: &Point3,
+        placed_block: &mut PlacedBlock,
+        block_ids: &Grid3<Option<BlockIndex>>,
+        wind_state: &[WindState],
+        blip_state: &mut Vec<BlipState>,
+        blips: &mut VecOption<Blip>,
+    ) {
+        let dir_x_pos = placed_block.rotated_dir_xy(Dir3::X_POS);
+        let dir_x_neg = placed_block.rotated_dir_xy(Dir3::X_NEG);
+
+        match placed_block.block {
+            Block::BlipSpawn {
+                kind,
+                ref mut num_spawns,
+            } => {
+                if num_spawns.map_or(true, |n| n > 0) {
+                    let output_pos = *block_pos + dir_x_pos.to_vector();
+                    Self::try_spawn_blip(kind, &output_pos, block_ids, blip_state, blips);
+
+                    *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
+                }
+            }
+            Block::BlipDuplicator { ref mut activated } => {
+                if let Some(kind) = activated.clone() {
+                    Self::try_spawn_blip(
+                        kind,
+                        &(*block_pos + dir_x_pos.to_vector()),
+                        block_ids,
+                        blip_state,
+                        blips,
+                    );
+                    Self::try_spawn_blip(
+                        kind,
+                        &(*block_pos + dir_x_neg.to_vector()),
+                        block_ids,
+                        blip_state,
+                        blips,
+                    );
+
+                    *activated = None;
+                }
+            }
+            _ => {}
         }
     }
 
