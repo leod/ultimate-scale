@@ -282,7 +282,7 @@ impl ShadowMapping {
             glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)
                 .unwrap();
 
-        let t = context.elapsed_time_secs / 48.0;
+        let t = std::f32::consts::PI / 4.0; //context.elapsed_time_secs / 48.0;
         self.light_pos.x = 15.0 + 20.0 * t.cos();
         self.light_pos.y = 15.0 + 20.0 * t.sin();
 
