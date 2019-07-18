@@ -25,6 +25,9 @@ pub enum Block {
     BlipDuplicator {
         activated: Option<BlipKind>,
     },
+    BlipWindSource {
+        activated: bool,
+    },
     Solid,
 }
 
@@ -40,6 +43,7 @@ impl Block {
             Block::BlipSpawn { .. } => false,
             Block::BlipDuplicator { .. } => false,
             Block::Solid => false,
+            Block::BlipWindSource { .. } => dir != Dir3::Y_NEG,
         }
     }
 
@@ -49,6 +53,7 @@ impl Block {
                 dir == Dir3(Axis3::Y, *open_move_hole_y) || dir == Dir3::X_POS
             }
             Block::BlipDuplicator { .. } => dir == Dir3::Y_NEG || dir == Dir3::Y_POS,
+            Block::BlipWindSource { .. } => dir == Dir3::Y_NEG,
             _ => self.has_wind_hole(dir),
         }
     }
