@@ -1,5 +1,6 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
+
 use log::info;
 
 use nalgebra as na;
@@ -278,6 +279,8 @@ impl ShadowMapping {
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         // TODO: unwrap
+        // TODO: Can we do this in glium without recreating the
+        //       `SimpleFrameBuffer` every frame?
         let mut shadow_target =
             glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)
                 .unwrap();
