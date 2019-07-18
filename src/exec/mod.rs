@@ -199,21 +199,28 @@ impl Exec {
         blip_state: &mut Vec<BlipState>,
         blips: &mut VecOption<Blip>,
     ) {
+        let dir_x_pos = placed_block.rotated_dir_xy(Dir3::X_POS);
+
         match placed_block.block {
-            Block::BlipSpawn(kind) => {
-                let output_dir = placed_block.rotated_dir_xy(Dir3::X_POS);
-                let output_pos = *block_pos + output_dir.to_vector();
+            Block::BlipSpawn { kind, ref mut num_spawns } => {
+                let do_spawn = num_spawns.map_or(true, |n| n > 0);
 
-                if let Some(Some(output_index)) = block_ids.get(&output_pos) {
-                    if blip_state[*output_index].blip_index.is_none() {
-                        debug!("spawning blip at {:?}", output_pos);
+                if do_spawn {
+                    let output_pos = *block_pos + dir_x_pos.to_vector();
 
-                        let blip = Blip {
-                            kind: kind,
-                            pos: output_pos,
-                        };
-                        blip_state[*output_index].blip_index = Some(blips.add(blip));
+                    if let Some(Some(output_index)) = block_ids.get(&output_pos) {
+                        if blip_state[*output_index].blip_index.is_none() {
+                            debug!("spawning blip at {:?}", output_pos);
+
+                            let blip = Blip {
+                                kind: kind,
+                                pos: output_pos,
+                            };
+                            blip_state[*output_index].blip_index = Some(blips.add(blip));
+                        }
                     }
+
+                    *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
                 }
             }
             _ => {}

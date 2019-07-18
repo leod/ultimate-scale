@@ -18,7 +18,10 @@ pub enum Block {
         open_move_hole_y: Sign,
     },
     WindSource,
-    BlipSpawn(BlipKind),
+    BlipSpawn {
+        kind: BlipKind,
+        num_spawns: Option<usize>,
+    },
     Solid,
 }
 
@@ -35,7 +38,7 @@ impl Block {
                     || dir == Dir3::X_POS
             }
             Block::WindSource => true,
-            Block::BlipSpawn(_kind) => false,
+            Block::BlipSpawn { .. } => false,
             Block::Solid => false,
         }
     }
