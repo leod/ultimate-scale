@@ -26,6 +26,8 @@ pub enum CreationError {
     TextureCreationError(glium::texture::TextureCreationError),
     ProgramCreationError(glium::program::ProgramCreationError),
     FrameBufferValidationError(glium::framebuffer::ValidationError),
+    VertexBufferCreationError(glium::vertex::BufferCreationError),
+    IndexBufferCreationError(glium::index::BufferCreationError),
 }
 
 impl From<glium::texture::TextureCreationError> for CreationError {
@@ -43,6 +45,18 @@ impl From<glium::program::ProgramCreationError> for CreationError {
 impl From<glium::framebuffer::ValidationError> for CreationError {
     fn from(err: glium::framebuffer::ValidationError) -> CreationError {
         CreationError::FrameBufferValidationError(err)
+    }
+}
+
+impl From<glium::vertex::BufferCreationError> for CreationError {
+    fn from(err: glium::vertex::BufferCreationError) -> CreationError {
+        CreationError::VertexBufferCreationError(err)
+    }
+}
+
+impl From<glium::index::BufferCreationError> for CreationError {
+    fn from(err: glium::index::BufferCreationError) -> CreationError {
+        CreationError::IndexBufferCreationError(err)
     }
 }
 
