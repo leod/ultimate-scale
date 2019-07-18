@@ -35,9 +35,7 @@ impl Default for Config {
 
 #[derive(Debug, Clone)]
 pub enum Status {
-    Playing {
-        tick_timer: Timer,
-    },
+    Playing,
     Paused,
     Stopped,
 }
@@ -45,7 +43,7 @@ pub enum Status {
 pub struct ExecView {
     config: Config,
     exec: Exec,
-    ticks_per_sec: f32,
+    tick_timer: Timer,
     status: Status,
 }
 
@@ -54,26 +52,26 @@ impl ExecView {
         ExecView {
             config: config.clone(),
             exec: Exec::new(machine),
-            ticks_per_sec: config.default_ticks_per_sec,
-            status: Status::Playing { tick_timer: Timer::from_hz(config.default_ticks_per_sec) },
+            tick_timer: Timer::from_hz(config.default_ticks_per_sec),
+            status: Status::Playing,
         }
     }
 
     pub fn update(mut self, dt: Duration, editor: Editor) -> GameState {
         match self.status {
-            Status::Playing { ref mut tick_timer } => {
-                *tick_timer += dt;                
+            Status::Playing => {
+                self.tick_timer += dt;
 
                 // TODO: Run multiple ticks on lag spikes? If so, with some
                 //       upper limit?
-                if tick_timer.trigger_reset() {
+                if self.tick_timer.trigger_reset() {
                     self.exec.update();
                 }
             }
             Status::Paused => (),
             Status::Stopped => {
                 info!("Stopping exec, returning to editor");
-                return GameState::Edit(editor)
+                return GameState::Edit(editor);
             }
         }
 
@@ -101,19 +99,13 @@ impl ExecView {
     fn on_key_press(&mut self, keycode: VirtualKeyCode) {
         if keycode == self.config.pause_resume_key {
             match self.status {
-                Status::Playing { .. } => {
+                Status::Playing => {
                     info!("Pausing exec");
                     self.status = Status::Paused;
                 }
                 Status::Paused => {
                     info!("Resuming exec");
-
-                    // Start off with running a tick so that we have immediate
-                    // feedback
-                    self.exec.update(); 
-                    self.status = Status::Playing {
-                        tick_timer: Timer::from_hz(self.ticks_per_sec),
-                    };
+                    self.status = Status::Playing;
                 }
                 Status::Stopped => {
                     // Should happen only if pause is pressed after stop in the
@@ -161,7 +153,7 @@ impl ExecView {
                     };
 
                     if let Some(arrow_dir) = arrow_dir {
-                        let center =  render::machine::block_center(block_pos);
+                        let center = render::machine::block_center(block_pos);
                         let arrow_dir: na::Vector3<f32> = na::convert(arrow_dir);
 
                         let start = center + arrow_dir;
@@ -186,7 +178,7 @@ impl ExecView {
 
     fn render_blips(&self, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
-            let center = render::machine::block_center(&blip.pos); //+ 0.2f32 * na::Vector3::z();
+            let center = render::machine::block_center(&blip.pos);
             let transform =
                 na::Matrix4::new_translation(&center.coords) * na::Matrix4::new_scaling(0.3);
             let instance = render::Instance {

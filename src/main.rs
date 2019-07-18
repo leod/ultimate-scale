@@ -17,7 +17,10 @@ use nalgebra as na;
 use edit::Editor;
 use game_state::GameState;
 
-fn perspective_matrix(config: &config::ViewConfig, window_size: &glutin::dpi::LogicalSize) -> na::Matrix4<f32> {
+fn perspective_matrix(
+    config: &config::ViewConfig,
+    window_size: &glutin::dpi::LogicalSize,
+) -> na::Matrix4<f32> {
     let projection = na::Perspective3::new(
         window_size.width as f32 / window_size.height as f32,
         config.fov_degrees.to_radians() as f32,
@@ -48,7 +51,7 @@ fn main() {
     );
     let mut camera = render::camera::Camera::new(
         viewport_size,
-        perspective_matrix(&config.view, &config.view.window_size)
+        perspective_matrix(&config.view, &config.view.window_size),
     );
     let mut edit_camera_view = render::camera::EditCameraView::new();
     let mut camera_input = render::camera::Input::new(&config.camera);
