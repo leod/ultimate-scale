@@ -202,6 +202,13 @@ impl ExecView {
 
             out.solid.add_instance(&instance);
             out.solid_shadow.add_instance(&instance);
+
+            out.lights.push(render::Light {
+                position: pos,
+                attenuation: na::Vector3::new(0.8, 0.00125, 0.0000001),
+                color: na::Vector3::new(0.0, 1.0, 0.0),
+                radius: 1.5,
+            });
         }
     }
 }

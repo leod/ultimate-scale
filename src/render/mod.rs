@@ -1,4 +1,6 @@
 pub mod camera;
+pub mod deferred;
+pub mod light;
 pub mod machine;
 pub mod object;
 pub mod render_list;
@@ -9,6 +11,7 @@ pub use camera::{Camera, EditCameraView};
 pub use object::{Instance, InstanceParams, Object};
 pub use render_list::RenderList;
 pub use resources::Resources;
+pub use light::Light;
 
 pub struct Context {
     pub camera: camera::Camera,
@@ -20,6 +23,7 @@ pub struct RenderLists {
     pub solid: RenderList,
     pub solid_shadow: RenderList,
     pub transparent: RenderList,
+    pub lights: Vec<Light>,
 }
 
 impl RenderLists {
@@ -31,6 +35,7 @@ impl RenderLists {
         self.solid.clear();
         self.solid_shadow.clear();
         self.transparent.clear();
+        self.lights.clear();
     }
 }
 
