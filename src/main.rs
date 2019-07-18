@@ -17,6 +17,16 @@ use nalgebra as na;
 use edit::Editor;
 use game_state::GameState;
 
+fn perspective_matrix(config: &config::ViewConfig, window_size: &glutin::dpi::LogicalSize) -> na::Matrix4<f32> {
+    let projection = na::Perspective3::new(
+        window_size.width as f32 / window_size.height as f32,
+        config.fov_degrees.to_radians() as f32,
+        0.1,
+        10000.0,
+    );
+    projection.to_homogeneous()
+}
+
 fn main() {
     simple_logger::init().unwrap();
 
@@ -32,21 +42,16 @@ fn main() {
     info!("Creating resources");
     let resources = render::Resources::create(&display).unwrap();
 
-    let mut quit = false;
-
-    let viewport = na::Vector2::new(
+    let viewport_size = na::Vector2::new(
         config.view.window_size.width as f32,
         config.view.window_size.height as f32,
     );
-    let projection = na::Perspective3::new(
-        viewport.x / viewport.y,
-        config.view.fov_degrees.to_radians() as f32,
-        0.1,
-        10000.0,
+    let mut camera = render::camera::Camera::new(
+        viewport_size,
+        perspective_matrix(&config.view, &config.view.window_size)
     );
-    let mut camera = render::camera::Camera::new(viewport, projection.to_homogeneous());
     let mut edit_camera_view = render::camera::EditCameraView::new();
-    let mut camera_input = render::camera::Input::new(config.camera);
+    let mut camera_input = render::camera::Input::new(&config.camera);
 
     let mut render_lists = render::RenderLists::new();
     let mut shadow_mapping = config
@@ -56,10 +61,12 @@ fn main() {
         .map(|config| render::shadow::ShadowMapping::create(&display, config).unwrap());
 
     let grid_size = machine::grid::Vector3::new(30, 30, 4);
-    let mut game_state = GameState::Edit(Editor::new(config.editor, config.exec, grid_size));
+    let mut game_state = GameState::Edit(Editor::new(&config.editor, &config.exec, grid_size));
 
     let mut previous_clock = Instant::now();
     let mut elapsed_time: Duration = Default::default();
+
+    let mut quit = false;
 
     while !quit {
         let now_clock = Instant::now();
@@ -113,6 +120,15 @@ fn main() {
                         info!("Quitting");
 
                         quit = true;
+                    }
+                    glutin::WindowEvent::Resized(viewport_size) => {
+                        camera.projection = perspective_matrix(&config.view, &viewport_size);
+                        camera.viewport = na::Vector4::new(
+                            0.0,
+                            0.0,
+                            viewport_size.width as f32,
+                            viewport_size.height as f32,
+                        );
                     }
                     _ => (),
                 }

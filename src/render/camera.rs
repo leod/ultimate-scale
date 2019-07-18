@@ -58,9 +58,9 @@ pub struct EditCameraView {
 }
 
 impl Camera {
-    pub fn new(viewport: na::Vector2<f32>, projection: na::Matrix4<f32>) -> Camera {
+    pub fn new(viewport_size: na::Vector2<f32>, projection: na::Matrix4<f32>) -> Camera {
         Camera {
-            viewport: na::Vector4::new(0.0, 0.0, viewport.x, viewport.y),
+            viewport: na::Vector4::new(0.0, 0.0, viewport_size.x, viewport_size.y),
             projection,
             view: na::Matrix4::identity(),
         }
@@ -132,9 +132,9 @@ pub struct Input {
 }
 
 impl Input {
-    pub fn new(config: Config) -> Input {
+    pub fn new(config: &Config) -> Input {
         Input {
-            config,
+            config: config.clone(),
             pressed_keys: HashSet::new(),
             modifiers_state: Default::default(),
             height_delta: 0.0,

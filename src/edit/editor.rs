@@ -94,10 +94,10 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub fn new(config: Config, exec_config: exec::view::Config, size: grid::Vector3) -> Editor {
+    pub fn new(config: &Config, exec_config: &exec::view::Config, size: grid::Vector3) -> Editor {
         Editor {
-            config,
-            exec_config,
+            config: config.clone(),
+            exec_config: exec_config.clone(),
             machine: Machine::new(size),
             place_block: PlacedBlock {
                 rotation_xy: 0,

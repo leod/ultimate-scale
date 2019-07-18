@@ -20,6 +20,7 @@ pub struct BlipMovement {
 pub struct Blip {
     pub kind: BlipKind,
     pub pos: Point3,
+    pub previous_pos: Option<Point3>,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
@@ -221,6 +222,7 @@ impl Exec {
                 let blip = Blip {
                     kind: kind,
                     pos: *pos,
+                    previous_pos: None,
                 };
                 blip_state[*output_index].blip_index = Some(blips.add(blip));
             }
