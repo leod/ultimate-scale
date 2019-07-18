@@ -29,13 +29,9 @@ impl Block {
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         match self {
             Block::PipeXY => dir == Dir3::Y_NEG || dir == Dir3::Y_POS,
-            Block::PipeBendXY => {
-                dir == Dir3::X_NEG || dir == Dir3::Y_POS
-            }
+            Block::PipeBendXY => dir == Dir3::X_NEG || dir == Dir3::Y_POS,
             Block::PipeSplitXY { .. } => {
-                dir == Dir3::Y_NEG
-                    || dir == Dir3::Y_POS
-                    || dir == Dir3::X_POS
+                dir == Dir3::Y_NEG || dir == Dir3::Y_POS || dir == Dir3::X_POS
             }
             Block::WindSource => true,
             Block::BlipSpawn { .. } => false,
@@ -46,8 +42,7 @@ impl Block {
     pub fn has_move_hole(&self, dir: Dir3) -> bool {
         match self {
             Block::PipeSplitXY { open_move_hole_y } => {
-                dir == Dir3(Axis3::Y, *open_move_hole_y)
-                    || dir == Dir3::X_POS
+                dir == Dir3(Axis3::Y, *open_move_hole_y) || dir == Dir3::X_POS
             }
             _ => self.has_wind_hole(dir),
         }

@@ -202,7 +202,10 @@ impl Exec {
         let dir_x_pos = placed_block.rotated_dir_xy(Dir3::X_POS);
 
         match placed_block.block {
-            Block::BlipSpawn { kind, ref mut num_spawns } => {
+            Block::BlipSpawn {
+                kind,
+                ref mut num_spawns,
+            } => {
                 let do_spawn = num_spawns.map_or(true, |n| n > 0);
 
                 if do_spawn {
@@ -251,27 +254,25 @@ impl Exec {
                 let block = &mut block_data[*block_index].1;
 
                 // To determine movement, check in flow of neighboring blocks
-                let out_dir = Dir3::ALL
-                    .iter()
-                    .find(|dir| {
-                        // TODO: At some point, we'll need to precompute neighbor
-                        //       indices.
+                let out_dir = Dir3::ALL.iter().find(|dir| {
+                    // TODO: At some point, we'll need to precompute neighbor
+                    //       indices.
 
-                        let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
-                        let neighbor_wind_in = if let Some(Some(neighbor_index)) = neighbor_index {
-                            wind_state[*neighbor_index].wind_in(dir.invert())
-                        } else {
-                            false
-                        };
+                    let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
+                    let neighbor_wind_in = if let Some(Some(neighbor_index)) = neighbor_index {
+                        wind_state[*neighbor_index].wind_in(dir.invert())
+                    } else {
+                        false
+                    };
 
-                        neighbor_wind_in && block.has_move_hole(**dir)
-                    });
+                    neighbor_wind_in && block.has_move_hole(**dir)
+                });
 
                 let new_pos = if let Some(out_dir) = out_dir {
                     // Apply effects of leaving the current block
                     match block.block.clone() {
                         Block::PipeSplitXY { open_move_hole_y } => {
-                            block.block = Block::PipeSplitXY { 
+                            block.block = Block::PipeSplitXY {
                                 open_move_hole_y: open_move_hole_y.invert(),
                             };
                         }
