@@ -179,7 +179,7 @@ impl ExecView {
     fn render_blips(&self, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
             if blip.old_pos.is_none() {
-                // Workaround for the fact that we use old blip positions but 
+                // Workaround for the fact that we use old blip positions but
                 // render new machine state
                 continue;
             }

@@ -1,12 +1,13 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
-
 pub use crate::render::shadow::CreationError; // TODO
+
+use crate::render::{Context, RenderLists, Resources};
 
 #[derive(Debug, Clone, Default)]
 pub struct Config;
 
-const NUM_TEXTURES: usize = 4;
+const NUM_TEXTURES: usize = 3;
 
 struct DeferredShading {
     config: Config,
@@ -15,6 +16,10 @@ struct DeferredShading {
     scene_textures: [glium::texture::Texture2d; NUM_TEXTURES],
     depth_texture: glium::texture::DepthTexture2d,
     light_texture: glium::texture::Texture2d,
+
+    scene_program: glium::Program,
+    //light_program: glium::Program,
+    //composition_program: glium::Program,
 }
 
 impl DeferredShading {
@@ -26,7 +31,6 @@ impl DeferredShading {
         let rounded_size: (u32, u32) = window_size.into();
 
         let scene_textures = [
-            Self::create_texture(facade, rounded_size)?,
             Self::create_texture(facade, rounded_size)?,
             Self::create_texture(facade, rounded_size)?,
             Self::create_texture(facade, rounded_size)?,
@@ -42,13 +46,72 @@ impl DeferredShading {
 
         let light_texture = Self::create_texture(facade, rounded_size)?;
 
+        let scene_program = glium::Program::from_source(
+            facade,
+            // Vertex shader
+            "
+                #version 140
+
+                uniform mat4 mat_model;
+                uniform mat4 mat_view;
+                uniform mat4 mat_projection;
+
+                in vec4 position;
+                in vec4 normal;
+
+                smooth out vec4 frag_position;
+                smooth out vec4 frag_normal;
+
+                void main() {
+                    frag_position = mat_model * position;
+                    frag_normal = mat_model * normal;
+
+                    gl_Position = mat_projection * mat_view * frag_position;
+                }
+            ",
+            // Fragment shader
+            "
+                #version 140
+
+                uniform vec4 color;
+
+                smooth in vec4 frag_position;
+                smooth in vec4 frag_normal;
+
+                out vec4 output1;
+                out vec4 output2;
+                out vec4 output3;
+
+                void main() {
+                    output1 = vec4(frag_position);
+                    output2 = vec4(frag_normal);
+                    output3 = color;
+                }
+            ",
+            None,
+        )?;
+
         Ok(DeferredShading {
             config: config.clone(),
             window_size,
             scene_textures,
             depth_texture,
             light_texture,
+            scene_program,
+            //light_program,
+            //composition_program,
         })
+    }
+
+    pub fn render_frame<F: glium::backend::Facade, S: glium::Surface>(
+        &mut self,
+        facade: &F,
+        resources: &Resources,
+        context: &Context,
+        render_lists: &RenderLists,
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
+        Ok(())
     }
 
     fn create_texture<F: glium::backend::Facade>(

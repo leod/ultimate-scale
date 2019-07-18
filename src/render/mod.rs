@@ -8,10 +8,10 @@ pub mod resources;
 pub mod shadow;
 
 pub use camera::{Camera, EditCameraView};
+pub use light::Light;
 pub use object::{Instance, InstanceParams, Object};
 pub use render_list::RenderList;
 pub use resources::Resources;
-pub use light::Light;
 
 pub struct Context {
     pub camera: camera::Camera,

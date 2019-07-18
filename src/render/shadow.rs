@@ -1,6 +1,5 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
-
 use log::info;
 
 use nalgebra as na;
