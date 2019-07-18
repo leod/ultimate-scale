@@ -2,6 +2,8 @@
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
 pub use crate::render::shadow::CreationError; // TODO
 
+use log::info;
+
 use glium::{implement_vertex, uniform, Surface};
 
 use crate::render::{Context, RenderLists, Resources};
@@ -11,7 +13,7 @@ pub struct Config;
 
 const NUM_TEXTURES: usize = 3;
 
-struct DeferredShading {
+pub struct DeferredShading {
     config: Config,
     window_size: glutin::dpi::LogicalSize,
 
@@ -20,7 +22,7 @@ struct DeferredShading {
     light_texture: glium::texture::Texture2d,
 
     scene_program: glium::Program,
-    //light_program: glium::Program,
+    light_program: glium::Program,
     //composition_program: glium::Program,
 
     quad_vertex_buffer: glium::VertexBuffer<QuadVertex>,
@@ -51,6 +53,7 @@ impl DeferredShading {
 
         let light_texture = Self::create_texture(facade, rounded_size)?;
 
+        info!("Creating deferred scene program");
         let scene_program = glium::Program::from_source(
             facade,
             // Vertex shader
@@ -83,14 +86,76 @@ impl DeferredShading {
                 smooth in vec4 frag_position;
                 smooth in vec4 frag_normal;
 
-                out vec4 output1;
-                out vec4 output2;
-                out vec4 output3;
+                out vec4 f_output1;
+                out vec4 f_output2;
+                out vec4 f_output3;
 
                 void main() {
-                    output1 = vec4(frag_position);
-                    output2 = vec4(frag_normal);
-                    output3 = color;
+                    f_output1 = vec4(frag_position);
+                    f_output2 = vec4(frag_normal);
+                    f_output3 = color;
+                }
+            ",
+            None,
+        )?;
+
+        info!("Creating deferred light program");
+        let light_program = glium::Program::from_source(
+            facade,
+            // Vertex shader
+            "
+                #version 140
+
+                uniform mat4 mat_orthogonal;
+
+                in vec4 position;
+                in vec2 tex_coord;
+
+                smooth out vec2 frag_tex_coord;
+
+                void main() {
+                    frag_tex_coord = tex_coord; 
+
+                    gl_Position = mat_orthogonal * position;
+                }
+            ",
+            // Fragment shader
+            "
+                #version 140
+
+                uniform sampler2D position_texture;
+                uniform sampler2D normal_texture;
+
+                uniform vec4 light_position;
+                uniform vec3 light_attenuation;
+                uniform vec3 light_color;
+                uniform float light_radius;
+
+                smooth in vec2 frag_tex_coord;
+
+                out vec4 f_color;
+
+                void main() {
+                    vec4 position = texture(position_texture, frag_tex_coord);
+                    vec3 normal = normalize(texture(normal_texture, frag_tex_coord).xyz);
+
+                    vec3 light_vector = light_position.xyz - position.xyz;
+                    float light_distance = abs(length(normal.xyz));
+
+                    float diffuse = max(dot(normal, light_vector), 0.0);
+
+                    if (diffuse > 0.0) {
+                        float attenuation_factor = 1.0 / (
+                            light_attenuation.x +
+                            light_attenuation.y * light_distance +
+                            light_attenuation.z * light_distance * light_distance
+                        );
+                        attenuation_factor *= (1.0 - pow((light_distance / light_radius), 2.0));
+                        attenuation_factor = max(attenuation_factor, 0.0);
+                        diffuse *= attenuation_factor;
+                    }
+
+                    f_color = vec4(light_color * diffuse, 1.0);
                 }
             ",
             None,
@@ -112,6 +177,8 @@ impl DeferredShading {
             &[0u16, 1, 2, 0, 2, 3]
         )?;
 
+        info!("Deferred shading initialized");
+
         Ok(DeferredShading {
             config: config.clone(),
             window_size,
@@ -119,7 +186,7 @@ impl DeferredShading {
             depth_texture,
             light_texture,
             scene_program,
-            //light_program,
+            light_program,
             //composition_program,
             quad_vertex_buffer,
             quad_index_buffer,

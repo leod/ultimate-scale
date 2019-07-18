@@ -33,7 +33,7 @@ fn perspective_matrix(
 fn main() {
     simple_logger::init_with_level(log::Level::Info).unwrap();
 
-    let config: config::Config = Default::default();
+    let mut config: config::Config = Default::default();
     info!("Running with config: {:?}", config);
 
     info!("Opening window");
@@ -70,6 +70,14 @@ fn main() {
     let mut elapsed_time: Duration = Default::default();
 
     let mut quit = false;
+
+    let mut deferred_shading = config
+        .render
+        .deferred_shading
+        .as_ref()
+        .map(|deferred_shading| 
+             render::deferred::DeferredShading::create(&display, &deferred_shading, config.view.window_size).unwrap()
+        );
 
     while !quit {
         let now_clock = Instant::now();
