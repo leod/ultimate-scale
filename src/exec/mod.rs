@@ -20,7 +20,9 @@ pub struct BlipMovement {
 pub struct Blip {
     pub kind: BlipKind,
     pub pos: Point3,
-    pub previous_pos: Option<Point3>,
+
+    /// We remember the previous grid position solely for visual purposes.
+    pub old_pos: Option<Point3>,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
@@ -99,7 +101,7 @@ impl Exec {
         for index in 0..self.blip_state.len() {
             self.old_blip_state[index] = self.blip_state[index];
 
-            //self.old_blip_state[index] = self.blip_state[index];
+            // The new blip state is written completely from scratch using the blips
             self.blip_state[index].blip_index = None;
         }
 
@@ -222,7 +224,7 @@ impl Exec {
                 let blip = Blip {
                     kind: kind,
                     pos: *pos,
-                    previous_pos: None,
+                    old_pos: None,
                 };
                 blip_state[*output_index].blip_index = Some(blips.add(blip));
             }
@@ -335,11 +337,14 @@ impl Exec {
         let new_block_index = block_ids.get(&new_pos);
 
         if let Some(Some(new_block_index)) = new_block_index {
-            blip.pos = new_pos;
             debug!(
                 "moving blip {} from {:?} to {:?}",
                 blip_index, blip.pos, new_pos
             );
+
+            // For visual purposes, we still remember the old position
+            blip.old_pos = Some(blip.pos);
+            blip.pos = new_pos;
 
             if let Some(out_dir) = out_dir {
                 // Apply effects of entering the new block

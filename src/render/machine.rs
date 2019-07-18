@@ -325,11 +325,11 @@ pub fn render_arrow(line: &Line, roll: f32, out: &mut RenderList) {
     render_line(line, out);
 
     // TODO
-    let head_transform = na::Matrix4::face_towards(
+    /*let head_transform = na::Matrix4::face_towards(
         &line.end,
         &(line.end + (line.end - line.start)),
-        &na::Vector3::z(),
-    ) * na::Matrix4::new_scaling(0.1);
+        &na::Vector3::y(),
+    ) * na::Matrix4::new_scaling(0.9);
 
     out.add(
         Object::Triangle,
@@ -338,7 +338,7 @@ pub fn render_arrow(line: &Line, roll: f32, out: &mut RenderList) {
             color: line.color,
             ..Default::default()
         },
-    );
+    );*/
 }
 
 pub fn block_center(pos: &grid::Point3) -> na::Point3<f32> {

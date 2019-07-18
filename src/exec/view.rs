@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use log::info;
 
 use nalgebra as na;
@@ -10,12 +12,14 @@ use crate::game_state::GameState;
 use crate::machine::grid::{Axis3, Dir3, Sign};
 use crate::machine::{Block, Machine};
 use crate::render::{self, RenderLists};
+use crate::util::timer::Timer;
 
 #[derive(Debug, Clone)]
 pub struct Config {
     pub pause_resume_key: VirtualKeyCode,
     pub stop_key: VirtualKeyCode,
     pub frame_key: VirtualKeyCode,
+    pub default_ticks_per_sec: f32,
 }
 
 impl Default for Config {
@@ -24,35 +28,58 @@ impl Default for Config {
             pause_resume_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
             frame_key: VirtualKeyCode::F,
+            default_ticks_per_sec: 8.0,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum Status {
+    Playing {
+        tick_timer: Timer,
+    },
+    Paused,
+    Stopped,
 }
 
 pub struct ExecView {
     config: Config,
     exec: Exec,
-
-    stop_exec: bool,
+    ticks_per_sec: f32,
+    status: Status,
 }
 
 impl ExecView {
-    pub fn new(config: Config, machine: Machine) -> ExecView {
+    pub fn new(config: &Config, machine: Machine) -> ExecView {
         ExecView {
-            config,
+            config: config.clone(),
             exec: Exec::new(machine),
-            stop_exec: false,
+            ticks_per_sec: config.default_ticks_per_sec,
+            status: Status::Playing { tick_timer: Timer::from_hz(config.default_ticks_per_sec) },
         }
     }
 
-    pub fn update(self, dt_secs: f32, editor: Editor) -> GameState {
-        if !self.stop_exec {
-            GameState::Exec {
-                exec_view: self,
-                editor,
+    pub fn update(mut self, dt: Duration, editor: Editor) -> GameState {
+        match self.status {
+            Status::Playing { ref mut tick_timer } => {
+                *tick_timer += dt;                
+
+                // TODO: Run multiple ticks on lag spikes? If so, with some
+                //       upper limit?
+                if tick_timer.trigger_reset() {
+                    self.exec.update();
+                }
             }
-        } else {
-            info!("Stopping exec, returning to editor");
-            GameState::Edit(editor)
+            Status::Paused => (),
+            Status::Stopped => {
+                info!("Stopping exec, returning to editor");
+                return GameState::Edit(editor)
+            }
+        }
+
+        GameState::Exec {
+            exec_view: self,
+            editor,
         }
     }
 
@@ -72,8 +99,29 @@ impl ExecView {
     }
 
     fn on_key_press(&mut self, keycode: VirtualKeyCode) {
-        if keycode == self.config.stop_key {
-            self.stop_exec = true;
+        if keycode == self.config.pause_resume_key {
+            match self.status {
+                Status::Playing { .. } => {
+                    info!("Pausing exec");
+                    self.status = Status::Paused;
+                }
+                Status::Paused => {
+                    info!("Resuming exec");
+
+                    // Start off with running a tick so that we have immediate
+                    // feedback
+                    self.exec.update(); 
+                    self.status = Status::Playing {
+                        tick_timer: Timer::from_hz(self.ticks_per_sec),
+                    };
+                }
+                Status::Stopped => {
+                    // Should happen only if pause is pressed after stop in the
+                    // same frame -- just ignore.
+                }
+            }
+        } else if keycode == self.config.stop_key {
+            self.status = Status::Stopped;
         } else if keycode == self.config.frame_key {
             info!("Running single frame");
             self.exec.update();
@@ -113,11 +161,11 @@ impl ExecView {
                     };
 
                     if let Some(arrow_dir) = arrow_dir {
-                        let block_pos_float: na::Point3<f32> = na::convert(*block_pos);
-                        let arrow_dir_float: na::Vector3<f32> = na::convert(arrow_dir);
+                        let center =  render::machine::block_center(block_pos);
+                        let arrow_dir: na::Vector3<f32> = na::convert(arrow_dir);
 
-                        let start = block_pos_float + na::Vector3::new(0.5, 0.5, 0.3);
-                        let end = start + arrow_dir_float;
+                        let start = center + arrow_dir;
+                        let end = center;
 
                         render::machine::render_arrow(
                             &render::machine::Line {
