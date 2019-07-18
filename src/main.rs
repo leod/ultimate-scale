@@ -75,9 +75,14 @@ fn main() {
         .render
         .deferred_shading
         .as_ref()
-        .map(|deferred_shading| 
-             render::deferred::DeferredShading::create(&display, &deferred_shading, config.view.window_size).unwrap()
-        );
+        .map(|deferred_shading| {
+            render::deferred::DeferredShading::create(
+                &display,
+                &deferred_shading,
+                config.view.window_size,
+            )
+            .unwrap()
+        });
 
     while !quit {
         let now_clock = Instant::now();
@@ -100,7 +105,24 @@ fn main() {
             GameState::Exec { exec_view, .. } => exec_view.render(&mut render_lists),
         }
 
-        if let Some(shadow_mapping) = &mut shadow_mapping {
+        if let Some(deferred_shading) = &mut deferred_shading {
+            render_lists.lights.push(render::Light {
+                position: na::Point3::new(15.0, 15.0, 15.0),
+                attenuation: na::Vector3::new(0.8, 0.125, 0.03),
+                color: na::Vector3::new(1.0, 1.0, 1.0),
+                radius: 30.0,
+            });
+
+            deferred_shading
+                .render_frame(
+                    &display,
+                    &resources,
+                    &render_context,
+                    &render_lists,
+                    &mut target,
+                )
+                .unwrap();
+        } else if let Some(shadow_mapping) = &mut shadow_mapping {
             shadow_mapping
                 .render_frame(
                     &display,
