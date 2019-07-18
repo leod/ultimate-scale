@@ -84,7 +84,7 @@ impl Exec {
 
     pub fn wind_state(&self) -> &[WindState] {
         &self.wind_state
-    } 
+    }
 
     pub fn blips(&self) -> &VecOption<Blip> {
         &self.blips
@@ -274,6 +274,33 @@ impl Exec {
         }
     }
 
+    fn blip_move_dir(
+        blip: &Blip,
+        placed_block: &PlacedBlock,
+        block_ids: &Grid3<Option<BlockIndex>>,
+        block_data: &VecOption<(Point3, PlacedBlock)>,
+        wind_state: &[WindState],
+    ) -> Option<Dir3> {
+        // To determine movement, check in flow of neighboring blocks
+        Dir3::ALL
+            .iter()
+            .find(|dir| {
+                // TODO: At some point, we'll need to precompute neighbor
+                //       indices.
+
+                let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
+                let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
+                    wind_state[*neighbor_index].wind_in(dir.invert())
+                        && block_data[*neighbor_index].1.has_move_hole(dir.invert())
+                } else {
+                    false
+                };
+
+                neighbor_in && placed_block.has_move_hole(**dir)
+            })
+            .cloned()
+    }
+
     fn update_blip(
         block_index: usize,
         blip_index: usize,
@@ -292,34 +319,11 @@ impl Exec {
         assert!(old_blip_state[block_index].blip_index == Some(blip_index));
         assert!(block_data[block_index].0 == blip.pos);
 
-        let block = block_data[block_index].1.clone();
+        let placed_block = block_data[block_index].1.clone();
 
-        // To determine movement, check in flow of neighboring blocks
-        let out_dir = Dir3::ALL.iter().find(|dir| {
-            // TODO: At some point, we'll need to precompute neighbor
-            //       indices.
-
-            let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
-            let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
-                wind_state[*neighbor_index].wind_in(dir.invert())
-                    && block_data[*neighbor_index].1.has_move_hole(dir.invert())
-            } else {
-                false
-            };
-
-            neighbor_in && block.has_move_hole(**dir)
-        });
-
+        let out_dir = Self::blip_move_dir(blip, &placed_block, block_ids, block_data, wind_state);
         let new_pos = if let Some(out_dir) = out_dir {
-            // Apply effects of leaving the current block
-            match block.block {
-                Block::PipeSplitXY { open_move_hole_y } => {
-                    block_data[block_index].1.block = Block::PipeSplitXY {
-                        open_move_hole_y: open_move_hole_y.invert(),
-                    };
-                }
-                _ => (),
-            }
+            Self::on_blip_leave_block(blip, out_dir, &mut block_data[block_index].1);
 
             blip.pos + out_dir.to_vector()
         } else {
@@ -335,33 +339,16 @@ impl Exec {
                 blip_index, blip.pos, new_pos
             );
 
-            // Apply effects of entering the new block
-            let new_placed_block = &mut block_data[*new_block_index].1;
-            let remove = match new_placed_block.block.clone() {
-                Block::BlipDuplicator { .. } => {
-                    // TODO: Resolve possible race condition in blip
-                    //       duplicator.  If two blips of different
-                    //       kind race into the duplicator, the output
-                    //       kind depends on the order of blip 
-                    //       evaluation.
-                    new_placed_block.block = Block::BlipDuplicator {
-                        activated: Some(blip.kind),
-                    };
-                    true
-                }
-                Block::BlipWindSource { activated } => {
-                    new_placed_block.block = Block::BlipWindSource {
-                        activated: true,
-                    };
-                    true
-                }
-                _ => false,
-            };
+            if let Some(out_dir) = out_dir {
+                // Apply effects of entering the new block
+                let remove =
+                    Self::on_blip_enter_block(blip, out_dir, &mut block_data[*new_block_index].1);
 
-            if remove {
-                // Effect of new block causes blip to be removed
-                remove_indices.push(blip_index);
-                return;
+                if remove {
+                    // Effect of new block causes blip to be removed
+                    remove_indices.push(blip_index);
+                    return;
+                }
             }
 
             if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
@@ -385,6 +372,38 @@ impl Exec {
             // We are on the grid, but there is no block at our position
             // -> remove blip
             remove_indices.push(blip_index);
+        }
+    }
+
+    fn on_blip_leave_block(_blip: &Blip, _dir: Dir3, placed_block: &mut PlacedBlock) {
+        match placed_block.block {
+            Block::PipeSplitXY { open_move_hole_y } => {
+                placed_block.block = Block::PipeSplitXY {
+                    open_move_hole_y: open_move_hole_y.invert(),
+                };
+            }
+            _ => (),
+        }
+    }
+
+    fn on_blip_enter_block(blip: &Blip, _dir: Dir3, new_placed_block: &mut PlacedBlock) -> bool {
+        match new_placed_block.block.clone() {
+            Block::BlipDuplicator { .. } => {
+                // TODO: Resolve possible race condition in blip
+                //       duplicator.  If two blips of different
+                //       kind race into the duplicator, the output
+                //       kind depends on the order of blip
+                //       evaluation.
+                new_placed_block.block = Block::BlipDuplicator {
+                    activated: Some(blip.kind),
+                };
+                true
+            }
+            Block::BlipWindSource { activated } => {
+                new_placed_block.block = Block::BlipWindSource { activated: true };
+                true
+            }
+            _ => false,
         }
     }
 
