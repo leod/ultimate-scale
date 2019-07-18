@@ -297,9 +297,7 @@ pub fn render_block(
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, -0.3, 0.0))
                 * na::Matrix4::new_rotation(input_dir.to_radians() * na::Vector3::z())
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                    0.9,
-                    input_size,
-                    input_size,
+                    0.9, input_size, input_size,
                 ));
             out.add(
                 Object::Cube,
