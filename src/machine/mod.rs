@@ -14,7 +14,9 @@ pub enum BlipKind {
 pub enum Block {
     PipeXY,
     PipeBendXY,
-    PipeSplitXY,
+    PipeSplitXY {
+        open_move_hole_y: Sign,
+    },
     WindSource,
     BlipSpawn(BlipKind),
     Solid,
@@ -23,14 +25,14 @@ pub enum Block {
 impl Block {
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         match self {
-            Block::PipeXY => dir == Dir3(Axis3::Y, Sign::Neg) || dir == Dir3(Axis3::Y, Sign::Pos),
+            Block::PipeXY => dir == Dir3::Y_NEG || dir == Dir3::Y_POS,
             Block::PipeBendXY => {
-                dir == Dir3(Axis3::X, Sign::Neg) || dir == Dir3(Axis3::Y, Sign::Pos)
+                dir == Dir3::X_NEG || dir == Dir3::Y_POS
             }
-            Block::PipeSplitXY => {
-                dir == Dir3(Axis3::Y, Sign::Neg)
-                    || dir == Dir3(Axis3::Y, Sign::Pos)
-                    || dir == Dir3(Axis3::X, Sign::Pos)
+            Block::PipeSplitXY { .. } => {
+                dir == Dir3::Y_NEG
+                    || dir == Dir3::Y_POS
+                    || dir == Dir3::X_POS
             }
             Block::WindSource => true,
             Block::BlipSpawn(_kind) => false,
@@ -38,10 +40,13 @@ impl Block {
         }
     }
 
-    pub fn allows_flow(&self) -> bool {
+    pub fn has_move_hole(&self, dir: Dir3) -> bool {
         match self {
-            Block::Solid => false,
-            _ => true,
+            Block::PipeSplitXY { open_move_hole_y } => {
+                dir == Dir3(Axis3::Y, *open_move_hole_y)
+                    || dir == Dir3::X_POS
+            }
+            _ => self.has_wind_hole(dir),
         }
     }
 }
@@ -90,6 +95,10 @@ impl PlacedBlock {
 
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         self.block.has_wind_hole(self.rotated_dir_ccw_xy(dir))
+    }
+
+    pub fn has_move_hole(&self, dir: Dir3) -> bool {
+        self.block.has_move_hole(self.rotated_dir_ccw_xy(dir))
     }
 
     pub fn wind_holes(&self) -> Vec<Dir3> {

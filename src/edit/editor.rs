@@ -31,7 +31,7 @@ impl Default for Config {
             block_keys: vec![
                 (VirtualKeyCode::Key1, Block::PipeXY),
                 (VirtualKeyCode::Key2, Block::PipeBendXY),
-                (VirtualKeyCode::Key3, Block::PipeSplitXY),
+                (VirtualKeyCode::Key3, Block::PipeSplitXY { open_move_hole_y: grid::Sign::Pos }),
                 (VirtualKeyCode::Key4, Block::WindSource),
                 (VirtualKeyCode::Key5, Block::BlipSpawn(BlipKind::A)),
                 (VirtualKeyCode::Key6, Block::Solid),

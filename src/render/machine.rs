@@ -156,7 +156,7 @@ pub fn render_block(
                 },
             );
         }
-        Block::PipeSplitXY => {
+        Block::PipeSplitXY { open_move_hole_y } => {
             out.add(
                 Object::PipeSplit,
                 &InstanceParams {
