@@ -2,6 +2,7 @@ use crate::edit::editor;
 use crate::exec;
 use crate::render::camera;
 use crate::render::shadow;
+use crate::render::deferred;
 
 #[derive(Debug, Clone)]
 pub struct ViewConfig {
@@ -21,12 +22,14 @@ impl Default for ViewConfig {
 #[derive(Debug, Clone)]
 pub struct RenderConfig {
     pub shadow_mapping: Option<shadow::Config>,
+    pub deferred_shading: Option<deferred::Config>,
 }
 
 impl Default for RenderConfig {
     fn default() -> RenderConfig {
         RenderConfig {
             shadow_mapping: Some(Default::default()),
+            deferred_shading: Some(Default::default()),
         }
     }
 }
