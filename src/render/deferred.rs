@@ -2,6 +2,8 @@
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
 pub use crate::render::shadow::CreationError; // TODO
 
+use glium::{implement_vertex, uniform, Surface};
+
 use crate::render::{Context, RenderLists, Resources};
 
 #[derive(Debug, Clone, Default)]
@@ -20,6 +22,9 @@ struct DeferredShading {
     scene_program: glium::Program,
     //light_program: glium::Program,
     //composition_program: glium::Program,
+
+    quad_vertex_buffer: glium::VertexBuffer<QuadVertex>,
+    quad_index_buffer: glium::IndexBuffer<u16>,
 }
 
 impl DeferredShading {
@@ -91,6 +96,22 @@ impl DeferredShading {
             None,
         )?;
 
+        let quad_vertex_buffer = glium::VertexBuffer::new(
+            facade,
+            &[
+                QuadVertex { position: [0.0, 0.0, 0.0, 1.0], tex_coord: [0.0, 0.0] },
+                QuadVertex { position: [1.0, 0.0, 0.0, 1.0], tex_coord: [1.0, 0.0] },
+                QuadVertex { position: [1.0, 1.0, 0.0, 1.0], tex_coord: [1.0, 1.0] },
+                QuadVertex { position: [0.0, 1.0, 0.0, 1.0], tex_coord: [0.0, 1.0] },
+            ]
+        )?;
+
+        let quad_index_buffer = glium::IndexBuffer::new(
+            facade,
+            glium::index::PrimitiveType::TrianglesList,
+            &[0u16, 1, 2, 0, 2, 3]
+        )?;
+
         Ok(DeferredShading {
             config: config.clone(),
             window_size,
@@ -100,6 +121,8 @@ impl DeferredShading {
             scene_program,
             //light_program,
             //composition_program,
+            quad_vertex_buffer,
+            quad_index_buffer,
         })
     }
 
@@ -127,3 +150,11 @@ impl DeferredShading {
         )?)
     }
 }
+
+#[derive(Copy, Clone)]
+struct QuadVertex {
+    position: [f32; 4],
+    tex_coord: [f32; 2]
+}
+
+implement_vertex!(QuadVertex, position, tex_coord);
