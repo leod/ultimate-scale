@@ -75,6 +75,7 @@ impl DeferredShading {
                 void main() {
                     frag_position = mat_model * vec4(position, 1.0);
                     frag_normal = vec4(mat3(mat_model) * normal, 1.0);
+                    //frag_normal = vec4(transpose(inverse(mat3(mat_model))) * normal, 1.0);
 
                     gl_Position = mat_projection * mat_view * frag_position;
                 }
