@@ -1,0 +1,96 @@
+{
+  "size": [
+    30,
+    30,
+    4
+  ],
+  "block_data": [
+    [
+      [
+        4,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        5,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        9,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        9,
+        1
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "activated": null
+          }
+        }
+      }
+    ]
+  ]
+}
