@@ -14,6 +14,10 @@ pub enum BlipKind {
 pub enum Block {
     PipeXY,
     PipeBendXY,
+    PipeZ,
+    PipeBendZ {
+        sign_z: Sign,
+    },
     PipeSplitXY {
         open_move_hole_y: Sign,
     },
@@ -36,6 +40,8 @@ impl Block {
         match self {
             Block::PipeXY => dir == Dir3::Y_NEG || dir == Dir3::Y_POS,
             Block::PipeBendXY => dir == Dir3::X_NEG || dir == Dir3::Y_POS,
+            Block::PipeZ => dir == Dir3::Z_NEG || dir == Dir3::Z_POS,
+            Block::PipeBendZ { sign_z } => dir == Dir3::Y_NEG || dir == Dir3(Axis3::Z, *sign_z),
             Block::PipeSplitXY { .. } => {
                 dir == Dir3::Y_NEG || dir == Dir3::Y_POS || dir == Dir3::X_POS
             }

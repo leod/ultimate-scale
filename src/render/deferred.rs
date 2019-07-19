@@ -286,7 +286,13 @@ impl DeferredShading {
         framebuffer.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
 
         if let Some(shadow_mapping) = self.shadow_mapping.as_mut() {
-            shadow_mapping.render_frame(facade, resources, context, render_lists, &mut framebuffer);
+            shadow_mapping.render_frame(
+                facade,
+                resources,
+                context,
+                render_lists,
+                &mut framebuffer,
+            )?;
         } else {
             render_lists.solid.render_with_program(
                 resources,

@@ -107,11 +107,15 @@ fn main() {
         }
 
         if let Some(deferred_shading) = &mut deferred_shading {
+            // TODO: Sync light position with shadow mapping
+            let light_x = 15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos();
+            let light_y = 15.0 + 20.0 * (std::f32::consts::PI / 4.0).sin();
+            let light_z = 20.0;
             render_lists.lights.push(render::Light {
-                position: na::Point3::new(15.0, 15.0, 15.0),
-                attenuation: na::Vector3::new(1.0, 0.01, 0.001),
+                position: na::Point3::new(light_x, light_y, light_z),
+                attenuation: na::Vector3::new(1.0, 0.01, 0.00001),
                 color: na::Vector3::new(1.0, 1.0, 1.0),
-                radius: 30.0,
+                radius: 160.0,
             });
 
             deferred_shading
