@@ -132,7 +132,7 @@ impl ExecView {
         let machine = &self.exec.machine();
         let wind_state = self.exec.wind_state();
 
-        for (index, (block_pos, placed_block)) in machine.block_data.iter() {
+        for (index, (block_pos, placed_block)) in machine.blocks.data.iter() {
             let block_wind_state = &wind_state[index];
 
             // Draw a wind line from all in dirs to all out dirs.

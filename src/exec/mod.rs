@@ -105,11 +105,11 @@ impl Exec {
             self.blip_state[index].blip_index = None;
         }
 
-        for (block_index, (block_pos, placed_block)) in self.machine.block_data.iter_mut() {
+        for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block_wind_state(
                 block_index,
                 block_pos,
-                &self.machine.block_ids,
+                &self.machine.blocks.indices,
                 &self.old_wind_state,
                 &mut self.wind_state,
                 placed_block,
@@ -117,20 +117,20 @@ impl Exec {
         }
 
         Self::update_blips(
-            &self.machine.block_ids,
+            &self.machine.blocks.indices,
             &self.wind_state,
             &self.old_blip_state,
             &mut self.blip_state,
-            &mut self.machine.block_data,
+            &mut self.machine.blocks.data,
             &mut self.blips,
         );
 
-        for (block_index, (block_pos, placed_block)) in self.machine.block_data.iter_mut() {
+        for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block_blip_state(
                 block_index,
                 block_pos,
                 placed_block,
-                &self.machine.block_ids,
+                &self.machine.blocks.indices,
                 &self.wind_state,
                 &mut self.blip_state,
                 &mut self.blips,
