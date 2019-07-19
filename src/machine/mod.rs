@@ -61,7 +61,7 @@ impl Block {
             Block::PipeSplitXY { open_move_hole_y } => {
                 dir == Dir3(Axis3::Y, *open_move_hole_y) || dir == Dir3::X_POS
             }
-            Block::BlipDuplicator { .. } => dir == Dir3::Y_NEG || dir == Dir3::Y_POS,
+            Block::BlipDuplicator { .. } => dir != Dir3::X_NEG || dir != Dir3::X_POS,
             Block::BlipWindSource { .. } => dir == Dir3::Y_NEG,
             _ => self.has_wind_hole(dir),
         }

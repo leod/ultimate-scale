@@ -117,6 +117,7 @@ impl ExecView {
         } else if keycode == self.config.frame_key {
             info!("Running single frame");
             self.exec.update();
+            self.tick_timer.reset();
         }
     }
 
