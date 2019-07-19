@@ -15,11 +15,44 @@ use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
 use crate::edit::Edit;
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ModifiedKey {
+    pub shift: bool,
+    pub ctrl: bool,
+    pub key: VirtualKeyCode,
+}
+
+impl ModifiedKey {
+    pub fn new(key: VirtualKeyCode) -> Self {
+        Self {
+            shift: false,
+            ctrl: false,
+            key,
+        }
+    }
+
+    pub fn shift(key: VirtualKeyCode) -> Self {
+        Self {
+            shift: true,
+            ctrl: false,
+            key,
+        }
+    }
+
+    pub fn ctrl(key: VirtualKeyCode) -> Self {
+        Self {
+            shift: false,
+            ctrl: true,
+            key,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Config {
     pub rotate_block_key: VirtualKeyCode,
     pub start_exec_key: VirtualKeyCode,
-    pub block_keys: HashMap<VirtualKeyCode, Block>,
+    pub block_keys: HashMap<ModifiedKey, Block>,
     pub layer_keys: HashMap<VirtualKeyCode, isize>,
 }
 
@@ -29,38 +62,38 @@ impl Default for Config {
             rotate_block_key: VirtualKeyCode::R,
             start_exec_key: VirtualKeyCode::Space,
             block_keys: vec![
-                (VirtualKeyCode::Key1, Block::PipeXY),
-                (VirtualKeyCode::Key2, Block::PipeBendXY),
+                (ModifiedKey::new(VirtualKeyCode::Key1), Block::PipeXY),
+                (ModifiedKey::new(VirtualKeyCode::Key2), Block::PipeBendXY),
                 (
-                    VirtualKeyCode::Key3,
+                    ModifiedKey::new(VirtualKeyCode::Key3),
                     Block::PipeSplitXY {
                         open_move_hole_y: grid::Sign::Pos,
                     },
                 ),
-                (VirtualKeyCode::Key4, Block::WindSource),
+                (ModifiedKey::new(VirtualKeyCode::Key4), Block::WindSource),
                 (
-                    VirtualKeyCode::Key5,
+                    ModifiedKey::new(VirtualKeyCode::Key5),
                     Block::BlipSpawn {
                         kind: BlipKind::A,
                         num_spawns: None,
                     },
                 ),
                 (
-                    VirtualKeyCode::Key6,
+                    ModifiedKey::new(VirtualKeyCode::Key6),
                     Block::BlipSpawn {
                         kind: BlipKind::A,
                         num_spawns: Some(1),
                     },
                 ),
                 (
-                    VirtualKeyCode::Key7,
+                    ModifiedKey::new(VirtualKeyCode::Key7),
                     Block::BlipDuplicator { activated: None },
                 ),
                 (
-                    VirtualKeyCode::Key8,
+                    ModifiedKey::new(VirtualKeyCode::Key8),
                     Block::BlipWindSource { activated: false },
                 ),
-                (VirtualKeyCode::Key9, Block::Solid),
+                (ModifiedKey::new(VirtualKeyCode::Key9), Block::Solid),
             ]
             .into_iter()
             .collect(),
@@ -236,7 +269,12 @@ impl Editor {
             }
         }
 
-        if let Some(block) = self.config.block_keys.get(&keycode) {
+        let modified_key = ModifiedKey {
+            shift: modifiers.shift,
+            ctrl: modifiers.ctrl,
+            key: keycode,
+        };
+        if let Some(block) = self.config.block_keys.get(&modified_key) {
             self.place_block.block = *block;
         }
 

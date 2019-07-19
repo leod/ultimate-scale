@@ -156,6 +156,27 @@ pub fn render_block(
                 },
             );
         }
+        Block::PipeZ => {
+            let rotation = na::Matrix4::new_rotation(na::Vector3::y() * std::f32::consts::PI / 2.0);
+            out.add(
+                Object::PipeSegment,
+                &InstanceParams {
+                    transform: translation * rotation * transform,
+                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                    ..Default::default()
+                },
+            );
+        }
+        Block::PipeBendZ { sign_z } => {
+            out.add(
+                Object::PipeBend,
+                &InstanceParams {
+                    transform: translation * transform,
+                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                    ..Default::default()
+                },
+            );
+        }
         Block::PipeSplitXY { open_move_hole_y } => {
             out.add(
                 Object::PipeSplit,
