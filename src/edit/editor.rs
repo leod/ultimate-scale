@@ -15,6 +15,8 @@ use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
 use crate::edit::Edit;
 
+// TODO: Shift does not work for some reason, we don't get any key press events
+//       for that.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ModifiedKey {
     pub shift: bool,
@@ -63,23 +65,36 @@ impl Default for Config {
             start_exec_key: VirtualKeyCode::Space,
             block_keys: vec![
                 (ModifiedKey::new(VirtualKeyCode::Key1), Block::PipeXY),
+                (ModifiedKey::ctrl(VirtualKeyCode::Key1), Block::PipeZ),
                 (ModifiedKey::new(VirtualKeyCode::Key2), Block::PipeBendXY),
                 (
                     ModifiedKey::new(VirtualKeyCode::Key3),
+                    Block::PipeBendZ {
+                        sign_z: grid::Sign::Pos,
+                    },
+                ),
+                (
+                    ModifiedKey::ctrl(VirtualKeyCode::Key3),
+                    Block::PipeBendZ {
+                        sign_z: grid::Sign::Neg,
+                    },
+                ),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key4),
                     Block::PipeSplitXY {
                         open_move_hole_y: grid::Sign::Pos,
                     },
                 ),
-                (ModifiedKey::new(VirtualKeyCode::Key4), Block::WindSource),
+                (ModifiedKey::new(VirtualKeyCode::Key5), Block::WindSource),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key5),
+                    ModifiedKey::new(VirtualKeyCode::Key6),
                     Block::BlipSpawn {
                         kind: BlipKind::A,
                         num_spawns: None,
                     },
                 ),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key6),
+                    ModifiedKey::ctrl(VirtualKeyCode::Key6),
                     Block::BlipSpawn {
                         kind: BlipKind::A,
                         num_spawns: Some(1),
