@@ -184,14 +184,14 @@ impl Editor {
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
     ) -> GameState {
-        self.update_mouse_grid_pos(camera, edit_camera_view);
-        self.update_input();
-
         edit_camera_view.set_target(na::Point3::new(
             edit_camera_view.target().x,
             edit_camera_view.target().y,
             self.current_layer as f32,
         ));
+
+        self.update_mouse_grid_pos(camera, edit_camera_view);
+        self.update_input();
 
         if !self.start_exec {
             GameState::Edit(self)
