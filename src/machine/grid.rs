@@ -89,6 +89,10 @@ impl Sign {
         }
     }
 
+    pub fn to_f32(&self) -> f32 {
+        self.to_number() as f32
+    }
+
     pub fn invert(self) -> Sign {
         match self {
             Sign::Pos => Sign::Neg,

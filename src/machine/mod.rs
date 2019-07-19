@@ -39,7 +39,7 @@ impl Block {
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         match self {
             Block::PipeXY => dir == Dir3::Y_NEG || dir == Dir3::Y_POS,
-            Block::PipeBendXY => dir == Dir3::X_NEG || dir == Dir3::Y_POS,
+            Block::PipeBendXY => dir == Dir3::X_POS || dir == Dir3::Y_NEG,
             Block::PipeZ => dir == Dir3::Z_NEG || dir == Dir3::Z_POS,
             Block::PipeBendZ { sign_z } => dir == Dir3::Y_NEG || dir == Dir3(Axis3::Z, *sign_z),
             Block::PipeSplitXY { .. } => {

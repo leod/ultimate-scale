@@ -147,31 +147,35 @@ pub fn render_block(
             );
         }
         Block::PipeBendXY => {
+            let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
             out.add(
                 Object::PipeBend,
                 &InstanceParams {
-                    transform: translation * transform,
+                    transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
                 },
             );
         }
         Block::PipeZ => {
-            let rotation = na::Matrix4::new_rotation(na::Vector3::y() * std::f32::consts::PI / 2.0);
+            let rotation = na::Matrix4::new_rotation(na::Vector3::x() * std::f32::consts::PI / 2.0);
             out.add(
                 Object::PipeSegment,
                 &InstanceParams {
-                    transform: translation * rotation * transform,
+                    transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
                 },
             );
         }
         Block::PipeBendZ { sign_z } => {
+            let angle_y = -sign_z.to_f32() * std::f32::consts::PI / 2.0;
+            let rotation = na::Matrix4::new_rotation(na::Vector3::y() * angle_y)
+                * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
             out.add(
                 Object::PipeBend,
                 &InstanceParams {
-                    transform: translation * transform,
+                    transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
                 },
