@@ -1,6 +1,6 @@
 pub mod view;
 
-use log::debug;
+use log::{debug, info};
 
 use crate::machine::grid::{Dir3, Grid3, Point3};
 use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock};
@@ -440,6 +440,7 @@ impl Exec {
             }
             Block::BlipDuplicator { ref mut activated } => {
                 if let Some(kind) = activated.clone() {
+                    info!("trying to activate");
                     Self::try_spawn_blip(
                         kind,
                         &(*block_pos + dir_x_pos.to_vector()),

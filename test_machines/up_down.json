@@ -1,0 +1,490 @@
+{
+  "size": [
+    30,
+    30,
+    4
+  ],
+  "block_data": [
+    [
+      [
+        3,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        3,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        15,
+        3
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeZ"
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        2
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeZ"
+      }
+    ],
+    [
+      [
+        12,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        18,
+        3
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "PipeSplitXY": {
+            "open_move_hole_y": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        16,
+        3
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        3
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        13,
+        18,
+        2
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeZ"
+      }
+    ],
+    [
+      [
+        12,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        18,
+        3
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeSplitXY": {
+            "open_move_hole_y": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        13,
+        18,
+        3
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        17,
+        3
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        18,
+        2
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeZ"
+      }
+    ],
+    [
+      [
+        13,
+        18,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeZ"
+      }
+    ],
+    [
+      [
+        11,
+        18,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeZ"
+      }
+    ],
+    [
+      [
+        13,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        13,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        11,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        12,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "PipeSplitXY": {
+            "open_move_hole_y": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ]
+  ]
+}
