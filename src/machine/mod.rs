@@ -1,16 +1,19 @@
 pub mod grid;
 
+use serde::ser::{SerializeSeq, Serializer};
+use serde::{Deserialize, Serialize};
+
 use crate::util::vec_option::VecOption;
 
 use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum BlipKind {
     A,
     B,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     PipeXY,
     PipeBendXY,
@@ -65,7 +68,7 @@ impl Block {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct PlacedBlock {
     pub rotation_xy: usize,
     pub block: Block,
@@ -130,32 +133,54 @@ impl PlacedBlock {
 pub type BlockIndex = usize;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
+pub struct Blocks {
+    pub indices: Grid3<Option<BlockIndex>>,
+    pub data: VecOption<(Point3, PlacedBlock)>,
+}
+
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Machine {
-    pub block_ids: Grid3<Option<BlockIndex>>,
-    pub block_data: VecOption<(Point3, PlacedBlock)>,
+    pub blocks: Blocks,
 }
 
 impl Machine {
-    pub fn empty() -> Machine {
-        Machine {
-            block_ids: Grid3::new(Vector3::new(0, 0, 0)),
-            block_data: VecOption::new(),
+    pub fn from_block_data(size: &Vector3, slice: &[(Point3, PlacedBlock)]) -> Self {
+        let mut indices = Grid3::new(*size);
+        let mut data = VecOption::new();
+
+        for (pos, placed_block) in slice {
+            indices[*pos] = Some(data.add((*pos, placed_block.clone())));
+        }
+
+        let blocks = Blocks { indices, data };
+
+        Machine { blocks }
+    }
+
+    pub fn empty() -> Self {
+        Self {
+            blocks: Blocks {
+                indices: Grid3::new(Vector3::new(0, 0, 0)),
+                data: VecOption::new(),
+            },
         }
     }
 
-    pub fn new(size: Vector3) -> Machine {
-        Machine {
-            block_ids: Grid3::new(size),
-            block_data: VecOption::new(),
+    pub fn new(size: Vector3) -> Self {
+        Self {
+            blocks: Blocks {
+                indices: Grid3::new(size),
+                data: VecOption::new(),
+            },
         }
     }
 
     pub fn size(&self) -> Vector3 {
-        self.block_ids.size()
+        self.blocks.indices.size()
     }
 
     pub fn is_valid_pos(&self, p: &Point3) -> bool {
-        self.block_ids.is_valid_pos(p)
+        self.blocks.indices.is_valid_pos(p)
     }
 
     pub fn is_valid_layer(&self, layer: isize) -> bool {
@@ -163,29 +188,30 @@ impl Machine {
     }
 
     pub fn get_block_at_pos(&self, p: &Point3) -> Option<(BlockIndex, &PlacedBlock)> {
-        self.block_ids
+        self.blocks
+            .indices
             .get(p)
             .and_then(|id| id.as_ref())
-            .map(|&id| (id, &self.block_data[id].1))
+            .map(|&id| (id, &self.blocks.data[id].1))
     }
 
     pub fn block_at_index(&self, index: BlockIndex) -> &(Point3, PlacedBlock) {
-        &self.block_data[index]
+        &self.blocks.data[index]
     }
 
     pub fn set_block_at_pos(&mut self, p: &Point3, block: Option<PlacedBlock>) {
         self.remove_at_pos(p);
 
         if let Some(block) = block {
-            let id = self.block_data.add((*p, block));
-            self.block_ids[*p] = Some(id);
+            let id = self.blocks.data.add((*p, block));
+            self.blocks.indices[*p] = Some(id);
         }
     }
 
     pub fn remove_at_pos(&mut self, p: &Point3) -> Option<(BlockIndex, PlacedBlock)> {
-        if let Some(Some(id)) = self.block_ids.get(p).cloned() {
-            self.block_ids[*p] = None;
-            self.block_data.remove(id).map(|(data_pos, block)| {
+        if let Some(Some(id)) = self.blocks.indices.get(p).cloned() {
+            self.blocks.indices[*p] = None;
+            self.blocks.data.remove(id).map(|(data_pos, block)| {
                 assert!(data_pos == *p);
                 (id, block)
             })
@@ -195,29 +221,29 @@ impl Machine {
     }
 
     pub fn iter_blocks(&self) -> impl Iterator<Item = (BlockIndex, &(Point3, PlacedBlock))> {
-        self.block_data.iter()
+        self.blocks.data.iter()
     }
 
     pub fn iter_blocks_mut(
         &mut self,
     ) -> impl Iterator<Item = (BlockIndex, &mut (Point3, PlacedBlock))> {
-        self.block_data.iter_mut()
+        self.blocks.data.iter_mut()
     }
 
     pub fn gc(&mut self) {
-        self.block_data.gc();
+        self.blocks.data.gc();
 
-        for (index, (grid_pos, _)) in self.block_data.iter() {
-            self.block_ids[*grid_pos] = Some(index);
+        for (index, (grid_pos, _)) in self.blocks.data.iter() {
+            self.blocks.indices[*grid_pos] = Some(index);
         }
     }
 
     pub fn is_contiguous(&self) -> bool {
-        self.block_data.num_free() == 0
+        self.blocks.data.num_free() == 0
     }
 
     pub fn num_blocks(&self) -> usize {
-        self.block_data.len()
+        self.blocks.data.len()
     }
 
     pub fn iter_neighbors<'a>(
@@ -225,10 +251,38 @@ impl Machine {
         pos: Point3,
     ) -> impl Iterator<Item = (Dir3, BlockIndex)> + 'a {
         Dir3::ALL.iter().filter_map(move |dir| {
-            self.block_ids
+            self.blocks
+                .indices
                 .get(&(pos + dir.to_vector()))
                 .and_then(|index| index.as_ref())
                 .map(|index| (*dir, *index))
         })
+    }
+}
+
+/// Stores only the data necessary for restoring a machine.
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
+pub struct SavedMachine {
+    pub size: Vector3,
+    pub block_data: Vec<(Point3, PlacedBlock)>,
+}
+
+impl SavedMachine {
+    pub fn from_machine(machine: &Machine) -> Self {
+        let block_data = machine
+            .blocks
+            .data
+            .iter()
+            .map(|(_index, data)| data.clone())
+            .collect();
+
+        Self {
+            size: machine.size(),
+            block_data,
+        }
+    }
+
+    pub fn into_machine(&self) -> Machine {
+        Machine::from_block_data(&self.size, &self.block_data)
     }
 }

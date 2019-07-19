@@ -203,8 +203,14 @@ impl Input {
             WindowEvent::KeyboardInput { input, .. } => {
                 if let Some(keycode) = input.virtual_keycode {
                     match input.state {
-                        glutin::ElementState::Pressed => self.pressed_keys.insert(keycode),
-                        glutin::ElementState::Released => self.pressed_keys.remove(&keycode),
+                        glutin::ElementState::Pressed => {
+                            if !input.modifiers.ctrl {
+                                self.pressed_keys.insert(keycode);
+                            }
+                        }
+                        glutin::ElementState::Released => {
+                            self.pressed_keys.remove(&keycode);
+                        }
                     };
                 }
 

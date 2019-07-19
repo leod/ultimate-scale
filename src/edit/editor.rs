@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use std::fs::File;
+use std::path::{Path, PathBuf};
 
-use log::info;
+use log::{info, warn};
 
 use nalgebra as na;
 
@@ -9,7 +11,7 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::exec::{self, ExecView};
 use crate::game_state::GameState;
 use crate::machine::grid;
-use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
+use crate::machine::{BlipKind, Block, Machine, PlacedBlock, SavedMachine};
 use crate::render::{self, Camera, EditCameraView, RenderLists};
 use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
@@ -52,8 +54,10 @@ impl ModifiedKey {
 
 #[derive(Debug, Clone)]
 pub struct Config {
+    pub default_save_path: PathBuf,
     pub rotate_block_key: VirtualKeyCode,
     pub start_exec_key: VirtualKeyCode,
+    pub save_key: ModifiedKey,
     pub block_keys: HashMap<ModifiedKey, Block>,
     pub layer_keys: HashMap<VirtualKeyCode, isize>,
 }
@@ -61,8 +65,10 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Config {
         Config {
+            default_save_path: PathBuf::from("machine.json"),
             rotate_block_key: VirtualKeyCode::R,
             start_exec_key: VirtualKeyCode::Space,
+            save_key: ModifiedKey::ctrl(VirtualKeyCode::S),
             block_keys: vec![
                 (ModifiedKey::new(VirtualKeyCode::Key1), Block::PipeXY),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key1), Block::PipeZ),
@@ -142,13 +148,13 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub fn new(config: &Config, exec_config: &exec::view::Config, size: grid::Vector3) -> Editor {
+    pub fn new(config: &Config, exec_config: &exec::view::Config, machine: Machine) -> Editor {
         Editor {
             config: config.clone(),
             exec_config: exec_config.clone(),
-            machine: Machine::new(size),
+            machine,
             place_block: PlacedBlock {
-                rotation_xy: 0,
+                rotation_xy: 1,
                 block: Block::PipeXY,
             },
             current_layer: 0,
@@ -302,6 +308,10 @@ impl Editor {
         if keycode == self.config.start_exec_key {
             self.start_exec = true;
         }
+
+        if modified_key == self.config.save_key {
+            self.save(&self.config.default_save_path);
+        }
     }
 
     fn on_mouse_input(
@@ -369,5 +379,29 @@ impl Editor {
         }
 
         Ok(())
+    }
+
+    fn save(&self, path: &Path) {
+        info!("Saving current machine to file {:?}", path);
+
+        match File::create(path) {
+            Ok(file) => {
+                let saved_machine = SavedMachine::from_machine(&self.machine);
+                if let Err(err) = serde_json::to_writer_pretty(file, &saved_machine) {
+                    warn!(
+                        "Error while saving machine to file {:?}: {}",
+                        path.to_str(),
+                        err
+                    );
+                }
+            }
+            Err(err) => {
+                warn!(
+                    "Could not open file {:?} for writing: {}",
+                    path.to_str(),
+                    err
+                );
+            }
+        };
     }
 }

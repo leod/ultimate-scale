@@ -6,9 +6,12 @@ mod machine;
 mod render;
 mod util;
 
+use std::fs::File;
+use std::io::BufReader;
 use std::thread;
 use std::time::{Duration, Instant};
 
+use clap::{App, Arg};
 use floating_duration::TimeAsFloat;
 use glium::Surface;
 use log::info;
@@ -16,6 +19,7 @@ use nalgebra as na;
 
 use edit::Editor;
 use game_state::GameState;
+use machine::{grid, Machine, SavedMachine};
 
 fn perspective_matrix(
     config: &config::ViewConfig,
@@ -32,6 +36,19 @@ fn perspective_matrix(
 
 fn main() {
     simple_logger::init_with_level(log::Level::Info).unwrap();
+
+    let args = App::new("Ultimate Scale")
+        .version("0.0.1")
+        .author("Leonard Dahlmann <leo.dahlmann@gmail.com>")
+        .arg(
+            Arg::with_name("file")
+                .short("f")
+                .long("file")
+                .value_name("FILE")
+                .help("Load the given machine")
+                .takes_value(true),
+        )
+        .get_matches();
 
     let mut config: config::Config = Default::default();
     info!("Running with config: {:?}", config);
@@ -63,8 +80,18 @@ fn main() {
         .as_ref()
         .map(|config| render::shadow::ShadowMapping::create(&display, config, false).unwrap());
 
-    let grid_size = machine::grid::Vector3::new(30, 30, 4);
-    let mut game_state = GameState::Edit(Editor::new(&config.editor, &config.exec, grid_size));
+    let initial_machine = if let Some(file) = args.value_of("file") {
+        let file = File::open(file).unwrap();
+        let reader = BufReader::new(file);
+        let saved_machine: SavedMachine = serde_json::from_reader(reader).unwrap();
+        saved_machine.into_machine()
+    } else {
+        let grid_size = grid::Vector3::new(30, 30, 4);
+        Machine::new(grid_size)
+    };
+    let editor = Editor::new(&config.editor, &config.exec, initial_machine);
+
+    let mut game_state = GameState::Edit(editor);
 
     let mut previous_clock = Instant::now();
     let mut elapsed_time: Duration = Default::default();

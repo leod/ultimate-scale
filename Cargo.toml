@@ -5,7 +5,7 @@ authors = ["Leonard Dahlmann <leo.dahlmann@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-nalgebra = "0.18"
+nalgebra = { version = "0.18", features = ["serde-serialize"] }
 glium = "0.25"
 glutin = "0.21"
 num-traits = "0.2"
@@ -15,3 +15,6 @@ simple_logger = "1.0"
 floating-duration = "0.1"
 obj = { version = "0.9", features = ["genmesh"] }
 genmesh = "0.6"
+clap = "2.33"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
