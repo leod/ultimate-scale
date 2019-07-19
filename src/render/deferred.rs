@@ -8,7 +8,7 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::render::{Context, RenderLists, Resources};
+use crate::render::{shadow, Context, RenderLists, Resources};
 
 #[derive(Debug, Clone, Default)]
 pub struct Config;
@@ -29,6 +29,8 @@ pub struct DeferredShading {
 
     quad_vertex_buffer: glium::VertexBuffer<QuadVertex>,
     quad_index_buffer: glium::IndexBuffer<u16>,
+
+    shadow_mapping: Option<shadow::ShadowMapping>,
 }
 
 impl DeferredShading {
@@ -36,6 +38,7 @@ impl DeferredShading {
         facade: &F,
         config: &Config,
         window_size: glutin::dpi::LogicalSize,
+        shadow_mapping_config: &Option<shadow::Config>,
     ) -> Result<DeferredShading, CreationError> {
         let rounded_size: (u32, u32) = window_size.into();
 
@@ -237,6 +240,12 @@ impl DeferredShading {
             &[0u16, 1, 2, 0, 2, 3],
         )?;
 
+        let shadow_mapping = if let Some(config) = shadow_mapping_config {
+            Some(shadow::ShadowMapping::create(facade, config, true)?)
+        } else {
+            None
+        };
+
         info!("Deferred shading initialized");
 
         Ok(DeferredShading {
@@ -250,6 +259,7 @@ impl DeferredShading {
             composition_program,
             quad_vertex_buffer,
             quad_index_buffer,
+            shadow_mapping,
         })
     }
 
@@ -273,15 +283,19 @@ impl DeferredShading {
             &self.depth_texture,
         )
         .unwrap(); // TODO: unwrap
-
         framebuffer.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        render_lists.solid.render_with_program(
-            resources,
-            context,
-            &Default::default(),
-            &self.scene_program,
-            &mut framebuffer,
-        )?;
+
+        if let Some(shadow_mapping) = self.shadow_mapping.as_mut() {
+            shadow_mapping.render_frame(facade, resources, context, render_lists, &mut framebuffer);
+        } else {
+            render_lists.solid.render_with_program(
+                resources,
+                context,
+                &Default::default(),
+                &self.scene_program,
+                &mut framebuffer,
+            )?;
+        }
 
         // Lighting pass
         let draw_params = glium::DrawParameters {

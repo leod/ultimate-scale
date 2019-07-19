@@ -76,9 +76,11 @@ pub struct ShadowMapping {
 }
 
 impl ShadowMapping {
+    #[rustfmt::skip]
     pub fn create<F: glium::backend::Facade>(
         facade: &F,
         config: &Config,
+        deferred: bool,
     ) -> Result<ShadowMapping, CreationError> {
         // Shaders for creating the shadow map from light source's perspective
         info!("Creating shadow map program");
@@ -151,7 +153,7 @@ impl ShadowMapping {
             ",
 
             // Fragment shader
-            "
+            &("
                 #version 330 core
 
                 uniform sampler2D shadow_map;
@@ -162,21 +164,36 @@ impl ShadowMapping {
                 in vec3 v_world_normal;
                 in vec4 v_shadow_coord;
 
+            ".to_string()
+            + if deferred {
+            "
+                out vec4 f_output1;
+                out vec4 f_output2;
+                out vec4 f_output3;
+            "
+            } else {
+            "
                 out vec4 f_color;
-
+            "
+            }
+            +
+            "
                 float shadow_calculation(vec4 pos_light_space) {
                     vec3 light_dir = normalize(vec3(light_pos - v_world_pos.xyz));
+
                     //float bias = max(0.0055 * (1.0 - dot(v_world_normal, light_dir)), 0.005);
                     float bias = 0.0;
 
                     vec3 proj_coords = pos_light_space.xyz / pos_light_space.w;
-
                     proj_coords = proj_coords * 0.5 + 0.5;
 
+                    // TODO: Is there a way to do this on texture-level?
                     if (proj_coords.z > 1.0)
                         return 1.0;
-
-                    if (proj_coords.x < 0.0 || proj_coords.x > 1.0 || proj_coords.y < 0.0 || proj_coords.y > 1.0) {
+                    if (proj_coords.x < 0.0
+                        || proj_coords.x > 1.0
+                        || proj_coords.y < 0.0
+                        || proj_coords.y > 1.0) {
                         return 1.0;
                     }
 
@@ -188,9 +205,17 @@ impl ShadowMapping {
 
                 void main() {
                     vec3 light_color = vec3(1, 1, 1);
-
+                    float shadow = shadow_calculation(v_shadow_coord);
+            "
+            + if deferred {
+            "
+                    f_output1 = v_world_pos;
+                    f_output2 = vec4(v_world_normal, 1.0);
+                    f_output3 = color * shadow;
+            "
+            } else {
+            "
                     float ambient = 0.3;
-
                     float diffuse = max(
                         dot(
                             normalize(v_world_normal),
@@ -198,12 +223,13 @@ impl ShadowMapping {
                         ),
                         0.05
                     );
-
-                    float shadow = shadow_calculation(v_shadow_coord);
-
                     f_color = vec4((ambient + shadow * diffuse) * color.rgb, 1.0);
+            "
+            }
+            +
+            "
                 }
-            ",
+            "),
 
             None
         )?;
@@ -402,7 +428,8 @@ impl ShadowMapping {
         }*/
 
         // Render transparent objects
-        render_lists.transparent.render(
+        // TODO: "Integration" with deferred shading
+        /*render_lists.transparent.render(
             resources,
             context,
             &glium::DrawParameters {
@@ -410,7 +437,7 @@ impl ShadowMapping {
                 ..Default::default()
             },
             target,
-        )?;
+        )?;*/
 
         Ok(())
     }
