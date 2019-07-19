@@ -19,7 +19,7 @@ use crate::edit::Edit;
 
 // TODO: Shift does not work for some reason, we don't get any key press events
 //       for that.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct ModifiedKey {
     pub shift: bool,
     pub ctrl: bool,
@@ -55,20 +55,24 @@ impl ModifiedKey {
 #[derive(Debug, Clone)]
 pub struct Config {
     pub default_save_path: PathBuf,
-    pub rotate_block_key: VirtualKeyCode,
-    pub start_exec_key: VirtualKeyCode,
+    pub rotate_block_key: ModifiedKey,
+    pub start_exec_key: ModifiedKey,
     pub save_key: ModifiedKey,
+    pub layer_up_key: ModifiedKey,
+    pub layer_down_key: ModifiedKey,
     pub block_keys: HashMap<ModifiedKey, Block>,
-    pub layer_keys: HashMap<VirtualKeyCode, isize>,
+    pub layer_keys: HashMap<ModifiedKey, isize>,
 }
 
 impl Default for Config {
     fn default() -> Config {
         Config {
             default_save_path: PathBuf::from("machine.json"),
-            rotate_block_key: VirtualKeyCode::R,
-            start_exec_key: VirtualKeyCode::Space,
+            rotate_block_key: ModifiedKey::new(VirtualKeyCode::R),
+            start_exec_key: ModifiedKey::new(VirtualKeyCode::Space),
             save_key: ModifiedKey::ctrl(VirtualKeyCode::S),
+            layer_up_key: ModifiedKey::new(VirtualKeyCode::Tab),
+            layer_down_key: ModifiedKey::shift(VirtualKeyCode::Tab),
             block_keys: vec![
                 (ModifiedKey::new(VirtualKeyCode::Key1), Block::PipeXY),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key1), Block::PipeZ),
@@ -119,10 +123,10 @@ impl Default for Config {
             .into_iter()
             .collect(),
             layer_keys: vec![
-                (VirtualKeyCode::F1, 0),
-                (VirtualKeyCode::F2, 1),
-                (VirtualKeyCode::F3, 2),
-                (VirtualKeyCode::F4, 3),
+                (ModifiedKey::new(VirtualKeyCode::F1), 0),
+                (ModifiedKey::new(VirtualKeyCode::F2), 1),
+                (ModifiedKey::new(VirtualKeyCode::F3), 2),
+                (ModifiedKey::new(VirtualKeyCode::F4), 3),
             ]
             .into_iter()
             .collect(),
@@ -276,41 +280,42 @@ impl Editor {
     fn on_keyboard_input(&mut self, input: &glutin::KeyboardInput) {
         if input.state == glutin::ElementState::Pressed {
             if let Some(keycode) = input.virtual_keycode {
-                self.on_key_press(keycode, &input.modifiers);
+                let modified_key = ModifiedKey {
+                    shift: input.modifiers.shift,
+                    ctrl: input.modifiers.ctrl,
+                    key: keycode,
+                };
+
+                self.on_key_press(modified_key);
             }
         }
     }
 
-    fn on_key_press(&mut self, keycode: VirtualKeyCode, modifiers: &glutin::ModifiersState) {
-        if keycode == self.config.rotate_block_key {
-            if !modifiers.shift {
+    fn on_key_press(&mut self, key: ModifiedKey) {
+        if key.key == self.config.rotate_block_key.key {
+            if !key.shift {
                 self.place_block.rotate_cw();
             } else {
                 self.place_block.rotate_ccw();
             }
-        }
-
-        let modified_key = ModifiedKey {
-            shift: modifiers.shift,
-            ctrl: modifiers.ctrl,
-            key: keycode,
-        };
-        if let Some(block) = self.config.block_keys.get(&modified_key) {
+        } else if key == self.config.start_exec_key {
+            self.start_exec = true;
+        } else if key == self.config.save_key {
+            self.save(&self.config.default_save_path);
+        } else if key == self.config.layer_up_key {
+            if self.machine.is_valid_layer(self.current_layer + 1) {
+                self.current_layer = self.current_layer + 1;
+            }
+        } else if key == self.config.layer_down_key {
+            if self.machine.is_valid_layer(self.current_layer - 1) {
+                self.current_layer = self.current_layer - 1;
+            }
+        } else if let Some(block) = self.config.block_keys.get(&key) {
             self.place_block.block = *block;
-        }
-
-        if let Some(&layer) = self.config.layer_keys.get(&keycode) {
+        } else if let Some(&layer) = self.config.layer_keys.get(&key) {
             if self.machine.is_valid_layer(layer) {
                 self.current_layer = layer;
             }
-        }
-
-        if keycode == self.config.start_exec_key {
-            self.start_exec = true;
-        }
-
-        if modified_key == self.config.save_key {
-            self.save(&self.config.default_save_path);
         }
     }
 

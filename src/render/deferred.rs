@@ -1,6 +1,5 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
-
 pub use crate::render::shadow::CreationError; // TODO
 
 use log::info;
@@ -269,7 +268,10 @@ impl DeferredShading {
         facade: &F,
         new_window_size: glutin::dpi::LogicalSize,
     ) -> Result<(), CreationError> {
-        info!("Recreating textures for deferred shading with size {:?}", new_window_size);
+        info!(
+            "Recreating textures for deferred shading with size {:?}",
+            new_window_size
+        );
 
         let rounded_size: (u32, u32) = new_window_size.into();
 
@@ -305,7 +307,7 @@ impl DeferredShading {
             ("f_output2", &self.scene_textures[1]),
             ("f_output3", &self.scene_textures[2]),
         ];
-        
+
         // TODO: How can we avoid having to create framebuffers in every frame?
         let mut framebuffer = glium::framebuffer::MultiOutputFrameBuffer::with_depth_buffer(
             facade,
