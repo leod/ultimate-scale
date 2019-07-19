@@ -24,6 +24,7 @@ pub enum Block {
     PipeSplitXY {
         open_move_hole_y: Sign,
     },
+    FunnelXY,
     WindSource,
     BlipSpawn {
         kind: BlipKind,
@@ -48,11 +49,29 @@ impl Block {
             Block::PipeSplitXY { .. } => {
                 dir == Dir3::Y_NEG || dir == Dir3::Y_POS || dir == Dir3::X_POS
             }
+            Block::FunnelXY => {
+                // Has restricted cases for in/out below 
+                dir == Dir3::Y_NEG || dir == Dir3::Y_POS
+            }
             Block::WindSource => true,
-            Block::BlipSpawn { .. } => false,
-            Block::BlipDuplicator { .. } => false,
+            Block::BlipSpawn { .. } => true,
+            Block::BlipDuplicator { .. } => true,
             Block::Solid => false,
-            Block::BlipWindSource { .. } => dir != Dir3::Y_NEG,
+            Block::BlipWindSource { .. } => true, //dir != Dir3::Y_NEG,
+        }
+    }
+
+    pub fn has_wind_hole_in(&self, dir: Dir3) -> bool {
+        match self {
+            Block::FunnelXY => dir == Dir3::Y_NEG,
+            _ => self.has_wind_hole(dir),
+        }
+    }
+
+    pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
+        match self {
+            Block::FunnelXY => dir == Dir3::Y_POS,
+            _ => self.has_wind_hole(dir),
         }
     }
 
@@ -118,13 +137,37 @@ impl PlacedBlock {
         self.block.has_move_hole(self.rotated_dir_ccw_xy(dir))
     }
 
+    pub fn has_wind_hole_in(&self, dir: Dir3) -> bool {
+        self.block.has_wind_hole_in(self.rotated_dir_ccw_xy(dir))
+    }
+
+    pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
+        self.block.has_wind_hole_out(self.rotated_dir_ccw_xy(dir))
+    }
+
     pub fn wind_holes(&self) -> Vec<Dir3> {
         // TODO: This could return an iterator to simplify optimizations
         // (or we could use generators, but they don't seem to be stable yet).
 
-        (&Dir3::ALL)
+        Dir3::ALL
             .iter()
             .filter(|dir| self.has_wind_hole(**dir))
+            .copied()
+            .collect()
+    }
+
+    pub fn wind_holes_in(&self) -> Vec<Dir3> {
+        Dir3::ALL
+            .iter()
+            .filter(|dir| self.has_wind_hole_in(**dir))
+            .copied()
+            .collect()
+    }
+
+    pub fn wind_holes_out(&self) -> Vec<Dir3> {
+        Dir3::ALL
+            .iter()
+            .filter(|dir| self.has_wind_hole_out(**dir))
             .copied()
             .collect()
     }
