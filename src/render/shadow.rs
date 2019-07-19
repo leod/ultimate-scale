@@ -143,6 +143,7 @@ impl ShadowMapping {
                         * mat_view
                         * v_world_pos;
  
+                    // TODO: Expensive inverse, can be optimized, probably unneeded
                     v_world_normal = transpose(inverse(mat3(mat_model))) * normal;
                     v_shadow_coord = mat_light_mvp * vec4(position + 0.02*normal, 1.0);
                     //v_shadow_coord = mat_light_mvp * vec4(position, 1.0);
@@ -256,6 +257,8 @@ impl ShadowMapping {
             ",
             None,
         )?;
+
+        info!("Shadow mapping initialized");
 
         Ok(ShadowMapping {
             config: config.clone(),
