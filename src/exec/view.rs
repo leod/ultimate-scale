@@ -205,8 +205,8 @@ impl ExecView {
 
             out.lights.push(render::Light {
                 position: pos,
-                attenuation: na::Vector3::new(0.8, 0.0000125, 0.000000001),
-                color: na::Vector3::new(0.3, 1.0, 0.3),
+                attenuation: na::Vector3::new(0.0, 0.0, 10.0),
+                color: na::Vector3::new(0.2, 1.0, 0.5),
                 radius: 1.0,
             });
         }
