@@ -105,14 +105,14 @@ impl Exec {
             self.blip_state[index].blip_index = None;
         }
 
-        for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
+        for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter() {
             Self::update_block_wind_state(
                 block_index,
                 block_pos,
                 &self.machine.blocks.indices,
+                &self.machine.blocks.data,
                 &self.old_wind_state,
                 &mut self.wind_state,
-                placed_block,
             );
         }
 
@@ -142,10 +142,12 @@ impl Exec {
         block_index: usize,
         block_pos: &Point3,
         block_ids: &Grid3<Option<BlockIndex>>,
+        block_data: &VecOption<(Point3, PlacedBlock)>,
         old_wind_state: &[WindState],
         wind_state: &mut Vec<WindState>,
-        placed_block: &mut PlacedBlock,
     ) {
+        let placed_block = &block_data[block_index].1;
+
         debug!(
             "wind: {:?} with {:?}",
             placed_block.block, old_wind_state[block_index]
@@ -163,7 +165,7 @@ impl Exec {
                     }
                 }
             }
-            Block::BlipWindSource { ref mut activated } => {
+            Block::BlipWindSource { ref activated } => {
                 for dir in &Dir3::ALL {
                     if *dir == dir_y_neg {
                         // Don't put wind in the direction of our blip button
@@ -177,11 +179,13 @@ impl Exec {
                     }
                 }
 
-                *activated = false;
+                // TODO: Can't currently borrow this mut; need to enable key
+                //       iterator for VecOption
+                //*activated = false;
             }
             _ => {
                 let any_in = placed_block
-                    .wind_holes()
+                    .wind_holes_in()
                     .iter()
                     .map(|dir| old_wind_state[block_index].wind_in(*dir))
                     .any(|b| b);
@@ -191,13 +195,14 @@ impl Exec {
                     placed_block.wind_holes(),
                     placed_block.rotation_xy
                 );
-                for dir in &placed_block.wind_holes() {
+                for dir in &placed_block.wind_holes_out() {
                     let neighbor_pos = *block_pos + dir.to_vector();
 
                     debug!("check wind guy {:?} at {:?}", block_pos, neighbor_pos);
                     if let Some(Some(neighbor_index)) = block_ids.get(&neighbor_pos) {
                         let neighbor_in_flow = if any_in {
                             !old_wind_state[block_index].wind_in[dir.to_index()]
+                                && block_data[*neighbor_index].1.has_wind_hole_in(dir.invert())
                         } else {
                             false
                         };
