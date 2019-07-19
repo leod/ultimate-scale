@@ -142,22 +142,26 @@ impl DeferredShading {
                     vec3 normal = normalize(texture(normal_texture, frag_tex_coord).xyz);
 
                     vec3 light_vector = light_position - position.xyz;
-                    float light_distance = abs(length(light_vector));
+                    float light_distance = length(light_vector);
 
-                    float diffuse = max(dot(normal, light_vector), 0.0);
+                    float diffuse = max(dot(normal, light_vector / light_distance), 0.0);
 
                     if (diffuse > 0.0) {
-                        float attenuation_factor = 1.0 / (
+                        float attenuation = 1.0 / (
                             light_attenuation.x +
                             light_attenuation.y * light_distance +
                             light_attenuation.z * light_distance * light_distance
                         );
-                        attenuation_factor *= (1.0 - pow((light_distance / light_radius), 2.0));
-                        attenuation_factor = max(attenuation_factor, 0.0);
-                        diffuse *= attenuation_factor;
+                        attenuation *= 1.0 - pow(light_distance / light_radius, 2.0);
+                        attenuation = max(attenuation, 0.0);
+
+                        diffuse *= attenuation;
                     }
 
-                    f_color = vec4(light_color * diffuse, 1.0);
+                    float ambient = 0.1;
+                    float radiance = diffuse;
+
+                    f_color = vec4(light_color * radiance, 1.0);
                 }
             ",
             None,
@@ -301,7 +305,7 @@ impl DeferredShading {
             &self.depth_texture,
         )
         .unwrap(); // TODO: unwrap
-        light_buffer.clear_color(0.0, 0.0, 0.0, 1.0);
+        light_buffer.clear_color(0.1, 0.1, 0.1, 1.0);
 
         let mat_scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
             self.window_size.width as f32,
