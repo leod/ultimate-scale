@@ -194,11 +194,13 @@ impl Machine {
         }
     }
 
-    pub fn iter_blocks(&self) -> impl Iterator<Item = (usize, &(Point3, PlacedBlock))> {
+    pub fn iter_blocks(&self) -> impl Iterator<Item = (BlockIndex, &(Point3, PlacedBlock))> {
         self.block_data.iter()
     }
 
-    pub fn iter_blocks_mut(&mut self) -> impl Iterator<Item = (usize, &mut (Point3, PlacedBlock))> {
+    pub fn iter_blocks_mut(
+        &mut self,
+    ) -> impl Iterator<Item = (BlockIndex, &mut (Point3, PlacedBlock))> {
         self.block_data.iter_mut()
     }
 
@@ -216,5 +218,17 @@ impl Machine {
 
     pub fn num_blocks(&self) -> usize {
         self.block_data.len()
+    }
+
+    pub fn iter_neighbors<'a>(
+        &'a self,
+        pos: Point3,
+    ) -> impl Iterator<Item = (Dir3, BlockIndex)> + 'a {
+        Dir3::ALL.iter().filter_map(move |dir| {
+            self.block_ids
+                .get(&(pos + dir.to_vector()))
+                .and_then(|index| index.as_ref())
+                .map(|index| (*dir, *index))
+        })
     }
 }

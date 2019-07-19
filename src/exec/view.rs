@@ -129,49 +129,52 @@ impl ExecView {
     }
 
     fn render_blocks(&self, out: &mut RenderLists) {
-        let block_data = &self.exec.machine().block_data;
+        let machine = &self.exec.machine();
         let wind_state = self.exec.wind_state();
 
-        for (index, (block_pos, placed_block)) in block_data.iter() {
+        for (index, (block_pos, placed_block)) in machine.block_data.iter() {
             let block_wind_state = &wind_state[index];
 
-            match placed_block.block {
-                Block::PipeXY => {
-                    let arrow_dir = {
-                        let in_dir_a = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Neg));
-                        let in_dir_b = placed_block.rotated_dir_xy(Dir3(Axis3::Y, Sign::Pos));
+            // Draw a wind line from all in dirs to all out dirs.
+            // If there is no out dir, draw to the block center instead.
+            let mut out_dirs: Vec<_> = machine
+                .iter_neighbors(*block_pos)
+                .filter(|(dir, index)| wind_state[*index].wind_in(dir.invert()))
+                .map(|(dir, _)| Some(dir))
+                .collect();
 
-                        match (
-                            block_wind_state.wind_in(in_dir_a),
-                            block_wind_state.wind_in(in_dir_b),
-                        ) {
-                            (true, true) => Some(na::Vector3::z()),
-                            (true, false) => Some(in_dir_a.to_vector()),
-                            (false, true) => Some(in_dir_b.to_vector()),
-                            (false, false) => None,
-                        }
-                    };
+            if out_dirs.is_empty() {
+                out_dirs.push(None);
+            }
 
-                    if let Some(arrow_dir) = arrow_dir {
-                        let center = render::machine::block_center(block_pos);
-                        let arrow_dir: na::Vector3<f32> = na::convert(arrow_dir);
+            for out_dir in out_dirs {
+                let in_dirs = Dir3::ALL
+                    .iter()
+                    .filter(|dir| block_wind_state.wind_in(**dir));
 
-                        let start = center + arrow_dir;
-                        let end = center;
+                for in_dir in in_dirs {
+                    let center = render::machine::block_center(block_pos);
 
-                        render::machine::render_arrow(
-                            &render::machine::Line {
-                                start,
-                                end,
-                                thickness: 0.2,
-                                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-                            },
-                            0.0,
-                            &mut out.solid,
-                        );
-                    }
+                    let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
+                    let out_vector: na::Vector3<f32> = out_dir
+                        .map_or(na::Vector3::zeros(), |out_dir| {
+                            na::convert(out_dir.to_vector())
+                        });
+
+                    let in_pos = center + in_vector / 2.0;
+                    let out_pos = center + out_vector / 2.0;
+
+                    render::machine::render_arrow(
+                        &render::machine::Line {
+                            start: in_pos,
+                            end: out_pos,
+                            thickness: 0.2,
+                            color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+                        },
+                        0.0,
+                        &mut out.solid,
+                    );
                 }
-                _ => (),
             }
         }
     }
