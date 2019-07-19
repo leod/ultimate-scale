@@ -212,7 +212,9 @@ fn main() {
             );
 
             if let Some(deferred_shading) = &mut deferred_shading {
-                deferred_shading.on_window_resize(&display, new_window_size).unwrap();
+                deferred_shading
+                    .on_window_resize(&display, new_window_size)
+                    .unwrap();
             }
         }
 
