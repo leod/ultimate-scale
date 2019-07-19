@@ -61,7 +61,7 @@ fn main() {
         .render
         .shadow_mapping
         .as_ref()
-        .map(|config| render::shadow::ShadowMapping::create(&display, config).unwrap());
+        .map(|config| render::shadow::ShadowMapping::create(&display, config, false).unwrap());
 
     let grid_size = machine::grid::Vector3::new(30, 30, 4);
     let mut game_state = GameState::Edit(Editor::new(&config.editor, &config.exec, grid_size));
@@ -80,6 +80,7 @@ fn main() {
                 &display,
                 &deferred_shading,
                 config.view.window_size,
+                &config.render.shadow_mapping,
             )
             .unwrap()
         });
