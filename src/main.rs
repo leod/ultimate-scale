@@ -171,6 +171,11 @@ fn main() {
 
         target.finish().unwrap();
 
+        // Remember only the last (hopefully: newest) resize event. We do this
+        // because resizing textures is somewhat costly, so it makes sense to
+        // do it at most once per frame.
+        let mut new_window_size = None;
+
         events_loop.poll_events(|event| match event {
             glutin::Event::WindowEvent { event, .. } => {
                 camera_input.on_event(&event);
@@ -187,13 +192,7 @@ fn main() {
                         quit = true;
                     }
                     glutin::WindowEvent::Resized(viewport_size) => {
-                        camera.projection = perspective_matrix(&config.view, &viewport_size);
-                        camera.viewport = na::Vector4::new(
-                            0.0,
-                            0.0,
-                            viewport_size.width as f32,
-                            viewport_size.height as f32,
-                        );
+                        new_window_size = Some(viewport_size);
                     }
                     _ => (),
                 }
@@ -201,10 +200,23 @@ fn main() {
             _ => (),
         });
 
-        let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
-        camera_input.update(frame_duration_secs, &mut edit_camera_view);
-        camera.view = edit_camera_view.view();
+        if let Some(new_window_size) = new_window_size {
+            info!("Window resized to: {:?}", new_window_size);
 
+            camera.projection = perspective_matrix(&config.view, &new_window_size);
+            camera.viewport = na::Vector4::new(
+                0.0,
+                0.0,
+                new_window_size.width as f32,
+                new_window_size.height as f32,
+            );
+
+            if let Some(deferred_shading) = &mut deferred_shading {
+                deferred_shading.on_window_resize(&display, new_window_size).unwrap();
+            }
+        }
+
+        let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
         game_state = match game_state {
             GameState::Edit(editor) => {
                 editor.update(frame_duration_secs, &camera, &mut edit_camera_view)
@@ -212,6 +224,9 @@ fn main() {
             GameState::Exec { exec_view, editor } => exec_view.update(frame_duration, editor),
         };
 
-        thread::sleep(Duration::from_millis(10));
+        camera_input.update(frame_duration_secs, &mut edit_camera_view);
+        camera.view = edit_camera_view.view();
+
+        thread::sleep(Duration::from_millis(0));
     }
 }
