@@ -1,14 +1,12 @@
 pub mod view;
 
-use log::{debug, info};
+use log::debug;
 
 use crate::machine::grid::{Dir3, Grid3, Point3};
 use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock};
 use crate::util::vec_option::VecOption;
 
 pub use view::ExecView;
-
-const MOVE_TICKS_PER_NODE: usize = 10;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct BlipMovement {
@@ -105,7 +103,7 @@ impl Exec {
             self.blip_state[index].blip_index = None;
         }
 
-        for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter() {
+        for (block_index, (block_pos, _placed_block)) in self.machine.blocks.data.iter() {
             Self::update_block_wind_state(
                 block_index,
                 block_pos,
@@ -116,7 +114,7 @@ impl Exec {
             );
         }
 
-        for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
+        for (_block_index, (_block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block(placed_block);
         }
 
@@ -129,13 +127,11 @@ impl Exec {
             &mut self.blips,
         );
 
-        for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
+        for (_block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block_blip_state(
-                block_index,
                 block_pos,
                 placed_block,
                 &self.machine.blocks.indices,
-                &self.wind_state,
                 &mut self.blip_state,
                 &mut self.blips,
             );
@@ -227,7 +223,7 @@ impl Exec {
         }
     }
 
-    pub (in crate::exec) fn try_spawn_blip(
+    pub(in crate::exec) fn try_spawn_blip(
         invert: bool,
         kind: BlipKind,
         pos: &Point3,
@@ -418,20 +414,24 @@ impl Exec {
     }
 
     fn on_blip_enter_block(blip: &Blip, _dir: Dir3, new_placed_block: &mut PlacedBlock) -> bool {
-        match new_placed_block.block.clone() {
-            Block::BlipDuplicator { .. } => {
+        match new_placed_block.block {
+            Block::BlipDuplicator {
+                ref mut activated, ..
+            } => {
                 // TODO: Resolve possible race condition in blip
                 //       duplicator.  If two blips of different
                 //       kind race into the duplicator, the output
                 //       kind depends on the order of blip
                 //       evaluation.
-                new_placed_block.block = Block::BlipDuplicator {
-                    activated: Some(blip.kind),
-                };
+                *activated = Some(blip.kind);
+
+                // Remove blip
                 true
             }
-            Block::BlipWindSource { activated } => {
-                new_placed_block.block = Block::BlipWindSource { activated: true };
+            Block::BlipWindSource { ref mut activated } => {
+                *activated = true;
+
+                // Remove blip
                 true
             }
             _ => false,
@@ -439,11 +439,9 @@ impl Exec {
     }
 
     fn update_block_blip_state(
-        block_index: usize,
         block_pos: &Point3,
         placed_block: &mut PlacedBlock,
         block_ids: &Grid3<Option<BlockIndex>>,
-        wind_state: &[WindState],
         blip_state: &mut Vec<BlipState>,
         blips: &mut VecOption<Blip>,
     ) {

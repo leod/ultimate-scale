@@ -181,7 +181,7 @@ pub fn render_block(
                 },
             );
         }
-        Block::PipeSplitXY { open_move_hole_y } => {
+        Block::PipeSplitXY { .. } => {
             out.add(
                 Object::PipeSplit,
                 &InstanceParams {
@@ -235,7 +235,7 @@ pub fn render_block(
                 },
             );
         }
-        Block::BlipSpawn { kind, num_spawns } => {
+        Block::BlipSpawn { num_spawns, .. } => {
             let cube_color = if num_spawns.is_some() {
                 na::Vector4::new(0.0, 0.5, 0.0, alpha)
             } else {
@@ -380,7 +380,7 @@ pub fn render_block(
     }
 }
 
-pub fn render_arrow(line: &Line, roll: f32, out: &mut RenderList) {
+pub fn render_arrow(line: &Line, _roll: f32, out: &mut RenderList) {
     render_line(line, out);
 
     // TODO

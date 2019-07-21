@@ -9,11 +9,11 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::edit::Editor;
 use crate::exec::Exec;
 use crate::game_state::GameState;
-use crate::machine::grid::{Axis3, Dir3, Sign};
-use crate::machine::{grid, Block, Machine, BlipKind};
-use crate::render::{self, RenderLists, Camera, EditCameraView};
+use crate::machine::grid::Dir3;
+use crate::machine::{grid, BlipKind, Machine};
+use crate::render::{self, Camera, EditCameraView, RenderLists};
+use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
-use crate::util::intersection::{Ray, AABB, ray_aabb_intersection};
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -146,7 +146,7 @@ impl ExecView {
 
     fn on_mouse_input(
         &mut self,
-        state: glutin::ElementState,
+        _state: glutin::ElementState,
         button: glutin::MouseButton,
         _modifiers: glutin::ModifiersState,
     ) {
@@ -166,7 +166,6 @@ impl ExecView {
             _ => (),
         }
     }
-
 
     pub fn render(&mut self, out: &mut RenderLists) {
         render::machine::render_machine(&self.exec.machine(), out);
@@ -196,7 +195,7 @@ impl ExecView {
         let machine = &self.exec.machine();
         let wind_state = self.exec.wind_state();
 
-        for (index, (block_pos, placed_block)) in machine.blocks.data.iter() {
+        for (index, (block_pos, _placed_block)) in machine.blocks.data.iter() {
             let block_wind_state = &wind_state[index];
 
             // Draw a wind line from all in dirs to all out dirs.
@@ -291,7 +290,7 @@ impl ExecView {
 
         let mut closest_block = None;
 
-        for (block_index, (block_pos, _placed_block)) in self.exec.machine().iter_blocks() {
+        for (_block_index, (block_pos, _placed_block)) in self.exec.machine().iter_blocks() {
             let center = render::machine::block_center(&block_pos);
 
             let aabb = AABB {
@@ -311,7 +310,6 @@ impl ExecView {
                     },
                 ));
             }
-
         }
 
         self.mouse_grid_pos = closest_block.map(|(pos, _distance)| *pos);
