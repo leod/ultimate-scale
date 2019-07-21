@@ -228,6 +228,7 @@ impl Exec {
     }
 
     fn try_spawn_blip(
+        invert: bool,
         kind: BlipKind,
         pos: &Point3,
         block_ids: &Grid3<Option<BlockIndex>>,
@@ -235,7 +236,13 @@ impl Exec {
         blips: &mut VecOption<Blip>,
     ) {
         if let Some(Some(output_index)) = block_ids.get(&pos) {
-            if blip_state[*output_index].blip_index.is_none() {
+            if let Some(blip_index) = blip_state[*output_index].blip_index.clone() {
+                if invert {
+                    debug!("removing blip {} at {:?}", blip_index, pos);
+                    blips.remove(blip_index);
+                    blip_state[*output_index].blip_index = None;
+                }
+            } else {
                 debug!("spawning blip at {:?}", pos);
 
                 let blip = Blip {
@@ -450,7 +457,7 @@ impl Exec {
             } => {
                 if num_spawns.map_or(true, |n| n > 0) {
                     let output_pos = *block_pos + dir_x_pos.to_vector();
-                    Self::try_spawn_blip(kind, &output_pos, block_ids, blip_state, blips);
+                    Self::try_spawn_blip(false, kind, &output_pos, block_ids, blip_state, blips);
 
                     *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
                 }
@@ -458,6 +465,7 @@ impl Exec {
             Block::BlipDuplicator { ref mut activated } => {
                 if let Some(kind) = activated.clone() {
                     Self::try_spawn_blip(
+                        true,
                         kind,
                         &(*block_pos + dir_x_pos.to_vector()),
                         block_ids,
@@ -465,6 +473,7 @@ impl Exec {
                         blips,
                     );
                     Self::try_spawn_blip(
+                        true,
                         kind,
                         &(*block_pos + dir_x_neg.to_vector()),
                         block_ids,
