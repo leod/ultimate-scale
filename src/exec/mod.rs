@@ -116,6 +116,10 @@ impl Exec {
             );
         }
 
+        for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
+            Self::update_block(placed_block);
+        }
+
         Self::update_blips(
             &self.machine.blocks.indices,
             &self.wind_state,
@@ -165,7 +169,7 @@ impl Exec {
                     }
                 }
             }
-            Block::BlipWindSource { ref activated } => {
+            Block::BlipWindSource { activated } => {
                 for dir in &Dir3::ALL {
                     if *dir == dir_y_neg {
                         // Don't put wind in the direction of our blip button
@@ -175,13 +179,12 @@ impl Exec {
                     let neighbor_pos = *block_pos + dir.to_vector();
                     let neighbor_index = block_ids.get(&neighbor_pos);
                     if let Some(Some(neighbor_index)) = neighbor_index {
-                        wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = *activated;
+                        wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = activated;
                     }
                 }
 
-                // TODO: Can't currently borrow this mut; need to enable key
-                //       iterator for VecOption
-                //*activated = false;
+                // Note: activated will be set to false in the same tick in
+                // `update_block`.
             }
             _ => {
                 let any_in = placed_block
@@ -212,6 +215,15 @@ impl Exec {
                     }
                 }
             }
+        }
+    }
+
+    fn update_block(block: &mut PlacedBlock) {
+        match block.block {
+            Block::BlipWindSource { ref mut activated } => {
+                *activated = false;
+            }
+            _ => (),
         }
     }
 
