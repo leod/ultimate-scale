@@ -45,7 +45,7 @@ pub struct BlipState {
 
 pub struct Exec {
     machine: Machine,
-    blips: VecOption<Blip>,
+    pub blips: VecOption<Blip>,
 
     /// Wind state for each block, indexed by BlockIndex
     wind_state: Vec<WindState>,
@@ -55,7 +55,7 @@ pub struct Exec {
     old_wind_state: Vec<WindState>,
 
     /// Blip state for each block, indexed by BlockIndex
-    blip_state: Vec<BlipState>,
+    pub blip_state: Vec<BlipState>,
 
     /// Blip state from the previous tick
     old_blip_state: Vec<BlipState>,
@@ -227,7 +227,7 @@ impl Exec {
         }
     }
 
-    fn try_spawn_blip(
+    pub (in crate::exec) fn try_spawn_blip(
         invert: bool,
         kind: BlipKind,
         pos: &Point3,

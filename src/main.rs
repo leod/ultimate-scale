@@ -228,7 +228,9 @@ fn main() {
             GameState::Edit(editor) => {
                 editor.update(frame_duration_secs, &camera, &mut edit_camera_view)
             }
-            GameState::Exec { exec_view, editor } => exec_view.update(frame_duration, editor),
+            GameState::Exec { exec_view, editor } => {
+                exec_view.update(frame_duration, editor, &camera, &edit_camera_view)
+            }
         };
 
         camera_input.update(frame_duration_secs, &mut edit_camera_view);
