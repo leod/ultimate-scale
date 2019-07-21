@@ -312,7 +312,7 @@ impl ShadowMapping {
         )
     }
 
-    pub fn render_frame<F: glium::backend::Facade, S: glium::Surface>(
+    pub fn render_shadowed<F: glium::backend::Facade, S: glium::Surface>(
         &mut self,
         facade: &F,
         resources: &Resources,
@@ -327,6 +327,7 @@ impl ShadowMapping {
             glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)
                 .unwrap();
 
+        // TODO: Sync main light position
         let t = std::f32::consts::PI / 4.0; //context.elapsed_time_secs / 48.0;
         self.light_pos.x = 15.0 + 20.0 * t.cos();
         self.light_pos.y = 15.0 + 20.0 * t.sin();
@@ -405,6 +406,19 @@ impl ShadowMapping {
             }
         }
 
+        Ok(())
+    }
+
+    pub fn render_frame<F: glium::backend::Facade, S: glium::Surface>(
+        &mut self,
+        facade: &F,
+        resources: &Resources,
+        context: &Context,
+        render_lists: &RenderLists,
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
+        self.render_shadowed(facade, resources, context, render_lists, target)?;
+
         // Render debug texture
         /*{
             let sampler = glium::uniforms::Sampler::new(&self.shadow_texture)
@@ -427,9 +441,14 @@ impl ShadowMapping {
                 .unwrap();
         }*/
 
+        // Render plain objects
+        render_lists
+            .plain
+            .render(resources, context, &Default::default(), target)?;
+
         // Render transparent objects
         // TODO: "Integration" with deferred shading
-        /*render_lists.transparent.render(
+        render_lists.transparent.render(
             resources,
             context,
             &glium::DrawParameters {
@@ -437,7 +456,7 @@ impl ShadowMapping {
                 ..Default::default()
             },
             target,
-        )?;*/
+        )?;
 
         Ok(())
     }

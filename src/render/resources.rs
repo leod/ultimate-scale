@@ -8,6 +8,7 @@ use crate::render::object::{self, Object, ObjectBuffers};
 pub struct Resources {
     pub object_buffers: Vec<ObjectBuffers>,
     pub program: glium::Program,
+    pub plain_program: glium::Program,
 }
 
 #[derive(Debug)]
@@ -66,7 +67,6 @@ impl Resources {
 
                         v_normal = normal;
                         v_color = color;
-
                     }
                 ",
 
@@ -82,7 +82,6 @@ impl Resources {
                     out vec4 f_color;
 
                     void main() {
-
                         vec3 lightdirA = vec3(sin(t/6.0), cos(t/6.0), 0.0); 
                         vec3 lightdirB = vec3(sin(t/6.0 + M_PI/2.0), cos(t/6.0 + M_PI/2.0), 0.0); 
                         float ambient = 0.2;
@@ -94,9 +93,50 @@ impl Resources {
             },
         )?;
 
+        info!("Creating plain render program");
+        let plain_program = program!(facade,
+            140 => {
+                vertex: "
+                    #version 140
+
+                    uniform mat4 mat_model;
+                    uniform mat4 mat_view;
+                    uniform mat4 mat_projection;
+
+                    uniform vec4 color;
+
+                    in vec3 position;
+                    out vec4 v_color;
+
+                    void main() {
+                        gl_Position = mat_projection
+                            * mat_view
+                            * mat_model
+                            * vec4(position, 1.0);
+
+                        v_color = color;
+                    }
+                ",
+
+                fragment: "
+                    #version 140
+
+                    uniform float t;
+
+                    in vec4 v_color;
+                    out vec4 f_color;
+
+                    void main() {
+                        f_color = v_color;
+                    }
+                "
+            },
+        )?;
+
         Ok(Resources {
             object_buffers,
             program,
+            plain_program,
         })
     }
 
