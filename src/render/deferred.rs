@@ -307,10 +307,8 @@ impl DeferredShading {
 
         // Before rendering plain non-deferred objects, copy depth buffer to
         // main surface
-        let framebuffer = glium::framebuffer::SimpleFrameBuffer::depth_only(
-            facade,
-            &self.depth_texture,
-        ).unwrap(); // TODO: unwrap
+        let framebuffer =
+            glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.depth_texture).unwrap(); // TODO: unwrap
         let rounded_size: (u32, u32) = self.window_size.into();
         target.blit_from_simple_framebuffer(
             &framebuffer,
