@@ -10,9 +10,10 @@ use crate::edit::Editor;
 use crate::exec::Exec;
 use crate::game_state::GameState;
 use crate::machine::grid::{Axis3, Dir3, Sign};
-use crate::machine::{Block, Machine};
-use crate::render::{self, RenderLists};
+use crate::machine::{grid, Block, Machine, BlipKind};
+use crate::render::{self, RenderLists, Camera, EditCameraView};
 use crate::util::timer::Timer;
+use crate::util::intersection::{Ray, AABB, ray_aabb_intersection};
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -45,6 +46,9 @@ pub struct ExecView {
     exec: Exec,
     tick_timer: Timer,
     status: Status,
+
+    mouse_window_pos: na::Point2<f32>,
+    mouse_grid_pos: Option<grid::Point3>,
 }
 
 impl ExecView {
@@ -54,10 +58,20 @@ impl ExecView {
             exec: Exec::new(machine),
             tick_timer: Timer::from_hz(config.default_ticks_per_sec),
             status: Status::Playing,
+            mouse_window_pos: na::Point2::origin(),
+            mouse_grid_pos: None,
         }
     }
 
-    pub fn update(mut self, dt: Duration, editor: Editor) -> GameState {
+    pub fn update(
+        mut self,
+        dt: Duration,
+        editor: Editor,
+        camera: &Camera,
+        edit_camera_view: &EditCameraView,
+    ) -> GameState {
+        self.update_mouse_grid_pos(camera, edit_camera_view);
+
         match self.status {
             Status::Playing => {
                 self.tick_timer += dt;
@@ -83,7 +97,16 @@ impl ExecView {
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
+            WindowEvent::CursorMoved { position, .. } => {
+                self.mouse_window_pos = na::Point2::new(position.x as f32, position.y as f32);
+            }
             WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(*input),
+            WindowEvent::MouseInput {
+                state,
+                button,
+                modifiers,
+                ..
+            } => self.on_mouse_input(*state, *button, *modifiers),
             _ => (),
         }
     }
@@ -121,12 +144,52 @@ impl ExecView {
         }
     }
 
+    fn on_mouse_input(
+        &mut self,
+        state: glutin::ElementState,
+        button: glutin::MouseButton,
+        _modifiers: glutin::ModifiersState,
+    ) {
+        match button {
+            glutin::MouseButton::Left => {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    Exec::try_spawn_blip(
+                        false,
+                        BlipKind::A,
+                        &mouse_grid_pos,
+                        &self.exec.machine.blocks.indices,
+                        &mut self.exec.blip_state,
+                        &mut self.exec.blips,
+                    );
+                }
+            }
+            _ => (),
+        }
+    }
+
+
     pub fn render(&mut self, out: &mut RenderLists) {
         render::machine::render_machine(&self.exec.machine(), out);
         //render::machine::render_xy_grid(&self.exec.machine().size(), 0.01, &mut out.solid);
 
         self.render_blocks(out);
         self.render_blips(out);
+
+        if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+            assert!(self.exec.machine().is_valid_pos(&mouse_grid_pos));
+
+            let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
+
+            render::machine::render_cuboid_wireframe(
+                &render::machine::Cuboid {
+                    center: mouse_grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
+                    size: na::Vector3::new(1.0, 1.0, 1.0),
+                },
+                0.015,
+                &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                &mut out.solid,
+            );
+        }
     }
 
     fn render_blocks(&self, out: &mut RenderLists) {
@@ -214,5 +277,43 @@ impl ExecView {
                 radius: 10.0,
             });
         }
+    }
+
+    fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
+        let p = self.mouse_window_pos;
+        let p_near = camera.unproject(&na::Point3::new(p.x, p.y, -1.0));
+        let p_far = camera.unproject(&na::Point3::new(p.x, p.y, 1.0));
+
+        let ray = Ray {
+            origin: edit_camera_view.eye(),
+            velocity: p_far - p_near,
+        };
+
+        let mut closest_block = None;
+
+        for (block_index, (block_pos, _placed_block)) in self.exec.machine().iter_blocks() {
+            let center = render::machine::block_center(&block_pos);
+
+            let aabb = AABB {
+                min: center - na::Vector3::new(0.5, 0.5, 0.5),
+                max: center + na::Vector3::new(0.5, 0.5, 0.5),
+            };
+
+            if let Some(distance) = ray_aabb_intersection(&ray, &aabb) {
+                closest_block = Some(closest_block.map_or(
+                    (block_pos, distance),
+                    |(closest_pos, closest_distance)| {
+                        if distance < closest_distance {
+                            (block_pos, distance)
+                        } else {
+                            (closest_pos, closest_distance)
+                        }
+                    },
+                ));
+            }
+
+        }
+
+        self.mouse_grid_pos = closest_block.map(|(pos, _distance)| *pos);
     }
 }
