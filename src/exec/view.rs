@@ -146,12 +146,12 @@ impl ExecView {
 
     fn on_mouse_input(
         &mut self,
-        _state: glutin::ElementState,
+        state: glutin::ElementState,
         button: glutin::MouseButton,
         _modifiers: glutin::ModifiersState,
     ) {
         match button {
-            glutin::MouseButton::Left => {
+            glutin::MouseButton::Left if state == glutin::ElementState::Pressed => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                     Exec::try_spawn_blip(
                         false,

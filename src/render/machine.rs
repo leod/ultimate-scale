@@ -226,10 +226,11 @@ pub fn render_block(
             );
         }
         Block::WindSource => {
+            let scaling = na::Matrix4::new_scaling(0.75);
             out.add(
                 Object::Cube,
                 &InstanceParams {
-                    transform: translation * transform,
+                    transform: translation * transform * scaling,
                     color: *color.unwrap_or(&na::Vector4::new(1.0, 0.0, 0.0, alpha)),
                     ..Default::default()
                 },
