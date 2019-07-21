@@ -1,0 +1,319 @@
+{
+  "size": [
+    30,
+    30,
+    4
+  ],
+  "block_data": [
+    [
+      [
+        16,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "BlipDuplicator": {
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "PipeSplitXY": {
+            "open_move_hole_y": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        16,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        18,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        13,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        16,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ]
+  ]
+}
