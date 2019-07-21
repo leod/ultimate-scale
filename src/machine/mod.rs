@@ -71,6 +71,7 @@ impl Block {
     pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
         match self {
             Block::FunnelXY => dir == Dir3::Y_POS,
+            Block::BlipDuplicator { .. } => false,
             _ => self.has_wind_hole(dir),
         }
     }
