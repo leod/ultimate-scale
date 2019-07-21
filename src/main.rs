@@ -81,6 +81,7 @@ fn main() {
         .map(|config| render::shadow::ShadowMapping::create(&display, config, false).unwrap());
 
     let initial_machine = if let Some(file) = args.value_of("file") {
+        info!("Loading machine from file `{}'", file);
         let file = File::open(file).unwrap();
         let reader = BufReader::new(file);
         let saved_machine: SavedMachine = serde_json::from_reader(reader).unwrap();
