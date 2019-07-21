@@ -7,6 +7,8 @@ pub mod render_list;
 pub mod resources;
 pub mod shadow;
 
+use nalgebra as na;
+
 pub use camera::{Camera, EditCameraView};
 pub use light::Light;
 pub use object::{Instance, InstanceParams, Object};
@@ -16,6 +18,8 @@ pub use resources::Resources;
 pub struct Context {
     pub camera: camera::Camera,
     pub elapsed_time_secs: f32,
+    pub main_light_pos: na::Point3<f32>,
+    pub main_light_center: na::Point3<f32>,
 }
 
 #[derive(Default, Clone)]

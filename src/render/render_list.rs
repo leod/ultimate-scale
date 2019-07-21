@@ -35,6 +35,7 @@ impl RenderList {
     ) -> Result<(), glium::DrawError> {
         let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
         let mat_view: [[f32; 4]; 4] = context.camera.view.into();
+        let light_pos: [f32; 3] = context.main_light_pos.coords.into();
 
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
@@ -55,6 +56,7 @@ impl RenderList {
                 mat_model: mat_model,
                 mat_view: mat_view,
                 mat_projection: mat_projection,
+                light_pos: light_pos,
                 color: color,
                 t: context.elapsed_time_secs,
             };

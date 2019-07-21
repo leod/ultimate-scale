@@ -68,9 +68,6 @@ pub struct ShadowMapping {
     debug_shadow_map_program: glium::Program,
     shadow_texture: glium::texture::DepthTexture2d,
 
-    light_pos: na::Point3<f32>,
-    light_center: na::Point3<f32>,
-
     debug_vertex_buffer: glium::VertexBuffer<DebugVertex>,
     debug_index_buffer: glium::IndexBuffer<u16>,
 }
@@ -147,6 +144,9 @@ impl ShadowMapping {
  
                     // TODO: Expensive inverse, can be optimized, probably unneeded
                     v_world_normal = transpose(inverse(mat3(mat_model))) * normal;
+
+                    // Bias shadow coord a bit in the direction of the normal --
+                    // this is a simple fix for a lot of self-shadowing artifacts
                     v_shadow_coord = mat_light_mvp * vec4(position + 0.02*normal, 1.0);
                     //v_shadow_coord = mat_light_mvp * vec4(position, 1.0);
                 }
@@ -294,8 +294,6 @@ impl ShadowMapping {
             debug_vertex_buffer,
             debug_index_buffer,
             debug_shadow_map_program,
-            light_pos: na::Point3::new(10.0, 10.0, 20.0),
-            light_center: na::Point3::new(15.0, 15.0, 0.0),
         })
     }
 
@@ -304,10 +302,10 @@ impl ShadowMapping {
         na::Matrix4::new_orthographic(-w, w, -w, w, 10.0, 50.0)
     }
 
-    fn light_view(&self) -> na::Matrix4<f32> {
+    fn light_view(&self, context: &Context) -> na::Matrix4<f32> {
         na::Matrix4::look_at_rh(
-            &self.light_pos,
-            &self.light_center,
+            &context.main_light_pos,
+            &context.main_light_center,
             &na::Vector3::new(0.0, 0.0, 1.0),
         )
     }
@@ -327,13 +325,8 @@ impl ShadowMapping {
             glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)
                 .unwrap();
 
-        // TODO: Sync main light position
-        let t = std::f32::consts::PI / 4.0; //context.elapsed_time_secs / 48.0;
-        self.light_pos.x = 15.0 + 20.0 * t.cos();
-        self.light_pos.y = 15.0 + 20.0 * t.sin();
-
         let light_projection = self.light_projection();
-        let light_view = self.light_view();
+        let light_view = self.light_view(context);
 
         // Render scene from the light's point of view into depth buffer
         {
@@ -378,7 +371,7 @@ impl ShadowMapping {
                 let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
                 let mat_light_mvp: [[f32; 4]; 4] = light_mvp.into();
                 let color: [f32; 4] = instance.params.color.into();
-                let light_pos: [f32; 3] = self.light_pos.coords.into();
+                let light_pos: [f32; 3] = context.main_light_pos.coords.into();
 
                 let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
                     .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)

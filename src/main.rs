@@ -51,6 +51,7 @@ fn main() {
         .get_matches();
 
     let mut config: config::Config = Default::default();
+    //config.render.deferred_shading = None;
     info!("Running with config: {:?}", config);
 
     info!("Opening window");
@@ -122,6 +123,12 @@ fn main() {
         let render_context = render::Context {
             camera: camera.clone(),
             elapsed_time_secs: elapsed_time.as_fractional_secs() as f32,
+            main_light_pos: na::Point3::new(
+                15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos(),
+                15.0 + 20.0 * (std::f32::consts::PI / 4.0).sin(),
+                20.0,
+            ),
+            main_light_center: na::Point3::new(15.0, 15.0, 0.0),
         };
 
         render_lists.clear();
@@ -135,14 +142,11 @@ fn main() {
         }
 
         if let Some(deferred_shading) = &mut deferred_shading {
-            // TODO: Sync light position with shadow mapping
-            let light_x = 15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos();
-            let light_y = 15.0 + 20.0 * (std::f32::consts::PI / 4.0).sin();
-            let light_z = 20.0;
+            let intensity = 1.0;
             render_lists.lights.push(render::Light {
-                position: na::Point3::new(light_x, light_y, light_z),
+                position: render_context.main_light_pos,
                 attenuation: na::Vector3::new(1.0, 0.01, 0.00001),
-                color: na::Vector3::new(1.0, 1.0, 1.0),
+                color: na::Vector3::new(intensity, intensity, intensity),
                 radius: 160.0,
             });
 

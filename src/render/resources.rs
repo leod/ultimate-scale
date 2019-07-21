@@ -56,16 +56,19 @@ impl Resources {
 
                     in vec3 position;
                     in vec3 normal;
-                    out vec3 v_normal;
+
+                    out vec3 v_world_normal;
+                    out vec4 v_world_pos;
                     out vec4 v_color;
 
                     void main() {
+                        v_world_pos = mat_model * vec4(position, 1.0);
+
                         gl_Position = mat_projection
                             * mat_view
-                            * mat_model
-                            * vec4(position, 1.0);
+                            * v_world_pos;
 
-                        v_normal = normal;
+                        v_world_normal = mat3(mat_model) * normal;
                         v_color = color;
                     }
                 ",
@@ -73,21 +76,24 @@ impl Resources {
                 fragment: "
                     #version 140
 
-                    uniform float M_PI = 3.1415926535;
+                    uniform vec3 light_pos;
 
-                    uniform float t;
-
-                    in vec3 v_normal;
+                    in vec4 v_world_pos;
+                    in vec3 v_world_normal;
                     in vec4 v_color;
                     out vec4 f_color;
 
                     void main() {
-                        vec3 lightdirA = vec3(sin(t/6.0), cos(t/6.0), 0.0); 
-                        vec3 lightdirB = vec3(sin(t/6.0 + M_PI/2.0), cos(t/6.0 + M_PI/2.0), 0.0); 
-                        float ambient = 0.2;
-                        float diffuseA = clamp(dot(lightdirA, v_normal), 0.0, 1.0);
-                        float diffuseB = clamp(dot(lightdirB, v_normal), 0.0, 1.0);
-                        f_color = (ambient + diffuseA + diffuseB) * v_color;
+                        float ambient = 0.3;
+                        float diffuse = max(
+                            dot(
+                                normalize(v_world_normal),
+                                normalize(light_pos - v_world_pos.xyz)
+                            ),
+                            0.05
+                        );
+
+                        f_color = (ambient + diffuse) * v_color;
                     }
                 "
             },

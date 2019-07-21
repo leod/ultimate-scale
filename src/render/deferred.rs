@@ -162,7 +162,7 @@ impl DeferredShading {
                         diffuse *= attenuation;
                     }
 
-                    float ambient = 0.1;
+                    float ambient = 0.3;
                     float radiance = diffuse;
 
                     f_color = vec4(light_color * radiance, 1.0);
@@ -305,6 +305,35 @@ impl DeferredShading {
         self.light_pass(facade, &render_lists.lights, target)?;
         self.composition_pass(target)?;
 
+        // Before rendering plain non-deferred objects, copy depth buffer to
+        // main surface
+        let framebuffer = glium::framebuffer::SimpleFrameBuffer::depth_only(
+            facade,
+            &self.depth_texture,
+        ).unwrap(); // TODO: unwrap
+        let rounded_size: (u32, u32) = self.window_size.into();
+        target.blit_from_simple_framebuffer(
+            &framebuffer,
+            &glium::Rect {
+                left: 0,
+                bottom: 0,
+                width: rounded_size.1,
+                height: rounded_size.1,
+            },
+            &glium::BlitTarget {
+                left: 0,
+                bottom: 0,
+                width: rounded_size.1 as i32,
+                height: rounded_size.1 as i32,
+            },
+            glium::uniforms::MagnifySamplerFilter::Nearest,
+        );
+        //target.clear_depth(1.0);
+
+        render_lists
+            .plain
+            .render(resources, context, &Default::default(), target)?;
+
         Ok(())
     }
 
@@ -359,7 +388,6 @@ impl DeferredShading {
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         let draw_params = glium::DrawParameters {
-            //depth_function: glium::DepthFunction::IfLessOrEqual,
             blend: glium::Blend {
                 color: glium::BlendingFunction::Addition {
                     source: glium::LinearBlendingFactor::One,
@@ -374,10 +402,10 @@ impl DeferredShading {
             ..Default::default()
         };
 
-        let mut light_buffer = glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(
+        let mut light_buffer = glium::framebuffer::SimpleFrameBuffer::new(
             facade,
             &self.light_texture,
-            &self.depth_texture,
+            //&self.depth_texture,
         )
         .unwrap(); // TODO: unwrap
         light_buffer.clear_color(0.1, 0.1, 0.1, 1.0);
