@@ -301,8 +301,8 @@ impl DeferredShading {
         render_lists: &RenderLists,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        self.scene_pass(facade, resources, context, render_lists, target)?;
-        self.light_pass(facade, &render_lists.lights, target)?;
+        self.scene_pass(facade, resources, context, render_lists)?;
+        self.light_pass(facade, &render_lists.lights)?;
         self.composition_pass(target)?;
 
         // Before rendering plain non-deferred objects, copy depth buffer to
@@ -335,13 +335,12 @@ impl DeferredShading {
         Ok(())
     }
 
-    fn scene_pass<F: glium::backend::Facade, S: glium::Surface>(
+    fn scene_pass<F: glium::backend::Facade>(
         &mut self,
         facade: &F,
         resources: &Resources,
         context: &Context,
         render_lists: &RenderLists,
-        target: &mut S,
     ) -> Result<(), glium::DrawError> {
         let output = &[
             ("f_output1", &self.scene_textures[0]),
@@ -379,11 +378,10 @@ impl DeferredShading {
         Ok(())
     }
 
-    fn light_pass<F: glium::backend::Facade, S: glium::Surface>(
+    fn light_pass<F: glium::backend::Facade>(
         &mut self,
         facade: &F,
         lights: &[Light],
-        target: &mut S,
     ) -> Result<(), glium::DrawError> {
         let draw_params = glium::DrawParameters {
             blend: glium::Blend {

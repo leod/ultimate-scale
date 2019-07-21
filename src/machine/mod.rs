@@ -1,6 +1,5 @@
 pub mod grid;
 
-use serde::ser::{SerializeSeq, Serializer};
 use serde::{Deserialize, Serialize};
 
 use crate::util::vec_option::VecOption;

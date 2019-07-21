@@ -181,7 +181,7 @@ impl Editor {
 
     pub fn update(
         mut self,
-        dt_secs: f32,
+        _dt_secs: f32,
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
     ) -> GameState {
