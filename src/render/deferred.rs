@@ -8,7 +8,7 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::render::{shadow, Context, RenderLists, Resources};
+use crate::render::{shadow, Context, Light, RenderLists, Resources};
 
 #[derive(Debug, Clone, Default)]
 pub struct Config;
@@ -301,7 +301,21 @@ impl DeferredShading {
         render_lists: &RenderLists,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        // Scene pass
+        self.scene_pass(facade, resources, context, render_lists, target)?;
+        self.light_pass(facade, &render_lists.lights, target)?;
+        self.composition_pass(target)?;
+
+        Ok(())
+    }
+
+    fn scene_pass<F: glium::backend::Facade, S: glium::Surface>(
+        &mut self,
+        facade: &F,
+        resources: &Resources,
+        context: &Context,
+        render_lists: &RenderLists,
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
         let output = &[
             ("f_output1", &self.scene_textures[0]),
             ("f_output2", &self.scene_textures[1]),
@@ -318,7 +332,7 @@ impl DeferredShading {
         framebuffer.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
 
         if let Some(shadow_mapping) = self.shadow_mapping.as_mut() {
-            shadow_mapping.render_frame(
+            shadow_mapping.render_shadowed(
                 facade,
                 resources,
                 context,
@@ -335,7 +349,15 @@ impl DeferredShading {
             )?;
         }
 
-        // Lighting pass
+        Ok(())
+    }
+
+    fn light_pass<F: glium::backend::Facade, S: glium::Surface>(
+        &mut self,
+        facade: &F,
+        lights: &[Light],
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
         let draw_params = glium::DrawParameters {
             //depth_function: glium::DepthFunction::IfLessOrEqual,
             blend: glium::Blend {
@@ -360,28 +382,13 @@ impl DeferredShading {
         .unwrap(); // TODO: unwrap
         light_buffer.clear_color(0.1, 0.1, 0.1, 1.0);
 
-        let mat_scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-            self.window_size.width as f32,
-            self.window_size.height as f32,
-            1.0,
-        ));
-        let mat_orthogonal = na::Matrix4::new_orthographic(
-            0.0,
-            self.window_size.width as f32,
-            0.0,
-            self.window_size.height as f32,
-            -1.0,
-            1.0,
-        ) * mat_scaling;
-        let mat_orthogonal: [[f32; 4]; 4] = mat_orthogonal.into();
-
-        for light in render_lists.lights.iter() {
+        for light in lights.iter() {
             let light_position: [f32; 3] = light.position.coords.into();
             let light_attenuation: [f32; 3] = light.attenuation.into();
             let light_color: [f32; 3] = light.color.into();
 
             let uniforms = uniform! {
-                mat_orthogonal: mat_orthogonal,
+                mat_orthogonal: self.orthogonal_projection(),
                 position_texture: &self.scene_textures[0],
                 normal_texture: &self.scene_textures[1],
                 light_position: light_position,
@@ -399,9 +406,15 @@ impl DeferredShading {
             )?;
         }
 
-        // Composition pass
+        Ok(())
+    }
+
+    fn composition_pass<S: glium::Surface>(
+        &mut self,
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
         let uniforms = uniform! {
-            mat_orthogonal: mat_orthogonal,
+            mat_orthogonal: self.orthogonal_projection(),
             color_texture: &self.scene_textures[2],
             lighting_texture: &self.light_texture,
         };
@@ -412,9 +425,27 @@ impl DeferredShading {
             &self.composition_program,
             &uniforms,
             &Default::default(),
-        )?;
+        )
+    }
 
-        Ok(())
+    fn orthogonal_projection(&self) -> [[f32; 4]; 4] {
+        // Scale our unit size quad to screen size before orthogonal projection
+        let mat_scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+            self.window_size.width as f32,
+            self.window_size.height as f32,
+            1.0,
+        ));
+        let mat_orthogonal = na::Matrix4::new_orthographic(
+            0.0,
+            self.window_size.width as f32,
+            0.0,
+            self.window_size.height as f32,
+            -1.0,
+            1.0,
+        ) * mat_scaling;
+        let mat_orthogonal: [[f32; 4]; 4] = mat_orthogonal.into();
+
+        mat_orthogonal
     }
 
     fn create_texture<F: glium::backend::Facade>(

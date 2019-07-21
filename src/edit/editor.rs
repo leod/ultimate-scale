@@ -380,7 +380,7 @@ impl Editor {
                 //Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
                 None,
                 0.8,
-                &mut out.transparent,
+                &mut out.plain,
             );
         }
 

@@ -23,6 +23,7 @@ pub struct RenderLists {
     pub solid: RenderList,
     pub solid_shadow: RenderList,
     pub transparent: RenderList,
+    pub plain: RenderList,
     pub lights: Vec<Light>,
 }
 
@@ -35,6 +36,7 @@ impl RenderLists {
         self.solid.clear();
         self.solid_shadow.clear();
         self.transparent.clear();
+        self.plain.clear();
         self.lights.clear();
     }
 }
@@ -47,6 +49,10 @@ pub fn render_frame_straight<S: glium::Surface>(
 ) -> Result<(), glium::DrawError> {
     render_lists
         .solid
+        .render(resources, context, &Default::default(), target)?;
+
+    render_lists
+        .plain
         .render(resources, context, &Default::default(), target)?;
 
     render_lists.transparent.render(

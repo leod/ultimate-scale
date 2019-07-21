@@ -50,7 +50,7 @@ impl Block {
                 dir == Dir3::Y_NEG || dir == Dir3::Y_POS || dir == Dir3::X_POS
             }
             Block::FunnelXY => {
-                // Has restricted cases for in/out below 
+                // Has restricted cases for in/out below
                 dir == Dir3::Y_NEG || dir == Dir3::Y_POS
             }
             Block::WindSource => true,
