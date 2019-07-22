@@ -1,4 +1,5 @@
 pub mod view;
+ld
 
 use log::debug;
 
@@ -264,6 +265,13 @@ impl Exec {
         for (blip_index, blip) in blips.iter_mut() {
             let block_index = block_ids.get(&blip.pos);
 
+            // Don't consider blips that are to be removed in the current tick
+            if remove_indices.contains(&blip_index) {
+                // TODO: The above check could be inefficient; consider using a
+                //       boolean vector.
+                continue;
+            }
+
             if let Some(Some(block_index)) = block_index {
                 Self::update_blip(
                     *block_index,
@@ -298,7 +306,14 @@ impl Exec {
         }
     }
 
-    fn blip_move_dir(
+    fn check_consistency(&self) {
+        for blip in &self.blips {
+            let block_index = self.machine.blocks.indices.get(&blip.pos)
+            assert_eq!(
+        }
+    }
+
+    fn get_blip_move_dir(
         blip: &Blip,
         placed_block: &PlacedBlock,
         block_ids: &Grid3<Option<BlockIndex>>,
@@ -340,12 +355,21 @@ impl Exec {
             "blip at {:?}: {:?} vs {:?}",
             blip.pos, old_blip_state[block_index].blip_index, blip_index,
         );
-        assert!(old_blip_state[block_index].blip_index == Some(blip_index));
-        assert!(block_data[block_index].0 == blip.pos);
+
+        // For each block, we store the BlipIndex of the blip currently in it.
+        // Check that this mapping is consistent.
+        assert_eq!(old_blip_state[block_index].blip_index, Some(blip_index));
+        assert_eq!(block_data[block_index].0, blip.pos);
 
         let placed_block = block_data[block_index].1.clone();
 
-        let out_dir = Self::blip_move_dir(blip, &placed_block, block_ids, block_data, wind_state);
+        let out_dir = Self::get_blip_move_dir(
+            blip,
+            &placed_block,
+            block_ids,
+            block_data,
+            wind_state
+        );
         let new_pos = if let Some(out_dir) = out_dir {
             Self::on_blip_leave_block(blip, out_dir, &mut block_data[block_index].1);
 
@@ -364,6 +388,7 @@ impl Exec {
 
             // For visual purposes, we still remember the old position
             blip.old_pos = Some(blip.pos);
+
             blip.pos = new_pos;
 
             if let Some(out_dir) = out_dir {
