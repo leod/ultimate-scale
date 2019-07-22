@@ -1,5 +1,4 @@
 pub mod view;
-ld
 
 use log::debug;
 
@@ -93,6 +92,8 @@ impl Exec {
     }
 
     pub fn update(&mut self) {
+        self.check_consistency();
+
         for index in 0..self.wind_state.len() {
             self.old_wind_state[index] = self.wind_state[index];
         }
@@ -128,6 +129,8 @@ impl Exec {
             &mut self.blips,
         );
 
+        self.check_consistency();
+
         for (_block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block_blip_state(
                 block_pos,
@@ -137,6 +140,8 @@ impl Exec {
                 &mut self.blips,
             );
         }
+
+        self.check_consistency();
     }
 
     fn update_block_wind_state(
@@ -273,13 +278,21 @@ impl Exec {
             }
 
             if let Some(Some(block_index)) = block_index {
+                debug!(
+                    "blip at {:?}: {:?} vs {:?}",
+                    blip.pos, old_blip_state[*block_index].blip_index, blip_index,
+                );
+
+                // For each block, we store the BlipIndex of the blip currently in it.
+                // Check that this mapping is consistent.
+                assert_eq!(old_blip_state[*block_index].blip_index, Some(blip_index));
+
                 Self::update_blip(
                     *block_index,
                     blip_index,
                     blip,
                     block_ids,
                     wind_state,
-                    old_blip_state,
                     blip_state,
                     block_data,
                     &mut remove_indices,
@@ -287,6 +300,7 @@ impl Exec {
             } else {
                 // Out of bounds.
                 // TODO: Can this happen?
+                debug!("removing blip {} due to out-of-bounds", blip_index);
                 remove_indices.push(blip_index);
             };
         }
@@ -298,7 +312,9 @@ impl Exec {
                 debug!("removing blip {} at pos {:?}", remove_index, pos);
 
                 if let Some(Some(block_index)) = block_ids.get(&pos) {
-                    blip_state[*block_index].blip_index = None;
+                    if blip_state[*block_index].blip_index == Some(remove_index) {
+                        blip_state[*block_index].blip_index = None;
+                    }
                 }
 
                 blips.remove(remove_index);
@@ -307,9 +323,33 @@ impl Exec {
     }
 
     fn check_consistency(&self) {
-        for blip in &self.blips {
-            let block_index = self.machine.blocks.indices.get(&blip.pos)
-            assert_eq!(
+        let block_indices = &self.machine.blocks.indices;
+        let block_data = &self.machine.blocks.data;
+
+        for (block_index, (block_pos, placed_block)) in block_data.iter() {
+            debug_assert_eq!(
+                block_indices[*block_pos],
+                Some(block_index),
+                "block with index {} in data has position {:?}, but index grid stores {:?} at that position",
+                block_index,
+                block_pos,
+                block_indices[*block_pos],
+            );
+        }
+
+        for (blip_index, blip) in self.blips.iter() {
+            let block_index = block_indices[blip.pos].unwrap();
+            let blip_index_in_block = self.blip_state[block_index].blip_index;
+
+            debug_assert_eq!(
+                blip_index_in_block,
+                Some(blip_index),
+                "blip with index {} has position {:?}, which has block index {}, but blip state stores blip index {:?} at that position",
+                blip_index,
+                blip.pos,
+                block_index,
+                blip_index_in_block,
+            );
         }
     }
 
@@ -346,19 +386,10 @@ impl Exec {
         blip: &mut Blip,
         block_ids: &Grid3<Option<BlockIndex>>,
         wind_state: &[WindState],
-        old_blip_state: &[BlipState],
         blip_state: &mut Vec<BlipState>,
         block_data: &mut VecOption<(Point3, PlacedBlock)>,
         remove_indices: &mut Vec<BlipIndex>,
     ) {
-        debug!(
-            "blip at {:?}: {:?} vs {:?}",
-            blip.pos, old_blip_state[block_index].blip_index, blip_index,
-        );
-
-        // For each block, we store the BlipIndex of the blip currently in it.
-        // Check that this mapping is consistent.
-        assert_eq!(old_blip_state[block_index].blip_index, Some(blip_index));
         assert_eq!(block_data[block_index].0, blip.pos);
 
         let placed_block = block_data[block_index].1.clone();
@@ -368,7 +399,7 @@ impl Exec {
             &placed_block,
             block_ids,
             block_data,
-            wind_state
+            wind_state,
         );
         let new_pos = if let Some(out_dir) = out_dir {
             Self::on_blip_leave_block(blip, out_dir, &mut block_data[block_index].1);
@@ -378,13 +409,14 @@ impl Exec {
             blip.pos
         };
 
+        debug!(
+            "moving blip {} from {:?} to {:?}",
+            blip_index, blip.pos, new_pos
+        );
+
         let new_block_index = block_ids.get(&new_pos);
 
         if let Some(Some(new_block_index)) = new_block_index {
-            debug!(
-                "moving blip {} from {:?} to {:?}",
-                blip_index, blip.pos, new_pos
-            );
 
             // For visual purposes, we still remember the old position
             blip.old_pos = Some(blip.pos);
@@ -393,11 +425,18 @@ impl Exec {
 
             if let Some(out_dir) = out_dir {
                 // Apply effects of entering the new block
+                let new_placed_block = &mut block_data[*new_block_index].1;
                 let remove =
-                    Self::on_blip_enter_block(blip, out_dir, &mut block_data[*new_block_index].1);
+                    Self::on_blip_enter_block(blip, out_dir, new_placed_block);
 
                 if remove {
                     // Effect of new block causes blip to be removed
+                    debug!(
+                        "removing blip {} due to block {:?} effect",
+                        blip_index,
+                        new_placed_block,
+                    );
+
                     remove_indices.push(blip_index);
                     return;
                 }
@@ -423,6 +462,7 @@ impl Exec {
         } else {
             // We are on the grid, but there is no block at our position
             // -> remove blip
+            debug!("removing blip {} due to no block", blip_index);
             remove_indices.push(blip_index);
         }
     }
@@ -444,7 +484,7 @@ impl Exec {
                 ref mut activated, ..
             } => {
                 // TODO: Resolve possible race condition in blip
-                //       duplicator.  If two blips of different
+                //       duplicator. If two blips of different
                 //       kind race into the duplicator, the output
                 //       kind depends on the order of blip
                 //       evaluation.
