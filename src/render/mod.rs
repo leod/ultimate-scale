@@ -6,6 +6,7 @@ pub mod object;
 pub mod render_list;
 pub mod resources;
 pub mod shadow;
+pub mod text;
 
 use nalgebra as na;
 

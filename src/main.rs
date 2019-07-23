@@ -221,6 +221,8 @@ fn main() {
                     .on_window_resize(&display, new_window_size)
                     .unwrap();
             }
+
+            //font.on_window_resize(new_window_size);
         }
 
         let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
