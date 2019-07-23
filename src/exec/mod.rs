@@ -394,13 +394,8 @@ impl Exec {
 
         let placed_block = block_data[block_index].1.clone();
 
-        let out_dir = Self::get_blip_move_dir(
-            blip,
-            &placed_block,
-            block_ids,
-            block_data,
-            wind_state,
-        );
+        let out_dir =
+            Self::get_blip_move_dir(blip, &placed_block, block_ids, block_data, wind_state);
         let new_pos = if let Some(out_dir) = out_dir {
             Self::on_blip_leave_block(blip, out_dir, &mut block_data[block_index].1);
 
@@ -417,7 +412,6 @@ impl Exec {
         let new_block_index = block_ids.get(&new_pos);
 
         if let Some(Some(new_block_index)) = new_block_index {
-
             // For visual purposes, we still remember the old position
             blip.old_pos = Some(blip.pos);
 
@@ -426,15 +420,13 @@ impl Exec {
             if let Some(out_dir) = out_dir {
                 // Apply effects of entering the new block
                 let new_placed_block = &mut block_data[*new_block_index].1;
-                let remove =
-                    Self::on_blip_enter_block(blip, out_dir, new_placed_block);
+                let remove = Self::on_blip_enter_block(blip, out_dir, new_placed_block);
 
                 if remove {
                     // Effect of new block causes blip to be removed
                     debug!(
                         "removing blip {} due to block {:?} effect",
-                        blip_index,
-                        new_placed_block,
+                        blip_index, new_placed_block,
                     );
 
                     remove_indices.push(blip_index);
