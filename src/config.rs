@@ -1,4 +1,4 @@
-use crate::edit::editor;
+use crate::edit;
 use crate::exec;
 use crate::render::camera;
 use crate::render::deferred;
@@ -13,8 +13,8 @@ pub struct ViewConfig {
 impl Default for ViewConfig {
     fn default() -> ViewConfig {
         ViewConfig {
-            window_size: glutin::dpi::LogicalSize::new(1024.0, 768.0),
-            fov_degrees: 90.0,
+            window_size: glutin::dpi::LogicalSize::new(640.0, 480.0),
+            fov_degrees: 45.0,
         }
     }
 }
@@ -28,8 +28,8 @@ pub struct RenderConfig {
 impl Default for RenderConfig {
     fn default() -> RenderConfig {
         RenderConfig {
-            shadow_mapping: Some(Default::default()),
-            deferred_shading: Some(Default::default()),
+            shadow_mapping: None,   //Some(Default::default()),
+            deferred_shading: None, //Some(Default::default()),
         }
     }
 }
@@ -39,6 +39,6 @@ pub struct Config {
     pub camera: camera::Config,
     pub view: ViewConfig,
     pub render: RenderConfig,
-    pub editor: editor::Config,
+    pub editor: edit::Config,
     pub exec: exec::view::Config,
 }

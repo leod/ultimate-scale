@@ -1,8 +1,10 @@
+pub mod config;
 pub mod editor;
 
 use crate::machine::grid;
 use crate::machine::{Machine, PlacedBlock};
 
+pub use config::Config;
 pub use editor::Editor;
 
 pub enum Edit {
