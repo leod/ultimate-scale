@@ -1,8 +1,8 @@
 use nalgebra as na;
 
-use std::{io, fs, path};
+use std::{fs, io, path};
 
-use glium_text::{TextSystem, FontTexture, TextDisplay};
+use glium_text::{FontTexture, TextDisplay, TextSystem};
 
 pub struct Font {
     system: TextSystem,
@@ -57,4 +57,3 @@ impl From<()> for CreationError {
         CreationError::FontTextureError(err)
     }
 }
-
