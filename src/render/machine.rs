@@ -5,6 +5,14 @@ use crate::machine::{Block, Machine, PlacedBlock};
 
 use crate::render::{InstanceParams, Object, RenderList, RenderLists};
 
+pub fn wind_source_color() -> na::Vector3<f32> {
+    na::Vector3::new(1.0, 0.08, 0.24)
+}
+
+pub fn blip_spawn_color() -> na::Vector3<f32> {
+    na::Vector3::new(60.0, 179.0, 113.0) / 255.0
+}
+
 #[derive(Clone, Debug)]
 pub struct Line {
     pub start: na::Point3<f32>,
@@ -125,6 +133,14 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
     }
 }
 
+pub fn block_color(
+    color_override: Option<&na::Vector4<f32>>,
+    color: &na::Vector3<f32>,
+    alpha: f32,
+) -> na::Vector4<f32> {
+    *color_override.unwrap_or(&na::Vector4::new(color.x, color.y, color.z, alpha))
+}
+
 pub fn render_block(
     block: &Block,
     center: &na::Point3<f32>,
@@ -231,7 +247,7 @@ pub fn render_block(
                 Object::Cube,
                 &InstanceParams {
                     transform: translation * transform * scaling,
-                    color: *color.unwrap_or(&na::Vector4::new(1.0, 0.0, 0.0, alpha)),
+                    color: block_color(color, &wind_source_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -240,7 +256,7 @@ pub fn render_block(
             let cube_color = if num_spawns.is_some() {
                 na::Vector4::new(0.0, 0.5, 0.0, alpha)
             } else {
-                na::Vector4::new(0.0, 1.0, 0.0, alpha)
+                block_color(color, &blip_spawn_color(), alpha)
             };
             let cube_transform = translation
                 * transform
@@ -285,7 +301,7 @@ pub fn render_block(
                 Object::Cube,
                 &InstanceParams {
                     transform: cube_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.0, 1.0, 0.0, alpha)),
+                    color: block_color(color, &blip_spawn_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -334,8 +350,9 @@ pub fn render_block(
             let cube_color = if *activated {
                 na::Vector4::new(0.5, 0.0, 0.0, alpha)
             } else {
-                na::Vector4::new(1.0, 0.0, 0.0, alpha)
+                block_color(color, &wind_source_color(), alpha)
             };
+
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
@@ -363,7 +380,7 @@ pub fn render_block(
                 Object::Cube,
                 &InstanceParams {
                     transform: input_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.0, 1.0, 0.0, alpha)),
+                    color: block_color(color, &blip_spawn_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -373,7 +390,7 @@ pub fn render_block(
                 Object::Cube,
                 &InstanceParams {
                     transform: translation * transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.3, 0.9, 0.2, alpha)),
+                    color: *color.unwrap_or(&na::Vector4::new(0.3, 0.2, 0.9, alpha)),
                     ..Default::default()
                 },
             );
