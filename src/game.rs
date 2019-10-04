@@ -1,5 +1,5 @@
-use std::time::Duration;
 use std::path::Path;
+use std::time::Duration;
 
 use floating_duration::TimeAsFloat;
 use glium::Surface;
@@ -14,9 +14,9 @@ use crate::machine::Machine;
 use crate::render::camera::{self, Camera, EditCameraView};
 use crate::render::deferred::DeferredShading;
 use crate::render::shadow::{self, ShadowMapping};
+use crate::render::text::{self, Font};
 use crate::render::{self, resources};
 use crate::render::{Light, RenderLists, Resources};
-use crate::render::text::{self, Font};
 
 #[derive(Debug)]
 pub enum CreationError {
@@ -43,6 +43,7 @@ pub struct Game {
     exec_view: Option<ExecView>,
 
     elapsed_time: Duration,
+    fps: f32,
 }
 
 impl Game {
@@ -108,6 +109,7 @@ impl Game {
             editor,
             exec_view: None,
             elapsed_time: Default::default(),
+            fps: 0.0,
         })
     }
 
@@ -174,7 +176,7 @@ impl Game {
             na::Vector2::new(3.0, 3.0),
             20.0,
             na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-            "Hello, world!",
+            &format!("FPS: {:.0}", self.fps),
             &mut target,
         );
 
@@ -187,6 +189,7 @@ impl Game {
     pub fn update(&mut self, dt: Duration) {
         self.elapsed_time += dt;
         let dt_secs = dt.as_fractional_secs() as f32;
+        self.fps = 1.0 / dt_secs;
 
         if let Some(exec_view) = self.exec_view.as_mut() {
             exec_view.update(dt, &self.camera, &self.edit_camera_view);
