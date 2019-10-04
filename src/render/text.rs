@@ -2,7 +2,7 @@ use nalgebra as na;
 
 use std::{fs, io, path};
 
-use glium_text::{FontTexture, TextDisplay, TextSystem};
+use glium_text::{FontTexture, TextSystem};
 
 pub struct Font {
     system: TextSystem,
