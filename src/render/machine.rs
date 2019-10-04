@@ -1,7 +1,7 @@
 use nalgebra as na;
 
 use crate::machine::grid::{self, Dir2};
-use crate::machine::{Block, Machine, PlacedBlock};
+use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::{InstanceParams, Object, RenderList, RenderLists};
 
@@ -11,6 +11,14 @@ pub fn wind_source_color() -> na::Vector3<f32> {
 
 pub fn blip_spawn_color() -> na::Vector3<f32> {
     na::Vector3::new(60.0, 179.0, 113.0) / 255.0
+}
+
+pub fn blip_color(kind: BlipKind) -> na::Vector4<f32> {
+    match kind {
+        BlipKind::A => na::Vector4::new(0.0, 0.737, 0.361, 1.0),
+        BlipKind::B => na::Vector4::new(1.0, 0.557, 0.0, 1.0),
+        BlipKind::C => na::Vector4::new(0.098, 0.129, 0.694, 1.0),
+    }
 }
 
 #[derive(Clone, Debug)]
