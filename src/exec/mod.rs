@@ -517,7 +517,11 @@ impl Exec {
                     *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
                 }
             }
-            Block::BlipDuplicator { ref mut activated } => {
+            Block::BlipDuplicator {
+                kind,
+                ref mut activated,
+            } => {
+                // TODO: Only allow activating with specific kind?
                 if let Some(kind) = activated.clone() {
                     Self::try_spawn_blip(
                         true,

@@ -102,7 +102,10 @@ impl Default for Config {
                 ),
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key4),
-                    Block::BlipDuplicator { activated: None },
+                    Block::BlipDuplicator {
+                        kind: BlipKind::A,
+                        activated: None,
+                    },
                 ),
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key5),

@@ -13,11 +13,11 @@ pub fn blip_spawn_color() -> na::Vector3<f32> {
     na::Vector3::new(60.0, 179.0, 113.0) / 255.0
 }
 
-pub fn blip_color(kind: BlipKind) -> na::Vector4<f32> {
+pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
     match kind {
-        BlipKind::A => na::Vector4::new(0.0, 0.737, 0.361, 1.0),
-        BlipKind::B => na::Vector4::new(1.0, 0.557, 0.0, 1.0),
-        BlipKind::C => na::Vector4::new(0.098, 0.129, 0.694, 1.0),
+        BlipKind::A => na::Vector3::new(0.0, 0.737, 0.361),
+        BlipKind::B => na::Vector3::new(1.0, 0.557, 0.0),
+        BlipKind::C => na::Vector3::new(0.098, 0.129, 0.694),
     }
 }
 
@@ -260,11 +260,13 @@ pub fn render_block(
                 },
             );
         }
-        Block::BlipSpawn { num_spawns, .. } => {
+        Block::BlipSpawn {
+            kind, num_spawns, ..
+        } => {
             let cube_color = if num_spawns.is_some() {
                 na::Vector4::new(0.0, 0.5, 0.0, alpha)
             } else {
-                block_color(color, &blip_spawn_color(), alpha)
+                block_color(color, &blip_color(*kind), alpha)
             };
             let cube_transform = translation
                 * transform
@@ -300,7 +302,7 @@ pub fn render_block(
                 },
             );
         }
-        Block::BlipDuplicator { .. } => {
+        Block::BlipDuplicator { kind, .. } => {
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
@@ -309,7 +311,7 @@ pub fn render_block(
                 Object::Cube,
                 &InstanceParams {
                     transform: cube_transform,
-                    color: block_color(color, &blip_spawn_color(), alpha),
+                    color: block_color(color, &blip_color(*kind), alpha),
                     ..Default::default()
                 },
             );
