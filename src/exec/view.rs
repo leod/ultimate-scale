@@ -153,6 +153,18 @@ impl ExecView {
                     );
                 }
             }
+            glutin::MouseButton::Right if state == glutin::ElementState::Pressed => {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    Exec::try_spawn_blip(
+                        false,
+                        BlipKind::B,
+                        &mouse_grid_pos,
+                        &self.exec.machine.blocks.indices,
+                        &mut self.exec.blip_state,
+                        &mut self.exec.blips,
+                    );
+                }
+            }
             _ => (),
         }
     }
@@ -250,7 +262,7 @@ impl ExecView {
             let instance = render::Instance {
                 object: render::Object::Cube,
                 params: render::InstanceParams {
-                    color: na::Vector4::new(0.0, 0.5, 0.0, 1.0),
+                    color: render::machine::blip_color(blip.kind),
                     transform,
                     ..Default::default()
                 },

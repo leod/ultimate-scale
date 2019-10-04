@@ -10,6 +10,7 @@ use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
 pub enum BlipKind {
     A,
     B,
+    C,
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
