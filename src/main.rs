@@ -1,7 +1,7 @@
 mod config;
 mod edit;
 mod exec;
-mod game_state;
+mod game;
 mod machine;
 mod render;
 mod util;
@@ -12,27 +12,10 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use clap::{App, Arg};
-use floating_duration::TimeAsFloat;
-use glium::Surface;
 use log::info;
-use nalgebra as na;
 
-use edit::Editor;
-use game_state::GameState;
+use game::Game;
 use machine::{grid, Machine, SavedMachine};
-
-fn perspective_matrix(
-    config: &config::ViewConfig,
-    window_size: &glutin::dpi::LogicalSize,
-) -> na::Matrix4<f32> {
-    let projection = na::Perspective3::new(
-        window_size.width as f32 / window_size.height as f32,
-        config.fov_degrees.to_radians() as f32,
-        0.1,
-        10000.0,
-    );
-    projection.to_homogeneous()
-}
 
 fn main() {
     simple_logger::init_with_level(log::Level::Info).unwrap();
@@ -50,36 +33,16 @@ fn main() {
         )
         .get_matches();
 
-    let mut config: config::Config = Default::default();
-    //config.render.deferred_shading = None;
+    let config: config::Config = Default::default();
     info!("Running with config: {:?}", config);
 
     info!("Opening window");
     let mut events_loop = glutin::EventsLoop::new();
-    let window_builder = glutin::WindowBuilder::new().with_dimensions(config.view.window_size);
-    let context_builder = glutin::ContextBuilder::new();
-    let display = glium::Display::new(window_builder, context_builder, &events_loop).unwrap();
-
-    info!("Creating resources");
-    let resources = render::Resources::create(&display).unwrap();
-
-    let viewport_size = na::Vector2::new(
-        config.view.window_size.width as f32,
-        config.view.window_size.height as f32,
-    );
-    let mut camera = render::camera::Camera::new(
-        viewport_size,
-        perspective_matrix(&config.view, &config.view.window_size),
-    );
-    let mut edit_camera_view = render::camera::EditCameraView::new();
-    let mut camera_input = render::camera::Input::new(&config.camera);
-
-    let mut render_lists = render::RenderLists::new();
-    let mut shadow_mapping = config
-        .render
-        .shadow_mapping
-        .as_ref()
-        .map(|config| render::shadow::ShadowMapping::create(&display, config, false).unwrap());
+    let display = {
+        let window_builder = glutin::WindowBuilder::new().with_dimensions(config.view.window_size);
+        let context_builder = glutin::ContextBuilder::new();
+        glium::Display::new(window_builder, context_builder, &events_loop).unwrap()
+    };
 
     let initial_machine = if let Some(file) = args.value_of("file") {
         info!("Loading machine from file `{}'", file);
@@ -91,90 +54,14 @@ fn main() {
         let grid_size = grid::Vector3::new(30, 30, 4);
         Machine::new(grid_size)
     };
-    let editor = Editor::new(&config.editor, &config.exec, initial_machine);
 
-    let mut game_state = GameState::Edit(editor);
+    let mut game = Game::create(&display, &config, initial_machine).unwrap();
 
     let mut previous_clock = Instant::now();
-    let mut elapsed_time: Duration = Default::default();
-
     let mut quit = false;
 
-    let mut deferred_shading = config
-        .render
-        .deferred_shading
-        .as_ref()
-        .map(|deferred_shading| {
-            render::deferred::DeferredShading::create(
-                &display,
-                &deferred_shading,
-                config.view.window_size,
-                &config.render.shadow_mapping,
-            )
-            .unwrap()
-        });
-
     while !quit {
-        let now_clock = Instant::now();
-        let frame_duration = now_clock - previous_clock;
-        previous_clock = now_clock;
-
-        elapsed_time += frame_duration;
-        let render_context = render::Context {
-            camera: camera.clone(),
-            elapsed_time_secs: elapsed_time.as_fractional_secs() as f32,
-            main_light_pos: na::Point3::new(
-                15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos(),
-                15.0 + 20.0 * (std::f32::consts::PI / 4.0).sin(),
-                20.0,
-            ),
-            main_light_center: na::Point3::new(15.0, 15.0, 0.0),
-        };
-
-        render_lists.clear();
-
-        let mut target = display.draw();
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
-
-        match &mut game_state {
-            GameState::Edit(editor) => editor.render(&mut render_lists).unwrap(),
-            GameState::Exec { exec_view, .. } => exec_view.render(&mut render_lists),
-        }
-
-        if let Some(deferred_shading) = &mut deferred_shading {
-            let intensity = 1.0;
-            render_lists.lights.push(render::Light {
-                position: render_context.main_light_pos,
-                attenuation: na::Vector3::new(1.0, 0.01, 0.00001),
-                color: na::Vector3::new(intensity, intensity, intensity),
-                radius: 160.0,
-            });
-
-            deferred_shading
-                .render_frame(
-                    &display,
-                    &resources,
-                    &render_context,
-                    &render_lists,
-                    &mut target,
-                )
-                .unwrap();
-        } else if let Some(shadow_mapping) = &mut shadow_mapping {
-            shadow_mapping
-                .render_frame(
-                    &display,
-                    &resources,
-                    &render_context,
-                    &render_lists,
-                    &mut target,
-                )
-                .unwrap();
-        } else {
-            render::render_frame_straight(&resources, &render_context, &render_lists, &mut target)
-                .unwrap();
-        }
-
-        target.finish().unwrap();
+        game.render(&display).unwrap();
 
         // Remember only the last (hopefully: newest) resize event. We do this
         // because resizing textures is somewhat costly, so it makes sense to
@@ -183,12 +70,7 @@ fn main() {
 
         events_loop.poll_events(|event| match event {
             glutin::Event::WindowEvent { event, .. } => {
-                camera_input.on_event(&event);
-
-                match &mut game_state {
-                    GameState::Edit(editor) => editor.on_event(&event),
-                    GameState::Exec { exec_view, .. } => exec_view.on_event(&event),
-                }
+                game.on_event(&event);
 
                 match event {
                     glutin::WindowEvent::CloseRequested => {
@@ -208,35 +90,15 @@ fn main() {
         if let Some(new_window_size) = new_window_size {
             info!("Window resized to: {:?}", new_window_size);
 
-            camera.projection = perspective_matrix(&config.view, &new_window_size);
-            camera.viewport = na::Vector4::new(
-                0.0,
-                0.0,
-                new_window_size.width as f32,
-                new_window_size.height as f32,
-            );
-
-            if let Some(deferred_shading) = &mut deferred_shading {
-                deferred_shading
-                    .on_window_resize(&display, new_window_size)
-                    .unwrap();
-            }
+            game.on_window_resize(&display, new_window_size);
 
             //font.on_window_resize(new_window_size);
         }
 
-        let frame_duration_secs = frame_duration.as_fractional_secs() as f32;
-        game_state = match game_state {
-            GameState::Edit(editor) => {
-                editor.update(frame_duration_secs, &camera, &mut edit_camera_view)
-            }
-            GameState::Exec { exec_view, editor } => {
-                exec_view.update(frame_duration, editor, &camera, &edit_camera_view)
-            }
-        };
-
-        camera_input.update(frame_duration_secs, &mut edit_camera_view);
-        camera.view = edit_camera_view.view();
+        let now_clock = Instant::now();
+        let frame_duration = now_clock - previous_clock;
+        previous_clock = now_clock;
+        game.update(frame_duration);
 
         thread::sleep(Duration::from_millis(0));
     }

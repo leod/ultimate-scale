@@ -8,7 +8,6 @@ use nalgebra as na;
 use glutin::WindowEvent;
 
 use crate::exec::{self, ExecView};
-use crate::game_state::GameState;
 use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
 use crate::render::{self, Camera, EditCameraView, RenderLists};
@@ -62,11 +61,11 @@ impl Editor {
     }
 
     pub fn update(
-        mut self,
+        &mut self,
         _dt_secs: f32,
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
-    ) -> GameState {
+    ) -> Option<ExecView> {
         edit_camera_view.set_target(na::Point3::new(
             edit_camera_view.target().x,
             edit_camera_view.target().y,
@@ -77,17 +76,14 @@ impl Editor {
         self.update_input();
 
         if !self.start_exec {
-            GameState::Edit(self)
+            None
         } else {
             info!("Starting exec");
 
             self.start_exec = false;
 
             let exec_view = ExecView::new(&self.exec_config, self.machine.clone());
-            GameState::Exec {
-                exec_view,
-                editor: self,
-            }
+            Some(exec_view)
         }
     }
 

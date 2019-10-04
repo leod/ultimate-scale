@@ -6,9 +6,7 @@ use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
-use crate::edit::Editor;
 use crate::exec::Exec;
-use crate::game_state::GameState;
 use crate::machine::grid::Dir3;
 use crate::machine::{grid, BlipKind, Machine};
 use crate::render::{self, Camera, EditCameraView, RenderLists};
@@ -34,7 +32,7 @@ impl Default for Config {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Status {
     Playing,
     Paused,
@@ -63,13 +61,11 @@ impl ExecView {
         }
     }
 
-    pub fn update(
-        mut self,
-        dt: Duration,
-        editor: Editor,
-        camera: &Camera,
-        edit_camera_view: &EditCameraView,
-    ) -> GameState {
+    pub fn status(&self) -> Status {
+        self.status
+    }
+
+    pub fn update(&mut self, dt: Duration, camera: &Camera, edit_camera_view: &EditCameraView) {
         self.update_mouse_grid_pos(camera, edit_camera_view);
 
         match self.status {
@@ -84,14 +80,8 @@ impl ExecView {
             }
             Status::Paused => (),
             Status::Stopped => {
-                info!("Stopping exec, returning to editor");
-                return GameState::Edit(editor);
+                // Game::update will return to editor
             }
-        }
-
-        GameState::Exec {
-            exec_view: self,
-            editor,
         }
     }
 
