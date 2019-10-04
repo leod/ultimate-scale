@@ -259,10 +259,11 @@ impl ExecView {
 
             let transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(0.3);
+            let color = render::machine::blip_color(blip.kind);
             let instance = render::Instance {
                 object: render::Object::Cube,
                 params: render::InstanceParams {
-                    color: render::machine::blip_color(blip.kind),
+                    color: na::Vector4::new(color.x, color.y, color.z, 1.0),
                     transform,
                     ..Default::default()
                 },

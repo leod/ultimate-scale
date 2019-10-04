@@ -13,6 +13,12 @@ pub enum BlipKind {
     C,
 }
 
+impl Default for BlipKind {
+    fn default() -> BlipKind {
+        BlipKind::A
+    }
+}
+
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     PipeXY,
@@ -31,6 +37,8 @@ pub enum Block {
         num_spawns: Option<usize>,
     },
     BlipDuplicator {
+        #[serde(default)]
+        kind: BlipKind,
         activated: Option<BlipKind>,
     },
     BlipWindSource {
