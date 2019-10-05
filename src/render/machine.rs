@@ -162,9 +162,9 @@ pub fn render_bridge(
     let dir_offset: na::Vector3<f32> = na::convert(dir.embed().to_vector());
     let output_transform = translation
         * transform
-        * na::Matrix4::new_translation(&(dir_offset * length))
+        * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
         * na::Matrix4::new_rotation(dir.to_radians() * na::Vector3::z())
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, size, size));
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, size, size));
     out.add(
         Object::Cube,
         &InstanceParams {
@@ -337,7 +337,7 @@ pub fn render_block(
 
             render_bridge(
                 Dir2::X_POS,
-                0.3,
+                0.75,
                 bridge_size,
                 center,
                 transform,
@@ -365,7 +365,7 @@ pub fn render_block(
 
             render_bridge(
                 Dir2::X_NEG,
-                0.3,
+                0.75,
                 0.3,
                 center,
                 transform,
@@ -374,7 +374,7 @@ pub fn render_block(
             );
             render_bridge(
                 Dir2::X_POS,
-                0.3,
+                0.75,
                 0.3,
                 center,
                 transform,
