@@ -15,6 +15,7 @@
         "rotation_xy": 2,
         "block": {
           "BlipDuplicator": {
+            "kind": null,
             "activated": null
           }
         }
@@ -27,8 +28,13 @@
         0
       ],
       {
-        "rotation_xy": 3,
-        "block": "PipeXY"
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
       }
     ],
     [
@@ -178,7 +184,8 @@
         "block": {
           "BlipSpawn": {
             "kind": "A",
-            "num_spawns": 1
+            "num_spawns": 1,
+            "activated": null
           }
         }
       }
@@ -190,8 +197,8 @@
         0
       ],
       {
-        "rotation_xy": 3,
-        "block": "PipeXY"
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
       }
     ],
     [
@@ -224,7 +231,7 @@
       ],
       {
         "rotation_xy": 3,
-        "block": "PipeXY"
+        "block": "PipeBendXY"
       }
     ],
     [
@@ -313,6 +320,506 @@
       {
         "rotation_xy": 3,
         "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        11,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipWindSource": {
+            "activated": false
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        14,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        7,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        6,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        6,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        5,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        5,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        4,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        4,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        3,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        3,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
       }
     ]
   ]
