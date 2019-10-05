@@ -307,11 +307,15 @@ pub fn render_block(
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
+            let kind_color = match kind {
+                Some(kind) => blip_color(*kind),
+                None => na::Vector3::new(0.6, 0.6, 0.6),
+            };
             out.add(
                 Object::Cube,
                 &InstanceParams {
                     transform: cube_transform,
-                    color: block_color(color, &blip_color(*kind), alpha),
+                    color: block_color(color, &kind_color, alpha),
                     ..Default::default()
                 },
             );
