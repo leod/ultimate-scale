@@ -112,10 +112,6 @@ impl Exec {
             self.blip_state[index].blip_index = None;
         }
 
-        for (_block_index, (_block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
-            Self::clear_block_blip_state(placed_block);
-        }
-
         for (block_index, (block_pos, _placed_block)) in self.machine.blocks.data.iter() {
             Self::update_block_wind_state(
                 block_index,
@@ -206,8 +202,7 @@ impl Exec {
                 let any_in = placed_block
                     .wind_holes_in()
                     .iter()
-                    .map(|dir| old_wind_state[block_index].wind_in(*dir))
-                    .any(|b| b);
+                    .any(|dir| old_wind_state[block_index].wind_in(*dir));
 
                 debug!(
                     "wind holes {:?}, rot {}",
@@ -238,6 +233,16 @@ impl Exec {
         match block.block {
             Block::BlipWindSource { ref mut activated } => {
                 *activated = false;
+            }
+            Block::BlipSpawn {
+                ref mut activated, ..
+            } => {
+                *activated = None;
+            }
+            Block::BlipDuplicator {
+                ref mut activated, ..
+            } => {
+                *activated = None;
             }
             _ => (),
         }
@@ -574,22 +579,6 @@ impl Exec {
                         blips,
                     );
                 }
-            }
-            _ => {}
-        }
-    }
-
-    fn clear_block_blip_state(placed_block: &mut PlacedBlock) {
-        match placed_block.block {
-            Block::BlipSpawn {
-                ref mut activated, ..
-            } => {
-                *activated = None;
-            }
-            Block::BlipDuplicator {
-                ref mut activated, ..
-            } => {
-                *activated = None;
             }
             _ => {}
         }
