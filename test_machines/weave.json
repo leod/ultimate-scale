@@ -1580,7 +1580,8 @@
         "block": {
           "BlipSpawn": {
             "kind": "A",
-            "num_spawns": null
+            "num_spawns": null,
+            "activated": null
           }
         }
       }
@@ -1596,7 +1597,8 @@
         "block": {
           "BlipSpawn": {
             "kind": "B",
-            "num_spawns": null
+            "num_spawns": null,
+            "activated": null
           }
         }
       }
@@ -1612,7 +1614,8 @@
         "block": {
           "BlipSpawn": {
             "kind": "C",
-            "num_spawns": null
+            "num_spawns": null,
+            "activated": null
           }
         }
       }
@@ -1628,7 +1631,8 @@
         "block": {
           "BlipSpawn": {
             "kind": "C",
-            "num_spawns": null
+            "num_spawns": null,
+            "activated": null
           }
         }
       }
@@ -1643,8 +1647,9 @@
         "rotation_xy": 1,
         "block": {
           "BlipSpawn": {
-            "kind": "A",
-            "num_spawns": null
+            "kind": "B",
+            "num_spawns": null,
+            "activated": null
           }
         }
       }
@@ -1659,8 +1664,9 @@
         "rotation_xy": 1,
         "block": {
           "BlipSpawn": {
-            "kind": "B",
-            "num_spawns": null
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
           }
         }
       }

@@ -237,7 +237,7 @@ impl ExecView {
                         &render::machine::Line {
                             start: in_pos,
                             end: out_pos,
-                            thickness: 0.2,
+                            thickness: 0.05,
                             color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
                         },
                         0.0,
