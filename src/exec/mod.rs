@@ -528,7 +528,14 @@ impl Exec {
 
                 if num_spawns.map_or(true, |n| n > 0) {
                     let output_pos = *block_pos + dir_x_pos.to_vector();
-                    let did_spawn = Self::try_spawn_blip(false, kind, &output_pos, block_ids, blip_state, blips);
+                    let did_spawn = Self::try_spawn_blip(
+                        false,
+                        kind,
+                        &output_pos,
+                        block_ids,
+                        blip_state,
+                        blips,
+                    );
 
                     *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
                     if did_spawn {
