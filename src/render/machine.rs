@@ -341,13 +341,13 @@ pub fn render_block(
 
                 if dt <= 1.0 {
                     let x = dt * std::f32::consts::PI;
-                    x.cos() * x.cos() * 0.75
+                    x.cos() * x.cos()
                 } else {
-                    0.75
+                    1.0
                 }
             } else {
-                0.75
-            };
+                1.0
+            } * 0.75;
 
             render_bridge(
                 Dir2::X_POS,
