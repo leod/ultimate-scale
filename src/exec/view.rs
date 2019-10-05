@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use std::time::Duration;
 
 use log::info;
@@ -6,9 +7,9 @@ use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
-use crate::exec::Exec;
-use crate::machine::grid::Dir3;
-use crate::machine::{grid, BlipKind, Machine};
+use crate::exec::{Exec, WindState};
+use crate::machine::grid::{Dir3, Point3};
+use crate::machine::{grid, BlipKind, BlockIndex, Machine};
 use crate::render::{self, Camera, EditCameraView, RenderLists};
 use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
@@ -27,7 +28,7 @@ impl Default for Config {
             pause_resume_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
             frame_key: VirtualKeyCode::F,
-            default_ticks_per_sec: 2.0,
+            default_ticks_per_sec: 0.5,
         }
     }
 }
@@ -175,7 +176,6 @@ impl ExecView {
 
     pub fn render(&mut self, out: &mut RenderLists) {
         render::machine::render_machine(&self.exec.machine(), self.cur_tick_time(), out);
-        //render::machine::render_xy_grid(&self.exec.machine().size(), 0.01, &mut out.solid);
 
         self.render_blocks(out);
         self.render_blips(out);
@@ -197,53 +197,76 @@ impl ExecView {
         }
     }
 
-    fn render_blocks(&self, out: &mut RenderLists) {
-        let machine = &self.exec.machine();
-        let wind_state = self.exec.wind_state();
+    fn wind_dir_pairs(
+        &self,
+        wind_state: &[WindState],
+        block_index: BlockIndex,
+        block_pos: &Point3,
+    ) -> BTreeSet<(Dir3, Option<Dir3>)> {
+        // In which directions are our neighbors getting flow from us?
+        let mut out_dirs: Vec<_> = self
+            .exec
+            .machine()
+            .iter_neighbors(block_pos)
+            .filter(|(dir, neighbor_index)| wind_state[*neighbor_index].wind_in(dir.invert()))
+            .map(|(dir, _)| dir)
+            .collect();
 
-        for (index, (block_pos, _placed_block)) in machine.blocks.data.iter() {
-            let block_wind_state = &wind_state[index];
+        // From which directions are we getting flow from a neighbor?
+        let in_dirs = Dir3::ALL
+            .iter()
+            .filter(|dir| wind_state[block_index].wind_in(**dir));
 
-            // Draw a wind line from all in dirs to all out dirs.
-            // If there is no out dir, draw to the block center instead.
-            let mut out_dirs: Vec<_> = machine
-                .iter_neighbors(*block_pos)
-                .filter(|(dir, index)| wind_state[*index].wind_in(dir.invert()))
-                .map(|(dir, _)| Some(dir))
-                .collect();
+        let mut dir_pairs = BTreeSet::new();
 
+        for &in_dir in in_dirs {
             if out_dirs.is_empty() {
-                out_dirs.push(None);
-            }
-
-            for out_dir in out_dirs {
-                let in_dirs = Dir3::ALL
-                    .iter()
-                    .filter(|dir| block_wind_state.wind_in(**dir));
-
-                for in_dir in in_dirs {
-                    let center = render::machine::block_center(block_pos);
-
-                    let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
-                    let out_vector: na::Vector3<f32> = out_dir
-                        .map_or(na::Vector3::zeros(), |out_dir| {
-                            na::convert(out_dir.to_vector())
-                        });
-
-                    let in_pos = center + in_vector / 2.0;
-                    let out_pos = center + out_vector / 2.0;
-
-                    render::machine::render_arrow(
-                        &render::machine::Line {
-                            start: in_pos,
-                            end: out_pos,
-                            thickness: 0.05,
-                            color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-                        },
-                        0.0,
-                        &mut out.solid,
-                    );
+                // There is no wind flowing out of this block
+                dir_pairs.insert((in_dir, None));
+            } else {
+                for &out_dir in &out_dirs {
+                    dir_pairs.insert((in_dir, Some(out_dir)));
                 }
+            }
+        }
+
+        dir_pairs
+    }
+
+    fn render_blocks(&self, out: &mut RenderLists) {
+        let wind_state = self.exec.wind_state();
+        let old_wind_state = self.exec.old_wind_state();
+
+        for (block_index, (block_pos, _placed_block)) in self.exec.machine().blocks.data.iter() {
+            let block_wind_state = &wind_state[block_index];
+
+            let dir_pairs = self.wind_dir_pairs(wind_state, block_index, block_pos);
+
+            for &(in_dir, out_dir) in &dir_pairs {
+                let center = render::machine::block_center(block_pos);
+
+                let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
+
+                // If the out_dir is None, there is no outgoing flow, so just
+                // draw the line to the block center
+                let out_vector: na::Vector3<f32> = out_dir
+                    .map_or(na::Vector3::zeros(), |out_dir| {
+                        na::convert(out_dir.to_vector())
+                    });
+
+                let in_pos = center + in_vector / 2.0;
+                let out_pos = center + out_vector / 2.0;
+
+                render::machine::render_arrow(
+                    &render::machine::Line {
+                        start: in_pos,
+                        end: out_pos,
+                        thickness: 0.05,
+                        color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+                    },
+                    0.0,
+                    &mut out.solid,
+                );
             }
         }
     }
