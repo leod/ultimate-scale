@@ -149,6 +149,36 @@ pub fn block_color(
     *color_override.unwrap_or(&na::Vector4::new(color.x, color.y, color.z, alpha))
 }
 
+pub fn render_bridge(
+    dir: Dir2,
+    length: f32,
+    size: f32,
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    color: &na::Vector4<f32>,
+    out: &mut RenderList,
+) {
+    let translation = na::Matrix4::new_translation(&center.coords);
+    let dir_offset: na::Vector3<f32> = na::convert(dir.embed().to_vector());
+    let output_transform = translation
+        * transform
+        * na::Matrix4::new_translation(&(dir_offset * length))
+        * na::Matrix4::new_rotation(dir.to_radians() * na::Vector3::z())
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+            1.0,
+            size,
+            size,
+        ));
+    out.add(
+        Object::Cube,
+        &InstanceParams {
+            transform: output_transform,
+            color: *color,
+            ..Default::default()
+        },
+    );
+}
+
 pub fn render_block(
     block: &Block,
     center: &na::Point3<f32>,
@@ -282,24 +312,16 @@ pub fn render_block(
             );
 
             let output_dir = Dir2::X_POS;
-            let output_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
+            let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
 
-            let output_transform = translation
-                * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
-                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                    1.0,
-                    output_size,
-                    output_size,
-                ));
-            out.add(
-                Object::Cube,
-                &InstanceParams {
-                    transform: output_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
-                    ..Default::default()
-                },
+            render_bridge(
+                Dir2::X_POS,
+                0.3,
+                bridge_size,
+                center,
+                transform,
+                &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                out,
             );
         }
         Block::BlipDuplicator { kind, .. } => {
@@ -320,44 +342,23 @@ pub fn render_block(
                 },
             );
 
-            let output_dir = Dir2::X_POS;
-            let output_size = 0.3;
-            let output_transform = translation
-                * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
-                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                    1.0,
-                    output_size,
-                    output_size,
-                ));
-            out.add(
-                Object::Cube,
-                &InstanceParams {
-                    transform: output_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
-                    ..Default::default()
-                },
+            render_bridge(
+                Dir2::X_NEG,
+                0.3,
+                0.3,
+                center,
+                transform,
+                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                out,
             );
-
-            let output_dir = Dir2::X_NEG;
-            let output_size = 0.3;
-            let output_transform = translation
-                * transform
-                * na::Matrix4::new_rotation(output_dir.to_radians() * na::Vector3::z())
-                * na::Matrix4::new_translation(&na::Vector3::new(0.3, 0.0, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                    1.0,
-                    output_size,
-                    output_size,
-                ));
-            out.add(
-                Object::Cube,
-                &InstanceParams {
-                    transform: output_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
-                    ..Default::default()
-                },
+            render_bridge(
+                Dir2::X_POS,
+                0.3,
+                0.3,
+                center,
+                transform,
+                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                out,
             );
         }
         Block::BlipWindSource { activated } => {
