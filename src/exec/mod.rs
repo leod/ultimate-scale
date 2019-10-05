@@ -21,6 +21,10 @@ pub struct Blip {
 
     /// We remember the previous grid position solely for visual purposes.
     pub old_pos: Option<Point3>,
+
+    /// Has this blip moved in the previous frame? If true, effects for
+    /// entering block will be applied in the next tick
+    pub moved: bool,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
@@ -277,6 +281,7 @@ impl Exec {
                     kind: kind,
                     pos: *pos,
                     old_pos: None,
+                    moved: true, // apply effects for entering block in next frame
                 };
                 blip_state[*output_index].blip_index = Some(blips.add(blip));
 
@@ -422,12 +427,31 @@ impl Exec {
     ) {
         assert_eq!(block_data[block_index].0, blip.pos);
 
-        let placed_block = block_data[block_index].1.clone();
+        if blip.moved {
+            // Blip moved in last tick. Apply effects of entering the new
+            // block.
+            blip.moved = false;
 
+            let placed_block = &mut block_data[block_index].1;
+            let remove = Self::on_blip_enter_block(blip, placed_block);
+            if remove {
+                // Effect of new block causes blip to be removed
+                debug!(
+                    "removing blip {} due to block {:?} effect",
+                    blip_index, placed_block,
+                );
+
+                remove_indices.push(blip_index);
+                return;
+            }
+        }
+
+        let placed_block = block_data[block_index].1.clone();
         let out_dir =
             Self::get_blip_move_dir(blip, &placed_block, block_ids, block_data, wind_state);
         let new_pos = if let Some(out_dir) = out_dir {
             Self::on_blip_leave_block(blip, out_dir, &mut block_data[block_index].1);
+            blip.moved = true;
 
             blip.pos + out_dir.to_vector()
         } else {
@@ -450,18 +474,6 @@ impl Exec {
             if let Some(out_dir) = out_dir {
                 // Apply effects of entering the new block
                 let new_placed_block = &mut block_data[*new_block_index].1;
-                let remove = Self::on_blip_enter_block(blip, out_dir, new_placed_block);
-
-                if remove {
-                    // Effect of new block causes blip to be removed
-                    debug!(
-                        "removing blip {} due to block {:?} effect",
-                        blip_index, new_placed_block,
-                    );
-
-                    remove_indices.push(blip_index);
-                    return;
-                }
             }
 
             if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
@@ -500,7 +512,7 @@ impl Exec {
         }
     }
 
-    fn on_blip_enter_block(blip: &Blip, _dir: Dir3, new_placed_block: &mut PlacedBlock) -> bool {
+    fn on_blip_enter_block(blip: &Blip, new_placed_block: &mut PlacedBlock) -> bool {
         match new_placed_block.block {
             Block::BlipDuplicator {
                 ref mut activated, ..
