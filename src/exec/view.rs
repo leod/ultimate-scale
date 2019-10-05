@@ -197,40 +197,33 @@ impl ExecView {
         }
     }
 
-    fn wind_dir_pairs(
+    fn render_wind(
         &self,
-        wind_state: &[WindState],
-        block_index: BlockIndex,
         block_pos: &Point3,
-    ) -> BTreeSet<(Dir3, Option<Dir3>)> {
-        // In which directions are our neighbors getting flow from us?
-        let mut out_dirs: Vec<_> = self
-            .exec
-            .machine()
-            .iter_neighbors(block_pos)
-            .filter(|(dir, neighbor_index)| wind_state[*neighbor_index].wind_in(dir.invert()))
-            .map(|(dir, _)| dir)
-            .collect();
+        in_dir: Dir3,
+        in_t: f32,
+        out_t: f32,
+        out: &mut RenderLists,
+    ) {
+        let center = render::machine::block_center(block_pos);
+        let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
+        let in_pos = center + in_vector;
 
-        // From which directions are we getting flow from a neighbor?
-        let in_dirs = Dir3::ALL
-            .iter()
-            .filter(|dir| wind_state[block_index].wind_in(**dir));
+        // Interpolate both start and end position
+        // (although in practice at most one position is interpolated at the same time)
+        let start = in_pos + in_t * (center - in_pos);
+        let end = center + out_t * (in_pos - center);
 
-        let mut dir_pairs = BTreeSet::new();
-
-        for &in_dir in in_dirs {
-            if out_dirs.is_empty() {
-                // There is no wind flowing out of this block
-                dir_pairs.insert((in_dir, None));
-            } else {
-                for &out_dir in &out_dirs {
-                    dir_pairs.insert((in_dir, Some(out_dir)));
-                }
-            }
-        }
-
-        dir_pairs
+        render::machine::render_arrow(
+            &render::machine::Line {
+                start,
+                end,
+                thickness: 0.05,
+                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+            },
+            0.0,
+            &mut out.solid,
+        );
     }
 
     fn render_blocks(&self, out: &mut RenderLists) {
@@ -238,36 +231,41 @@ impl ExecView {
         let old_wind_state = self.exec.old_wind_state();
 
         for (block_index, (block_pos, _placed_block)) in self.exec.machine().blocks.data.iter() {
-            let block_wind_state = &wind_state[block_index];
+            // Determine the set of wind in directions at this block
+            let wind_in_dirs: BTreeSet<Dir3> = Dir3::ALL
+                .iter()
+                .filter(|dir| wind_state[block_index].wind_in(**dir))
+                .cloned()
+                .collect();
 
-            let dir_pairs = self.wind_dir_pairs(wind_state, block_index, block_pos);
+            // Also determine the set of wind in directions in the previous tick
+            let old_wind_in_dirs: BTreeSet<Dir3> = Dir3::ALL
+                .iter()
+                .filter(|dir| old_wind_state[block_index].wind_in(**dir))
+                .cloned()
+                .collect();
 
-            for &(in_dir, out_dir) in &dir_pairs {
-                let center = render::machine::block_center(block_pos);
-
-                let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
-
-                // If the out_dir is None, there is no outgoing flow, so just
-                // draw the line to the block center
-                let out_vector: na::Vector3<f32> = out_dir
-                    .map_or(na::Vector3::zeros(), |out_dir| {
-                        na::convert(out_dir.to_vector())
-                    });
-
-                let in_pos = center + in_vector / 2.0;
-                let out_pos = center + out_vector / 2.0;
-
-                render::machine::render_arrow(
-                    &render::machine::Line {
-                        start: in_pos,
-                        end: out_pos,
-                        thickness: 0.05,
-                        color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-                    },
-                    0.0,
-                    &mut out.solid,
-                );
+            // For each incoming direction, one of the following cases holds:
+            // 1) The in direction is only in the new set, i.e. wind is appearing
+            for &in_dir in wind_in_dirs.difference(&old_wind_in_dirs) {
+                // Interpolate, i.e. draw partial line
+                self.render_wind(block_pos, in_dir, 0.0, 1.0 - self.tick_timer.progress(), out);
             }
+
+            // 2) The in direction is in both sets:
+            for &in_dir in wind_in_dirs.intersection(&old_wind_in_dirs) {
+                // Draw full line
+                self.render_wind(block_pos, in_dir, 0.0, 0.0, out);
+            }
+
+            // 3) The in direction is only in the old set, i.e. wind is disappearing:
+            for &in_dir in old_wind_in_dirs.difference(&wind_in_dirs) {
+                // Interpolate, i.e. draw partial line
+                self.render_wind(block_pos, in_dir, self.tick_timer.progress(), 0.0, out);
+            }
+
+            // 4) The pair is in neither set:
+            // Draw nothing.
         }
     }
 
