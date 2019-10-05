@@ -250,16 +250,20 @@ impl ExecView {
 
     fn render_blips(&self, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
-            if blip.old_pos.is_none() {
+            /*if blip.old_pos.is_none() {
                 // Workaround for the fact that we use old blip positions but
                 // render new machine state
                 continue;
-            }
+            }*/
 
             let center = render::machine::block_center(&blip.pos);
-            let old_center = render::machine::block_center(&blip.old_pos.unwrap());
 
-            let pos = old_center + self.tick_timer.progress() * (center - old_center);
+            let pos = if let Some(old_pos) = blip.old_pos {
+                let old_center = render::machine::block_center(&blip.old_pos.unwrap());
+                old_center + self.tick_timer.progress() * (center - old_center)
+            } else {
+                center
+            };
 
             let transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(0.3);

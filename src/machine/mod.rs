@@ -76,7 +76,11 @@ impl Block {
                 kind: _,
                 num_spawns,
                 activated,
-            } => Block::BlipSpawn { kind, num_spawns, activated },
+            } => Block::BlipSpawn {
+                kind,
+                num_spawns,
+                activated,
+            },
             Block::BlipDuplicator { kind: _, activated } => Block::BlipDuplicator {
                 kind: Some(kind),
                 activated,
