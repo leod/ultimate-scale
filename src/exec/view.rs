@@ -265,8 +265,19 @@ impl ExecView {
                 center
             };
 
+            let size = if blip.old_pos.is_none() {
+                // Animate spawning the blip
+                if self.tick_timer.progress() < 0.75 {
+                    0.0
+                } else {
+                    (self.tick_timer.progress() - 0.75) * 4.0
+                }
+            } else {
+                1.0
+            } * 0.3;
+
             let transform =
-                na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(0.3);
+                na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
             let color = render::machine::blip_color(blip.kind);
             let instance = render::Instance {
                 object: render::Object::Cube,
