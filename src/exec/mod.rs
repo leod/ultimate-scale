@@ -3,7 +3,7 @@ pub mod view;
 use log::debug;
 
 use crate::machine::grid::{Dir3, Grid3, Point3};
-use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock};
+use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 
 pub use view::ExecView;
@@ -42,6 +42,8 @@ pub struct BlipState {
 }
 
 pub struct Exec {
+    cur_tick: TickNum,
+
     machine: Machine,
     pub blips: VecOption<Blip>,
 
@@ -70,6 +72,7 @@ impl Exec {
         let old_blip_state = blip_state.clone();
 
         Exec {
+            cur_tick: 0,
             machine,
             blips: VecOption::new(),
             wind_state,
@@ -133,6 +136,7 @@ impl Exec {
 
         for (_block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block_blip_state(
+                self.cur_tick,
                 block_pos,
                 placed_block,
                 &self.machine.blocks.indices,
@@ -142,6 +146,8 @@ impl Exec {
         }
 
         self.check_consistency();
+
+        self.cur_tick += 1;
     }
 
     fn update_block_wind_state(
@@ -496,6 +502,7 @@ impl Exec {
     }
 
     fn update_block_blip_state(
+        cur_tick: TickNum,
         block_pos: &Point3,
         placed_block: &mut PlacedBlock,
         block_ids: &Grid3<Option<BlockIndex>>,
@@ -509,12 +516,16 @@ impl Exec {
             Block::BlipSpawn {
                 kind,
                 ref mut num_spawns,
+                ref mut activated,
             } => {
+                *activated = None;
+
                 if num_spawns.map_or(true, |n| n > 0) {
                     let output_pos = *block_pos + dir_x_pos.to_vector();
                     Self::try_spawn_blip(false, kind, &output_pos, block_ids, blip_state, blips);
 
                     *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
+                    *activated = Some(cur_tick);
                 }
             }
             Block::BlipDuplicator {

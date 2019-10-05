@@ -93,6 +93,7 @@ impl Default for Config {
                     Block::BlipSpawn {
                         kind: BlipKind::A,
                         num_spawns: None,
+                        activated: None,
                     },
                 ),
                 (
@@ -100,6 +101,7 @@ impl Default for Config {
                     Block::BlipSpawn {
                         kind: BlipKind::A,
                         num_spawns: Some(1),
+                        activated: None,
                     },
                 ),
                 (
