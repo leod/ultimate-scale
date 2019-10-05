@@ -249,7 +249,8 @@ impl ExecView {
             // 1) The in direction is only in the new set, i.e. wind is appearing
             for &in_dir in wind_in_dirs.difference(&old_wind_in_dirs) {
                 // Interpolate, i.e. draw partial line
-                self.render_wind(block_pos, in_dir, 0.0, 1.0 - self.tick_timer.progress(), out);
+                let out_t = 1.0 - self.tick_timer.progress();
+                self.render_wind(block_pos, in_dir, 0.0, out_t, out);
             }
 
             // 2) The in direction is in both sets:
@@ -261,7 +262,8 @@ impl ExecView {
             // 3) The in direction is only in the old set, i.e. wind is disappearing:
             for &in_dir in old_wind_in_dirs.difference(&wind_in_dirs) {
                 // Interpolate, i.e. draw partial line
-                self.render_wind(block_pos, in_dir, self.tick_timer.progress(), 0.0, out);
+                let in_t = self.tick_timer.progress();
+                self.render_wind(block_pos, in_dir, in_t, 0.0, out);
             }
 
             // 4) The pair is in neither set:

@@ -177,7 +177,9 @@ impl Exec {
                     let neighbor_pos = *block_pos + dir.to_vector();
                     let neighbor_index = block_ids.get(&neighbor_pos);
                     if let Some(Some(neighbor_index)) = neighbor_index {
-                        wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = true;
+                        if block_data[*neighbor_index].1.has_wind_hole_in(dir.invert()) {
+                            wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = true;
+                        }
                     }
                 }
             }
@@ -191,7 +193,10 @@ impl Exec {
                     let neighbor_pos = *block_pos + dir.to_vector();
                     let neighbor_index = block_ids.get(&neighbor_pos);
                     if let Some(Some(neighbor_index)) = neighbor_index {
-                        wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = activated;
+                        if block_data[*neighbor_index].1.has_wind_hole_in(dir.invert()) {
+                            wind_state[*neighbor_index].wind_in[dir.invert().to_index()] =
+                                activated;
+                        }
                     }
                 }
 
