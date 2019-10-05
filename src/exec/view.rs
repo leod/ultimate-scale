@@ -7,9 +7,9 @@ use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
-use crate::exec::{Exec, WindState};
+use crate::exec::Exec;
 use crate::machine::grid::{Dir3, Point3};
-use crate::machine::{grid, BlipKind, BlockIndex, Machine};
+use crate::machine::{grid, BlipKind, Machine};
 use crate::render::{self, Camera, EditCameraView, RenderLists};
 use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
@@ -282,7 +282,7 @@ impl ExecView {
             let center = render::machine::block_center(&blip.pos);
 
             let pos = if let Some(old_pos) = blip.old_pos {
-                let old_center = render::machine::block_center(&blip.old_pos.unwrap());
+                let old_center = render::machine::block_center(&old_pos);
                 old_center + self.tick_timer.progress() * (center - old_center)
             } else {
                 center

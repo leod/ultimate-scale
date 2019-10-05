@@ -361,7 +361,7 @@ impl Exec {
         let block_indices = &self.machine.blocks.indices;
         let block_data = &self.machine.blocks.data;
 
-        for (block_index, (block_pos, placed_block)) in block_data.iter() {
+        for (block_index, (block_pos, _placed_block)) in block_data.iter() {
             debug_assert_eq!(
                 block_indices[*block_pos],
                 Some(block_index),
@@ -470,11 +470,6 @@ impl Exec {
             blip.old_pos = Some(blip.pos);
 
             blip.pos = new_pos;
-
-            if let Some(out_dir) = out_dir {
-                // Apply effects of entering the new block
-                let new_placed_block = &mut block_data[*new_block_index].1;
-            }
 
             if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
                 // We cannot have two blips in the same block. Note

@@ -1,4 +1,3 @@
-use log::info;
 use nalgebra as na;
 
 use crate::machine::grid::{self, Dir2};
@@ -345,7 +344,6 @@ pub fn render_block(
                 },
             );
 
-            let output_dir = Dir2::X_POS;
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
             let bridge_length = bridge_length_animation(activated.is_some(), tick_time.fract());
 
