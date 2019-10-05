@@ -164,15 +164,36 @@ pub fn render_bridge(
         * transform
         * na::Matrix4::new_translation(&(dir_offset * length))
         * na::Matrix4::new_rotation(dir.to_radians() * na::Vector3::z())
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-            1.0,
-            size,
-            size,
-        ));
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, size, size));
     out.add(
         Object::Cube,
         &InstanceParams {
             transform: output_transform,
+            color: *color,
+            ..Default::default()
+        },
+    );
+}
+
+pub fn render_button(
+    dir: Dir2,
+    size: f32,
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    color: &na::Vector4<f32>,
+    out: &mut RenderList,
+) {
+    let translation = na::Matrix4::new_translation(&center.coords);
+    let dir_offset: na::Vector3<f32> = na::convert(dir.embed().to_vector());
+    let input_transform = translation
+        * transform
+        * na::Matrix4::new_translation(&(dir_offset * 0.5 * size))
+        * na::Matrix4::new_rotation(dir.to_radians() * na::Vector3::z())
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.3, size, size));
+    out.add(
+        Object::Cube,
+        &InstanceParams {
+            transform: input_transform,
             color: *color,
             ..Default::default()
         },
@@ -381,23 +402,13 @@ pub fn render_block(
                 },
             );
 
-            let input_dir = Dir2::Y_NEG;
-            let input_size = 0.6;
-
-            let input_transform = translation
-                * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.0, -0.3, 0.0))
-                * na::Matrix4::new_rotation(input_dir.to_radians() * na::Vector3::z())
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                    0.9, input_size, input_size,
-                ));
-            out.add(
-                Object::Cube,
-                &InstanceParams {
-                    transform: input_transform,
-                    color: block_color(color, &blip_spawn_color(), alpha),
-                    ..Default::default()
-                },
+            render_button(
+                Dir2::Y_NEG,
+                0.6,
+                center,
+                transform,
+                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                out,
             );
         }
         Block::Solid => {
