@@ -1,5 +1,5 @@
-use nalgebra as na;
 use log::info;
+use nalgebra as na;
 
 use crate::machine::grid::{self, Dir2};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
@@ -314,7 +314,9 @@ pub fn render_block(
             );
         }
         Block::BlipSpawn {
-            kind, num_spawns, activated,
+            kind,
+            num_spawns,
+            activated,
         } => {
             let cube_color = if num_spawns.is_some() {
                 na::Vector4::new(0.0, 0.5, 0.0, alpha)
