@@ -106,7 +106,7 @@ impl Block {
             Block::BlipSpawn { .. } => true,
             Block::BlipDuplicator { .. } => true,
             Block::Solid => false,
-            Block::BlipWindSource { .. } => true, //dir != Dir3::Y_NEG,
+            Block::BlipWindSource { .. } => true,
         }
     }
 
