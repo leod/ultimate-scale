@@ -187,11 +187,11 @@ impl Editor {
             self.save(&self.config.default_save_path);
         } else if key == self.config.layer_up_key {
             if self.machine.is_valid_layer(self.current_layer + 1) {
-                self.current_layer = self.current_layer + 1;
+                self.current_layer += 1;
             }
         } else if key == self.config.layer_down_key {
             if self.machine.is_valid_layer(self.current_layer - 1) {
-                self.current_layer = self.current_layer - 1;
+                self.current_layer -= 1;
             }
         } else if let Some(block) = self.config.block_keys.get(&key) {
             self.place_block.block = *block;

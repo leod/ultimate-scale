@@ -376,7 +376,8 @@ impl SavedMachine {
         }
     }
 
-    pub fn into_machine(&self) -> Machine {
+    pub fn into_machine(self) -> Machine {
+        // TODO: Make use of moving
         Machine::from_block_data(&self.size, &self.block_data)
     }
 }

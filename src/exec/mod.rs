@@ -33,7 +33,7 @@ pub struct WindState {
 }
 
 impl WindState {
-    pub fn wind_in(&self, dir: Dir3) -> bool {
+    pub fn wind_in(self, dir: Dir3) -> bool {
         self.wind_in[dir.to_index()]
     }
 }
@@ -105,13 +105,10 @@ impl Exec {
     pub fn update(&mut self) {
         self.check_consistency();
 
-        for index in 0..self.wind_state.len() {
-            self.old_wind_state[index] = self.wind_state[index];
-        }
+        self.old_wind_state[..].clone_from_slice(&self.wind_state);
+        self.old_blip_state[..].clone_from_slice(&self.blip_state);
 
         for index in 0..self.blip_state.len() {
-            self.old_blip_state[index] = self.blip_state[index];
-
             // The new blip state is written completely from scratch using the blips
             self.blip_state[index].blip_index = None;
         }
@@ -266,7 +263,7 @@ impl Exec {
         blips: &mut VecOption<Blip>,
     ) -> bool {
         if let Some(Some(output_index)) = block_ids.get(&pos) {
-            if let Some(blip_index) = blip_state[*output_index].blip_index.clone() {
+            if let Some(blip_index) = blip_state[*output_index].blip_index {
                 if invert {
                     debug!("removing blip {} at {:?}", blip_index, pos);
                     blips.remove(blip_index);
@@ -278,7 +275,7 @@ impl Exec {
                 debug!("spawning blip at {:?}", pos);
 
                 let blip = Blip {
-                    kind: kind,
+                    kind,
                     pos: *pos,
                     old_pos: None,
                     moved: true, // apply effects for entering block in next frame
@@ -568,12 +565,9 @@ impl Exec {
                     }
                 }
             }
-            Block::BlipDuplicator {
-                kind,
-                ref mut activated,
-            } => {
+            Block::BlipDuplicator { kind, activated } => {
                 // TODO: Only allow activating with specific kind?
-                if let Some(kind) = activated.clone() {
+                if let Some(kind) = activated {
                     Self::try_spawn_blip(
                         true,
                         kind,

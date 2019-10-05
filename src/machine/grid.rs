@@ -91,7 +91,7 @@ impl Sign {
         }
     }
 
-    pub fn to_f32(&self) -> f32 {
+    pub fn to_f32(self) -> f32 {
         self.to_number() as f32
     }
 
