@@ -1,4 +1,5 @@
 use nalgebra as na;
+use log::info;
 
 use crate::machine::grid::{self, Dir2};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
@@ -313,7 +314,7 @@ pub fn render_block(
             );
         }
         Block::BlipSpawn {
-            kind, num_spawns, ..
+            kind, num_spawns, activated,
         } => {
             let cube_color = if num_spawns.is_some() {
                 na::Vector4::new(0.0, 0.5, 0.0, alpha)
@@ -335,10 +336,22 @@ pub fn render_block(
 
             let output_dir = Dir2::X_POS;
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
+            let bridge_length = if let Some(activated_tick) = *activated {
+                let dt = tick_time - activated_tick as f32 - 1.0;
+
+                if dt <= 1.0 {
+                    let x = dt * std::f32::consts::PI;
+                    x.cos() * x.cos() * 0.75
+                } else {
+                    0.75
+                }
+            } else {
+                0.75
+            };
 
             render_bridge(
                 Dir2::X_POS,
-                0.75,
+                bridge_length,
                 bridge_size,
                 center,
                 transform,
