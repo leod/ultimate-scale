@@ -174,7 +174,7 @@ impl ExecView {
     }
 
     pub fn render(&mut self, out: &mut RenderLists) {
-        render::machine::render_machine(&self.exec.machine(), out);
+        render::machine::render_machine(&self.exec.machine(), self.cur_tick_time(), out);
         //render::machine::render_xy_grid(&self.exec.machine().size(), 0.01, &mut out.solid);
 
         self.render_blocks(out);

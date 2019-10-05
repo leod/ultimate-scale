@@ -202,6 +202,7 @@ pub fn render_button(
 
 pub fn render_block(
     block: &Block,
+    tick_time: f32,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: Option<&na::Vector4<f32>>,
@@ -453,7 +454,7 @@ pub fn placed_block_transform(placed_block: &PlacedBlock) -> na::Matrix4<f32> {
     na::Matrix4::new_rotation(placed_block.angle_xy_radians() * na::Vector3::z())
 }
 
-pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
+pub fn render_machine(machine: &Machine, tick_time: f32, out: &mut RenderLists) {
     let floor_size = na::Vector3::new(machine.size().x as f32, machine.size().y as f32, 1.0);
 
     let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
@@ -473,6 +474,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
 
         render_block(
             &placed_block.block,
+            tick_time,
             &center,
             &transform,
             None,
@@ -481,6 +483,7 @@ pub fn render_machine(machine: &Machine, out: &mut RenderLists) {
         );
         render_block(
             &placed_block.block,
+            tick_time,
             &center,
             &transform,
             None,

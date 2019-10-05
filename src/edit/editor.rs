@@ -231,7 +231,7 @@ impl Editor {
             &mut out.solid,
         );
 
-        render::machine::render_machine(&self.machine, out);
+        render::machine::render_machine(&self.machine, 0.0, out);
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + 0.01,
@@ -257,6 +257,7 @@ impl Editor {
             let block_transform = render::machine::placed_block_transform(&self.place_block);
             render::machine::render_block(
                 &self.place_block.block,
+                0.0,
                 &block_center,
                 &block_transform,
                 //Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
