@@ -342,12 +342,12 @@ impl Machine {
 
     pub fn iter_neighbors<'a>(
         &'a self,
-        pos: Point3,
+        pos: &'a Point3,
     ) -> impl Iterator<Item = (Dir3, BlockIndex)> + 'a {
         Dir3::ALL.iter().filter_map(move |dir| {
             self.blocks
                 .indices
-                .get(&(pos + dir.to_vector()))
+                .get(&(*pos + dir.to_vector()))
                 .and_then(|index| index.as_ref())
                 .map(|index| (*dir, *index))
         })

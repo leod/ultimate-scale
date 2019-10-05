@@ -90,6 +90,10 @@ impl Exec {
         &self.wind_state
     }
 
+    pub fn old_wind_state(&self) -> &[WindState] {
+        &self.old_wind_state
+    }
+
     pub fn blips(&self) -> &VecOption<Blip> {
         &self.blips
     }
