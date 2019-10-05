@@ -108,6 +108,10 @@ impl Exec {
             self.blip_state[index].blip_index = None;
         }
 
+        for (_block_index, (_block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
+            Self::clear_block_blip_state(placed_block);
+        }
+
         for (block_index, (block_pos, _placed_block)) in self.machine.blocks.data.iter() {
             Self::update_block_wind_state(
                 block_index,
@@ -565,9 +569,23 @@ impl Exec {
                         blip_state,
                         blips,
                     );
-
-                    *activated = None;
                 }
+            }
+            _ => {}
+        }
+    }
+
+    fn clear_block_blip_state(placed_block: &mut PlacedBlock) {
+        match placed_block.block {
+            Block::BlipSpawn {
+                ref mut activated, ..
+            } => {
+                *activated = None;
+            }
+            Block::BlipDuplicator {
+                ref mut activated, ..
+            } => {
+                *activated = None;
             }
             _ => {}
         }

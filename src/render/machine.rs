@@ -142,6 +142,15 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
     }
 }
 
+pub fn bridge_length_animation(activated: bool, progress: f32) -> f32 {
+    (if activated && progress <= 1.0 {
+        let x = progress * std::f32::consts::PI;
+        x.cos() * x.cos()
+    } else {
+        1.0
+    }) * 0.75
+}
+
 pub fn block_color(
     color_override: Option<&na::Vector4<f32>>,
     color: &na::Vector3<f32>,
@@ -338,18 +347,7 @@ pub fn render_block(
 
             let output_dir = Dir2::X_POS;
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
-            let bridge_length = if let Some(activated_tick) = *activated {
-                let dt = tick_time - activated_tick as f32 - 1.0;
-
-                if dt <= 1.0 {
-                    let x = dt * std::f32::consts::PI;
-                    x.cos() * x.cos()
-                } else {
-                    1.0
-                }
-            } else {
-                1.0
-            } * 0.75;
+            let bridge_length = bridge_length_animation(activated.is_some(), tick_time.fract());
 
             render_bridge(
                 Dir2::X_POS,
@@ -361,7 +359,9 @@ pub fn render_block(
                 out,
             );
         }
-        Block::BlipDuplicator { kind, .. } => {
+        Block::BlipDuplicator {
+            kind, activated, ..
+        } => {
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
@@ -379,9 +379,11 @@ pub fn render_block(
                 },
             );
 
+            let bridge_length = bridge_length_animation(activated.is_some(), tick_time.fract());
+
             render_bridge(
                 Dir2::X_NEG,
-                0.75,
+                bridge_length,
                 0.3,
                 center,
                 transform,
@@ -390,7 +392,7 @@ pub fn render_block(
             );
             render_bridge(
                 Dir2::X_POS,
-                0.75,
+                bridge_length,
                 0.3,
                 center,
                 transform,
