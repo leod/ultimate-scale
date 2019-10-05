@@ -19,6 +19,16 @@ impl Default for BlipKind {
     }
 }
 
+impl BlipKind {
+    pub fn next(self) -> BlipKind {
+        match self {
+            BlipKind::A => BlipKind::B,
+            BlipKind::B => BlipKind::C,
+            BlipKind::C => BlipKind::A,
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     PipeXY,
@@ -38,7 +48,7 @@ pub enum Block {
     },
     BlipDuplicator {
         #[serde(default)]
-        kind: BlipKind,
+        kind: Option<BlipKind>,
         activated: Option<BlipKind>,
     },
     BlipWindSource {
@@ -48,6 +58,28 @@ pub enum Block {
 }
 
 impl Block {
+    pub fn kind(&self) -> Option<BlipKind> {
+        match self {
+            Block::BlipSpawn { kind, .. } => Some(*kind),
+            Block::BlipDuplicator { kind, .. } => *kind,
+            _ => None,
+        }
+    }
+
+    pub fn with_kind(&self, kind: BlipKind) -> Block {
+        match *self {
+            Block::BlipSpawn {
+                kind: _,
+                num_spawns,
+            } => Block::BlipSpawn { kind, num_spawns },
+            Block::BlipDuplicator { kind: _, activated } => Block::BlipDuplicator {
+                kind: Some(kind),
+                activated,
+            },
+            x => x,
+        }
+    }
+
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         match self {
             Block::PipeXY => dir == Dir3::Y_NEG || dir == Dir3::Y_POS,

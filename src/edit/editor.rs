@@ -177,6 +177,10 @@ impl Editor {
             } else {
                 self.place_block.rotate_ccw();
             }
+        } else if key == self.config.block_kind_key {
+            if let Some(current_kind) = self.place_block.block.kind() {
+                self.place_block.block = self.place_block.block.with_kind(current_kind.next());
+            }
         } else if key == self.config.start_exec_key {
             self.start_exec = true;
         } else if key == self.config.save_key {

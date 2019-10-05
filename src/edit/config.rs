@@ -45,6 +45,7 @@ impl ModifiedKey {
 pub struct Config {
     pub default_save_path: PathBuf,
     pub rotate_block_key: ModifiedKey,
+    pub block_kind_key: ModifiedKey,
     pub start_exec_key: ModifiedKey,
     pub save_key: ModifiedKey,
     pub layer_up_key: ModifiedKey,
@@ -58,6 +59,7 @@ impl Default for Config {
         Config {
             default_save_path: PathBuf::from("machine.json"),
             rotate_block_key: ModifiedKey::new(VirtualKeyCode::R),
+            block_kind_key: ModifiedKey::new(VirtualKeyCode::C),
             start_exec_key: ModifiedKey::new(VirtualKeyCode::Space),
             save_key: ModifiedKey::ctrl(VirtualKeyCode::S),
             layer_up_key: ModifiedKey::new(VirtualKeyCode::Tab),
@@ -103,7 +105,7 @@ impl Default for Config {
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key4),
                     Block::BlipDuplicator {
-                        kind: BlipKind::A,
+                        kind: Some(BlipKind::A),
                         activated: None,
                     },
                 ),
