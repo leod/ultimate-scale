@@ -104,6 +104,7 @@ impl Block {
     pub fn has_wind_hole_in(&self, dir: Dir3) -> bool {
         match self {
             Block::FunnelXY => dir == Dir3::Y_NEG,
+            Block::WindSource => false,
             _ => self.has_wind_hole(dir),
         }
     }
