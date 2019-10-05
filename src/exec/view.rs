@@ -65,6 +65,10 @@ impl ExecView {
         self.status
     }
 
+    pub fn cur_tick_time(&self) -> f32 {
+        self.exec.cur_tick as f32 + self.tick_timer.progress()
+    }
+
     pub fn update(&mut self, dt: Duration, camera: &Camera, edit_camera_view: &EditCameraView) {
         self.update_mouse_grid_pos(camera, edit_camera_view);
 

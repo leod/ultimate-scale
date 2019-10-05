@@ -29,6 +29,8 @@ impl BlipKind {
     }
 }
 
+pub type TickNum = usize;
+
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     PipeXY,
@@ -45,6 +47,8 @@ pub enum Block {
     BlipSpawn {
         kind: BlipKind,
         num_spawns: Option<usize>,
+        #[serde(default)]
+        activated: Option<TickNum>,
     },
     BlipDuplicator {
         #[serde(default)]
@@ -71,7 +75,8 @@ impl Block {
             Block::BlipSpawn {
                 kind: _,
                 num_spawns,
-            } => Block::BlipSpawn { kind, num_spawns },
+                activated,
+            } => Block::BlipSpawn { kind, num_spawns, activated },
             Block::BlipDuplicator { kind: _, activated } => Block::BlipDuplicator {
                 kind: Some(kind),
                 activated,
