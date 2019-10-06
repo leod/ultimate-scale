@@ -186,31 +186,6 @@ pub fn render_bridge(
     );
 }
 
-pub fn render_button(
-    dir: Dir2,
-    size: f32,
-    center: &na::Point3<f32>,
-    transform: &na::Matrix4<f32>,
-    color: &na::Vector4<f32>,
-    out: &mut RenderList,
-) {
-    let translation = na::Matrix4::new_translation(&center.coords);
-    let dir_offset: na::Vector3<f32> = na::convert(dir.embed().to_vector());
-    let input_transform = translation
-        * transform
-        * na::Matrix4::new_translation(&(dir_offset * 0.5 * size))
-        * na::Matrix4::new_rotation(dir.to_radians() * na::Vector3::z())
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.3, size, size));
-    out.add(
-        Object::Cube,
-        &InstanceParams {
-            transform: input_transform,
-            color: *color,
-            ..Default::default()
-        },
-    );
-}
-
 pub fn render_block(
     block: &Block,
     tick_time: f32,
@@ -422,8 +397,14 @@ pub fn render_block(
                 },
             );
 
-            render_button(
+            let button_length = if *activated {
+                0.4
+            } else {
+                0.45
+            };
+            render_bridge(
                 Dir2::Y_NEG,
+                button_length,
                 0.6,
                 center,
                 transform,
