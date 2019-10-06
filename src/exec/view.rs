@@ -271,6 +271,43 @@ impl ExecView {
         }
     }
 
+    fn blip_spawn_size_animation(t: f32) -> f32 {
+        /*if t < 0.75 {
+            0.0
+        } else {
+            (t - 0.75) * 4.0
+        }*/
+
+        // Periodic cubic spline interpolation of these points:
+        //  0 0
+        //  0.75 1.1
+        //  1 1
+        //
+        // Using this tool:
+        //     https://tools.timodenk.com/cubic-spline-interpolation
+        /*if t <= 0.75 {
+            -4.9778 * t.powi(3) + 5.6 * t.powi(2) + 0.06667 * t
+        } else {
+            14.933 * t.powi(3) - 39.2 * t.powi(2) + 33.667 * t - 8.4
+        }*/
+
+        // Natural cubic spline interpolation of these points:
+        //  0 0
+        //  0.4 0.3
+        //  0.8 1.2
+        //  1 1
+        //
+        // Using this tool:
+        //     https://tools.timodenk.com/cubic-spline-interpolation
+        if t <= 0.4 {
+            4.4034 * t.powi(3) - 4.5455e-2 * t
+        } else if t <= 0.8 {
+            -1.2642e1 * t.powi(3) + 2.0455e1 * t.powi(2) - 8.1364 * t + 1.0909
+        } else {
+            1.6477e1 * t.powi(3) - 4.9432e1 * t.powi(2) + 4.7773e1 * t - 1.3818e1
+        }
+    }
+
     fn render_blips(&self, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
             /*if blip.old_pos.is_none() {
@@ -290,11 +327,7 @@ impl ExecView {
 
             let size = if blip.old_pos.is_none() {
                 // Animate spawning the blip
-                if self.tick_timer.progress() < 0.75 {
-                    0.0
-                } else {
-                    (self.tick_timer.progress() - 0.75) * 4.0
-                }
+                Self::blip_spawn_size_animation(self.tick_timer.progress())
             } else {
                 1.0
             } * 0.3;

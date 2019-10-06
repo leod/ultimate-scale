@@ -569,7 +569,7 @@ impl Exec {
                     }
                 }
             }
-            Block::BlipDuplicator { kind, activated } => {
+            Block::BlipDuplicator { activated, .. } => {
                 // TODO: Only allow activating with specific kind?
                 if let Some(kind) = activated {
                     Self::try_spawn_blip(
