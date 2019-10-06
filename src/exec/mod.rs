@@ -25,6 +25,9 @@ pub struct Blip {
     /// Has this blip moved in the previous frame? If true, effects for
     /// entering block will be applied in the next tick
     pub moved: bool,
+
+    /// If true, blip will be removed in the next tick.
+    pub dead: bool,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
@@ -266,7 +269,8 @@ impl Exec {
             if let Some(blip_index) = blip_state[*output_index].blip_index {
                 if invert {
                     debug!("removing blip {} at {:?}", blip_index, pos);
-                    blips.remove(blip_index);
+                    //blips.remove(blip_index);
+                    blips[blip_index].dead = true;
                     blip_state[*output_index].blip_index = None;
                 }
 
@@ -279,6 +283,7 @@ impl Exec {
                     pos: *pos,
                     old_pos: None,
                     moved: true, // apply effects for entering block in next frame
+                    dead: false,
                 };
                 blip_state[*output_index].blip_index = Some(blips.add(blip));
 
@@ -298,6 +303,18 @@ impl Exec {
         blips: &mut VecOption<Blip>,
     ) {
         let mut remove_indices = Vec::new();
+
+        for (blip_index, blip) in blips.iter() {
+            if blip.dead {
+                remove_indices.push(blip_index)
+            }
+        }
+
+        for &remove_index in &remove_indices {
+            blips.remove(remove_index);
+        }
+
+        remove_indices.clear();
 
         for (blip_index, blip) in blips.iter_mut() {
             let block_index = block_ids.get(&blip.pos);
@@ -332,7 +349,7 @@ impl Exec {
             } else {
                 // Out of bounds.
                 // TODO: Can this happen?
-                debug!("removing blip {} due to out-of-bounds", blip_index);
+                debug!("will mark blip {} as dead due to out-of-bounds", blip_index);
                 remove_indices.push(blip_index);
             };
         }
@@ -341,7 +358,7 @@ impl Exec {
             if blips.contains(remove_index) {
                 let pos = blips[remove_index].pos;
 
-                debug!("removing blip {} at pos {:?}", remove_index, pos);
+                debug!("marking blip {} as dead at pos {:?}", remove_index, pos);
 
                 if let Some(Some(block_index)) = block_ids.get(&pos) {
                     if blip_state[*block_index].blip_index == Some(remove_index) {
@@ -349,7 +366,8 @@ impl Exec {
                     }
                 }
 
-                blips.remove(remove_index);
+                blips[remove_index].dead = true;
+                //blips.remove(remove_index);
             }
         }
     }
@@ -373,15 +391,17 @@ impl Exec {
             let block_index = block_indices[blip.pos].unwrap();
             let blip_index_in_block = self.blip_state[block_index].blip_index;
 
-            debug_assert_eq!(
-                blip_index_in_block,
-                Some(blip_index),
-                "blip with index {} has position {:?}, which has block index {}, but blip state stores blip index {:?} at that position",
-                blip_index,
-                blip.pos,
-                block_index,
-                blip_index_in_block,
-            );
+            if !blip.dead {
+                debug_assert_eq!(
+                    blip_index_in_block,
+                    Some(blip_index),
+                    "blip with index {} has position {:?}, which has block index {}, but blip state stores blip index {:?} at that position",
+                    blip_index,
+                    blip.pos,
+                    block_index,
+                    blip_index_in_block,
+                );
+            }
         }
     }
 
@@ -434,7 +454,7 @@ impl Exec {
             if remove {
                 // Effect of new block causes blip to be removed
                 debug!(
-                    "removing blip {} due to block {:?} effect",
+                    "will mark blip {} as dead due to block {:?} effect",
                     blip_index, placed_block,
                 );
 
@@ -476,7 +496,7 @@ impl Exec {
                 // spawn any blips in this function, so the indices
                 // stay valid.
                 debug!(
-                    "{} bumped into {}, removing",
+                    "{} bumped into {}, will mark as dead",
                     blip_index, new_block_blip_index
                 );
 
@@ -488,7 +508,7 @@ impl Exec {
         } else {
             // We are on the grid, but there is no block at our position
             // -> remove blip
-            debug!("removing blip {} due to no block", blip_index);
+            debug!("will mark blip {} as dead due to no block", blip_index);
             remove_indices.push(blip_index);
         }
     }
