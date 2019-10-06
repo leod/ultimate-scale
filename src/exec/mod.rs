@@ -507,14 +507,18 @@ impl Exec {
     fn on_blip_enter_block(blip: &Blip, new_placed_block: &mut PlacedBlock) -> bool {
         match new_placed_block.block {
             Block::BlipDuplicator {
-                ref mut activated, ..
+                kind,
+                ref mut activated,
+                ..
             } => {
                 // TODO: Resolve possible race condition in blip
                 //       duplicator. If two blips of different
                 //       kind race into the duplicator, the output
                 //       kind depends on the order of blip
                 //       evaluation.
-                *activated = Some(blip.kind);
+                if kind == None || kind == Some(blip.kind) {
+                    *activated = Some(blip.kind);
+                }
 
                 // Remove blip
                 true
