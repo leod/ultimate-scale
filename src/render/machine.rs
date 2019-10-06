@@ -25,6 +25,7 @@ pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
 pub struct Line {
     pub start: na::Point3<f32>,
     pub end: na::Point3<f32>,
+    pub roll: f32,
     pub thickness: f32,
     pub color: na::Vector4<f32>,
 }
@@ -103,6 +104,7 @@ pub fn render_cuboid_wireframe(
             &Line {
                 start: cuboid.corner_pos(start_idx),
                 end: cuboid.corner_pos(end_idx),
+                roll: 0.0,
                 thickness,
                 color: *color,
             },

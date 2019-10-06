@@ -28,7 +28,7 @@ impl Default for Config {
             pause_resume_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
             frame_key: VirtualKeyCode::F,
-            default_ticks_per_sec: 2.0,
+            default_ticks_per_sec: 0.5,
         }
     }
 }
@@ -218,6 +218,7 @@ impl ExecView {
             &render::machine::Line {
                 start,
                 end,
+                roll: 0.0,
                 thickness: 0.05,
                 color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
             },
