@@ -113,6 +113,13 @@ impl Default for Config {
                 ),
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key5),
+                    Block::BlipDuplicator {
+                        kind: None,
+                        activated: None,
+                    },
+                ),
+                (
+                    ModifiedKey::ctrl(VirtualKeyCode::Key6),
                     Block::BlipWindSource { activated: false },
                 ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
