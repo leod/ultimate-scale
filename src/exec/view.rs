@@ -329,6 +329,9 @@ impl ExecView {
             let size = if blip.old_pos.is_none() {
                 // Animate spawning the blip
                 Self::blip_spawn_size_animation(self.tick_timer.progress())
+            } else if blip.dead {
+                // Animate killing the blip
+                Self::blip_spawn_size_animation(1.0 - self.tick_timer.progress())
             } else {
                 1.0
             } * 0.3;
