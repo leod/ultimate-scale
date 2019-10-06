@@ -458,6 +458,9 @@ impl Exec {
                     blip_index, placed_block,
                 );
 
+                // Disable interpolation for this blip
+                blip.old_pos = None;
+
                 remove_indices.push(blip_index);
                 return;
             }
