@@ -82,10 +82,10 @@ impl Game {
             .render
             .deferred_shading
             .as_ref()
-            .map(|deferred_shading| {
+            .map(|deferred_shading_config| {
                 DeferredShading::create(
                     facade,
-                    &deferred_shading,
+                    &deferred_shading_config,
                     config.view.window_size,
                     &config.render.shadow_mapping,
                 )
@@ -240,6 +240,8 @@ impl Game {
                 .on_window_resize(facade, new_window_size)
                 .unwrap();
         }
+
+        self.font.on_window_resize(new_window_size);
     }
 
     fn perspective_matrix(
