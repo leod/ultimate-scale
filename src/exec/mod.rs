@@ -49,7 +49,7 @@ pub struct Exec {
     cur_tick: TickNum,
 
     machine: Machine,
-    pub blips: VecOption<Blip>,
+    blips: VecOption<Blip>,
 
     /// Wind state for each block, indexed by BlockIndex
     wind_state: Vec<WindState>,
@@ -59,7 +59,7 @@ pub struct Exec {
     old_wind_state: Vec<WindState>,
 
     /// Blip state for each block, indexed by BlockIndex
-    pub blip_state: Vec<BlipState>,
+    blip_state: Vec<BlipState>,
 
     /// Blip state from the previous tick
     old_blip_state: Vec<BlipState>,
