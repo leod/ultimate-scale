@@ -37,8 +37,8 @@ pub fn render_line(line: &Line, out: &mut RenderList) {
 
     // This will roll the line somewhat, works nicely for the cuboid wireframe
     let up = d.cross(&na::Vector3::x()) + d.cross(&na::Vector3::y()) + d.cross(&na::Vector3::z());
-
-    let look_at = na::Isometry3::face_towards(&center, &line.end, &up);
+    let rot = na::Rotation3::new(d.normalize() * line.roll);
+    let look_at = na::Isometry3::face_towards(&center, &line.end, &(rot * up));
 
     let scaling = na::Vector3::new(
         line.thickness,

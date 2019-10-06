@@ -1,4 +1,5 @@
 pub mod grid;
+pub mod level;
 
 use serde::{Deserialize, Serialize};
 
