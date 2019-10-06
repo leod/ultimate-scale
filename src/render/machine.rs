@@ -143,13 +143,13 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
     }
 }
 
-pub fn bridge_length_animation(activated: bool, progress: f32) -> f32 {
-    (if activated && progress <= 1.0 {
+pub fn bridge_length_animation(min: f32, max: f32, activated: bool, progress: f32) -> f32 {
+    min + (if activated && progress <= 1.0 {
         let x = progress * std::f32::consts::PI;
         x.cos().abs()
     } else {
         1.0
-    }) * 0.75
+    }) * (max - min)
 }
 
 pub fn block_color(
@@ -347,7 +347,8 @@ pub fn render_block(
             );
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
-            let bridge_length = bridge_length_animation(activated.is_some(), tick_time.fract());
+            let bridge_length =
+                bridge_length_animation(0.15, 0.75, activated.is_some(), tick_time.fract());
 
             render_bridge(
                 Dir2::X_POS,
@@ -379,7 +380,8 @@ pub fn render_block(
                 },
             );
 
-            let bridge_length = bridge_length_animation(activated.is_some(), tick_time.fract());
+            let bridge_length =
+                bridge_length_animation(0.35, 0.75, activated.is_some(), tick_time.fract());
 
             render_bridge(
                 Dir2::X_NEG,
