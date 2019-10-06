@@ -398,11 +398,7 @@ pub fn render_block(
                 },
             );
 
-            let button_length = if *activated {
-                0.4
-            } else {
-                0.45
-            };
+            let button_length = if *activated { 0.4 } else { 0.45 };
             render_bridge(
                 Dir2::Y_NEG,
                 button_length,

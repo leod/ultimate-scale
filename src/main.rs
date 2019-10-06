@@ -39,7 +39,9 @@ fn main() {
     info!("Opening window");
     let mut events_loop = glutin::EventsLoop::new();
     let display = {
-        let window_builder = glutin::WindowBuilder::new().with_dimensions(config.view.window_size);
+        let window_builder = glutin::WindowBuilder::new()
+            .with_dimensions(config.view.window_size)
+            .with_title("Ultimate Scale!");
         let context_builder = glutin::ContextBuilder::new();
         glium::Display::new(window_builder, context_builder, &events_loop).unwrap()
     };
