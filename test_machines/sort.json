@@ -1,0 +1,485 @@
+{
+  "size": [
+    30,
+    30,
+    4
+  ],
+  "block_data": [
+    [
+      [
+        7,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "B",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        15,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        15,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        16,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        17,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipDuplicator": {
+            "kind": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        22,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipDuplicator": {
+            "kind": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        22,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        23,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        26,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        27,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ]
+  ]
+}
