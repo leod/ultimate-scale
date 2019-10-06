@@ -144,7 +144,7 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
 pub fn bridge_length_animation(activated: bool, progress: f32) -> f32 {
     (if activated && progress <= 1.0 {
         let x = progress * std::f32::consts::PI;
-        x.cos() * x.cos()
+        x.cos().abs()
     } else {
         1.0
     }) * 0.75
