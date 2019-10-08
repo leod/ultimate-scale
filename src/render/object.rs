@@ -15,6 +15,8 @@ pub enum Object {
     LineY,
     LineZ,
 
+    TessellatedCube,
+
     PipeSegment,
     PipeSplit,
     PipeBend,
@@ -248,7 +250,7 @@ impl Object {
                 ObjectBuffers::from_slices(
                     facade,
                     glium::index::PrimitiveType::TrianglesList,
-                    CUBE_VERTICES,
+                    CUBE_POSITIONS,
                     CUBE_NORMALS,
                     CUBE_INDICES,
                 )
@@ -280,6 +282,33 @@ impl Object {
                     &[0, 1],
                 )
             }
+            Object::TessellatedCube => {
+                let mut positions = Vec::new();
+                let mut normals = Vec::new();
+                let mut indices = Vec::new();
+                let n = 64;
+
+                for i in 0..n {
+                    let x_offset = i as f32 / n as f32 - 0.5;
+
+                    for (&position, &normal) in CUBE_POSITIONS.iter().zip(CUBE_NORMALS.iter()) {
+                        positions.push([x_offset + position[0] / n as f32, position[1], position[2]]);
+                        normals.push(normal);
+                    }
+
+                    for &index in CUBE_INDICES {
+                        indices.push((CUBE_POSITIONS.len() * i) as u32 + index);
+                    }
+                }
+
+                ObjectBuffers::from_slices(
+                    facade,
+                    glium::index::PrimitiveType::TrianglesList,
+                    &positions,
+                    &normals,
+                    &indices,
+                )
+            }
             Object::PipeSegment =>
                 ObjectBuffers::load_wavefront(facade, Path::new("resources/pipe_seg.obj")),
             Object::PipeSplit =>
@@ -291,7 +320,7 @@ impl Object {
     }
 }
 
-pub const CUBE_VERTICES: &[[f32; 3]] = &[
+pub const CUBE_POSITIONS: &[[f32; 3]] = &[
     // Front
     [-0.5, -0.5,  0.5],
     [ 0.5, -0.5,  0.5],
