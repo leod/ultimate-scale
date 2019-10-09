@@ -6,6 +6,7 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
+use crate::render::render_list::InstanceParams;
 use crate::render::{Camera, Context, RenderLists, Resources};
 
 #[derive(Debug, Clone)]
@@ -352,9 +353,6 @@ impl ShadowMapping {
 
         // Render scene from the camera's point of view
         {
-            let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
-            let mat_view: [[f32; 4]; 4] = context.camera.view.into();
-
             let params = glium::DrawParameters {
                 backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
                 depth: glium::Depth {
@@ -367,26 +365,17 @@ impl ShadowMapping {
 
             for instance in &render_lists.solid.instances {
                 let light_mvp = light_projection * light_view * instance.params.transform;
-
-                let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
                 let mat_light_mvp: [[f32; 4]; 4] = light_mvp.into();
-                let color: [f32; 4] = instance.params.color.into();
-                let light_pos: [f32; 3] = context.main_light_pos.coords.into();
 
                 let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
                     .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
                     .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
 
-                let uniforms = uniform! {
-                    mat_model: mat_model,
-                    mat_view: mat_view,
-                    mat_projection: mat_projection,
-                    mat_light_mvp: mat_light_mvp,
-                    color: color,
-                    t: context.elapsed_time_secs,
-                    light_pos: light_pos,
-                    shadow_map: shadow_map,
-                };
+                let uniforms = instance
+                    .params
+                    .uniforms(context)
+                    .add("mat_light_mvp", mat_light_mvp)
+                    .add("shadow_map", shadow_map);
 
                 let buffers = resources.get_object_buffers(instance.object);
                 buffers.index_buffer.draw(

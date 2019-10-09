@@ -13,8 +13,7 @@ use nalgebra as na;
 pub use camera::{Camera, EditCameraView};
 pub use light::Light;
 pub use object::Object;
-pub use render_list::RenderList;
-pub use render_list::{Instance, InstanceParams};
+pub use render_list::{DefaultInstanceParams, Instance, InstanceParams, RenderList};
 pub use resources::Resources;
 
 pub struct Context {
@@ -26,10 +25,18 @@ pub struct Context {
 
 #[derive(Default, Clone)]
 pub struct RenderLists {
-    pub solid: RenderList,
-    pub solid_shadow: RenderList,
-    pub transparent: RenderList,
-    pub plain: RenderList,
+    /// Instances that may be shadowed.
+    pub solid: RenderList<DefaultInstanceParams>,
+
+    /// Instances that cast a shadow.
+    pub solid_shadow: RenderList<DefaultInstanceParams>,
+
+    /// Transparent instances.
+    pub transparent: RenderList<DefaultInstanceParams>,
+
+    /// Non-shadowed instances.
+    pub plain: RenderList<DefaultInstanceParams>,
+
     pub lights: Vec<Light>,
 }
 
