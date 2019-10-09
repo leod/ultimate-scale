@@ -320,6 +320,7 @@ impl Object {
     }
 }
 
+#[rustfmt::skip]
 pub const CUBE_POSITIONS: &[[f32; 3]] = &[
     // Front
     [-0.5, -0.5,  0.5],
@@ -358,6 +359,7 @@ pub const CUBE_POSITIONS: &[[f32; 3]] = &[
     [-0.5, -0.5,  0.5],
 ];
 
+#[rustfmt::skip]
 pub const CUBE_NORMALS: &[[f32; 3]] = &[
     // Front
     [ 0.0,  0.0,  1.0],
@@ -396,6 +398,7 @@ pub const CUBE_NORMALS: &[[f32; 3]] = &[
     [ 0.0, -1.0,  0.0],
 ];
 
+#[rustfmt::skip]
 pub const CUBE_INDICES: &[u32] = &[
     // Front
     0, 1, 2, 0, 2, 3,
