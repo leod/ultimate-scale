@@ -1,8 +1,32 @@
 use glium::uniform;
+use nalgebra as na;
 
-use crate::render::object::{Instance, InstanceParams, Object};
+use crate::render::object::Object;
 use crate::render::resources::Resources;
 use crate::render::Context;
+
+#[derive(Clone, Debug)]
+pub struct InstanceParams {
+    pub transform: na::Matrix4<f32>,
+    pub color: na::Vector4<f32>,
+}
+
+impl Default for InstanceParams {
+    fn default() -> InstanceParams {
+        InstanceParams {
+            transform: na::Matrix4::identity(),
+            color: na::Vector4::new(1.0, 1.0, 1.0, 1.0),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Instance {
+    pub object: Object,
+    pub params: InstanceParams,
+}
+
+impl Instance {}
 
 #[derive(Default, Clone)]
 pub struct RenderList {
@@ -52,7 +76,7 @@ impl RenderList {
 
             let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
             let color: [f32; 4] = instance.params.color.into();
-            let uniforms = uniform! {
+            let mut uniforms = uniform! {
                 mat_model: mat_model,
                 mat_view: mat_view,
                 mat_projection: mat_projection,

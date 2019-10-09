@@ -12,8 +12,9 @@ use nalgebra as na;
 
 pub use camera::{Camera, EditCameraView};
 pub use light::Light;
-pub use object::{Instance, InstanceParams, Object};
+pub use object::Object;
 pub use render_list::RenderList;
+pub use render_list::{Instance, InstanceParams};
 pub use resources::Resources;
 
 pub struct Context {
