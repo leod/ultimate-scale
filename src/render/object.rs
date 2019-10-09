@@ -141,29 +141,6 @@ impl ObjectBuffers {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct InstanceParams {
-    pub transform: na::Matrix4<f32>,
-    pub color: na::Vector4<f32>,
-}
-
-impl Default for InstanceParams {
-    fn default() -> InstanceParams {
-        InstanceParams {
-            transform: na::Matrix4::identity(),
-            color: na::Vector4::new(1.0, 1.0, 1.0, 1.0),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Instance {
-    pub object: Object,
-    pub params: InstanceParams,
-}
-
-impl Instance {}
-
 #[derive(Debug)]
 pub enum CreationError {
     VertexBufferCreationError(glium::vertex::BufferCreationError),
