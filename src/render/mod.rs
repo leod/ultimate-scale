@@ -1,5 +1,6 @@
 pub mod camera;
 pub mod deferred;
+pub mod instance;
 pub mod light;
 pub mod machine;
 pub mod object;
@@ -11,9 +12,10 @@ pub mod text;
 use nalgebra as na;
 
 pub use camera::{Camera, EditCameraView};
+pub use instance::{DefaultInstanceParams, Instance, InstanceParams};
 pub use light::Light;
 pub use object::Object;
-pub use render_list::{DefaultInstanceParams, Instance, InstanceParams, RenderList};
+pub use render_list::RenderList;
 pub use resources::Resources;
 
 pub struct Context {

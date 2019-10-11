@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
-use nalgebra as na;
 use glium::uniform;
+use nalgebra as na;
 
-use crate::render::{Object, Context};
+use crate::render::{Context, Object};
 
 pub trait InstanceParams: Clone + Debug + Default {
     type T: glium::uniforms::AsUniformValue;
@@ -54,4 +54,3 @@ pub struct Instance<T: InstanceParams> {
     pub object: Object,
     pub params: T,
 }
-
