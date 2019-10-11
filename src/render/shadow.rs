@@ -4,10 +4,9 @@ use log::info;
 
 use nalgebra as na;
 
-use glium::{implement_vertex, uniform, Surface};
+use glium::{implement_vertex, Surface};
 
-use crate::render::render_list::InstanceParams;
-use crate::render::{Camera, Context, RenderLists, Resources};
+use crate::render::{Camera, Context, InstanceParams, RenderLists, Resources};
 
 #[derive(Debug, Clone)]
 pub struct Config {

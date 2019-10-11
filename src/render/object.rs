@@ -3,7 +3,6 @@ use std::path::Path;
 
 use glium::{self, implement_vertex};
 use log::info;
-use nalgebra as na;
 use num_derive::{FromPrimitive, ToPrimitive};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
