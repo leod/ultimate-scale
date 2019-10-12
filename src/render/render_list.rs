@@ -1,3 +1,4 @@
+use crate::render::instance::UniformsPair;
 use crate::render::{Context, Instance, InstanceParams, Object, Resources};
 
 #[derive(Default, Clone)]
@@ -43,7 +44,7 @@ impl<T: InstanceParams> RenderList<T> {
 
         for instance in &self.instances {
             let buffers = resources.get_object_buffers(instance.object);
-            let uniforms = instance.params.uniforms(context);
+            let uniforms = UniformsPair(context.uniforms(), instance.params.uniforms());
 
             buffers.index_buffer.draw(
                 &buffers.vertex_buffer,

@@ -18,6 +18,7 @@ pub use object::Object;
 pub use render_list::RenderList;
 pub use resources::Resources;
 
+#[derive(Debug, Clone)]
 pub struct Context {
     pub camera: camera::Camera,
     pub elapsed_time_secs: f32,
