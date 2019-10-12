@@ -4,8 +4,9 @@ use log::info;
 
 use nalgebra as na;
 
-use glium::{implement_vertex, Surface};
+use glium::{implement_vertex, uniform, Surface};
 
+use crate::render::instance::UniformsPair;
 use crate::render::{Camera, Context, InstanceParams, RenderLists, Resources};
 
 #[derive(Debug, Clone)]
@@ -365,16 +366,17 @@ impl ShadowMapping {
             for instance in &render_lists.solid.instances {
                 let light_mvp = light_projection * light_view * instance.params.transform;
                 let mat_light_mvp: [[f32; 4]; 4] = light_mvp.into();
-
                 let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
                     .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
                     .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
 
-                let uniforms = instance
-                    .params
-                    .uniforms(context)
-                    .add("mat_light_mvp", mat_light_mvp)
-                    .add("shadow_map", shadow_map);
+                let uniforms = UniformsPair(
+                    UniformsPair(context.uniforms(), instance.params.uniforms()),
+                    uniform! {
+                        mat_light_mvp: mat_light_mvp,
+                        shadow_map: shadow_map,
+                    },
+                );
 
                 let buffers = resources.get_object_buffers(instance.object);
                 buffers.index_buffer.draw(
