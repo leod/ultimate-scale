@@ -10,7 +10,8 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::exec::Exec;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
-use crate::render::{self, Camera, EditCameraView, RenderLists};
+use crate::render::{self, Camera, EditCameraView};
+use crate::render::pipeline::RenderLists;
 use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
 
@@ -339,9 +340,9 @@ impl ExecView {
             let transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
             let color = render::machine::blip_color(blip.kind);
-            let instance = render::Instance {
+            let instance = render::pipeline::Instance {
                 object: render::Object::Cube,
-                params: render::DefaultInstanceParams {
+                params: render::pipeline::DefaultInstanceParams {
                     color: na::Vector4::new(color.x, color.y, color.z, 1.0),
                     transform,
                     ..Default::default()
@@ -351,7 +352,7 @@ impl ExecView {
             out.solid.add_instance(&instance);
             out.solid_shadow.add_instance(&instance);
 
-            out.lights.push(render::Light {
+            out.lights.push(render::pipeline::Light {
                 position: pos,
                 attenuation: na::Vector3::new(0.0, 0.0, 100.0),
                 color: na::Vector3::new(0.2, 10.0, 0.5),
