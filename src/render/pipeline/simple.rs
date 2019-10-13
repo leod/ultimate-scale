@@ -1,8 +1,10 @@
 use glium::uniforms::UniformType;
 
 use crate::render::object::Vertex;
-use crate::render::pipeline::DefaultInstanceParams;
+use crate::render::pipeline::{Context, DefaultInstanceParams, InstanceParamsPair};
 use crate::render::shader::{self, VariableQualifier};
+
+type Params = InstanceParamsPair<Context, DefaultInstanceParams>;
 
 pub fn diffuse_shared_variables() -> Vec<shader::SharedVariableDef> {
     vec![
@@ -24,7 +26,7 @@ pub fn diffuse_shared_variables() -> Vec<shader::SharedVariableDef> {
     ]
 }
 
-pub fn diffuse_vertex_core() -> shader::VertexCore<DefaultInstanceParams, Vertex> {
+pub fn diffuse_vertex_core() -> shader::VertexCore<Params, Vertex> {
     shader::VertexCore {
         output_defs: diffuse_shared_variables(),
         output_exprs: shader_output_exprs! {
@@ -37,7 +39,7 @@ pub fn diffuse_vertex_core() -> shader::VertexCore<DefaultInstanceParams, Vertex
     }
 }
 
-pub fn diffuse_fragment_core() -> shader::FragmentCore<DefaultInstanceParams> {
+pub fn diffuse_fragment_core() -> shader::FragmentCore<Params> {
     shader::FragmentCore {
         input_defs: diffuse_shared_variables(),
         body: "
