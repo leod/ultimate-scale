@@ -3,6 +3,7 @@ pub mod instance;
 pub mod light;
 pub mod render_list;
 pub mod shadow;
+pub mod simple;
 
 use nalgebra as na;
 
