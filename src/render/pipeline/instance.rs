@@ -5,8 +5,8 @@ use nalgebra as na;
 use glium::uniform;
 use glium::uniforms::{UniformValue, Uniforms};
 
-use crate::render::Object;
 use crate::render::pipeline::Context;
+use crate::render::Object;
 
 pub trait InstanceParams: Clone + Debug {
     type U: Uniforms;

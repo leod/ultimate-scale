@@ -10,8 +10,8 @@ use glutin::WindowEvent;
 use crate::exec::{self, ExecView};
 use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
-use crate::render::{self, Camera, EditCameraView};
 use crate::render::pipeline::RenderLists;
+use crate::render::{self, Camera, EditCameraView};
 use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
 use crate::edit::config::ModifiedKey;

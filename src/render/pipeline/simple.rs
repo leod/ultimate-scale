@@ -1,17 +1,27 @@
 use glium::uniforms::UniformType;
 
 use crate::render::object::Vertex;
-use crate::render::shader::{self, VariableQualifier};
 use crate::render::pipeline::DefaultInstanceParams;
+use crate::render::shader::{self, VariableQualifier};
 
 pub fn diffuse_shared_variables() -> shader::VariableDefs {
-    shader::VariableDefs(
-        vec![
-            (shader::V_WORLD_NORMAL.into(), VariableQualifier::Smooth, UniformType::FloatVec3),
-            (shader::V_WORLD_POS.into(), VariableQualifier::Smooth, UniformType::FloatVec4),
-            (shader::V_COLOR.into(), VariableQualifier::Smooth, UniformType::FloatVec4),
-        ],
-    )
+    shader::VariableDefs(vec![
+        (
+            shader::V_WORLD_NORMAL.into(),
+            VariableQualifier::Smooth,
+            UniformType::FloatVec3,
+        ),
+        (
+            shader::V_WORLD_POS.into(),
+            VariableQualifier::Smooth,
+            UniformType::FloatVec4,
+        ),
+        (
+            shader::V_COLOR.into(),
+            VariableQualifier::Smooth,
+            UniformType::FloatVec4,
+        ),
+    ])
 }
 
 pub fn diffuse_vertex_core() -> shader::VertexCore<DefaultInstanceParams, Vertex> {
@@ -23,7 +33,7 @@ pub fn diffuse_vertex_core() -> shader::VertexCore<DefaultInstanceParams, Vertex
             shader::V_COLOR => "color",
             shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
         },
-        .. Default::default()
+        ..Default::default()
     }
 }
 
@@ -39,16 +49,16 @@ pub fn diffuse_fragment_core() -> shader::FragmentCore<DefaultInstanceParams> {
                 ),
                 0.05
             );
-        ".into(),
-        outputs: vec![
-            ("f_color".into(), UniformType::FloatVec4, "(ambient + diffuse) * v_color".into()),
-        ],
-        .. Default::default()
+        "
+        .into(),
+        outputs: vec![(
+            "f_color".into(),
+            UniformType::FloatVec4,
+            "(ambient + diffuse) * v_color".into(),
+        )],
+        ..Default::default()
     }
 }
-
-
-                        
 
 /*
 

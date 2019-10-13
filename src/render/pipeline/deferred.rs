@@ -8,8 +8,8 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::render::Resources;
 use crate::render::pipeline::{shadow, Context, Light, RenderLists};
+use crate::render::Resources;
 
 #[derive(Debug, Clone, Default)]
 pub struct Config;
