@@ -17,14 +17,12 @@ pub fn diffuse_shared_variables() -> shader::VariableDefs {
 pub fn diffuse_vertex_core() -> shader::VertexCore<DefaultInstanceParams, Vertex> {
     shader::VertexCore {
         output_defs: diffuse_shared_variables(),
-        output_exprs: shader::str_exprs(
-            vec![
-                (shader::V_WORLD_NORMAL, "mat3(mat_model) * normal"),
-                (shader::V_WORLD_POS, "mat_model * vec4(position, 1.0)"),
-                (shader::V_COLOR, "color"),
-                (shader::V_POSITION, "mat_projection * mat_view * v_world_pos"),
-            ],
-        ),
+        output_exprs: shader_output_exprs! {
+            shader::V_WORLD_NORMAL => "mat3(mat_model) * normal",
+            shader::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
+            shader::V_COLOR => "color",
+            shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
+        },
         .. Default::default()
     }
 }
