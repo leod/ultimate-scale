@@ -44,6 +44,17 @@ impl InstanceParams for Context {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct InstanceParamsPair<T: InstanceParams, U: InstanceParams>(pub T, pub U);
+
+impl<T: InstanceParams, U: InstanceParams> InstanceParams for InstanceParamsPair<T, U> {
+    type U = UniformsPair<T::U, U::U>;
+
+    fn uniforms(&self) -> Self::U {
+        UniformsPair(self.0.uniforms(), self.1.uniforms())
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct DefaultInstanceParams {
     pub transform: na::Matrix4<f32>,
