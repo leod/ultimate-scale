@@ -172,7 +172,7 @@ fn compile_instance_params_uniforms<P: InstanceParams + Default>() -> String {
 }
 
 fn compile_output_assignment((name, expr): (VariableName, GLSL)) -> String {
-    name + " = " + &expr + ";\n"
+    "    ".to_string() + &name + " = " + &expr + ";\n"
 }
 
 fn compile_output_assignments(exprs: impl Iterator<Item = (VariableName, GLSL)>) -> String {
