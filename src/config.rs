@@ -1,8 +1,7 @@
 use crate::edit;
 use crate::exec;
 use crate::render::camera;
-use crate::render::deferred;
-use crate::render::shadow;
+use crate::render::pipeline::{deferred, shadow};
 
 #[derive(Debug, Clone)]
 pub struct ViewConfig {

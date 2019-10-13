@@ -1,6 +1,6 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
-pub use crate::render::shadow::CreationError; // TODO
+pub use crate::render::pipeline::shadow::CreationError; // TODO
 
 use log::info;
 
@@ -8,7 +8,8 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::render::{shadow, Context, Light, RenderLists, Resources};
+use crate::render::Resources;
+use crate::render::pipeline::{shadow, Context, Light, RenderLists};
 
 #[derive(Debug, Clone, Default)]
 pub struct Config;
