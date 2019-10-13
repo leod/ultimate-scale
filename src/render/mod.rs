@@ -3,7 +3,7 @@ pub mod machine;
 pub mod object;
 pub mod resources;
 pub mod text;
-pub mod shader;
+#[macro_use] pub mod shader;
 pub mod pipeline;
 
 use nalgebra as na;

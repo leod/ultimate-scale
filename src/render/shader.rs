@@ -48,8 +48,15 @@ pub struct Core<P: InstanceParams, V: glium::vertex::Vertex> {
     pub fragment: FragmentCore<P>,
 }
 
-pub fn str_exprs(exprs: Vec<(&str, &str)>) -> Vec<(String, String)> {
-    exprs.into_iter().map(|(name, expr)| (name.into(), expr.into())).collect()
+#[macro_export]
+macro_rules! shader_output_exprs {
+    { $($variable:expr => $expr:literal),*, } => {
+        vec![
+            $(
+                ($variable.to_string(), $expr.to_string()),
+            )*
+        ]
+    }
 }
 
 impl<P: InstanceParams, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
