@@ -51,11 +51,9 @@ pub fn diffuse_fragment_core() -> shader::FragmentCore<DefaultInstanceParams> {
             );
         "
         .into(),
-        outputs: vec![(
-            "f_color".into(),
-            UniformType::FloatVec4,
-            "(ambient + diffuse) * v_color".into(),
-        )],
+        outputs: shader_output_exprs! {
+            "f_color", UniformType::FloatVec4 => "(ambient + diffuse) * v_color",
+        },
         ..Default::default()
     }
 }

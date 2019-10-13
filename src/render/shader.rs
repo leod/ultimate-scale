@@ -56,7 +56,14 @@ macro_rules! shader_output_exprs {
                 ($variable.to_string(), $expr.to_string()),
             )*
         ]
-    }
+    };
+    { $($variable:expr, $type:expr => $expr:literal),*, } => {
+        vec![
+            $(
+                ($variable.to_string(), $type, $expr.to_string()),
+            )*
+        ]
+    };
 }
 
 impl<P: InstanceParams, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
