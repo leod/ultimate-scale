@@ -21,6 +21,17 @@ pub struct Context {
     pub main_light_center: na::Point3<f32>,
 }
 
+impl Default for Context {
+    fn default() -> Self {
+        Self {
+            camera: Default::default(),
+            elapsed_time_secs: 0.0,
+            main_light_pos: na::Point3::origin(),
+            main_light_center: na::Point3::origin(),
+        }
+    }
+}
+
 #[derive(Default, Clone)]
 pub struct RenderLists {
     /// Instances that may be shadowed.
