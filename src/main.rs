@@ -38,6 +38,15 @@ fn main() {
     let config: config::Config = Default::default();
     info!("Running with config: {:?}", config);
 
+    println!(
+        "{}",
+        render::pipeline::simple::diffuse_vertex_core().compile()
+    );
+    println!(
+        "{}",
+        render::pipeline::simple::diffuse_fragment_core().compile()
+    );
+
     info!("Opening window");
     let mut events_loop = glutin::EventsLoop::new();
     let display = {
