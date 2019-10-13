@@ -14,10 +14,10 @@ use crate::machine::Machine;
 use crate::render::camera::{self, Camera, EditCameraView};
 use crate::render::pipeline::deferred::DeferredShading;
 use crate::render::pipeline::shadow::{self, ShadowMapping};
-use crate::render::text::{self, Font};
-use crate::render::{self, resources};
-use crate::render::Resources;
 use crate::render::pipeline::{Light, RenderLists};
+use crate::render::text::{self, Font};
+use crate::render::Resources;
+use crate::render::{self, resources};
 
 #[derive(Debug)]
 pub enum CreationError {

@@ -1,6 +1,6 @@
-use crate::render::{Object, Resources};
-use crate::render::pipeline::{Context, Instance, InstanceParams};
 use crate::render::pipeline::instance::UniformsPair;
+use crate::render::pipeline::{Context, Instance, InstanceParams};
+use crate::render::{Object, Resources};
 
 #[derive(Default, Clone)]
 pub struct RenderList<T: InstanceParams> {

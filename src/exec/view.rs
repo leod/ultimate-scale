@@ -10,8 +10,8 @@ use glutin::{VirtualKeyCode, WindowEvent};
 use crate::exec::Exec;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
-use crate::render::{self, Camera, EditCameraView};
 use crate::render::pipeline::RenderLists;
+use crate::render::{self, Camera, EditCameraView};
 use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
 

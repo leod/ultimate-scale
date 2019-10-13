@@ -9,9 +9,9 @@ use nalgebra as na;
 
 use crate::render::{Camera, Resources};
 
-pub use render_list::RenderList;
 pub use instance::{DefaultInstanceParams, Instance, InstanceParams};
 pub use light::Light;
+pub use render_list::RenderList;
 
 #[derive(Debug, Clone)]
 pub struct Context {

@@ -6,9 +6,9 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::render::{Camera, Resources};
-use crate::render::pipeline::{Context, InstanceParams, RenderLists};
 use crate::render::pipeline::instance::UniformsPair;
+use crate::render::pipeline::{Context, InstanceParams, RenderLists};
+use crate::render::{Camera, Resources};
 
 #[derive(Debug, Clone)]
 pub struct Config {

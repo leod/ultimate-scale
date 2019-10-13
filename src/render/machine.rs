@@ -3,8 +3,8 @@ use nalgebra as na;
 use crate::machine::grid::{self, Dir2};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
-use crate::render::Object;
 use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
+use crate::render::Object;
 
 pub fn wind_source_color() -> na::Vector3<f32> {
     na::Vector3::new(1.0, 0.08, 0.24)
