@@ -9,7 +9,7 @@ use nalgebra as na;
 
 use crate::render::{Camera, Resources};
 
-pub use instance::{DefaultInstanceParams, Instance, InstanceParams, InstanceParamsPair};
+pub use instance::{DefaultInstanceParams, Instance, InstanceParams};
 pub use light::Light;
 pub use render_list::RenderList;
 
