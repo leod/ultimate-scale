@@ -93,16 +93,13 @@ impl ShadowMapping {
 
         // Shaders for rendering the shadowed scene
         info!("Creating shadow render program");
-        let core = shader::render_core_transform(
-            pipeline::simple::plain_core(),
-        );
-
+        let core = pipeline::simple::plain_core();
+        let core = shader::render_core_transform(core);
+        let core = pipeline::simple::diffuse_core_transform(core);
         println!("{}", core.link().vertex.compile());
         println!("{}", core.link().fragment.compile());
 
-        let render_program = shader::render_core_transform(
-            pipeline::simple::plain_core(),
-        ).build_program(facade)?;
+        let render_program = core.build_program(facade)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
             facade,

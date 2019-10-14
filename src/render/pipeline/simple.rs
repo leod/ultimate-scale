@@ -9,6 +9,7 @@ pub fn plain_core() -> shader::Core<(Context, DefaultInstanceParams), Vertex> {
         vertex: shader::VertexCore {
             output_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
             output_exprs: shader_output_exprs! {
+                // TODO: Precompute inverse of mat_model if we ever have lots of vertices
                 shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * normal)",
                 shader::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
                 shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
@@ -27,6 +28,8 @@ pub fn plain_core() -> shader::Core<(Context, DefaultInstanceParams), Vertex> {
 pub fn diffuse_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
+    let has_shadow = core.fragment.get_output_expr(shader::F_SHADOW).is_some();
+
     shader::Core {
         vertex: core.vertex,
         fragment: core
@@ -46,7 +49,11 @@ pub fn diffuse_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
             ",
             )
             .with_updated_output(shader::F_COLOR, |expr| {
-                format!("(ambient + diffuse) * ({})", expr)
+                if has_shadow {
+                    format!("(ambient + f_shadow * diffuse) * ({})", expr)
+                } else {
+                    format!("(ambient + diffuse) * ({})", expr)
+                }
             }),
     }
 }

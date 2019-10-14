@@ -11,6 +11,7 @@ pub const V_COLOR: &str = "v_color";
 pub const V_POSITION: &str = "gl_Position";
 
 pub const F_COLOR: &str = "f_color";
+pub const F_SHADOW: &str = "f_shadow";
 
 pub fn v_world_normal_def() -> SharedVariableDef {
     (
@@ -40,6 +41,7 @@ pub fn v_color_def() -> SharedVariableDef {
 pub enum VariableQualifier {
     Flat,
     Smooth,
+    Local,
 }
 
 pub type VariableName = String;
@@ -193,6 +195,13 @@ impl<P: InstanceParams> FragmentCore<P> {
         }
     }
 
+    pub fn with_output(mut self, name: &str, t: UniformType, expr: &str) -> Self {
+        assert!(self.get_output_expr(name).is_none());
+
+        self.outputs.push((name.into(), t, expr.into()));
+        self
+    }
+
     pub fn with_updated_output(mut self, name: &str, f: impl Fn(&str) -> String) -> Self {
         for i in 0..self.outputs.len() {
             if self.outputs[i].0 == name {
@@ -247,13 +256,6 @@ impl<P: InstanceParams + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
     }
 }
 
-fn compile_variable_qualifier(q: VariableQualifier) -> &'static str {
-    match q {
-        VariableQualifier::Flat => "flat",
-        VariableQualifier::Smooth => "smooth",
-    }
-}
-
 fn compile_uniform_type(t: UniformType) -> &'static str {
     match t {
         UniformType::Float => "float",
@@ -289,12 +291,12 @@ fn uniform_value_to_type<'a>(v: UniformValue<'a>) -> UniformType {
     }
 }
 
-fn compile_variable_def(prefix: &'static str, (name, t): &VariableDef) -> String {
+fn compile_variable_def(prefix: &str, (name, t): &VariableDef) -> String {
     prefix.to_string() + " " + &compile_uniform_type(*t).to_string() + " " + name + ";\n"
 }
 
 fn compile_variable_defs<'a>(
-    prefix: &'static str,
+    prefix: &str,
     defs: impl Iterator<Item = VariableDef>,
 ) -> String {
     defs.map(|def| compile_variable_def(prefix, &def))
@@ -302,13 +304,17 @@ fn compile_variable_defs<'a>(
         .join("")
 }
 
-fn compile_shared_variable_def(prefix: &'static str, (name, t, q): &SharedVariableDef) -> String {
-    compile_variable_qualifier(*q).to_string()
-        + " "
-        + &compile_variable_def(prefix, &(name.to_string(), *t))
+fn compile_shared_variable_def(prefix: &str, (name, t, q): &SharedVariableDef) -> String {
+    let prefix = match q {
+        VariableQualifier::Flat => "flat ".to_string() + prefix,
+        VariableQualifier::Smooth => "smooth ".to_string() + prefix,
+        VariableQualifier::Local => "".to_string(),
+    };
+
+    compile_variable_def(&prefix, &(name.to_string(), *t))
 }
 
-fn compile_shared_variable_defs(prefix: &'static str, defs: &[SharedVariableDef]) -> String {
+fn compile_shared_variable_defs(prefix: &str, defs: &[SharedVariableDef]) -> String {
     defs.iter()
         .map(|def| compile_shared_variable_def(prefix, def))
         .collect::<Vec<_>>()
