@@ -12,6 +12,30 @@ pub const V_POSITION: &str = "gl_Position";
 
 pub const F_COLOR: &str = "f_color";
 
+pub fn v_world_normal_def() -> SharedVariableDef {
+    (
+        V_WORLD_NORMAL.into(),
+        UniformType::FloatVec3,
+        VariableQualifier::Smooth,
+    )
+}
+
+pub fn v_world_pos_def() -> SharedVariableDef {
+    (
+        V_WORLD_POS.into(),
+        UniformType::FloatVec4,
+        VariableQualifier::Smooth,
+    )
+}
+
+pub fn v_color_def() -> SharedVariableDef {
+    (
+        V_COLOR.into(),
+        UniformType::FloatVec3,
+        VariableQualifier::Smooth,
+    )
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VariableQualifier {
     Flat,
@@ -44,7 +68,14 @@ pub struct FragmentCore<P: InstanceParams> {
     pub phantom: PhantomData<P>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Core<P: InstanceParams, V: glium::vertex::Vertex> {
+    pub vertex: VertexCore<P, V>,
+    pub fragment: FragmentCore<P>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LinkedCore<P: InstanceParams, V: glium::vertex::Vertex> {
     pub vertex: VertexCore<P, V>,
     pub fragment: FragmentCore<P>,
 }
@@ -90,6 +121,62 @@ impl<P: InstanceParams> Default for FragmentCore<P> {
             outputs: Vec::new(),
             phantom: PhantomData,
         }
+    }
+}
+
+impl<P: InstanceParams, V: glium::vertex::Vertex> VertexCore<P, V> {
+    pub fn get_output_expr(&self, name: &str) -> Option<&GLSL> {
+        self.output_exprs
+            .iter()
+            .find(|(n, _expr)| n == name)
+            .map(|(_n, expr)| expr)
+    }
+}
+
+impl<P: InstanceParams> FragmentCore<P> {
+    pub fn get_input_def(&self, name: &str) -> Option<&SharedVariableDef> {
+        self.input_defs.iter().find(|(n, _t, _q)| n == name)
+    }
+
+    pub fn get_output_expr(&self, name: &str) -> Option<&GLSL> {
+        self.outputs
+            .iter()
+            .find(|(n, _t, _expr)| n == name)
+            .map(|(_n, _t, expr)| expr)
+    }
+
+    pub fn with_input_def(mut self, (name, t, q): SharedVariableDef) -> Self {
+        match self.get_input_def(&name) {
+            Some((_, cur_t, cur_q)) if *cur_t != t => panic!(
+                "FragmentCore already has input `{}', but with type {:?} instead of {:?}",
+                name, cur_t, t
+            ),
+            Some((_, cur_t, cur_q)) if *cur_q != q => panic!(
+                "FragmentCore already has input `{}', but with qualifier {:?} instead of {:?}",
+                name, cur_q, q
+            ),
+            Some(_) => self,
+            None => {
+                self.input_defs.push((name, t, q));
+                self
+            }
+        }
+    }
+
+    pub fn with_updated_output(mut self, name: &str, f: impl Fn(&str) -> String) -> Self {
+        for i in 0..self.outputs.len() {
+            if self.outputs[i].0 == name {
+                self.outputs[i].2 = f(&self.outputs[i].2);
+                return self;
+            }
+        }
+
+        panic!("FragmentCore does not contain output `{}'", name);
+    }
+
+    pub fn with_body(mut self, body: &str) -> Self {
+        self.body += body;
+        self
     }
 }
 

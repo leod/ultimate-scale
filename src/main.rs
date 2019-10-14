@@ -40,11 +40,14 @@ fn main() {
 
     println!(
         "{}",
-        render::pipeline::simple::diffuse_vertex_core().compile()
+        render::pipeline::simple::diffuse_vertex_core(render::pipeline::simple::plain_vertex_core()).compile()
     );
     println!(
         "{}",
-        render::pipeline::simple::diffuse_fragment_core().compile()
+        render::pipeline::simple::diffuse_fragment_core(
+            render::pipeline::simple::plain_fragment_core()
+        )
+        .compile()
     );
 
     info!("Opening window");

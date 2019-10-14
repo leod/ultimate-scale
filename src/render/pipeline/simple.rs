@@ -1,48 +1,45 @@
 use glium::uniforms::UniformType;
 
 use crate::render::object::Vertex;
-use crate::render::pipeline::{Context, DefaultInstanceParams, InstanceParamsPair};
-use crate::render::shader::{self, VariableQualifier};
+use crate::render::pipeline::{Context, DefaultInstanceParams, InstanceParams, InstanceParamsPair};
+use crate::render::shader;
 
 type Params = InstanceParamsPair<Context, DefaultInstanceParams>;
 
-pub fn diffuse_shared_variables() -> Vec<shader::SharedVariableDef> {
-    vec![
-        (
-            shader::V_WORLD_NORMAL.into(),
-            UniformType::FloatVec3,
-            VariableQualifier::Smooth,
-        ),
-        (
-            shader::V_WORLD_POS.into(),
-            UniformType::FloatVec4,
-            VariableQualifier::Smooth,
-        ),
-        (
-            shader::V_COLOR.into(),
-            UniformType::FloatVec4,
-            VariableQualifier::Smooth,
-        ),
-    ]
-}
-
-pub fn diffuse_vertex_core() -> shader::VertexCore<Params, Vertex> {
+pub fn plain_vertex_core() -> shader::VertexCore<Params, Vertex> {
     shader::VertexCore {
-        output_defs: diffuse_shared_variables(),
+        output_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
         output_exprs: shader_output_exprs! {
             shader::V_WORLD_NORMAL => "mat3(mat_model) * normal",
             shader::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
-            shader::V_COLOR => "color",
             shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
         },
         ..Default::default()
     }
 }
 
-pub fn diffuse_fragment_core() -> shader::FragmentCore<Params> {
+pub fn plain_fragment_core() -> shader::FragmentCore<Params> {
     shader::FragmentCore {
-        input_defs: diffuse_shared_variables(),
-        body: "
+        outputs: shader_output_exprs! {
+            shader::F_COLOR, UniformType::FloatVec4 => "color",
+        },
+        ..Default::default()
+    }
+}
+
+pub fn diffuse_vertex_core<P: InstanceParams, V: glium::vertex::Vertex>(
+    core: shader::VertexCore<P, V>,
+) -> shader::VertexCore<P, V> {
+    core
+}
+
+pub fn diffuse_fragment_core<P: InstanceParams>(
+    core: shader::FragmentCore<P>,
+) -> shader::FragmentCore<P> {
+    core.with_input_def(shader::v_world_normal_def())
+        .with_input_def(shader::v_world_pos_def())
+        .with_body(
+            "
             float ambient = 0.3;
             float diffuse = max(
                 dot(
@@ -51,54 +48,9 @@ pub fn diffuse_fragment_core() -> shader::FragmentCore<Params> {
                 ),
                 0.05
             );
-        "
-        .into(),
-        outputs: shader_output_exprs! {
-            "f_color", UniformType::FloatVec4 => "(ambient + diffuse) * v_color",
-        },
-        ..Default::default()
-    }
+        ",
+        )
+        .with_updated_output(shader::F_COLOR, |expr| {
+            format!("(ambient + diffuse) * ({})", expr)
+        })
 }
-
-/*
-
-        info!("Creating plain render program");
-        let plain_program = program!(facade,
-            140 => {
-                vertex: "
-                    #version 140
-
-                    uniform mat4 mat_model;
-                    uniform mat4 mat_view;
-                    uniform mat4 mat_projection;
-
-                    uniform vec4 color;
-
-                    in vec3 position;
-                    out vec4 v_color;
-
-                    void main() {
-                        gl_Position = mat_projection
-                            * mat_view
-                            * mat_model
-                            * vec4(position, 1.0);
-
-                        v_color = color;
-                    }
-                ",
-
-                fragment: "
-                    #version 140
-
-                    uniform float t;
-
-                    in vec4 v_color;
-                    out vec4 f_color;
-
-                    void main() {
-                        f_color = v_color;
-                    }
-                "
-            },
-        )?;
-*/
