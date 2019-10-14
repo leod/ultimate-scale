@@ -131,6 +131,30 @@ impl<P: InstanceParams, V: glium::vertex::Vertex> VertexCore<P, V> {
             .find(|(n, _expr)| n == name)
             .map(|(_n, expr)| expr)
     }
+
+    pub fn with_extra_uniform(mut self, def: VariableDef) -> Self {
+        // TODO: Check for duplicates
+        self.extra_uniforms.push(def);
+        self
+    }
+
+    pub fn with_defs(mut self, defs: &str) -> Self {
+        self.defs += defs;
+        self
+    }
+
+    pub fn with_body(mut self, body: &str) -> Self {
+        self.body += body;
+        self
+    }
+
+    pub fn with_output(mut self, def: SharedVariableDef, expr: &str) -> Self {
+        assert!(self.get_output_expr(&def.0).is_none());
+
+        self.output_exprs.push((def.0.clone(), expr.into()));
+        self.output_defs.push(def);
+        self
+    }
 }
 
 impl<P: InstanceParams> FragmentCore<P> {
@@ -143,6 +167,12 @@ impl<P: InstanceParams> FragmentCore<P> {
             .iter()
             .find(|(n, _t, _expr)| n == name)
             .map(|(_n, _t, expr)| expr)
+    }
+
+    pub fn with_extra_uniform(mut self, def: VariableDef) -> Self {
+        // TODO: Check for duplicates
+        self.extra_uniforms.push(def);
+        self
     }
 
     pub fn with_input_def(mut self, (name, t, q): SharedVariableDef) -> Self {
@@ -174,6 +204,11 @@ impl<P: InstanceParams> FragmentCore<P> {
         panic!("FragmentCore does not contain output `{}'", name);
     }
 
+    pub fn with_defs(mut self, defs: &str) -> Self {
+        self.defs += defs;
+        self
+    }
+
     pub fn with_body(mut self, body: &str) -> Self {
         self.body += body;
         self
@@ -183,6 +218,7 @@ impl<P: InstanceParams> FragmentCore<P> {
 impl<P: InstanceParams, V: glium::vertex::Vertex> Core<P, V> {
     pub fn link(&self) -> LinkedCore<P, V> {
         // TODO: Remove unused shared variables
+        // TODO: Check non-duplicate inputs/outputs
         LinkedCore {
             vertex: self.vertex.clone(),
             fragment: self.fragment.clone(),

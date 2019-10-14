@@ -9,7 +9,7 @@ pub fn plain_core() -> shader::Core<(Context, DefaultInstanceParams), Vertex> {
         vertex: shader::VertexCore {
             output_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
             output_exprs: shader_output_exprs! {
-                shader::V_WORLD_NORMAL => "mat3(mat_model) * normal",
+                shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * normal)",
                 shader::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
                 shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
             },

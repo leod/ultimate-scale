@@ -4,7 +4,7 @@ use glium::program;
 use num_traits::ToPrimitive;
 
 use crate::render::object::{self, Object, ObjectBuffers};
-use crate::render::pipeline::simple;
+use crate::render::pipeline;
 
 pub struct Resources {
     pub object_buffers: Vec<ObjectBuffers>,
@@ -44,10 +44,11 @@ impl Resources {
         }
 
         info!("Creating straight render program");
-        let program = simple::diffuse_core_transform(simple::plain_core()).build_program(facade)?;
+        let program = pipeline::simple::diffuse_core_transform(pipeline::simple::plain_core())
+            .build_program(facade)?;
 
         info!("Creating plain render program");
-        let plain_program = simple::plain_core().build_program(facade)?;
+        let plain_program = pipeline::simple::plain_core().build_program(facade)?;
 
         Ok(Resources {
             object_buffers,

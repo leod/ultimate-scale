@@ -1,5 +1,7 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
+mod shader;
+
 use log::info;
 
 use nalgebra as na;
@@ -7,7 +9,7 @@ use nalgebra as na;
 use glium::{implement_vertex, uniform, Surface};
 
 use crate::render::pipeline::instance::UniformsPair;
-use crate::render::pipeline::{Context, InstanceParams, RenderLists};
+use crate::render::pipeline::{self, Context, InstanceParams, RenderLists};
 use crate::render::{Camera, Resources};
 
 #[derive(Debug, Clone)]
@@ -81,160 +83,26 @@ impl ShadowMapping {
         config: &Config,
         deferred: bool,
     ) -> Result<ShadowMapping, CreationError> {
+        assert!(!deferred, "TODO after shader refactorin");
+
         // Shaders for creating the shadow map from light source's perspective
         info!("Creating shadow map program");
-        let shadow_map_program = glium::Program::from_source(
-            facade,
-            // Vertex shader
-            "
-                #version 330 core
-
-                uniform mat4 mat_model;
-                uniform mat4 mat_view;
-                uniform mat4 mat_projection;
-
-                in vec3 position;
-
-                void main() {
-                    gl_Position = mat_projection
-                        * mat_view
-                        * mat_model
-                        * vec4(position, 1.0);
-                }
-            ",
-            // Fragment shader
-            "
-                #version 330 core
-
-                layout(location = 0) out float f_fragment_depth;
-
-                void main() {
-                    f_fragment_depth = gl_FragCoord.z;
-                }
-            ",
-            None,
-        )?;
+        let shadow_map_program = shader::depth_map_core_transform(
+            pipeline::simple::plain_core(),
+        ).build_program(facade)?;
 
         // Shaders for rendering the shadowed scene
         info!("Creating shadow render program");
-        let render_program = glium::Program::from_source(
-            facade,
+        let core = shader::render_core_transform(
+            pipeline::simple::plain_core(),
+        );
 
-            // Vertex shader
-            "
-                #version 330 core
+        println!("{}", core.link().vertex.compile());
+        println!("{}", core.link().fragment.compile());
 
-                uniform mat4 mat_model;
-                uniform mat4 mat_view;
-                uniform mat4 mat_projection;
-                uniform mat4 mat_light_mvp;
-                uniform vec3 light_pos;
-                
-                in vec3 position;
-                in vec3 normal;
-
-                out vec4 v_world_pos;
-                out vec3 v_world_normal;
-                out vec4 v_shadow_coord;
-
-                void main() {
-                    v_world_pos = mat_model * vec4(position, 1.0);
-
-                    gl_Position = mat_projection
-                        * mat_view
-                        * v_world_pos;
- 
-                    // TODO: Expensive inverse, can be optimized, probably unneeded
-                    v_world_normal = transpose(inverse(mat3(mat_model))) * normal;
-
-                    // Bias shadow coord a bit in the direction of the normal --
-                    // this is a simple fix for a lot of self-shadowing artifacts
-                    v_shadow_coord = mat_light_mvp * vec4(position + 0.02*normal, 1.0);
-                    //v_shadow_coord = mat_light_mvp * vec4(position, 1.0);
-                }
-            ",
-
-            // Fragment shader
-            &("
-                #version 330 core
-
-                uniform sampler2D shadow_map;
-                uniform vec3 light_pos;
-                uniform vec4 color;
-
-                in vec4 v_world_pos;
-                in vec3 v_world_normal;
-                in vec4 v_shadow_coord;
-
-            ".to_string()
-            + if deferred {
-            "
-                out vec4 f_output1;
-                out vec4 f_output2;
-                out vec4 f_output3;
-            "
-            } else {
-            "
-                out vec4 f_color;
-            "
-            }
-            +
-            "
-                float shadow_calculation(vec4 pos_light_space) {
-                    vec3 light_dir = normalize(vec3(light_pos - v_world_pos.xyz));
-
-                    //float bias = max(0.0055 * (1.0 - dot(v_world_normal, light_dir)), 0.005);
-                    float bias = 0.0;
-
-                    vec3 proj_coords = pos_light_space.xyz / pos_light_space.w;
-                    proj_coords = proj_coords * 0.5 + 0.5;
-
-                    // TODO: Is there a way to do this on texture-level?
-                    if (proj_coords.z > 1.0)
-                        return 1.0;
-                    if (proj_coords.x < 0.0
-                        || proj_coords.x > 1.0
-                        || proj_coords.y < 0.0
-                        || proj_coords.y > 1.0) {
-                        return 1.0;
-                    }
-
-                    float closest_depth = texture(shadow_map, proj_coords.xy).r;
-                    float current_depth = proj_coords.z;
-
-                    return current_depth > closest_depth + bias ? 0.5 : 1.0;
-                }
-
-                void main() {
-                    vec3 light_color = vec3(1, 1, 1);
-                    float shadow = shadow_calculation(v_shadow_coord);
-            "
-            + if deferred {
-            "
-                    f_output1 = v_world_pos;
-                    f_output2 = vec4(v_world_normal, 1.0);
-                    f_output3 = color * shadow;
-            "
-            } else {
-            "
-                    float ambient = 0.3;
-                    float diffuse = max(
-                        dot(
-                            normalize(v_world_normal),
-                            normalize(light_pos - v_world_pos.xyz)
-                        ),
-                        0.05
-                    );
-                    f_color = vec4((ambient + shadow * diffuse) * color.rgb, 1.0);
-            "
-            }
-            +
-            "
-                }
-            "),
-
-            None
-        )?;
+        let render_program = shader::render_core_transform(
+            pipeline::simple::plain_core(),
+        ).build_program(facade)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
             facade,
@@ -365,8 +233,8 @@ impl ShadowMapping {
             };
 
             for instance in &render_lists.solid.instances {
-                let light_mvp = light_projection * light_view * instance.params.transform;
-                let mat_light_mvp: [[f32; 4]; 4] = light_mvp.into();
+                let mat_light_view_projection: [[f32; 4]; 4] =
+                    (light_projection * light_view).into();
                 let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
                     .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
                     .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
@@ -374,7 +242,7 @@ impl ShadowMapping {
                 let uniforms = UniformsPair(
                     UniformsPair(context.uniforms(), instance.params.uniforms()),
                     uniform! {
-                        mat_light_mvp: mat_light_mvp,
+                        mat_light_view_projection: mat_light_view_projection,
                         shadow_map: shadow_map,
                     },
                 );
