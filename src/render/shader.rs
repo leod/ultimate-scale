@@ -80,6 +80,12 @@ pub struct LinkedCore<P: InstanceParams, V: glium::vertex::Vertex> {
     pub fragment: FragmentCore<P>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Compilation {
+    pub vertex: String,
+    pub fragment: String,
+}
+
 #[macro_export]
 macro_rules! shader_output_exprs {
     { $($variable:expr => $expr:literal),*, } => {
@@ -177,6 +183,26 @@ impl<P: InstanceParams> FragmentCore<P> {
     pub fn with_body(mut self, body: &str) -> Self {
         self.body += body;
         self
+    }
+}
+
+impl<P: InstanceParams, V: glium::vertex::Vertex> Core<P, V> {
+    pub fn link(&self) -> LinkedCore<P, V> {
+        // TODO: Remove unused shared variables
+        LinkedCore {
+            vertex: self.vertex.clone(),
+            fragment: self.fragment.clone(),
+        }
+    }
+}
+
+impl<P: InstanceParams + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
+    pub fn compile(&self) -> Compilation {
+        // TODO: Remove unused shared variables
+        Compilation {
+            vertex: self.vertex.compile(),
+            fragment: self.fragment.compile(),
+        }
     }
 }
 
