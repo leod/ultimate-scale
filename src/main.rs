@@ -38,17 +38,12 @@ fn main() {
     let config: config::Config = Default::default();
     info!("Running with config: {:?}", config);
 
-    println!(
-        "{}",
-        render::pipeline::simple::diffuse_vertex_core(render::pipeline::simple::plain_vertex_core()).compile()
-    );
-    println!(
-        "{}",
-        render::pipeline::simple::diffuse_fragment_core(
-            render::pipeline::simple::plain_fragment_core()
-        )
-        .compile()
-    );
+    let core =
+        render::pipeline::simple::diffuse_core_transform(render::pipeline::simple::plain_core());
+    let compilation = core.link().compile();
+
+    println!("{}", compilation.vertex);
+    println!("{}", compilation.fragment);
 
     info!("Opening window");
     let mut events_loop = glutin::EventsLoop::new();
