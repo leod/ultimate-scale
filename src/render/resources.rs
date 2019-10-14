@@ -4,6 +4,7 @@ use glium::program;
 use num_traits::ToPrimitive;
 
 use crate::render::object::{self, Object, ObjectBuffers};
+use crate::render::pipeline::simple;
 
 pub struct Resources {
     pub object_buffers: Vec<ObjectBuffers>,
@@ -14,7 +15,7 @@ pub struct Resources {
 #[derive(Debug)]
 pub enum CreationError {
     ObjectCreationError(object::CreationError),
-    ProgramChooserCreationError(glium::program::ProgramChooserCreationError),
+    ProgramCreationError(glium::program::ProgramCreationError),
 }
 
 impl From<object::CreationError> for CreationError {
@@ -23,9 +24,9 @@ impl From<object::CreationError> for CreationError {
     }
 }
 
-impl From<glium::program::ProgramChooserCreationError> for CreationError {
-    fn from(err: glium::program::ProgramChooserCreationError) -> CreationError {
-        CreationError::ProgramChooserCreationError(err)
+impl From<glium::program::ProgramCreationError> for CreationError {
+    fn from(err: glium::program::ProgramCreationError) -> CreationError {
+        CreationError::ProgramCreationError(err)
     }
 }
 
@@ -43,101 +44,10 @@ impl Resources {
         }
 
         info!("Creating straight render program");
-        let program = program!(facade,
-            140 => {
-                vertex: "
-                    #version 140
-
-                    uniform mat4 mat_model;
-                    uniform mat4 mat_view;
-                    uniform mat4 mat_projection;
-
-                    uniform vec4 color;
-
-                    in vec3 position;
-                    in vec3 normal;
-
-                    out vec3 v_world_normal;
-                    out vec4 v_world_pos;
-                    out vec4 v_color;
-
-                    void main() {
-                        v_world_pos = mat_model * vec4(position, 1.0);
-
-                        gl_Position = mat_projection
-                            * mat_view
-                            * v_world_pos;
-
-                        v_world_normal = mat3(mat_model) * normal;
-                        v_color = color;
-                    }
-                ",
-
-                fragment: "
-                    #version 140
-
-                    uniform vec3 light_pos;
-
-                    in vec4 v_world_pos;
-                    in vec3 v_world_normal;
-                    in vec4 v_color;
-                    out vec4 f_color;
-
-                    void main() {
-                        float ambient = 0.3;
-                        float diffuse = max(
-                            dot(
-                                normalize(v_world_normal),
-                                normalize(light_pos - v_world_pos.xyz)
-                            ),
-                            0.05
-                        );
-
-                        f_color = (ambient + diffuse) * v_color;
-                    }
-                "
-            },
-        )?;
+        let program = simple::diffuse_core_transform(simple::plain_core()).build_program(facade)?;
 
         info!("Creating plain render program");
-        let plain_program = program!(facade,
-            140 => {
-                vertex: "
-                    #version 140
-
-                    uniform mat4 mat_model;
-                    uniform mat4 mat_view;
-                    uniform mat4 mat_projection;
-
-                    uniform vec4 color;
-
-                    in vec3 position;
-                    out vec4 v_color;
-
-                    void main() {
-                        gl_Position = mat_projection
-                            * mat_view
-                            * mat_model
-                            * vec4(position, 1.0);
-
-                        v_color = color;
-                    }
-                ",
-
-                fragment: "
-                    #version 140
-
-                    uniform float t;
-
-                    in vec4 v_color;
-                    out vec4 f_color;
-
-                    void main() {
-                        f_color = v_color;
-                    }
-                "
-            },
-        )?;
+        let plain_program = simple::plain_core().build_program(facade)?;
 
         Ok(Resources {
             object_buffers,

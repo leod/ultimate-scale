@@ -80,12 +80,6 @@ pub struct LinkedCore<P: InstanceParams, V: glium::vertex::Vertex> {
     pub fragment: FragmentCore<P>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Compilation {
-    pub vertex: String,
-    pub fragment: String,
-}
-
 #[macro_export]
 macro_rules! shader_output_exprs {
     { $($variable:expr => $expr:literal),*, } => {
@@ -196,13 +190,24 @@ impl<P: InstanceParams, V: glium::vertex::Vertex> Core<P, V> {
     }
 }
 
+impl<P: InstanceParams + Default, V: glium::vertex::Vertex> Core<P, V> {
+    pub fn build_program<F: glium::backend::Facade>(
+        &self,
+        facade: &F,
+    ) -> Result<glium::Program, glium::program::ProgramCreationError> {
+        self.link().build_program(facade)
+    }
+}
+
 impl<P: InstanceParams + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
-    pub fn compile(&self) -> Compilation {
-        // TODO: Remove unused shared variables
-        Compilation {
-            vertex: self.vertex.compile(),
-            fragment: self.fragment.compile(),
-        }
+    pub fn build_program<F: glium::backend::Facade>(
+        &self,
+        facade: &F,
+    ) -> Result<glium::Program, glium::program::ProgramCreationError> {
+        let vertex = self.vertex.compile();
+        let fragment = self.fragment.compile();
+
+        glium::Program::from_source(facade, &vertex, &fragment, None)
     }
 }
 
