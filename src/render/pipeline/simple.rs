@@ -1,10 +1,10 @@
 use glium::uniforms::UniformType;
 
 use crate::render::object::Vertex;
-use crate::render::pipeline::{Context, DefaultInstanceParams, InstanceParams, InstanceParamsPair};
+use crate::render::pipeline::{Context, DefaultInstanceParams, InstanceParams};
 use crate::render::shader;
 
-type Params = InstanceParamsPair<Context, DefaultInstanceParams>;
+type Params = (Context, DefaultInstanceParams);
 
 pub fn plain_vertex_core() -> shader::VertexCore<Params, Vertex> {
     shader::VertexCore {
