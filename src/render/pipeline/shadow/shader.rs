@@ -81,22 +81,7 @@ pub fn render_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
             }
             ",
         )
-        .with_body(
-            "
-            float ambient = 0.3;
-            float shadow = shadow_calculation(v_light_space_pos);
-            float diffuse = max(
-                dot(
-                    normalize(v_world_normal),
-                    normalize(light_pos - v_world_pos.xyz)
-                ),
-                0.05
-            );
-        ",
-        )
-        .with_updated_output(shader::F_COLOR, |expr| {
-            format!("vec4((ambient + shadow * diffuse) * ({}).rgb, 1.0)", expr)
-        });
+        .with_output(shader::F_SHADOW, UniformType::Float, "shadow_calculation(v_light_space_pos)");
 
     shader::Core { vertex, fragment }
 }
