@@ -9,8 +9,9 @@ pub fn depth_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
 ) -> shader::Core<P, V> {
     // Only write depth into the output, discard color output of original core
     let fragment = shader::FragmentCore {
-        outputs: shader_output_exprs! {
-            "f_fragment_depth", UniformType::Float => "gl_FragCoord.z",
+        out_defs: vec![shader::f_fragment_depth_def()],
+        out_exprs: shader_output_exprs! {
+            shader::F_FRAGMENT_DEPTH => "gl_FragCoord.z",
         },
         ..Default::default()
     };
@@ -25,26 +26,26 @@ pub fn depth_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
 pub fn render_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     core: shader::Core<(Context, P), V>,
 ) -> shader::Core<(Context, P), V> {
-    core.vertex
-        .get_output_expr(shader::V_WORLD_POS)
-        .expect("VertexCore needs V_WORLD_POS output for shadow mapping");
-    core.vertex
-        .get_output_expr(shader::V_WORLD_NORMAL)
-        .expect("VertexCore needs V_WORLD_NORMAL output for shadow mapping");
+    assert!(
+        core.vertex.has_out(shader::V_WORLD_POS),
+        "VertexCore needs V_WORLD_POS output for shadow mapping"
+    );
+    assert!(
+        core.vertex.has_out(shader::V_WORLD_NORMAL),
+        "VertexCore needs V_WORLD_NORMAL output for shadow mapping"
+    );
 
     // Position of current vertex in light space
     let v_light_space_pos = (
-        "v_light_space_pos".into(),
-        UniformType::FloatVec4,
-        shader::VariableQualifier::Smooth,
+        ("v_light_space_pos".into(), UniformType::FloatVec4),
+        shader::VertexOutQualifier::Smooth,
     );
 
     let vertex = core
         .vertex
         .with_extra_uniform(("mat_light_view_projection".into(), UniformType::FloatMat4))
-        .with_output(
+        .with_out(
             v_light_space_pos.clone(),
-
             // Bias shadow coord a bit in the direction of the normal --
             // this is a simple fix for a lot of self-shadowing artifacts
             "mat_light_view_projection * (v_world_pos + 0.02 * vec4(v_world_normal, 0.0))",
@@ -53,9 +54,9 @@ pub fn render_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     let fragment = core
         .fragment
         .with_extra_uniform(("shadow_map".into(), UniformType::Sampler2d))
-        .with_input_def(shader::v_world_pos_def())
-        .with_input_def(shader::v_world_normal_def())
-        .with_input_def(v_light_space_pos)
+        .with_in_def(shader::v_world_pos_def())
+        .with_in_def(shader::v_world_normal_def())
+        .with_in_def(v_light_space_pos)
         .with_defs(
             "
             float shadow_calculation(vec4 light_space_pos) {
@@ -81,7 +82,10 @@ pub fn render_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
             }
             ",
         )
-        .with_output(shader::F_SHADOW, UniformType::Float, "shadow_calculation(v_light_space_pos)");
+        .with_out(
+            shader::f_shadow_def(),
+            "shadow_calculation(v_light_space_pos)",
+        );
 
     shader::Core { vertex, fragment }
 }

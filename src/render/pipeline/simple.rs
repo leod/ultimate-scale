@@ -1,5 +1,3 @@
-use glium::uniforms::UniformType;
-
 use crate::render::object::Vertex;
 use crate::render::pipeline::{Context, DefaultInstanceParams, InstanceParams};
 use crate::render::shader;
@@ -7,8 +5,8 @@ use crate::render::shader;
 pub fn plain_core() -> shader::Core<(Context, DefaultInstanceParams), Vertex> {
     shader::Core {
         vertex: shader::VertexCore {
-            output_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
-            output_exprs: shader_output_exprs! {
+            out_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
+            out_exprs: shader_output_exprs! {
                 // TODO: Precompute inverse of mat_model if we ever have lots of vertices
                 shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * normal)",
                 shader::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
@@ -17,8 +15,9 @@ pub fn plain_core() -> shader::Core<(Context, DefaultInstanceParams), Vertex> {
             ..Default::default()
         },
         fragment: shader::FragmentCore {
-            outputs: shader_output_exprs! {
-                shader::F_COLOR, UniformType::FloatVec4 => "color",
+            out_defs: vec![shader::f_color_def()],
+            out_exprs: shader_output_exprs! {
+                shader::F_COLOR => "color",
             },
             ..Default::default()
         },
@@ -28,14 +27,18 @@ pub fn plain_core() -> shader::Core<(Context, DefaultInstanceParams), Vertex> {
 pub fn diffuse_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
-    let has_shadow = core.fragment.get_output_expr(shader::F_SHADOW).is_some();
+    let color_expr = if core.fragment.has_out(shader::F_SHADOW) {
+        "(0.3 + f_shadow * diffuse) * f_color"
+    } else {
+        "(0.3 + diffuse) * f_color"
+    };
 
     shader::Core {
         vertex: core.vertex,
         fragment: core
             .fragment
-            .with_input_def(shader::v_world_normal_def())
-            .with_input_def(shader::v_world_pos_def())
+            .with_in_def(shader::v_world_normal_def())
+            .with_in_def(shader::v_world_pos_def())
             .with_body(
                 "
                 float ambient = 0.3;
@@ -48,12 +51,6 @@ pub fn diffuse_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
                 );
             ",
             )
-            .with_updated_output(shader::F_COLOR, |expr| {
-                if has_shadow {
-                    format!("(ambient + f_shadow * diffuse) * ({})", expr)
-                } else {
-                    format!("(ambient + diffuse) * ({})", expr)
-                }
-            }),
+            .with_out_expr(shader::F_COLOR, color_expr),
     }
 }
