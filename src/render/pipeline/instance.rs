@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use nalgebra as na;
 
 use glium::uniform;
-use glium::uniforms::{UniformValue, Uniforms};
+use glium::uniforms::{UniformValue, Uniforms, EmptyUniforms};
 
 use crate::render::pipeline::Context;
 use crate::render::Object;
@@ -12,6 +12,14 @@ pub trait InstanceParams: Clone + Debug {
     type U: Uniforms;
 
     fn uniforms(&self) -> Self::U;
+}
+
+impl InstanceParams for () {
+    type U = EmptyUniforms;
+
+    fn uniforms(&self) -> Self::U {
+        EmptyUniforms
+    }
 }
 
 pub struct UniformsPair<T: Uniforms, U: Uniforms>(pub T, pub U);

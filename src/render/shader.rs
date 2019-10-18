@@ -8,6 +8,7 @@ use crate::render::pipeline::InstanceParams;
 pub const V_WORLD_NORMAL: &str = "v_world_normal";
 pub const V_WORLD_POS: &str = "v_world_pos";
 pub const V_COLOR: &str = "v_color";
+pub const V_TEX_COORD: &str = "v_tex_coord";
 pub const V_POSITION: &str = "gl_Position";
 
 pub const F_COLOR: &str = "f_color";
@@ -31,6 +32,13 @@ pub fn v_world_pos_def() -> VertexOutDef {
 pub fn v_color_def() -> VertexOutDef {
     (
         (V_COLOR.into(), UniformType::FloatVec3),
+        VertexOutQualifier::Smooth,
+    )
+}
+
+pub fn v_tex_coord_def() -> VertexOutDef {
+    (
+        (V_TEX_COORD.into(), UniformType::FloatVec2),
         VertexOutQualifier::Smooth,
     )
 }
@@ -110,7 +118,7 @@ pub struct LinkedCore<P: InstanceParams, V: glium::vertex::Vertex> {
 }
 
 #[macro_export]
-macro_rules! shader_output_exprs {
+macro_rules! shader_out_exprs {
     { $($variable:expr => $expr:literal),*, } => {
         vec![
             $(
