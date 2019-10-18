@@ -106,3 +106,40 @@ pub fn light_core() -> shader::Core<Light, deferred::vertex::QuadVertex> {
         fragment,
     }
 }
+
+/// Shader core for composing the buffers.
+pub fn composition_core() -> shader::Core<(), deferred::vertex::QuadVertex> {
+    let vertex = shader::VertexCore {
+        extra_uniforms: vec![("mat_orthogonal".into(), UniformType::FloatMat4)],
+        out_defs: vec![shader::v_tex_coord_def()],
+        out_exprs: shader_out_exprs! {
+            shader::V_TEX_COORD => "tex_coord",
+            shader::V_POSITION => "mat_orthogonal * position",
+        },
+        ..Default::default()
+    };
+
+    let fragment = shader::FragmentCore {
+        extra_uniforms: vec![
+            ("color_texture".into(), UniformType::Sampler2d),
+            ("light_texture".into(), UniformType::Sampler2d),
+        ],
+        in_defs: vec![shader::v_tex_coord_def()],
+        out_defs: vec![shader::f_color_def()],
+        body: "
+            vec3 color_value = texture(color_texture, v_tex_coord).rgb;
+            vec3 light_value = texture(light_texture, v_tex_coord).rgb;
+        ".into(),
+        out_exprs: shader_out_exprs! {
+            shader::F_COLOR => "vec4(color_value * light_value, 1.0)",
+        },
+        ..Default::default()
+    };
+
+    shader::Core {
+        vertex,
+        fragment,
+    }
+}
+
+

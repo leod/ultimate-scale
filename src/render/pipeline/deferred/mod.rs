@@ -71,50 +71,11 @@ impl DeferredShading {
 
         info!("Creating deferred light program");
         let light_core = shader::light_core();
-        println!("{}", light_core.vertex.compile());
-        println!("{}", light_core.fragment.compile());
         let light_program = light_core.build_program(facade)?;
 
         info!("Creating deferred composition program");
-        let composition_program = glium::Program::from_source(
-            facade,
-            // Vertex shader
-            "
-                #version 140
-
-                uniform mat4 mat_orthogonal;
-
-                in vec4 position;
-                in vec2 tex_coord;
-
-                smooth out vec2 frag_tex_coord;
-
-                void main() {
-                    frag_tex_coord = tex_coord;
-
-                    gl_Position = mat_orthogonal * position;
-                }
-            ",
-            // Fragment shader
-            "
-                #version 140
-
-                uniform sampler2D color_texture;
-                uniform sampler2D lighting_texture;
-
-                smooth in vec2 frag_tex_coord;
-
-                out vec4 f_color;
-
-                void main() {
-                    vec3 color_value = texture(color_texture, frag_tex_coord).rgb;
-                    vec3 lighting_value = texture(lighting_texture, frag_tex_coord).rgb;
-
-                    f_color = vec4(color_value * lighting_value, 1.0);
-                }
-            ",
-            None,
-        )?;
+        let composition_core = shader::composition_core();
+        let composition_program = composition_core.build_program(facade)?;
 
         let quad_vertex_buffer = glium::VertexBuffer::new(
             facade,
@@ -322,7 +283,7 @@ impl DeferredShading {
         let uniforms = uniform! {
             mat_orthogonal: self.orthogonal_projection(),
             color_texture: &self.scene_textures[0],
-            lighting_texture: &self.light_texture,
+            light_texture: &self.light_texture,
         };
 
         target.draw(
