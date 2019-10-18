@@ -38,10 +38,18 @@ pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>
         "FragmentCore needs F_COLOR output for deferred shading"
     );
 
+    let color_expr = if core.fragment.has_out(shader::F_SHADOW) {
+        // TODO: Write shadow value to a separate buffer?
+        "f_shadow * f_color"
+    } else {
+        "f_color"
+    };
+
     let fragment = core
         .fragment
         .with_in_def(shader::v_world_pos_def())
         .with_in_def(shader::v_world_normal_def())
+        .with_out_expr(shader::F_COLOR, color_expr)
         .with_out(f_world_pos_def(), "v_world_pos")
         .with_out(f_world_normal_def(), "vec4(v_world_normal, 0.0)");
 
