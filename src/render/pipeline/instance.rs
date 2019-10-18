@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use nalgebra as na;
 
 use glium::uniform;
-use glium::uniforms::{UniformValue, Uniforms, EmptyUniforms};
+use glium::uniforms::{EmptyUniforms, UniformValue, Uniforms};
 
 use crate::render::pipeline::Context;
 use crate::render::Object;

@@ -1,6 +1,6 @@
 use glium::uniforms::UniformType;
 
-use crate::render::pipeline::{InstanceParams, Light, deferred};
+use crate::render::pipeline::{deferred, InstanceParams, Light};
 use crate::render::shader;
 
 pub const F_WORLD_POS: &str = "f_world_pos";
@@ -94,17 +94,15 @@ pub fn light_core() -> shader::Core<Light, deferred::vertex::QuadVertex> {
 
             float ambient = 0.3;
             float radiance = diffuse;
-        ".into(),
+        "
+        .into(),
         out_exprs: shader_out_exprs! {
             shader::F_COLOR => "vec4(light_color * radiance, 1.0)",
         },
         ..Default::default()
     };
 
-    shader::Core {
-        vertex,
-        fragment,
-    }
+    shader::Core { vertex, fragment }
 }
 
 /// Shader core for composing the buffers.
@@ -129,17 +127,13 @@ pub fn composition_core() -> shader::Core<(), deferred::vertex::QuadVertex> {
         body: "
             vec3 color_value = texture(color_texture, v_tex_coord).rgb;
             vec3 light_value = texture(light_texture, v_tex_coord).rgb;
-        ".into(),
+        "
+        .into(),
         out_exprs: shader_out_exprs! {
             shader::F_COLOR => "vec4(color_value * light_value, 1.0)",
         },
         ..Default::default()
     };
 
-    shader::Core {
-        vertex,
-        fragment,
-    }
+    shader::Core { vertex, fragment }
 }
-
-

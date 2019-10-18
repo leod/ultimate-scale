@@ -11,8 +11,8 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::render::pipeline::{self, shadow, Context, Light, RenderLists, InstanceParams};
 use crate::render::pipeline::instance::UniformsPair;
+use crate::render::pipeline::{self, shadow, Context, InstanceParams, Light, RenderLists};
 use crate::render::Resources;
 
 #[derive(Debug, Clone, Default)]
@@ -77,10 +77,7 @@ impl DeferredShading {
         let composition_core = shader::composition_core();
         let composition_program = composition_core.build_program(facade)?;
 
-        let quad_vertex_buffer = glium::VertexBuffer::new(
-            facade,
-            vertex::QUAD_VERTICES,
-        )?;
+        let quad_vertex_buffer = glium::VertexBuffer::new(facade, vertex::QUAD_VERTICES)?;
 
         let quad_index_buffer = glium::IndexBuffer::new(
             facade,
