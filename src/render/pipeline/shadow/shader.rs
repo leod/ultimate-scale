@@ -23,7 +23,7 @@ pub fn depth_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
 }
 
 /// Shader core for rendering the shadowed scene.
-pub fn render_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+pub fn render_shadowed_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     core: shader::Core<(Context, P), V>,
 ) -> shader::Core<(Context, P), V> {
     assert!(

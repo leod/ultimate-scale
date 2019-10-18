@@ -93,7 +93,7 @@ impl ShadowMapping {
         info!("Creating shadow render program");
 
         let core = pipeline::simple::plain_core();
-        let core = shader::render_core_transform(core);
+        let core = shader::render_shadowed_core_transform(core);
         let core = if deferred {
             pipeline::deferred::shader::scene_buffers_core_transform(core)
         } else {
