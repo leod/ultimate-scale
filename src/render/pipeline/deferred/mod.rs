@@ -1,6 +1,7 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
 mod shader;
+mod vertex;
 
 pub use crate::render::pipeline::shadow::CreationError; // TODO
 
@@ -10,7 +11,8 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::render::pipeline::{self, shadow, Context, Light, RenderLists};
+use crate::render::pipeline::{self, shadow, Context, Light, RenderLists, InstanceParams};
+use crate::render::pipeline::instance::UniformsPair;
 use crate::render::Resources;
 
 #[derive(Debug, Clone, Default)]
@@ -30,7 +32,7 @@ pub struct DeferredShading {
     light_program: glium::Program,
     composition_program: glium::Program,
 
-    quad_vertex_buffer: glium::VertexBuffer<QuadVertex>,
+    quad_vertex_buffer: glium::VertexBuffer<vertex::QuadVertex>,
     quad_index_buffer: glium::IndexBuffer<u16>,
 
     shadow_mapping: Option<shadow::ShadowMapping>,
@@ -68,70 +70,10 @@ impl DeferredShading {
         let scene_program = scene_core.build_program(facade)?;
 
         info!("Creating deferred light program");
-        let light_program = glium::Program::from_source(
-            facade,
-            // Vertex shader
-            "
-                #version 140
-
-                uniform mat4 mat_orthogonal;
-
-                in vec4 position;
-                in vec2 tex_coord;
-
-                smooth out vec2 frag_tex_coord;
-
-                void main() {
-                    frag_tex_coord = tex_coord; 
-
-                    gl_Position = mat_orthogonal * position;
-                }
-            ",
-            // Fragment shader
-            "
-                #version 140
-
-                uniform sampler2D position_texture;
-                uniform sampler2D normal_texture;
-
-                uniform vec3 light_position;
-                uniform vec3 light_attenuation;
-                uniform vec3 light_color;
-                uniform float light_radius;
-
-                smooth in vec2 frag_tex_coord;
-
-                out vec4 f_color;
-
-                void main() {
-                    vec4 position = texture(position_texture, frag_tex_coord);
-                    vec3 normal = normalize(texture(normal_texture, frag_tex_coord).xyz);
-
-                    vec3 light_vector = light_position - position.xyz;
-                    float light_distance = length(light_vector);
-
-                    float diffuse = max(dot(normal, light_vector / light_distance), 0.0);
-
-                    if (diffuse > 0.0) {
-                        float attenuation = 1.0 / (
-                            light_attenuation.x +
-                            light_attenuation.y * light_distance +
-                            light_attenuation.z * light_distance * light_distance
-                        );
-                        attenuation *= 1.0 - pow(light_distance / light_radius, 2.0);
-                        attenuation = max(attenuation, 0.0);
-
-                        diffuse *= attenuation;
-                    }
-
-                    float ambient = 0.3;
-                    float radiance = diffuse;
-
-                    f_color = vec4(light_color * radiance, 1.0);
-                }
-            ",
-            None,
-        )?;
+        let light_core = shader::light_core();
+        println!("{}", light_core.vertex.compile());
+        println!("{}", light_core.fragment.compile());
+        let light_program = light_core.build_program(facade)?;
 
         info!("Creating deferred composition program");
         let composition_program = glium::Program::from_source(
@@ -176,30 +118,13 @@ impl DeferredShading {
 
         let quad_vertex_buffer = glium::VertexBuffer::new(
             facade,
-            &[
-                QuadVertex {
-                    position: [0.0, 0.0, 0.0, 1.0],
-                    tex_coord: [0.0, 0.0],
-                },
-                QuadVertex {
-                    position: [1.0, 0.0, 0.0, 1.0],
-                    tex_coord: [1.0, 0.0],
-                },
-                QuadVertex {
-                    position: [1.0, 1.0, 0.0, 1.0],
-                    tex_coord: [1.0, 1.0],
-                },
-                QuadVertex {
-                    position: [0.0, 1.0, 0.0, 1.0],
-                    tex_coord: [0.0, 1.0],
-                },
-            ],
+            vertex::QUAD_VERTICES,
         )?;
 
         let quad_index_buffer = glium::IndexBuffer::new(
             facade,
             glium::index::PrimitiveType::TrianglesList,
-            &[0u16, 1, 2, 0, 2, 3],
+            vertex::QUAD_INDICES,
         )?;
 
         let shadow_mapping = if let Some(config) = shadow_mapping_config {
@@ -369,19 +294,14 @@ impl DeferredShading {
         light_buffer.clear_color(0.1, 0.1, 0.1, 1.0);
 
         for light in lights.iter() {
-            let light_position: [f32; 3] = light.position.coords.into();
-            let light_attenuation: [f32; 3] = light.attenuation.into();
-            let light_color: [f32; 3] = light.color.into();
-
-            let uniforms = uniform! {
-                mat_orthogonal: self.orthogonal_projection(),
-                position_texture: &self.scene_textures[1],
-                normal_texture: &self.scene_textures[2],
-                light_position: light_position,
-                light_attenuation: light_attenuation,
-                light_color: light_color,
-                light_radius: light.radius,
-            };
+            let uniforms = UniformsPair(
+                light.uniforms(),
+                uniform! {
+                    mat_orthogonal: self.orthogonal_projection(),
+                    position_texture: &self.scene_textures[1],
+                    normal_texture: &self.scene_textures[2],
+                },
+            );
 
             light_buffer.draw(
                 &self.quad_vertex_buffer,
@@ -447,11 +367,3 @@ impl DeferredShading {
         )?)
     }
 }
-
-#[derive(Copy, Clone)]
-struct QuadVertex {
-    position: [f32; 4],
-    tex_coord: [f32; 2],
-}
-
-implement_vertex!(QuadVertex, position, tex_coord);

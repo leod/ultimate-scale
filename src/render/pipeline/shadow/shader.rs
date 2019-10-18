@@ -10,7 +10,7 @@ pub fn depth_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     // Only write depth into the output, discard color output of original core
     let fragment = shader::FragmentCore {
         out_defs: vec![shader::f_fragment_depth_def()],
-        out_exprs: shader_output_exprs! {
+        out_exprs: shader_out_exprs! {
             shader::F_FRAGMENT_DEPTH => "gl_FragCoord.z",
         },
         ..Default::default()
