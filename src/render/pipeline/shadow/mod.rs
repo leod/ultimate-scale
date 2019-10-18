@@ -83,8 +83,6 @@ impl ShadowMapping {
         config: &Config,
         deferred: bool,
     ) -> Result<ShadowMapping, CreationError> {
-        assert!(!deferred, "TODO after shader refactorin");
-
         // Shaders for creating the shadow map from light source's perspective
         info!("Creating shadow map program");
         let shadow_map_program = shader::depth_map_core_transform(
@@ -93,9 +91,15 @@ impl ShadowMapping {
 
         // Shaders for rendering the shadowed scene
         info!("Creating shadow render program");
+
         let core = pipeline::simple::plain_core();
         let core = shader::render_core_transform(core);
-        let core = pipeline::simple::diffuse_core_transform(core);
+        let core = if deferred {
+            pipeline::deferred::shader::scene_buffers_core_transform(core)
+        } else {
+            pipeline::simple::diffuse_core_transform(core)
+        };
+
         println!("{}", core.link().vertex.compile());
         println!("{}", core.link().fragment.compile());
 

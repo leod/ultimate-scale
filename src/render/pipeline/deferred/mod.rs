@@ -1,6 +1,6 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
-mod shader;
+pub mod shader;
 mod vertex;
 
 pub use crate::render::pipeline::shadow::CreationError; // TODO
@@ -9,7 +9,7 @@ use log::info;
 
 use nalgebra as na;
 
-use glium::{implement_vertex, uniform, Surface};
+use glium::{uniform, Surface};
 
 use crate::render::pipeline::instance::UniformsPair;
 use crate::render::pipeline::{self, shadow, Context, InstanceParams, Light, RenderLists};
