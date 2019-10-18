@@ -1,6 +1,5 @@
 use log::info;
 
-use glium::program;
 use num_traits::ToPrimitive;
 
 use crate::render::object::{self, Object, ObjectBuffers};

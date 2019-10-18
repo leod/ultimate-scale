@@ -11,62 +11,89 @@ pub const V_COLOR: &str = "v_color";
 pub const V_POSITION: &str = "gl_Position";
 
 pub const F_COLOR: &str = "f_color";
+pub const F_FRAGMENT_DEPTH: &str = "f_fragment_depth";
 pub const F_SHADOW: &str = "f_shadow";
 
-pub fn v_world_normal_def() -> SharedVariableDef {
+pub fn v_world_normal_def() -> VertexOutDef {
     (
-        V_WORLD_NORMAL.into(),
-        UniformType::FloatVec3,
-        VariableQualifier::Smooth,
+        (V_WORLD_NORMAL.into(), UniformType::FloatVec3),
+        VertexOutQualifier::Smooth,
     )
 }
 
-pub fn v_world_pos_def() -> SharedVariableDef {
+pub fn v_world_pos_def() -> VertexOutDef {
     (
-        V_WORLD_POS.into(),
-        UniformType::FloatVec4,
-        VariableQualifier::Smooth,
+        (V_WORLD_POS.into(), UniformType::FloatVec4),
+        VertexOutQualifier::Smooth,
     )
 }
 
-pub fn v_color_def() -> SharedVariableDef {
+pub fn v_color_def() -> VertexOutDef {
     (
-        V_COLOR.into(),
-        UniformType::FloatVec3,
-        VariableQualifier::Smooth,
+        (V_COLOR.into(), UniformType::FloatVec3),
+        VertexOutQualifier::Smooth,
+    )
+}
+
+pub fn f_color_def() -> FragmentOutDef {
+    (
+        (F_COLOR.into(), UniformType::FloatVec4),
+        FragmentOutQualifier::Yield,
+    )
+}
+
+pub fn f_fragment_depth_def() -> FragmentOutDef {
+    (
+        (F_FRAGMENT_DEPTH.into(), UniformType::Float),
+        FragmentOutQualifier::Yield,
+    )
+}
+
+pub fn f_shadow_def() -> FragmentOutDef {
+    (
+        (F_SHADOW.into(), UniformType::Float),
+        FragmentOutQualifier::Local,
     )
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum VariableQualifier {
+pub enum VertexOutQualifier {
     Flat,
     Smooth,
     Local,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum FragmentOutQualifier {
+    Local,
+    Yield,
 }
 
 pub type VariableName = String;
 pub type GLSL = String;
 
 pub type VariableDef = (VariableName, UniformType);
-pub type SharedVariableDef = (VariableName, UniformType, VariableQualifier);
+pub type VertexOutDef = (VariableDef, VertexOutQualifier);
+pub type FragmentOutDef = (VariableDef, FragmentOutQualifier);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VertexCore<P: InstanceParams, V: glium::vertex::Vertex> {
     pub extra_uniforms: Vec<VariableDef>,
-    pub output_defs: Vec<SharedVariableDef>,
+    pub out_defs: Vec<VertexOutDef>,
     pub defs: GLSL,
     pub body: GLSL,
-    pub output_exprs: Vec<(VariableName, GLSL)>,
+    pub out_exprs: Vec<(VariableName, GLSL)>,
     pub phantom: PhantomData<(P, V)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FragmentCore<P: InstanceParams> {
     pub extra_uniforms: Vec<VariableDef>,
-    pub input_defs: Vec<SharedVariableDef>,
+    pub in_defs: Vec<VertexOutDef>,
+    pub out_defs: Vec<FragmentOutDef>,
     pub defs: String,
     pub body: String,
-    pub outputs: Vec<(VariableName, UniformType, GLSL)>,
+    pub out_exprs: Vec<(VariableName, GLSL)>,
     pub phantom: PhantomData<P>,
 }
 
@@ -104,10 +131,10 @@ impl<P: InstanceParams, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
     fn default() -> Self {
         Self {
             extra_uniforms: Vec::new(),
-            output_defs: Vec::new(),
+            out_defs: Vec::new(),
             defs: "".into(),
             body: "".into(),
-            output_exprs: Vec::new(),
+            out_exprs: Vec::new(),
             phantom: PhantomData,
         }
     }
@@ -117,20 +144,29 @@ impl<P: InstanceParams> Default for FragmentCore<P> {
     fn default() -> Self {
         Self {
             extra_uniforms: Vec::new(),
-            input_defs: Vec::new(),
+            in_defs: Vec::new(),
+            out_defs: Vec::new(),
             defs: "".into(),
             body: "".into(),
-            outputs: Vec::new(),
+            out_exprs: Vec::new(),
             phantom: PhantomData,
         }
     }
 }
 
 impl<P: InstanceParams, V: glium::vertex::Vertex> VertexCore<P, V> {
-    pub fn get_output_expr(&self, name: &str) -> Option<&GLSL> {
-        self.output_exprs
+    pub fn has_out(&self, name: &str) -> bool {
+        self.out_defs
             .iter()
-            .find(|(n, _expr)| n == name)
+            .filter(|((n, _t), _q)| n == name)
+            .count()
+            > 0
+    }
+
+    pub fn get_out_exprs<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a GLSL> {
+        self.out_exprs
+            .iter()
+            .filter(move |(n, _expr)| n == name)
             .map(|(_n, expr)| expr)
     }
 
@@ -150,25 +186,33 @@ impl<P: InstanceParams, V: glium::vertex::Vertex> VertexCore<P, V> {
         self
     }
 
-    pub fn with_output(mut self, def: SharedVariableDef, expr: &str) -> Self {
-        assert!(self.get_output_expr(&def.0).is_none());
+    pub fn with_out(mut self, def: VertexOutDef, expr: &str) -> Self {
+        assert!(self.get_out_exprs(&(def.0).0).count() == 0);
 
-        self.output_exprs.push((def.0.clone(), expr.into()));
-        self.output_defs.push(def);
+        self.out_exprs.push(((def.0).0.clone(), expr.into()));
+        self.out_defs.push(def);
         self
     }
 }
 
 impl<P: InstanceParams> FragmentCore<P> {
-    pub fn get_input_def(&self, name: &str) -> Option<&SharedVariableDef> {
-        self.input_defs.iter().find(|(n, _t, _q)| n == name)
+    pub fn get_in_def(&self, name: &str) -> Option<&VertexOutDef> {
+        self.in_defs.iter().find(|((n, _t), _q)| n == name)
     }
 
-    pub fn get_output_expr(&self, name: &str) -> Option<&GLSL> {
-        self.outputs
+    pub fn has_out(&self, name: &str) -> bool {
+        self.out_defs
             .iter()
-            .find(|(n, _t, _expr)| n == name)
-            .map(|(_n, _t, expr)| expr)
+            .filter(|((n, _t), _q)| n == name)
+            .count()
+            > 0
+    }
+
+    pub fn get_out_exprs<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a GLSL> {
+        self.out_exprs
+            .iter()
+            .filter(move |(n, _expr)| n == name)
+            .map(|(_n, expr)| expr)
     }
 
     pub fn with_extra_uniform(mut self, def: VariableDef) -> Self {
@@ -177,40 +221,35 @@ impl<P: InstanceParams> FragmentCore<P> {
         self
     }
 
-    pub fn with_input_def(mut self, (name, t, q): SharedVariableDef) -> Self {
-        match self.get_input_def(&name) {
-            Some((_, cur_t, cur_q)) if *cur_t != t => panic!(
+    pub fn with_in_def(mut self, ((name, t), q): VertexOutDef) -> Self {
+        match self.get_in_def(&name) {
+            Some(((_, cur_t), _cur_q)) if *cur_t != t => panic!(
                 "FragmentCore already has input `{}', but with type {:?} instead of {:?}",
                 name, cur_t, t
             ),
-            Some((_, cur_t, cur_q)) if *cur_q != q => panic!(
+            Some(((_, _cur_t), cur_q)) if *cur_q != q => panic!(
                 "FragmentCore already has input `{}', but with qualifier {:?} instead of {:?}",
                 name, cur_q, q
             ),
             Some(_) => self,
             None => {
-                self.input_defs.push((name, t, q));
+                self.in_defs.push(((name, t), q));
                 self
             }
         }
     }
 
-    pub fn with_output(mut self, name: &str, t: UniformType, expr: &str) -> Self {
-        assert!(self.get_output_expr(name).is_none());
+    pub fn with_out(mut self, def: FragmentOutDef, expr: &str) -> Self {
+        assert!(self.get_out_exprs(&(def.0).0).count() == 0);
 
-        self.outputs.push((name.into(), t, expr.into()));
+        self.out_exprs.push(((def.0).0.clone(), expr.into()));
+        self.out_defs.push(def);
         self
     }
 
-    pub fn with_updated_output(mut self, name: &str, f: impl Fn(&str) -> String) -> Self {
-        for i in 0..self.outputs.len() {
-            if self.outputs[i].0 == name {
-                self.outputs[i].2 = f(&self.outputs[i].2);
-                return self;
-            }
-        }
-
-        panic!("FragmentCore does not contain output `{}'", name);
+    pub fn with_out_expr(mut self, name: &str, expr: &str) -> Self {
+        self.out_exprs.push((name.into(), expr.into()));
+        self
     }
 
     pub fn with_defs(mut self, defs: &str) -> Self {
@@ -226,7 +265,7 @@ impl<P: InstanceParams> FragmentCore<P> {
 
 impl<P: InstanceParams, V: glium::vertex::Vertex> Core<P, V> {
     pub fn link(&self) -> LinkedCore<P, V> {
-        // TODO: Remove unused shared variables
+        // TODO: Convert unused vertex outputs to local
         // TODO: Check non-duplicate inputs/outputs
         LinkedCore {
             vertex: self.vertex.clone(),
@@ -295,28 +334,41 @@ fn compile_variable_def(prefix: &str, (name, t): &VariableDef) -> String {
     prefix.to_string() + " " + &compile_uniform_type(*t).to_string() + " " + name + ";\n"
 }
 
-fn compile_variable_defs<'a>(
-    prefix: &str,
-    defs: impl Iterator<Item = VariableDef>,
-) -> String {
+fn compile_variable_defs<'a>(prefix: &str, defs: impl Iterator<Item = VariableDef>) -> String {
     defs.map(|def| compile_variable_def(prefix, &def))
         .collect::<Vec<_>>()
         .join("")
 }
 
-fn compile_shared_variable_def(prefix: &str, (name, t, q): &SharedVariableDef) -> String {
+fn compile_vertex_out_def(non_local_prefix: &str, ((name, t), q): &VertexOutDef) -> String {
     let prefix = match q {
-        VariableQualifier::Flat => "flat ".to_string() + prefix,
-        VariableQualifier::Smooth => "smooth ".to_string() + prefix,
-        VariableQualifier::Local => "".to_string(),
+        VertexOutQualifier::Flat => "flat ".to_string() + non_local_prefix,
+        VertexOutQualifier::Smooth => "smooth ".to_string() + non_local_prefix,
+        VertexOutQualifier::Local => "".to_string(),
     };
 
     compile_variable_def(&prefix, &(name.to_string(), *t))
 }
 
-fn compile_shared_variable_defs(prefix: &str, defs: &[SharedVariableDef]) -> String {
+fn compile_vertex_out_defs(prefix: &str, defs: &[VertexOutDef]) -> String {
     defs.iter()
-        .map(|def| compile_shared_variable_def(prefix, def))
+        .map(|def| compile_vertex_out_def(prefix, def))
+        .collect::<Vec<_>>()
+        .join("")
+}
+
+fn compile_fragment_out_def(((name, t), q): &FragmentOutDef) -> String {
+    let prefix = match q {
+        FragmentOutQualifier::Local => "".to_string(),
+        FragmentOutQualifier::Yield => "out ".to_string(),
+    };
+
+    compile_variable_def(&prefix, &(name.to_string(), *t))
+}
+
+fn compile_fragment_out_defs(defs: &[FragmentOutDef]) -> String {
+    defs.iter()
+        .map(compile_fragment_out_def)
         .collect::<Vec<_>>()
         .join("")
 }
@@ -331,13 +383,13 @@ fn compile_instance_params_uniforms<P: InstanceParams + Default>() -> String {
     compile_variable_defs("uniform", uniforms.iter().cloned())
 }
 
-fn compile_output_assignment((name, expr): (VariableName, GLSL)) -> String {
+fn compile_out_assignment((name, expr): (VariableName, GLSL)) -> String {
     "    ".to_string() + &name + " = " + &expr + ";\n"
 }
 
-fn compile_output_assignments(exprs: impl Iterator<Item = (VariableName, GLSL)>) -> String {
+fn compile_out_assignments(exprs: impl Iterator<Item = (VariableName, GLSL)>) -> String {
     exprs
-        .map(compile_output_assignment)
+        .map(compile_out_assignment)
         .collect::<Vec<_>>()
         .join("")
 }
@@ -378,7 +430,7 @@ impl<P: InstanceParams + Default, V: glium::vertex::Vertex> VertexCore<P, V> {
         s += "\n";
         s += &compile_vertex_attributes::<V>();
         s += "\n";
-        s += &compile_shared_variable_defs("out", &self.output_defs);
+        s += &compile_vertex_out_defs("out", &self.out_defs);
         s += "\n";
 
         s += &self.defs;
@@ -387,7 +439,7 @@ impl<P: InstanceParams + Default, V: glium::vertex::Vertex> VertexCore<P, V> {
         s += "void main() {\n";
         s += &self.body;
         s += "\n";
-        s += &compile_output_assignments(self.output_exprs.iter().cloned());
+        s += &compile_out_assignments(self.out_exprs.iter().cloned());
         s += "}\n";
 
         s
@@ -404,14 +456,9 @@ impl<P: InstanceParams + Default> FragmentCore<P> {
         s += "\n";
         s += &compile_variable_defs("uniform", self.extra_uniforms.iter().cloned());
         s += "\n";
-        s += &compile_shared_variable_defs("in", &self.input_defs);
+        s += &compile_vertex_out_defs("in", &self.in_defs);
         s += "\n";
-        s += &compile_variable_defs(
-            "out",
-            self.outputs
-                .iter()
-                .map(|(name, t, _expr)| (name.clone(), *t)),
-        );
+        s += &compile_fragment_out_defs(&self.out_defs);
         s += "\n";
 
         s += &self.defs;
@@ -420,11 +467,7 @@ impl<P: InstanceParams + Default> FragmentCore<P> {
         s += "void main() {\n";
         s += &self.body;
         s += "\n";
-        s += &compile_output_assignments(
-            self.outputs
-                .iter()
-                .map(|(name, _t, expr)| (name.clone(), expr.clone())),
-        );
+        s += &compile_out_assignments(self.out_exprs.iter().cloned());
         s += "}\n";
 
         s
