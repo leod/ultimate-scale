@@ -1,5 +1,7 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
+mod shader;
+
 pub use crate::render::pipeline::shadow::CreationError; // TODO
 
 use log::info;
@@ -8,7 +10,7 @@ use nalgebra as na;
 
 use glium::{implement_vertex, uniform, Surface};
 
-use crate::render::pipeline::{shadow, Context, Light, RenderLists};
+use crate::render::pipeline::{self, shadow, Context, Light, RenderLists};
 use crate::render::Resources;
 
 #[derive(Debug, Clone, Default)]
@@ -60,51 +62,10 @@ impl DeferredShading {
         let light_texture = Self::create_texture(facade, rounded_size)?;
 
         info!("Creating deferred scene program");
-        let scene_program = glium::Program::from_source(
-            facade,
-            // Vertex shader
-            "
-                #version 140
-
-                uniform mat4 mat_model;
-                uniform mat4 mat_view;
-                uniform mat4 mat_projection;
-
-                in vec3 position;
-                in vec3 normal;
-
-                smooth out vec4 frag_position;
-                smooth out vec4 frag_normal;
-
-                void main() {
-                    frag_position = mat_model * vec4(position, 1.0);
-                    frag_normal = vec4(mat3(mat_model) * normal, 1.0);
-                    //frag_normal = vec4(transpose(inverse(mat3(mat_model))) * normal, 1.0);
-
-                    gl_Position = mat_projection * mat_view * frag_position;
-                }
-            ",
-            // Fragment shader
-            "
-                #version 140
-
-                uniform vec4 color;
-
-                smooth in vec4 frag_position;
-                smooth in vec4 frag_normal;
-
-                out vec4 f_output1;
-                out vec4 f_output2;
-                out vec4 f_output3;
-
-                void main() {
-                    f_output1 = frag_position;
-                    f_output2 = frag_normal;
-                    f_output3 = color;
-                }
-            ",
-            None,
-        )?;
+        let scene_core = shader::scene_buffers_core_transform(pipeline::simple::plain_core());
+        println!("{}", scene_core.vertex.compile());
+        println!("{}", scene_core.fragment.compile());
+        let scene_program = scene_core.build_program(facade)?;
 
         info!("Creating deferred light program");
         let light_program = glium::Program::from_source(
@@ -344,9 +305,9 @@ impl DeferredShading {
         render_lists: &RenderLists,
     ) -> Result<(), glium::DrawError> {
         let output = &[
-            ("f_output1", &self.scene_textures[0]),
-            ("f_output2", &self.scene_textures[1]),
-            ("f_output3", &self.scene_textures[2]),
+            ("f_color", &self.scene_textures[0]),
+            ("f_world_pos", &self.scene_textures[1]),
+            ("f_world_normal", &self.scene_textures[2]),
         ];
 
         // TODO: How can we avoid having to create framebuffers in every frame?
@@ -414,8 +375,8 @@ impl DeferredShading {
 
             let uniforms = uniform! {
                 mat_orthogonal: self.orthogonal_projection(),
-                position_texture: &self.scene_textures[0],
-                normal_texture: &self.scene_textures[1],
+                position_texture: &self.scene_textures[1],
+                normal_texture: &self.scene_textures[2],
                 light_position: light_position,
                 light_attenuation: light_attenuation,
                 light_color: light_color,
@@ -440,7 +401,7 @@ impl DeferredShading {
     ) -> Result<(), glium::DrawError> {
         let uniforms = uniform! {
             mat_orthogonal: self.orthogonal_projection(),
-            color_texture: &self.scene_textures[2],
+            color_texture: &self.scene_textures[0],
             lighting_texture: &self.light_texture,
         };
 
