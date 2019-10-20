@@ -200,10 +200,11 @@ pub fn render_block(
 
     match block {
         Block::PipeXY => {
+            let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
             out.solid_conduit.add(
                 Object::TessellatedCube,
                 &conduit::Params {
-                    transform: translation * transform,
+                    transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
                 },
