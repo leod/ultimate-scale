@@ -121,6 +121,10 @@ impl Game {
         let render_context = render::pipeline::Context {
             camera: self.camera.clone(),
             elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
+            tick_progress: self
+                .exec_view
+                .as_ref()
+                .map_or(0.0, |exec_view| exec_view.cur_tick_progress()),
             main_light_pos: na::Point3::new(
                 15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos(),
                 15.0 + 20.0 * (std::f32::consts::PI / 4.0).sin(),

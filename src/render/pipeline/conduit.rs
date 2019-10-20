@@ -39,7 +39,7 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
         out_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
         out_exprs: shader_out_exprs! {
             shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * normal)",
-            shader::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
+            shader::V_WORLD_POS => "mat_model * vec4(position * 0.5, 1.0) + vec4(v_world_normal * sin(tick_progress * 3.141592) * 0.1, 0.0)",
             shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
         },
         ..Default::default()
