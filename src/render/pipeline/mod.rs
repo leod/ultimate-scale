@@ -1,3 +1,4 @@
+pub mod conduit;
 pub mod deferred;
 pub mod instance;
 pub mod light;
@@ -34,11 +35,8 @@ impl Default for Context {
 
 #[derive(Default, Clone)]
 pub struct RenderLists {
-    /// Instances that may be shadowed.
     pub solid: RenderList<DefaultInstanceParams>,
-
-    /// Instances that cast a shadow.
-    pub solid_shadow: RenderList<DefaultInstanceParams>,
+    pub solid_conduit: RenderList<conduit::Params>,
 
     /// Transparent instances.
     pub transparent: RenderList<DefaultInstanceParams>,
@@ -56,7 +54,6 @@ impl RenderLists {
 
     pub fn clear(&mut self) {
         self.solid.clear();
-        self.solid_shadow.clear();
         self.transparent.clear();
         self.plain.clear();
         self.lights.clear();
