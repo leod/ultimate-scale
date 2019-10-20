@@ -212,7 +212,7 @@ impl ShadowMapping {
             shadow_target.clear_color(1.0, 1.0, 1.0, 1.0);
             shadow_target.clear_depth(1.0);
 
-            render_lists.solid_shadow.render_with_program(
+            render_lists.solid.render_with_program(
                 resources,
                 &light_context,
                 &Default::default(),

@@ -194,13 +194,13 @@ pub fn render_block(
     transform: &na::Matrix4<f32>,
     color: Option<&na::Vector4<f32>>,
     alpha: f32,
-    out: &mut RenderList<DefaultInstanceParams>,
+    out: &mut RenderLists,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
 
     match block {
         Block::PipeXY => {
-            out.add(
+            out.solid.add(
                 Object::PipeSegment,
                 &DefaultInstanceParams {
                     transform: translation * transform,
@@ -211,7 +211,7 @@ pub fn render_block(
         }
         Block::PipeBendXY => {
             let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
-            out.add(
+            out.solid.add(
                 Object::PipeBend,
                 &DefaultInstanceParams {
                     transform: translation * transform * rotation,
@@ -222,7 +222,7 @@ pub fn render_block(
         }
         Block::PipeZ => {
             let rotation = na::Matrix4::new_rotation(na::Vector3::x() * std::f32::consts::PI / 2.0);
-            out.add(
+            out.solid.add(
                 Object::PipeSegment,
                 &DefaultInstanceParams {
                     transform: translation * transform * rotation,
@@ -235,7 +235,7 @@ pub fn render_block(
             let angle_y = -sign_z.to_f32() * std::f32::consts::PI / 2.0;
             let rotation = na::Matrix4::new_rotation(na::Vector3::y() * angle_y)
                 * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
-            out.add(
+            out.solid.add(
                 Object::PipeBend,
                 &DefaultInstanceParams {
                     transform: translation * transform * rotation,
@@ -245,7 +245,7 @@ pub fn render_block(
             );
         }
         Block::PipeSplitXY { .. } => {
-            out.add(
+            out.solid.add(
                 Object::PipeSplit,
                 &DefaultInstanceParams {
                     transform: translation * transform,
@@ -260,7 +260,7 @@ pub fn render_block(
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.7, 0.8, 0.7));
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
@@ -279,7 +279,7 @@ pub fn render_block(
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
                     0.9, input_size, input_size,
                 ));
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: input_transform,
@@ -290,7 +290,7 @@ pub fn render_block(
         }
         Block::WindSource => {
             let scaling = na::Matrix4::new_scaling(0.75);
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
@@ -313,7 +313,7 @@ pub fn render_block(
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
@@ -333,7 +333,7 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                out,
+                &mut out.solid,
             );
         }
         Block::BlipDuplicator {
@@ -348,7 +348,7 @@ pub fn render_block(
                 Some(kind) => blip_color(kind),
                 None => na::Vector3::new(0.6, 0.6, 0.6),
             };
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
@@ -367,7 +367,7 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(0.8, 0.8, 0.8, alpha),
-                out,
+                &mut out.solid,
             );
             render_bridge(
                 Dir2::X_POS,
@@ -376,7 +376,7 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(0.8, 0.8, 0.8, alpha),
-                out,
+                &mut out.solid,
             );
         }
         Block::BlipWindSource { activated } => {
@@ -390,7 +390,7 @@ pub fn render_block(
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 1.0));
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
@@ -407,11 +407,11 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(0.8, 0.8, 0.8, alpha),
-                out,
+                &mut out.solid,
             );
         }
         Block::Solid => {
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform,
@@ -470,7 +470,7 @@ pub fn render_machine(machine: &Machine, tick_time: f32, out: &mut RenderLists) 
         let transform = placed_block_transform(&placed_block);
         let center = block_center(&block_pos);
 
-        render_block(
+        /*render_block(
             &placed_block.block,
             tick_time,
             &center,
@@ -478,7 +478,7 @@ pub fn render_machine(machine: &Machine, tick_time: f32, out: &mut RenderLists) 
             None,
             1.0,
             &mut out.solid_shadow,
-        );
+        );*/
         render_block(
             &placed_block.block,
             tick_time,
@@ -486,7 +486,7 @@ pub fn render_machine(machine: &Machine, tick_time: f32, out: &mut RenderLists) 
             &transform,
             None,
             1.0,
-            &mut out.solid,
+            out,
         );
     }
 }
