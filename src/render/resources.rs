@@ -48,8 +48,11 @@ impl Resources {
             .build_program(facade)?;
 
         info!("Creating straight conduit program");
-        let conduit_program = pipeline::simple::diffuse_core_transform(pipeline::conduit::core())
-            .build_program(facade)?;
+        let conduit_core =
+            pipeline::simple::diffuse_core_transform(pipeline::conduit::core()).link();
+        println!("{}", conduit_core.vertex.compile());
+        println!("{}", conduit_core.fragment.compile());
+        let conduit_program = conduit_core.build_program(facade)?;
 
         info!("Creating plain render program");
         let plain_program = pipeline::simple::plain_core().build_program(facade)?;

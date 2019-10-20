@@ -1,0 +1,174 @@
+{
+  "size": [
+    30,
+    30,
+    4
+  ],
+  "block_data": [
+    [
+      [
+        4,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        5,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        3,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ]
+  ]
+}
