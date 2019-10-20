@@ -37,9 +37,30 @@ impl InstanceParams for Params {
 pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
     let vertex = shader::VertexCore {
         out_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
+        defs: "
+            const float PI = 3.141592;
+            const float radius = 0.5;
+            const float scale = 0.15;
+        "
+        .to_string(),
+        body: "
+            float a = (position.x + 0.5 + tick_progress) * 2.0 * PI;
+            float s = sin(a);
+            float c = cos(a);
+            mat2 m = mat2(c, -s, s, c);
+
+            vec3 scaled_pos = position;
+            scaled_pos.yz *= scale;
+            scaled_pos.z += radius - 0.5 * scale;
+            scaled_pos.yz = m * scaled_pos.yz;
+
+            vec3 rot_normal = normal;
+            rot_normal.yz = m * rot_normal.yz;
+        "
+        .to_string(),
         out_exprs: shader_out_exprs! {
-            shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * normal)",
-            shader::V_WORLD_POS => "mat_model * vec4(position * 0.5, 1.0) + vec4(v_world_normal * sin(tick_progress * 3.141592) * 0.1, 0.0)",
+            shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * rot_normal)",
+            shader::V_WORLD_POS => "mat_model * vec4(scaled_pos, 1.0)",
             shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
         },
         ..Default::default()
