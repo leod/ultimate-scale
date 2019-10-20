@@ -12,11 +12,12 @@ use crate::exec::{self, ExecView};
 use crate::machine::Machine;
 
 use crate::render::camera::{self, Camera, EditCameraView};
-use crate::render::deferred::DeferredShading;
-use crate::render::shadow::{self, ShadowMapping};
+use crate::render::pipeline::deferred::DeferredShading;
+use crate::render::pipeline::shadow::{self, ShadowMapping};
+use crate::render::pipeline::{Light, RenderLists};
 use crate::render::text::{self, Font};
+use crate::render::Resources;
 use crate::render::{self, resources};
-use crate::render::{Light, RenderLists, Resources};
 
 #[derive(Debug)]
 pub enum CreationError {
@@ -117,7 +118,7 @@ impl Game {
         &mut self,
         display: &glium::backend::glutin::Display,
     ) -> Result<(), glium::DrawError> {
-        let render_context = render::Context {
+        let render_context = render::pipeline::Context {
             camera: self.camera.clone(),
             elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
             main_light_pos: na::Point3::new(
@@ -164,7 +165,7 @@ impl Game {
                 &mut target,
             )?;
         } else {
-            render::render_frame_straight(
+            render::pipeline::render_frame_straight(
                 &self.resources,
                 &render_context,
                 &self.render_lists,
