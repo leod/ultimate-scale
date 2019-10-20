@@ -67,6 +67,10 @@ impl ExecView {
         self.status
     }
 
+    pub fn cur_tick_progress(&self) -> f32 {
+        self.tick_timer.progress()
+    }
+
     pub fn cur_tick_time(&self) -> f32 {
         self.exec.cur_tick as f32 + self.tick_timer.progress()
     }

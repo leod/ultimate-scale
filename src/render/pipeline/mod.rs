@@ -18,6 +18,7 @@ pub use render_list::RenderList;
 pub struct Context {
     pub camera: Camera,
     pub elapsed_time_secs: f32,
+    pub tick_progress: f32,
     pub main_light_pos: na::Point3<f32>,
     pub main_light_center: na::Point3<f32>,
 }
@@ -27,6 +28,7 @@ impl Default for Context {
         Self {
             camera: Default::default(),
             elapsed_time_secs: 0.0,
+            tick_progress: 0.0,
             main_light_pos: na::Point3::origin(),
             main_light_center: na::Point3::origin(),
         }

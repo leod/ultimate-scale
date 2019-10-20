@@ -201,7 +201,7 @@ pub fn render_block(
     match block {
         Block::PipeXY => {
             out.solid_conduit.add(
-                Object::PipeSegment,
+                Object::TessellatedCube,
                 &conduit::Params {
                     transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
