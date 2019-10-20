@@ -54,12 +54,14 @@ impl RenderLists {
 
     pub fn clear(&mut self) {
         self.solid.clear();
+        self.solid_conduit.clear();
         self.transparent.clear();
         self.plain.clear();
         self.lights.clear();
     }
 }
 
+// TODO: Facter out into some struct that also holds the necessary programs
 pub fn render_frame_straight<S: glium::Surface>(
     resources: &Resources,
     context: &Context,
@@ -69,6 +71,14 @@ pub fn render_frame_straight<S: glium::Surface>(
     render_lists
         .solid
         .render(resources, context, &Default::default(), target)?;
+
+    render_lists.solid_conduit.render_with_program(
+        resources,
+        context,
+        &Default::default(),
+        &resources.conduit_program,
+        target,
+    )?;
 
     render_lists
         .plain

@@ -3,7 +3,7 @@ use nalgebra as na;
 use crate::machine::grid::{self, Dir2};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
-use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
+use crate::render::pipeline::{conduit, DefaultInstanceParams, RenderList, RenderLists};
 use crate::render::Object;
 
 pub fn wind_source_color() -> na::Vector3<f32> {
@@ -200,9 +200,9 @@ pub fn render_block(
 
     match block {
         Block::PipeXY => {
-            out.solid.add(
+            out.solid_conduit.add(
                 Object::PipeSegment,
-                &DefaultInstanceParams {
+                &conduit::Params {
                     transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
