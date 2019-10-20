@@ -206,6 +206,7 @@ pub fn render_block(
                 &conduit::Params {
                     transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                    phase: 0.0,
                     ..Default::default()
                 },
             );

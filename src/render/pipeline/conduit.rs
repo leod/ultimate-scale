@@ -9,6 +9,7 @@ use crate::render::{object, shader};
 pub struct Params {
     pub transform: na::Matrix4<f32>,
     pub color: na::Vector4<f32>,
+    pub phase: f32,
 }
 
 impl Default for Params {
@@ -16,6 +17,7 @@ impl Default for Params {
         Self {
             transform: na::Matrix4::identity(),
             color: na::Vector4::zeros(),
+            phase: 0.0,
         }
     }
 }
@@ -30,6 +32,7 @@ impl InstanceParams for Params {
         uniform! {
             mat_model: mat_model,
             color: color,
+            phase: self.phase,
         }
     }
 }
@@ -44,7 +47,7 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
         "
         .to_string(),
         body: "
-            float a = (position.x + 0.5 + tick_progress) * 2.0 * PI;
+            float a = (position.x + 0.5 + tick_progress) * 2.0 * PI + phase;
             float s = sin(a);
             float c = cos(a);
             mat2 m = mat2(c, -s, s, c);

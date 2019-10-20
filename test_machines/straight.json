@@ -7,45 +7,12 @@
   "block_data": [
     [
       [
-        4,
+        13,
         7,
         0
       ],
       {
-        "rotation_xy": 2,
-        "block": "PipeXY"
-      }
-    ],
-    [
-      [
-        5,
-        7,
-        0
-      ],
-      {
-        "rotation_xy": 2,
-        "block": "PipeXY"
-      }
-    ],
-    [
-      [
-        6,
-        7,
-        0
-      ],
-      {
-        "rotation_xy": 2,
-        "block": "PipeXY"
-      }
-    ],
-    [
-      [
-        7,
-        7,
-        0
-      ],
-      {
-        "rotation_xy": 2,
+        "rotation_xy": 3,
         "block": "PipeXY"
       }
     ],
@@ -56,7 +23,7 @@
         0
       ],
       {
-        "rotation_xy": 2,
+        "rotation_xy": 3,
         "block": "PipeXY"
       }
     ],
@@ -67,7 +34,7 @@
         0
       ],
       {
-        "rotation_xy": 2,
+        "rotation_xy": 3,
         "block": "PipeXY"
       }
     ],
@@ -78,7 +45,7 @@
         0
       ],
       {
-        "rotation_xy": 2,
+        "rotation_xy": 3,
         "block": "PipeXY"
       }
     ],
@@ -89,7 +56,7 @@
         0
       ],
       {
-        "rotation_xy": 2,
+        "rotation_xy": 3,
         "block": "PipeXY"
       }
     ],
@@ -100,36 +67,31 @@
         0
       ],
       {
-        "rotation_xy": 2,
-        "block": "PipeXY"
-      }
-    ],
-    [
-      [
-        13,
-        7,
-        0
-      ],
-      {
-        "rotation_xy": 2,
-        "block": "PipeXY"
-      }
-    ],
-    [
-      [
-        7,
-        5,
-        0
-      ],
-      {
         "rotation_xy": 3,
         "block": "PipeXY"
       }
     ],
     [
       [
-        7,
         4,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        7,
         0
       ],
       {
@@ -139,35 +101,46 @@
     ],
     [
       [
+        6,
         7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
         3,
-        0
-      ],
-      {
-        "rotation_xy": 3,
-        "block": "PipeXY"
-      }
-    ],
-    [
-      [
         7,
-        2,
         0
       ],
       {
-        "rotation_xy": 3,
-        "block": "PipeXY"
-      }
-    ],
-    [
-      [
-        7,
-        1,
-        0
-      ],
-      {
-        "rotation_xy": 3,
-        "block": "PipeXY"
+        "rotation_xy": 1,
+        "block": "WindSource"
       }
     ]
   ]
