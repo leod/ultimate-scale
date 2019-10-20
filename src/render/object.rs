@@ -3,7 +3,6 @@ use std::path::Path;
 
 use glium::{self, implement_vertex};
 use log::info;
-use nalgebra as na;
 use num_derive::{FromPrimitive, ToPrimitive};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
@@ -140,29 +139,6 @@ impl ObjectBuffers {
         })
     }
 }
-
-#[derive(Clone, Debug)]
-pub struct InstanceParams {
-    pub transform: na::Matrix4<f32>,
-    pub color: na::Vector4<f32>,
-}
-
-impl Default for InstanceParams {
-    fn default() -> InstanceParams {
-        InstanceParams {
-            transform: na::Matrix4::identity(),
-            color: na::Vector4::new(1.0, 1.0, 1.0, 1.0),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Instance {
-    pub object: Object,
-    pub params: InstanceParams,
-}
-
-impl Instance {}
 
 #[derive(Debug)]
 pub enum CreationError {
@@ -320,6 +296,7 @@ impl Object {
     }
 }
 
+#[rustfmt::skip]
 pub const CUBE_POSITIONS: &[[f32; 3]] = &[
     // Front
     [-0.5, -0.5,  0.5],
@@ -358,6 +335,7 @@ pub const CUBE_POSITIONS: &[[f32; 3]] = &[
     [-0.5, -0.5,  0.5],
 ];
 
+#[rustfmt::skip]
 pub const CUBE_NORMALS: &[[f32; 3]] = &[
     // Front
     [ 0.0,  0.0,  1.0],
@@ -396,6 +374,7 @@ pub const CUBE_NORMALS: &[[f32; 3]] = &[
     [ 0.0, -1.0,  0.0],
 ];
 
+#[rustfmt::skip]
 pub const CUBE_INDICES: &[u32] = &[
     // Front
     0, 1, 2, 0, 2, 3,

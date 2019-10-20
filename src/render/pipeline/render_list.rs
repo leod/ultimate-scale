@@ -1,24 +1,24 @@
-use glium::uniform;
-
-use crate::render::object::{Instance, InstanceParams, Object};
-use crate::render::resources::Resources;
-use crate::render::Context;
+use crate::render::pipeline::instance::UniformsPair;
+use crate::render::pipeline::{Context, Instance, InstanceParams};
+use crate::render::{Object, Resources};
 
 #[derive(Default, Clone)]
-pub struct RenderList {
-    pub instances: Vec<Instance>,
+pub struct RenderList<T: InstanceParams> {
+    pub instances: Vec<Instance<T>>,
 }
 
-impl RenderList {
-    pub fn new() -> RenderList {
-        Default::default()
+impl<T: InstanceParams> RenderList<T> {
+    pub fn new() -> RenderList<T> {
+        Self {
+            instances: Vec::new(),
+        }
     }
 
-    pub fn add_instance(&mut self, instance: &Instance) {
+    pub fn add_instance(&mut self, instance: &Instance<T>) {
         self.instances.push(instance.clone());
     }
 
-    pub fn add(&mut self, object: Object, params: &InstanceParams) {
+    pub fn add(&mut self, object: Object, params: &T) {
         self.add_instance(&Instance {
             object,
             params: params.clone(),
@@ -33,10 +33,6 @@ impl RenderList {
         program: &glium::Program,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        let mat_projection: [[f32; 4]; 4] = context.camera.projection.into();
-        let mat_view: [[f32; 4]; 4] = context.camera.view.into();
-        let light_pos: [f32; 3] = context.main_light_pos.coords.into();
-
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
@@ -49,17 +45,7 @@ impl RenderList {
 
         for instance in &self.instances {
             let buffers = resources.get_object_buffers(instance.object);
-
-            let mat_model: [[f32; 4]; 4] = instance.params.transform.into();
-            let color: [f32; 4] = instance.params.color.into();
-            let uniforms = uniform! {
-                mat_model: mat_model,
-                mat_view: mat_view,
-                mat_projection: mat_projection,
-                light_pos: light_pos,
-                color: color,
-                t: context.elapsed_time_secs,
-            };
+            let uniforms = UniformsPair(context.uniforms(), instance.params.uniforms());
 
             buffers.index_buffer.draw(
                 &buffers.vertex_buffer,

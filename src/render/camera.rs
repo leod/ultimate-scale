@@ -48,6 +48,16 @@ pub struct Camera {
     pub view: na::Matrix4<f32>,
 }
 
+impl Default for Camera {
+    fn default() -> Self {
+        Camera {
+            viewport: na::Vector4::zeros(),
+            projection: na::Matrix4::identity(),
+            view: na::Matrix4::zeros(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct EditCameraView {
     target: na::Point3<f32>,

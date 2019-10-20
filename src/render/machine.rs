@@ -3,7 +3,8 @@ use nalgebra as na;
 use crate::machine::grid::{self, Dir2};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
-use crate::render::{InstanceParams, Object, RenderList, RenderLists};
+use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
+use crate::render::Object;
 
 pub fn wind_source_color() -> na::Vector3<f32> {
     na::Vector3::new(1.0, 0.08, 0.24)
@@ -30,7 +31,7 @@ pub struct Line {
     pub color: na::Vector4<f32>,
 }
 
-pub fn render_line(line: &Line, out: &mut RenderList) {
+pub fn render_line(line: &Line, out: &mut RenderList<DefaultInstanceParams>) {
     let center = line.start + (line.end - line.start) / 2.0;
 
     let d = line.end - line.start;
@@ -50,7 +51,7 @@ pub fn render_line(line: &Line, out: &mut RenderList) {
 
     out.add(
         Object::Cube,
-        &InstanceParams {
+        &DefaultInstanceParams {
             transform,
             color: line.color,
             ..Default::default()
@@ -77,7 +78,7 @@ pub fn render_cuboid_wireframe(
     cuboid: &Cuboid,
     thickness: f32,
     color: &na::Vector4<f32>,
-    out: &mut RenderList,
+    out: &mut RenderList<DefaultInstanceParams>,
 ) {
     let lines = vec![
         // Front
@@ -113,7 +114,7 @@ pub fn render_cuboid_wireframe(
     }
 }
 
-pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
+pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList<DefaultInstanceParams>) {
     let color = na::Vector4::new(0.7, 0.7, 0.7, 1.0);
 
     for x in 0..=size.x {
@@ -121,7 +122,7 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
         let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::y() * (size.y as f32)));
         out.add(
             Object::LineY,
-            &InstanceParams {
+            &DefaultInstanceParams {
                 transform: translation * scaling,
                 color,
                 ..Default::default()
@@ -134,7 +135,7 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList) {
         let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::x() * (size.x as f32)));
         out.add(
             Object::LineX,
-            &InstanceParams {
+            &DefaultInstanceParams {
                 transform: translation * scaling,
                 color,
                 ..Default::default()
@@ -167,7 +168,7 @@ pub fn render_bridge(
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: &na::Vector4<f32>,
-    out: &mut RenderList,
+    out: &mut RenderList<DefaultInstanceParams>,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
     let dir_offset: na::Vector3<f32> = na::convert(dir.embed().to_vector());
@@ -178,7 +179,7 @@ pub fn render_bridge(
         * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, size, size));
     out.add(
         Object::Cube,
-        &InstanceParams {
+        &DefaultInstanceParams {
             transform: output_transform,
             color: *color,
             ..Default::default()
@@ -193,7 +194,7 @@ pub fn render_block(
     transform: &na::Matrix4<f32>,
     color: Option<&na::Vector4<f32>>,
     alpha: f32,
-    out: &mut RenderList,
+    out: &mut RenderList<DefaultInstanceParams>,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
 
@@ -201,7 +202,7 @@ pub fn render_block(
         Block::PipeXY => {
             out.add(
                 Object::PipeSegment,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
@@ -212,7 +213,7 @@ pub fn render_block(
             let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
             out.add(
                 Object::PipeBend,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
@@ -223,7 +224,7 @@ pub fn render_block(
             let rotation = na::Matrix4::new_rotation(na::Vector3::x() * std::f32::consts::PI / 2.0);
             out.add(
                 Object::PipeSegment,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
@@ -236,7 +237,7 @@ pub fn render_block(
                 * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
             out.add(
                 Object::PipeBend,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
@@ -246,7 +247,7 @@ pub fn render_block(
         Block::PipeSplitXY { .. } => {
             out.add(
                 Object::PipeSplit,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
@@ -261,7 +262,7 @@ pub fn render_block(
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.7, 0.8, 0.7));
             out.add(
                 Object::Cube,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: cube_transform,
                     color: *color.unwrap_or(&cube_color),
                     ..Default::default()
@@ -280,7 +281,7 @@ pub fn render_block(
                 ));
             out.add(
                 Object::Cube,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: input_transform,
                     color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
                     ..Default::default()
@@ -291,7 +292,7 @@ pub fn render_block(
             let scaling = na::Matrix4::new_scaling(0.75);
             out.add(
                 Object::Cube,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: translation * transform * scaling,
                     color: block_color(color, &wind_source_color(), alpha),
                     ..Default::default()
@@ -314,7 +315,7 @@ pub fn render_block(
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
             out.add(
                 Object::Cube,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: cube_transform,
                     color: *color.unwrap_or(&cube_color),
                     ..Default::default()
@@ -349,7 +350,7 @@ pub fn render_block(
             };
             out.add(
                 Object::Cube,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: cube_transform,
                     color: block_color(color, &kind_color, alpha),
                     ..Default::default()
@@ -391,7 +392,7 @@ pub fn render_block(
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 1.0));
             out.add(
                 Object::Cube,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: cube_transform,
                     color: *color.unwrap_or(&cube_color),
                     ..Default::default()
@@ -412,7 +413,7 @@ pub fn render_block(
         Block::Solid => {
             out.add(
                 Object::Cube,
-                &InstanceParams {
+                &DefaultInstanceParams {
                     transform: translation * transform,
                     color: *color.unwrap_or(&na::Vector4::new(0.3, 0.2, 0.9, alpha)),
                     ..Default::default()
@@ -422,7 +423,7 @@ pub fn render_block(
     }
 }
 
-pub fn render_arrow(line: &Line, _roll: f32, out: &mut RenderList) {
+pub fn render_arrow(line: &Line, _roll: f32, out: &mut RenderList<DefaultInstanceParams>) {
     render_line(line, out);
 
     // TODO
@@ -434,7 +435,7 @@ pub fn render_arrow(line: &Line, _roll: f32, out: &mut RenderList) {
 
     out.add(
         Object::Triangle,
-        &InstanceParams {
+        &DefaultInstanceParams {
             transform: head_transform,
             color: line.color,
             ..Default::default()
@@ -457,7 +458,7 @@ pub fn render_machine(machine: &Machine, tick_time: f32, out: &mut RenderLists) 
     let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
     out.solid.add(
         Object::Quad,
-        &InstanceParams {
+        &DefaultInstanceParams {
             transform: floor_transform,
             //color: na::Vector4::new(0.1608, 0.4235, 0.5725, 1.0),
             color: na::Vector4::new(0.33, 0.64, 0.82, 1.0),
