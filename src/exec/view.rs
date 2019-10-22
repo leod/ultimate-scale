@@ -30,7 +30,7 @@ impl Default for Config {
             pause_resume_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
             frame_key: VirtualKeyCode::F,
-            default_ticks_per_sec: 0.5,
+            default_ticks_per_sec: 0.1,
         }
     }
 }

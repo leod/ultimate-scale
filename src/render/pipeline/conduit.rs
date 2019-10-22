@@ -11,8 +11,10 @@ pub struct Params {
     pub transform: na::Matrix4<f32>,
     pub color: na::Vector4<f32>,
     pub phase: f32,
-    pub wind_life_in: WindLife,
-    pub wind_life_out: WindLife,
+    pub off_left: f32,
+    pub off_right: f32,
+    pub slope_left: f32,
+    pub slope_right: f32,
 }
 
 impl Default for Params {
@@ -21,8 +23,10 @@ impl Default for Params {
             transform: na::Matrix4::identity(),
             color: na::Vector4::zeros(),
             phase: 0.0,
-            wind_life_in: WindLife::None,
-            wind_life_out: WindLife::None,
+            off_left: 0.0,
+            off_right: 0.0,
+            slope_left: 0.0,
+            slope_right: 0.0,
         }
     }
 }
@@ -33,25 +37,15 @@ impl InstanceParams for Params {
     fn uniforms(&self) -> Self::U {
         let mat_model: [[f32; 4]; 4] = self.transform.into();
         let color: [f32; 4] = self.color.into();
-        let wind_life_in = match self.wind_life_in {
-            WindLife::None => 0,
-            WindLife::Appearing => 1,
-            WindLife::Existing => 2,
-            WindLife::Disappearing => 3,
-        };
-        let wind_life_out = match self.wind_life_out {
-            WindLife::None => 0,
-            WindLife::Appearing => 1,
-            WindLife::Existing => 2,
-            WindLife::Disappearing => 3,
-        };
 
         uniform! {
             mat_model: mat_model,
             color: color,
             phase: self.phase,
-            wind_life_in: wind_life_in,
-            wind_life_out: wind_life_out,
+            off_left: self.off_left,
+            off_right: self.off_right,
+            slope_left: self.slope_left,
+            slope_right: self.slope_right,
         }
     }
 }
@@ -61,36 +55,38 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
         out_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
         defs: "
             const float PI = 3.141592;
-            const float radius = 0.3;
-            const float scale = 0.15;
+            const float radius = 0.15;
+            const float scale = 0.10;
         "
         .to_string(),
         body: "
             float angle = (position.x + 0.5 + tick_progress) * 2.0 * PI + phase;
-            float rot_s = sin(angle);
-            float rot_c = cos(angle);
+            float rot_s = sin(-angle);
+            float rot_c = cos(-angle);
             mat2 rot_m = mat2(rot_c, -rot_s, rot_s, rot_c);
 
-            float local_radius = radius;
-            if (position.x > 0.0) {
-                if (wind_life_in == 0)
-                    local_radius = 0.0;
-                else if (wind_life_in == 1)
-                    local_radius *= max(tick_progress + 2.0 * (position.x - 0.5), 0.0);
+            float radius_factor;
+            if (position.x < 0.0) {
+                radius_factor = off_left + 2.0 * slope_left * (position.x + 0.5);
             } else {
-                if (wind_life_out == 0)
-                    local_radius = 0.0;
-                else if (wind_life_out == 1)
-                    local_radius *= max(tick_progress + 2.0 * (position.x - 0.5), 0.0);
+                radius_factor = off_right + 2.0 * slope_right * position.x;
             }
+
+            radius_factor = exp(-radius_factor) * radius_factor;
+
+            radius_factor = clamp(radius_factor, 0.0, 1.0);
 
             vec3 scaled_pos = position;
             scaled_pos.yz *= scale;
-            scaled_pos.z += local_radius - 0.5 * scale;
-            //scaled_pos.yz = rot_m * scaled_pos.yz;
+            //scaled_pos.z += local_radius - 0.5 * scale;
+            scaled_pos.z += radius * radius_factor;
 
             vec3 rot_normal = normal;
-            //rot_normal.yz = rot_m * rot_normal.yz;
+
+            if (radius_factor > 0) {
+                scaled_pos.yz = rot_m * scaled_pos.yz;
+                rot_normal.yz = rot_m * rot_normal.yz;
+            }
         "
         .to_string(),
         out_exprs: shader_out_exprs! {
