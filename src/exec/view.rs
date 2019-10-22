@@ -7,6 +7,7 @@ use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
+use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
@@ -237,43 +238,28 @@ impl ExecView {
         let old_wind_state = self.exec.old_wind_state();
 
         for (block_index, (block_pos, _placed_block)) in self.exec.machine().blocks.data.iter() {
-            // Determine the set of wind in directions at this block
-            let wind_in_dirs: BTreeSet<Dir3> = Dir3::ALL
-                .iter()
-                .filter(|dir| wind_state[block_index].wind_in(**dir))
-                .cloned()
-                .collect();
+            let anim_state =
+                WindAnimState::from_states(&old_wind_state[block_index], &wind_state[block_index]);
 
-            // Also determine the set of wind in directions in the previous tick
-            let old_wind_in_dirs: BTreeSet<Dir3> = Dir3::ALL
-                .iter()
-                .filter(|dir| old_wind_state[block_index].wind_in(**dir))
-                .cloned()
-                .collect();
-
-            // For each incoming direction, one of the following cases holds:
-            // 1) The in direction is only in the new set, i.e. wind is appearing
-            for &in_dir in wind_in_dirs.difference(&old_wind_in_dirs) {
-                // Interpolate, i.e. draw partial line
-                let out_t = 1.0 - self.tick_timer.progress();
-                self.render_wind(block_pos, in_dir, 0.0, out_t, out);
+            for &dir in &Dir3::ALL {
+                match anim_state.wind_in(dir) {
+                    WindLife::None => {}
+                    WindLife::Appearing => {
+                        // Interpolate, i.e. draw partial line
+                        let out_t = 1.0 - self.tick_timer.progress();
+                        self.render_wind(block_pos, dir, 0.0, out_t, out);
+                    }
+                    WindLife::Existing => {
+                        // Draw full line
+                        self.render_wind(block_pos, dir, 0.0, 0.0, out);
+                    }
+                    WindLife::Disappearing => {
+                        // Interpolate, i.e. draw partial line
+                        let in_t = self.tick_timer.progress();
+                        self.render_wind(block_pos, dir, in_t, 0.0, out);
+                    }
+                }
             }
-
-            // 2) The in direction is in both sets:
-            for &in_dir in wind_in_dirs.intersection(&old_wind_in_dirs) {
-                // Draw full line
-                self.render_wind(block_pos, in_dir, 0.0, 0.0, out);
-            }
-
-            // 3) The in direction is only in the old set, i.e. wind is disappearing:
-            for &in_dir in old_wind_in_dirs.difference(&wind_in_dirs) {
-                // Interpolate, i.e. draw partial line
-                let in_t = self.tick_timer.progress();
-                self.render_wind(block_pos, in_dir, in_t, 0.0, out);
-            }
-
-            // 4) The pair is in neither set:
-            // Draw nothing.
         }
     }
 
