@@ -181,7 +181,12 @@ impl ExecView {
     }
 
     pub fn render(&mut self, out: &mut RenderLists) {
-        render::machine::render_machine(&self.exec.machine(), self.cur_tick_time(), out);
+        render::machine::render_machine(
+            &self.exec.machine(),
+            self.cur_tick_time(),
+            Some(&self.exec),
+            out,
+        );
 
         self.render_blocks(out);
         self.render_blips(out);
