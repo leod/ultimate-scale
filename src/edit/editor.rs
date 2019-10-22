@@ -129,6 +129,8 @@ impl Editor {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                 let edit = Edit::SetBlock(mouse_grid_pos, Some(self.place_block.clone()));
                 self.run_edit(edit);
+
+                println!("mouse at {:?}", mouse_grid_pos);
             }
         }
 

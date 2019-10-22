@@ -204,21 +204,43 @@ pub fn render_block(
 
     match placed_block.block {
         Block::PipeXY => {
-            let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
-            let dir_in = placed_block.rotated_dir_ccw_xy(Dir3::Y_NEG);
-            let dir_out = placed_block.rotated_dir_ccw_xy(Dir3::Y_POS);
+            let dir_left = placed_block.rotated_dir_ccw_xy(Dir3::Y_NEG);
+            let dir_right = placed_block.rotated_dir_ccw_xy(Dir3::Y_POS);
+
+            let (off_left, slope_left) = match wind_anim_state.as_ref().map(|s| s.wind_in(dir_left))
+            {
+                Some(WindLife::None) | None => (0.0, 0.0),
+                Some(WindLife::Appearing) => {
+                    if tick_time.fract() >= 0.5 {
+                        (4.0 * (tick_time.fract() - 0.5), -1.0)
+                    } else {
+                        (0.0, 0.0)
+                    }
+                }
+                Some(WindLife::Existing) => (1.0, 0.0),
+                Some(WindLife::Disappearing) => (0.0, 0.0),
+            };
+            let (off_right, slope_right) =
+                match wind_anim_state.as_ref().map(|s| s.wind_out(dir_right)) {
+                    Some(WindLife::None) | None => (0.0, 0.0),
+                    Some(WindLife::Appearing) => (4.0 * tick_time.fract(), -1.0),
+                    Some(WindLife::Existing) => (1.0, 0.0),
+                    Some(WindLife::Disappearing) => (0.0, 0.0),
+                };
+
+            let rotation =
+                na::Matrix4::new_rotation(-na::Vector3::z() * std::f32::consts::PI / 2.0);
+
             out.solid_conduit.add(
                 Object::TessellatedCube,
                 &conduit::Params {
                     transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     phase: 0.0,
-                    wind_life_in: wind_anim_state
-                        .as_ref()
-                        .map_or(WindLife::None, |s| s.wind_in(dir_in)),
-                    wind_life_out: wind_anim_state
-                        .as_ref()
-                        .map_or(WindLife::None, |s| s.wind_in(dir_out)),
+                    slope_left,
+                    off_left,
+                    slope_right,
+                    off_right,
                     ..Default::default()
                 },
             );

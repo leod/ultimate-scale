@@ -73,23 +73,6 @@
     ],
     [
       [
-        4,
-        8,
-        0
-      ],
-      {
-        "rotation_xy": 1,
-        "block": {
-          "BlipSpawn": {
-            "kind": "A",
-            "num_spawns": null,
-            "activated": null
-          }
-        }
-      }
-    ],
-    [
-      [
         7,
         7,
         0
