@@ -243,8 +243,7 @@ impl ExecView {
         let old_wind_state = self.exec.old_wind_state();
 
         for (block_index, (block_pos, _placed_block)) in self.exec.machine().blocks.data.iter() {
-            let anim_state =
-                WindAnimState::from_states(&old_wind_state[block_index], &wind_state[block_index]);
+            let anim_state = WindAnimState::from_exec_block(&self.exec, block_index);
 
             for &dir in &Dir3::ALL {
                 match anim_state.wind_in(dir) {
