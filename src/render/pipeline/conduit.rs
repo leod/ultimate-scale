@@ -56,13 +56,13 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
         defs: "
             const float PI = 3.141592;
             const float radius = 0.15;
-            const float scale = 0.10;
+            const float scale = 0.075;
         "
         .to_string(),
         body: "
-            float angle = (position.x + 0.5 + tick_progress) * 2.0 * PI + phase;
-            float rot_s = sin(-angle);
-            float rot_c = cos(-angle);
+            float angle = (-(position.x + 0.5) + tick_progress) * 2.0 * PI + phase;
+            float rot_s = sin(angle);
+            float rot_c = cos(angle);
             mat2 rot_m = mat2(rot_c, -rot_s, rot_s, rot_c);
 
             float radius_factor;
@@ -71,8 +71,6 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
             } else {
                 radius_factor = off_right + 2.0 * slope_right * position.x;
             }
-
-            radius_factor = exp(-radius_factor) * radius_factor;
 
             radius_factor = clamp(radius_factor, 0.0, 1.0);
 
