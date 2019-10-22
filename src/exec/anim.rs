@@ -1,5 +1,6 @@
-use crate::exec::WindState;
+use crate::exec::{Exec, WindState};
 use crate::machine::grid::Dir3;
+use crate::machine::{BlockIndex, Machine};
 
 /// Stages in the lifecycle of wind in some direction in a block. Used for
 /// animation purposes.
@@ -30,26 +31,48 @@ impl WindLife {
     }
 }
 
-/// Animation state for incoming wind in all directions in a block. Used for
-/// animation purposes.
+/// Animation state for wind in all directions in a block. Used for animation
+/// purposes.
 pub struct WindAnimState {
     pub wind_in: [WindLife; Dir3::NUM_INDICES],
+    pub wind_out: [WindLife; Dir3::NUM_INDICES],
 }
 
 impl WindAnimState {
     /// Returns the WindAnimState of one block based on the previous and the
     /// current simulation WindState.
-    pub fn from_states(old: &WindState, cur: &WindState) -> Self {
+    pub fn from_exec_block(exec: &Exec, block_index: BlockIndex) -> Self {
+        let machine = exec.machine();
+
         let mut wind_in = [WindLife::None; Dir3::NUM_INDICES];
+        let mut wind_out = [WindLife::None; Dir3::NUM_INDICES];
 
         for &dir in &Dir3::ALL {
-            wind_in[dir.to_index()] = WindLife::from_states(old.wind_in(dir), cur.wind_in(dir));
+            // Incoming wind
+            wind_in[dir.to_index()] = WindLife::from_states(
+                exec.old_wind_state()[block_index].wind_in(dir),
+                exec.wind_state()[block_index].wind_in(dir),
+            );
+
+            // Outgoing wind
+            let neighbor_pos = machine.block_pos_at_index(block_index) + dir.to_vector();
+            let neighbor_block = machine.get_block_at_pos(&neighbor_pos);
+            if let Some((neighbor_index, _neighbor_block)) = neighbor_block {
+                wind_out[dir.to_index()] = WindLife::from_states(
+                    exec.old_wind_state()[neighbor_index].wind_in(dir.invert()),
+                    exec.wind_state()[neighbor_index].wind_in(dir.invert()),
+                );
+            }
         }
 
-        WindAnimState { wind_in }
+        WindAnimState { wind_in, wind_out }
     }
 
     pub fn wind_in(&self, dir: Dir3) -> WindLife {
         self.wind_in[dir.to_index()]
+    }
+
+    pub fn wind_out(&self, dir: Dir3) -> WindLife {
+        self.wind_out[dir.to_index()]
     }
 }

@@ -257,7 +257,7 @@ impl Editor {
             let block_center = render::machine::block_center(&mouse_grid_pos);
             let block_transform = render::machine::placed_block_transform(&self.place_block);
             render::machine::render_block(
-                &self.place_block.block,
+                &self.place_block,
                 0.0,
                 &None,
                 &block_center,

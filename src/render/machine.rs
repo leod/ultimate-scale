@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::machine::grid::{self, Dir2};
+use crate::machine::grid::{self, Dir2, Dir3};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::pipeline::{conduit, DefaultInstanceParams, RenderList, RenderLists};
@@ -191,7 +191,7 @@ pub fn render_bridge(
 }
 
 pub fn render_block(
-    block: &Block,
+    placed_block: &PlacedBlock,
     tick_time: f32,
     wind_anim_state: &Option<WindAnimState>,
     center: &na::Point3<f32>,
@@ -202,15 +202,23 @@ pub fn render_block(
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
 
-    match block {
+    match placed_block.block {
         Block::PipeXY => {
             let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
+            let dir_in = placed_block.rotated_dir_ccw_xy(Dir3::Y_NEG);
+            let dir_out = placed_block.rotated_dir_ccw_xy(Dir3::Y_POS);
             out.solid_conduit.add(
                 Object::TessellatedCube,
                 &conduit::Params {
                     transform: translation * transform * rotation,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     phase: 0.0,
+                    wind_life_in: wind_anim_state
+                        .as_ref()
+                        .map_or(WindLife::None, |s| s.wind_in(dir_in)),
+                    wind_life_out: wind_anim_state
+                        .as_ref()
+                        .map_or(WindLife::None, |s| s.wind_in(dir_out)),
                     ..Default::default()
                 },
             );
@@ -313,7 +321,7 @@ pub fn render_block(
             let cube_color = if num_spawns.is_some() {
                 na::Vector4::new(0.0, 0.5, 0.0, alpha)
             } else {
-                block_color(color, &blip_color(*kind), alpha)
+                block_color(color, &blip_color(kind), alpha)
             };
             let cube_transform = translation
                 * transform
@@ -350,7 +358,7 @@ pub fn render_block(
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
 
-            let kind_color = match activated.or(*kind) {
+            let kind_color = match activated.or(kind) {
                 Some(kind) => blip_color(kind),
                 None => na::Vector3::new(0.6, 0.6, 0.6),
             };
@@ -386,7 +394,7 @@ pub fn render_block(
             );
         }
         Block::BlipWindSource { activated } => {
-            let cube_color = if *activated {
+            let cube_color = if activated {
                 na::Vector4::new(0.5, 0.0, 0.0, alpha)
             } else {
                 block_color(color, &wind_source_color(), alpha)
@@ -405,7 +413,7 @@ pub fn render_block(
                 },
             );
 
-            let button_length = if *activated { 0.4 } else { 0.45 };
+            let button_length = if activated { 0.4 } else { 0.45 };
             render_bridge(
                 Dir2::Y_NEG,
                 button_length,
@@ -481,12 +489,7 @@ pub fn render_machine(
         let transform = placed_block_transform(&placed_block);
         let center = block_center(&block_pos);
 
-        let wind_anim_state = exec.map(|exec| {
-            WindAnimState::from_states(
-                &exec.old_wind_state()[block_index],
-                &exec.wind_state()[block_index],
-            )
-        });
+        let wind_anim_state = exec.map(|exec| WindAnimState::from_exec_block(exec, block_index));
 
         /*render_block(
             &placed_block.block,
@@ -498,7 +501,7 @@ pub fn render_machine(
             &mut out.solid_shadow,
         );*/
         render_block(
-            &placed_block.block,
+            &placed_block,
             tick_time,
             &wind_anim_state,
             &center,
