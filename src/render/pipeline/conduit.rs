@@ -65,7 +65,7 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
         defs: "
             const float PI = 3.141592;
             const float radius = 0.05;
-            const float scale = 0.01;
+            const float scale = 0.0075;
         "
         .to_string(),
         body: "

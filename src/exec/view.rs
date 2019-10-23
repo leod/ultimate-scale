@@ -224,27 +224,22 @@ impl ExecView {
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
 
-        out.solid_conduit.add(
-            render::Object::TessellatedCylinder,
-            &conduit::Params {
-                transform,
-                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-                start: in_t,
-                end: out_t,
-                ..Default::default()
-            },
-        );
-        out.solid_conduit.add(
-            render::Object::TessellatedCylinder,
-            &conduit::Params {
-                transform,
-                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-                start: in_t,
-                end: out_t,
-                phase: std::f32::consts::PI,
-                ..Default::default()
-            },
-        );
+        let color = render::machine::wind_source_color();
+        let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
+
+        for &phase in &[0.0, 0.25, 0.5, 0.75] {
+            out.solid_conduit.add(
+                render::Object::TessellatedCylinder,
+                &conduit::Params {
+                    transform,
+                    color,
+                    start: in_t,
+                    end: out_t,
+                    phase: 2.0 * phase * std::f32::consts::PI,
+                    ..Default::default()
+                },
+            );
+        }
     }
 
     fn render_blocks(&self, out: &mut RenderLists) {
