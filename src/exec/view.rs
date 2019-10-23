@@ -1,4 +1,3 @@
-use std::collections::BTreeSet;
 use std::time::Duration;
 
 use log::info;
@@ -218,12 +217,6 @@ impl ExecView {
     ) {
         let block_center = render::machine::block_center(block_pos);
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
-        let in_pos = block_center + in_vector;
-
-        // Interpolate both start and end position
-        // (although in practice at most one position is interpolated at the same time)
-        let start = in_pos + in_t * (block_center - in_pos);
-        let end = block_center + out_t * (in_pos - block_center);
 
         // The cylinder object points in the direction of the x axis
         let (pitch, yaw) = in_dir.to_pitch_yaw_x();
@@ -237,7 +230,7 @@ impl ExecView {
                 transform,
                 color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
                 start: in_t,
-                end: 1.0 - out_t,
+                end: out_t,
                 ..Default::default()
             },
         );
@@ -247,30 +240,17 @@ impl ExecView {
                 transform,
                 color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
                 start: in_t,
-                end: 1.0 - out_t,
+                end: out_t,
                 phase: std::f32::consts::PI,
                 ..Default::default()
             },
         );
-
-        /*render::machine::render_arrow(
-            &render::machine::Line {
-                start,
-                end,
-                roll: 0.0,
-                thickness: 0.05,
-                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-            },
-            0.0,
-            &mut out.solid,
-        );*/
     }
 
     fn render_blocks(&self, out: &mut RenderLists) {
-        let wind_state = self.exec.wind_state();
-        let old_wind_state = self.exec.old_wind_state();
+        let blocks = &self.exec.machine().blocks;
 
-        for (block_index, (block_pos, _placed_block)) in self.exec.machine().blocks.data.iter() {
+        for (block_index, (block_pos, _placed_block)) in blocks.data.iter() {
             let anim_state = WindAnimState::from_exec_block(&self.exec, block_index);
 
             for &dir in &Dir3::ALL {
@@ -278,17 +258,17 @@ impl ExecView {
                     WindLife::None => {}
                     WindLife::Appearing => {
                         // Interpolate, i.e. draw partial line
-                        let out_t = 1.0 - self.tick_timer.progress();
+                        let out_t = self.tick_timer.progress();
                         self.render_wind(block_pos, dir, 0.0, out_t, out);
                     }
                     WindLife::Existing => {
                         // Draw full line
-                        self.render_wind(block_pos, dir, 0.0, 0.0, out);
+                        self.render_wind(block_pos, dir, 0.0, 1.0, out);
                     }
                     WindLife::Disappearing => {
                         // Interpolate, i.e. draw partial line
                         let in_t = self.tick_timer.progress();
-                        self.render_wind(block_pos, dir, in_t, 0.0, out);
+                        self.render_wind(block_pos, dir, in_t, 1.0, out);
                     }
                 }
             }

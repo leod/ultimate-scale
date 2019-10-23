@@ -1,12 +1,12 @@
 use nalgebra as na;
 
-use crate::machine::grid::{self, Dir2, Dir3};
+use crate::machine::grid::{self, Dir2};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
 use crate::render::Object;
 
-use crate::exec::anim::{WindAnimState, WindLife};
+use crate::exec::anim::WindAnimState;
 use crate::exec::Exec;
 
 pub const PIPE_THICKNESS: f32 = 0.05;
@@ -235,7 +235,8 @@ pub fn render_pipe_bend(
         }
     } else {
         1.0
-    } * PIPE_THICKNESS * 3.0;
+    } * PIPE_THICKNESS
+        * 3.0;
     let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(size, size, size));
     out.add(
         Object::Cube,

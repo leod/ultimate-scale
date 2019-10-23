@@ -1,6 +1,6 @@
-use crate::exec::{Exec, WindState};
+use crate::exec::Exec;
 use crate::machine::grid::Dir3;
-use crate::machine::{BlockIndex, Machine};
+use crate::machine::BlockIndex;
 
 /// Stages in the lifecycle of wind in some direction in a block. Used for
 /// animation purposes.
