@@ -2,7 +2,6 @@ use glium::uniform;
 
 use nalgebra as na;
 
-use crate::exec::anim::WindLife;
 use crate::render::pipeline::{Context, InstanceParams};
 use crate::render::{object, shader};
 
