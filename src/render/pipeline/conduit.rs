@@ -13,6 +13,7 @@ pub struct Params {
     pub phase: f32,
     pub start: f32,
     pub end: f32,
+    pub bend: bool,
 }
 
 impl Default for Params {
@@ -23,6 +24,7 @@ impl Default for Params {
             phase: 0.0,
             start: 0.0,
             end: 0.0,
+            bend: false,
         }
     }
 }
@@ -40,6 +42,7 @@ impl InstanceParams for Params {
             phase: self.phase,
             start: self.start,
             end: self.end,
+            bend: self.bend,
         }
     }
 }
@@ -74,11 +77,24 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
 
             vec3 scaled_pos = position;
             scaled_pos.yz *= scale;
-            scaled_pos.z += radius;
-            scaled_pos.yz = rot_m * scaled_pos.yz;
+            //scaled_pos.z += radius;
+
+
+            if (bend) {
+                float tau = (0.5 - position.x) * PI / 2.0;
+                scaled_pos.x = 0.5 * cos(tau);
+                scaled_pos.y += 0.5 * sin(tau);
+
+                vec3 normal = vec3(cos(tau), sin(tau), 0.0);
+                scaled_pos += normal * sin(angle) * 0.05;
+            }
+
+            scaled_pos.y += sin(angle) * 0.05;
+            scaled_pos.z += cos(angle) * 0.05;
 
             vec3 rot_normal = normal;
-            rot_normal.yz = rot_m * rot_normal.yz;
+            //scaled_pos.yz = rot_m * scaled_pos.yz;
+            //rot_normal.yz = rot_m * rot_normal.yz;
 
             if (0.5 - position.x < start || 0.5 - position.x > end)
                 v_discard = 1.0;
