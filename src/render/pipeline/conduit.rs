@@ -70,7 +70,7 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
         "
         .to_string(),
         body: "
-            float angle = (position.x + 0.5 + tick_progress) * 2.0 * PI + phase;
+            float angle = (position.x + 0.5 + 2.0 * tick_progress) * 1.0 * PI + phase;
             float rot_s = sin(angle);
             float rot_c = cos(angle);
             mat2 rot_m = mat2(rot_c, -rot_s, rot_s, rot_c);
