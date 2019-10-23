@@ -28,9 +28,9 @@ pub fn diffuse_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
     let color_expr = if core.fragment.has_out(shader::F_SHADOW) {
-        "(0.3 + f_shadow * diffuse) * f_color"
+        "vec4((0.3 + f_shadow * diffuse) * f_color.rgb, f_color.a)"
     } else {
-        "(0.3 + diffuse) * f_color"
+        "vec4((0.3 + diffuse) * f_color.rgb, f_color.a)"
     };
 
     shader::Core {

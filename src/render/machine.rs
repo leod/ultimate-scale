@@ -3,7 +3,7 @@ use nalgebra as na;
 use crate::machine::grid::{self, Dir2, Dir3};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
-use crate::render::pipeline::{conduit, DefaultInstanceParams, RenderList, RenderLists};
+use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
 use crate::render::Object;
 
 use crate::exec::anim::{WindAnimState, WindLife};
@@ -204,43 +204,13 @@ pub fn render_block(
 
     match placed_block.block {
         Block::PipeXY => {
-            let dir_left = placed_block.rotated_dir_ccw_xy(Dir3::Y_NEG);
-            let dir_right = placed_block.rotated_dir_ccw_xy(Dir3::Y_POS);
+            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.05, 1.0, 0.05));
 
-            let (off_left, slope_left) = match wind_anim_state.as_ref().map(|s| s.wind_in(dir_left))
-            {
-                Some(WindLife::None) | None => (0.0, 0.0),
-                Some(WindLife::Appearing) => {
-                    if tick_time.fract() >= 0.5 {
-                        (4.0 * (tick_time.fract() - 0.5), -1.0)
-                    } else {
-                        (0.0, 0.0)
-                    }
-                }
-                Some(WindLife::Existing) => (1.0, 0.0),
-                Some(WindLife::Disappearing) => (0.0, 0.0),
-            };
-            let (off_right, slope_right) =
-                match wind_anim_state.as_ref().map(|s| s.wind_out(dir_right)) {
-                    Some(WindLife::None) | None => (0.0, 0.0),
-                    Some(WindLife::Appearing) => (4.0 * tick_time.fract(), -1.0),
-                    Some(WindLife::Existing) => (1.0, 0.0),
-                    Some(WindLife::Disappearing) => (0.0, 0.0),
-                };
-
-            let rotation =
-                na::Matrix4::new_rotation(-na::Vector3::z() * std::f32::consts::PI / 2.0);
-
-            out.solid_conduit.add(
-                Object::TessellatedCylinder,
-                &conduit::Params {
-                    transform: translation * transform * rotation,
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * transform * scaling,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
-                    phase: 0.0,
-                    slope_left,
-                    off_left,
-                    slope_right,
-                    off_right,
                     ..Default::default()
                 },
             );

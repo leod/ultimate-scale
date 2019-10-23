@@ -317,6 +317,7 @@ fn compile_uniform_type(t: UniformType) -> &'static str {
         UniformType::IntVec3 => "ivec3",
         UniformType::IntVec4 => "ivec4",
         UniformType::Sampler2d => "sampler2D",
+        UniformType::Bool => "bool",
         _ => unimplemented!("Given UniformType not yet supported: {:?}", t),
     }
 }

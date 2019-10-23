@@ -220,6 +220,22 @@ impl Dir3 {
         };
         Dir3(axis, sign)
     }
+
+    /// Returns pitch and yaw to rotate an object that is oriented towards the x
+    /// axis to point in our direction.
+    ///
+    /// See also:
+    ///     https://raw.githubusercontent.com/limbusdev/images_for_wikimedia_commons/master/images/en/roll_pitch_yaw_en.png
+    pub fn to_pitch_yaw_x(self) -> (f32, f32) {
+        match self {
+            Dir3(Axis3::X, Sign::Pos) => (0.0, 0.0),
+            Dir3(Axis3::X, Sign::Neg) => (0.0, std::f32::consts::PI),
+            Dir3(Axis3::Y, Sign::Pos) => (0.0, std::f32::consts::PI / 2.0),
+            Dir3(Axis3::Y, Sign::Neg) => (0.0, 3.0 / 2.0 * std::f32::consts::PI),
+            Dir3(Axis3::Z, Sign::Pos) => (-std::f32::consts::PI / 2.0, 0.0),
+            Dir3(Axis3::Z, Sign::Neg) => (std::f32::consts::PI / 2.0, 0.0),
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
