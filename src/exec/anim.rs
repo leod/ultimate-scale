@@ -29,6 +29,14 @@ impl WindLife {
             (true, false) => WindLife::Disappearing,
         }
     }
+
+    /// Is wind flowing?
+    pub fn is_alive(self) -> bool {
+        match self {
+            WindLife::None => false,
+            _ => true,
+        }
+    }
 }
 
 /// Animation state for wind in all directions in a block. Used for animation
@@ -74,5 +82,13 @@ impl WindAnimState {
 
     pub fn wind_out(&self, dir: Dir3) -> WindLife {
         self.wind_out[dir.to_index()]
+    }
+
+    pub fn num_alive_in(&self) -> usize {
+        self.wind_in.iter().filter(|anim| anim.is_alive()).count()
+    }
+
+    pub fn num_alive_out(&self) -> usize {
+        self.wind_out.iter().filter(|anim| anim.is_alive()).count()
     }
 }
