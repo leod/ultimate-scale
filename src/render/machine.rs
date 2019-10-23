@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::machine::grid::{self, Dir2};
+use crate::machine::grid::{self, Dir2, Dir3};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
@@ -192,6 +192,33 @@ pub fn render_bridge(
     );
 }
 
+pub fn render_mill(
+    dir: Dir3,
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    roll: f32,
+    color: &na::Vector4<f32>,
+    out: &mut RenderList<DefaultInstanceParams>,
+) {
+    let translation = na::Matrix4::new_translation(&center.coords);
+    let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
+    let (pitch, yaw) = dir.to_pitch_yaw_x();
+    let length = 0.45;
+    let transform = translation
+        * transform
+        * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
+        * na::Matrix4::from_euler_angles(roll, pitch, yaw)
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.1));
+    out.add(
+        Object::Cube,
+        &DefaultInstanceParams {
+            transform,
+            color: *color,
+            ..Default::default()
+        },
+    );
+}
+
 pub fn render_pipe_bend(
     tick_time: f32,
     wind_anim_state: &Option<WindAnimState>,
@@ -227,16 +254,21 @@ pub fn render_pipe_bend(
     );
 
     // Pulsator to hide our shame of twist
-    let size = if let Some(wind_anim_state) = wind_anim_state.as_ref() {
-        if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
-            1.0 + 0.1 * (tick_time.fract() * std::f32::consts::PI).cos().powf(2.0)
+    let size = 3.0
+        * PIPE_THICKNESS
+        * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
+            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
+                1.0 + 0.1
+                    * (tick_time.fract() * 2.0 * std::f32::consts::PI)
+                        .cos()
+                        .powf(2.0)
+            } else {
+                1.0
+            }
         } else {
             1.0
-        }
-    } else {
-        1.0
-    } * PIPE_THICKNESS
-        * 3.0;
+        };
+
     let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(size, size, size));
     out.add(
         Object::Cube,
@@ -363,6 +395,29 @@ pub fn render_block(
                     ..Default::default()
                 },
             );
+
+            for &dir in &Dir3::ALL {
+                let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
+                    // We need to apply the rotation because here we render
+                    // the blocks as if they were not rotated yet.
+                    // (Any rotation is contained in `transform`).
+                    let original_dir = placed_block.rotated_dir_xy(dir);
+
+                    if anim.wind_out(original_dir).is_alive() {
+                        tick_time.fract() * std::f32::consts::PI * 2.0
+                    } else {
+                        0.0
+                    }
+                });
+                render_mill(
+                    dir,
+                    center,
+                    transform,
+                    roll,
+                    color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                    &mut out.solid,
+                );
+            }
         }
         Block::BlipSpawn {
             kind,
