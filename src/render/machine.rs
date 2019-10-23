@@ -208,7 +208,7 @@ pub fn render_mill(
         * transform
         * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
         * na::Matrix4::from_euler_angles(roll, pitch, yaw)
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.1));
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.07));
     out.add(
         Object::Cube,
         &DefaultInstanceParams {
@@ -409,14 +409,16 @@ pub fn render_block(
                         0.0
                     }
                 });
-                render_mill(
-                    dir,
-                    center,
-                    transform,
-                    roll,
-                    color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
-                    &mut out.solid,
-                );
+                for &phase in &[0.0, 0.25] {
+                    render_mill(
+                        dir,
+                        center,
+                        transform,
+                        roll + 2.0 * phase * std::f32::consts::PI,
+                        color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                        &mut out.solid,
+                    );
+                }
             }
         }
         Block::BlipSpawn {
