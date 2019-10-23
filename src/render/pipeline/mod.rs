@@ -1,3 +1,4 @@
+pub mod conduit;
 pub mod deferred;
 pub mod instance;
 pub mod light;
@@ -17,6 +18,7 @@ pub use render_list::RenderList;
 pub struct Context {
     pub camera: Camera,
     pub elapsed_time_secs: f32,
+    pub tick_progress: f32,
     pub main_light_pos: na::Point3<f32>,
     pub main_light_center: na::Point3<f32>,
 }
@@ -26,6 +28,7 @@ impl Default for Context {
         Self {
             camera: Default::default(),
             elapsed_time_secs: 0.0,
+            tick_progress: 0.0,
             main_light_pos: na::Point3::origin(),
             main_light_center: na::Point3::origin(),
         }
@@ -34,11 +37,8 @@ impl Default for Context {
 
 #[derive(Default, Clone)]
 pub struct RenderLists {
-    /// Instances that may be shadowed.
     pub solid: RenderList<DefaultInstanceParams>,
-
-    /// Instances that cast a shadow.
-    pub solid_shadow: RenderList<DefaultInstanceParams>,
+    pub solid_conduit: RenderList<conduit::Params>,
 
     /// Transparent instances.
     pub transparent: RenderList<DefaultInstanceParams>,
@@ -56,36 +56,44 @@ impl RenderLists {
 
     pub fn clear(&mut self) {
         self.solid.clear();
-        self.solid_shadow.clear();
+        self.solid_conduit.clear();
         self.transparent.clear();
         self.plain.clear();
         self.lights.clear();
     }
 }
 
+// TODO: Factor out into some struct that also holds the necessary programs
 pub fn render_frame_straight<S: glium::Surface>(
     resources: &Resources,
     context: &Context,
     render_lists: &RenderLists,
     target: &mut S,
 ) -> Result<(), glium::DrawError> {
+    let blend = glium::DrawParameters {
+        blend: glium::draw_parameters::Blend::alpha_blending(),
+        ..Default::default()
+    };
+
     render_lists
         .solid
         .render(resources, context, &Default::default(), target)?;
+
+    render_lists.solid_conduit.render_with_program(
+        resources,
+        context,
+        &Default::default(),
+        &resources.conduit_program,
+        target,
+    )?;
 
     render_lists
         .plain
         .render(resources, context, &Default::default(), target)?;
 
-    render_lists.transparent.render(
-        resources,
-        context,
-        &glium::DrawParameters {
-            blend: glium::draw_parameters::Blend::alpha_blending(),
-            ..Default::default()
-        },
-        target,
-    )?;
+    render_lists
+        .transparent
+        .render(resources, context, &blend, target)?;
 
     Ok(())
 }

@@ -317,6 +317,7 @@ fn compile_uniform_type(t: UniformType) -> &'static str {
         UniformType::IntVec3 => "ivec3",
         UniformType::IntVec4 => "ivec4",
         UniformType::Sampler2d => "sampler2D",
+        UniformType::Bool => "bool",
         _ => unimplemented!("Given UniformType not yet supported: {:?}", t),
     }
 }
@@ -334,6 +335,7 @@ fn uniform_value_to_type<'a>(v: UniformValue<'a>) -> UniformType {
         UniformValue::IntVec2(_) => UniformType::IntVec2,
         UniformValue::IntVec3(_) => UniformType::IntVec3,
         UniformValue::IntVec4(_) => UniformType::IntVec4,
+        UniformValue::Bool(_) => UniformType::Bool,
         _ => unimplemented!("Given UniformValue not yet supported"),
     }
 }

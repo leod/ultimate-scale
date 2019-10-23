@@ -1,10 +1,15 @@
 use nalgebra as na;
 
-use crate::machine::grid::{self, Dir2};
+use crate::machine::grid::{self, Dir2, Dir3};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
 use crate::render::Object;
+
+use crate::exec::anim::WindAnimState;
+use crate::exec::Exec;
+
+pub const PIPE_THICKNESS: f32 = 0.05;
 
 pub fn wind_source_color() -> na::Vector3<f32> {
     na::Vector3::new(1.0, 0.08, 0.24)
@@ -187,42 +192,134 @@ pub fn render_bridge(
     );
 }
 
-pub fn render_block(
-    block: &Block,
+pub fn render_mill(
+    dir: Dir3,
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    roll: f32,
+    color: &na::Vector4<f32>,
+    out: &mut RenderList<DefaultInstanceParams>,
+) {
+    let translation = na::Matrix4::new_translation(&center.coords);
+    let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
+    let (pitch, yaw) = dir.to_pitch_yaw_x();
+    let length = 0.45;
+    let transform = translation
+        * transform
+        * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
+        * na::Matrix4::from_euler_angles(roll, pitch, yaw)
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.07));
+    out.add(
+        Object::Cube,
+        &DefaultInstanceParams {
+            transform,
+            color: *color,
+            ..Default::default()
+        },
+    );
+}
+
+pub fn render_pipe_bend(
     tick_time: f32,
+    wind_anim_state: &Option<WindAnimState>,
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    color: &na::Vector4<f32>,
+    out: &mut RenderList<DefaultInstanceParams>,
+) {
+    let translation = na::Matrix4::new_translation(&center.coords);
+    let scaling =
+        na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(PIPE_THICKNESS, 0.5, PIPE_THICKNESS));
+    let offset = na::Matrix4::new_translation(&na::Vector3::new(0.0, -0.25, 0.0));
+
+    // One rail
+    out.add(
+        Object::Cube,
+        &DefaultInstanceParams {
+            transform: translation * transform * offset * scaling,
+            color: *color,
+            ..Default::default()
+        },
+    );
+
+    // Another rail
+    let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
+    out.add(
+        Object::Cube,
+        &DefaultInstanceParams {
+            transform: translation * transform * rotation * offset * scaling,
+            color: *color,
+            ..Default::default()
+        },
+    );
+
+    // Pulsator to hide our shame of twist
+    let size = 3.0
+        * PIPE_THICKNESS
+        * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
+            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
+                1.0 + 0.1
+                    * (tick_time.fract() * 2.0 * std::f32::consts::PI)
+                        .cos()
+                        .powf(2.0)
+            } else {
+                1.0
+            }
+        } else {
+            1.0
+        };
+
+    let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(size, size, size));
+    out.add(
+        Object::Cube,
+        &DefaultInstanceParams {
+            transform: translation * transform * scaling,
+            color: *color,
+            ..Default::default()
+        },
+    );
+}
+
+pub fn render_block(
+    placed_block: &PlacedBlock,
+    tick_time: f32,
+    wind_anim_state: &Option<WindAnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: Option<&na::Vector4<f32>>,
     alpha: f32,
-    out: &mut RenderList<DefaultInstanceParams>,
+    out: &mut RenderLists,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
 
-    match block {
+    match placed_block.block {
         Block::PipeXY => {
-            out.add(
-                Object::PipeSegment,
+            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                PIPE_THICKNESS,
+                1.0,
+                PIPE_THICKNESS,
+            ));
+
+            out.solid.add(
+                Object::Cube,
                 &DefaultInstanceParams {
-                    transform: translation * transform,
+                    transform: translation * transform * scaling,
                     color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
                     ..Default::default()
                 },
             );
         }
-        Block::PipeBendXY => {
-            let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
-            out.add(
-                Object::PipeBend,
-                &DefaultInstanceParams {
-                    transform: translation * transform * rotation,
-                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
-                    ..Default::default()
-                },
-            );
-        }
+        Block::PipeBendXY => render_pipe_bend(
+            tick_time,
+            wind_anim_state,
+            center,
+            transform,
+            color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+            &mut out.solid,
+        ),
         Block::PipeZ => {
             let rotation = na::Matrix4::new_rotation(na::Vector3::x() * std::f32::consts::PI / 2.0);
-            out.add(
+            out.solid.add(
                 Object::PipeSegment,
                 &DefaultInstanceParams {
                     transform: translation * transform * rotation,
@@ -233,19 +330,19 @@ pub fn render_block(
         }
         Block::PipeBendZ { sign_z } => {
             let angle_y = -sign_z.to_f32() * std::f32::consts::PI / 2.0;
-            let rotation = na::Matrix4::new_rotation(na::Vector3::y() * angle_y)
-                * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
-            out.add(
-                Object::PipeBend,
-                &DefaultInstanceParams {
-                    transform: translation * transform * rotation,
-                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
-                    ..Default::default()
-                },
+            let rotation = na::Matrix4::new_rotation(na::Vector3::y() * angle_y);
+
+            render_pipe_bend(
+                tick_time,
+                wind_anim_state,
+                center,
+                &(transform * rotation),
+                color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                &mut out.solid,
             );
         }
         Block::PipeSplitXY { .. } => {
-            out.add(
+            out.solid.add(
                 Object::PipeSplit,
                 &DefaultInstanceParams {
                     transform: translation * transform,
@@ -260,7 +357,7 @@ pub fn render_block(
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.7, 0.8, 0.7));
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
@@ -279,7 +376,7 @@ pub fn render_block(
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
                     0.9, input_size, input_size,
                 ));
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: input_transform,
@@ -290,7 +387,7 @@ pub fn render_block(
         }
         Block::WindSource => {
             let scaling = na::Matrix4::new_scaling(0.75);
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
@@ -298,6 +395,31 @@ pub fn render_block(
                     ..Default::default()
                 },
             );
+
+            for &dir in &Dir3::ALL {
+                let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
+                    // We need to apply the rotation because here we render
+                    // the blocks as if they were not rotated yet.
+                    // (Any rotation is contained in `transform`).
+                    let original_dir = placed_block.rotated_dir_xy(dir);
+
+                    if anim.wind_out(original_dir).is_alive() {
+                        tick_time.fract() * std::f32::consts::PI * 2.0
+                    } else {
+                        0.0
+                    }
+                });
+                for &phase in &[0.0, 0.25] {
+                    render_mill(
+                        dir,
+                        center,
+                        transform,
+                        roll + 2.0 * phase * std::f32::consts::PI,
+                        color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                        &mut out.solid,
+                    );
+                }
+            }
         }
         Block::BlipSpawn {
             kind,
@@ -307,13 +429,13 @@ pub fn render_block(
             let cube_color = if num_spawns.is_some() {
                 na::Vector4::new(0.0, 0.5, 0.0, alpha)
             } else {
-                block_color(color, &blip_color(*kind), alpha)
+                block_color(color, &blip_color(kind), alpha)
             };
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
@@ -333,7 +455,7 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                out,
+                &mut out.solid,
             );
         }
         Block::BlipDuplicator {
@@ -344,11 +466,11 @@ pub fn render_block(
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
 
-            let kind_color = match activated.or(*kind) {
+            let kind_color = match activated.or(kind) {
                 Some(kind) => blip_color(kind),
                 None => na::Vector3::new(0.6, 0.6, 0.6),
             };
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
@@ -367,7 +489,7 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(0.8, 0.8, 0.8, alpha),
-                out,
+                &mut out.solid,
             );
             render_bridge(
                 Dir2::X_POS,
@@ -376,11 +498,11 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(0.8, 0.8, 0.8, alpha),
-                out,
+                &mut out.solid,
             );
         }
         Block::BlipWindSource { activated } => {
-            let cube_color = if *activated {
+            let cube_color = if activated {
                 na::Vector4::new(0.5, 0.0, 0.0, alpha)
             } else {
                 block_color(color, &wind_source_color(), alpha)
@@ -390,7 +512,7 @@ pub fn render_block(
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 1.0));
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
@@ -399,7 +521,7 @@ pub fn render_block(
                 },
             );
 
-            let button_length = if *activated { 0.4 } else { 0.45 };
+            let button_length = if activated { 0.4 } else { 0.45 };
             render_bridge(
                 Dir2::Y_NEG,
                 button_length,
@@ -407,11 +529,11 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(0.8, 0.8, 0.8, alpha),
-                out,
+                &mut out.solid,
             );
         }
         Block::Solid => {
-            out.add(
+            out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform,
@@ -452,7 +574,12 @@ pub fn placed_block_transform(placed_block: &PlacedBlock) -> na::Matrix4<f32> {
     na::Matrix4::new_rotation(placed_block.angle_xy_radians() * na::Vector3::z())
 }
 
-pub fn render_machine(machine: &Machine, tick_time: f32, out: &mut RenderLists) {
+pub fn render_machine(
+    machine: &Machine,
+    tick_time: f32,
+    exec: Option<&Exec>,
+    out: &mut RenderLists,
+) {
     let floor_size = na::Vector3::new(machine.size().x as f32, machine.size().y as f32, 1.0);
 
     let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
@@ -466,11 +593,13 @@ pub fn render_machine(machine: &Machine, tick_time: f32, out: &mut RenderLists) 
         },
     );
 
-    for (_index, (block_pos, placed_block)) in machine.iter_blocks() {
+    for (block_index, (block_pos, placed_block)) in machine.iter_blocks() {
         let transform = placed_block_transform(&placed_block);
         let center = block_center(&block_pos);
 
-        render_block(
+        let wind_anim_state = exec.map(|exec| WindAnimState::from_exec_block(exec, block_index));
+
+        /*render_block(
             &placed_block.block,
             tick_time,
             &center,
@@ -478,15 +607,16 @@ pub fn render_machine(machine: &Machine, tick_time: f32, out: &mut RenderLists) 
             None,
             1.0,
             &mut out.solid_shadow,
-        );
+        );*/
         render_block(
-            &placed_block.block,
+            &placed_block,
             tick_time,
+            &wind_anim_state,
             &center,
             &transform,
             None,
             1.0,
-            &mut out.solid,
+            out,
         );
     }
 }

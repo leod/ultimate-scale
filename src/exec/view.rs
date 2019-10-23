@@ -1,4 +1,3 @@
-use std::collections::BTreeSet;
 use std::time::Duration;
 
 use log::info;
@@ -7,10 +6,11 @@ use nalgebra as na;
 
 use glutin::{VirtualKeyCode, WindowEvent};
 
+use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
-use crate::render::pipeline::RenderLists;
+use crate::render::pipeline::{conduit, RenderLists};
 use crate::render::{self, Camera, EditCameraView};
 use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
@@ -29,7 +29,7 @@ impl Default for Config {
             pause_resume_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
             frame_key: VirtualKeyCode::F,
-            default_ticks_per_sec: 0.5,
+            default_ticks_per_sec: 1.0,
         }
     }
 }
@@ -65,6 +65,10 @@ impl ExecView {
 
     pub fn status(&self) -> Status {
         self.status
+    }
+
+    pub fn cur_tick_progress(&self) -> f32 {
+        self.tick_timer.progress()
     }
 
     pub fn cur_tick_time(&self) -> f32 {
@@ -176,7 +180,12 @@ impl ExecView {
     }
 
     pub fn render(&mut self, out: &mut RenderLists) {
-        render::machine::render_machine(&self.exec.machine(), self.cur_tick_time(), out);
+        render::machine::render_machine(
+            &self.exec.machine(),
+            self.cur_tick_time(),
+            Some(&self.exec),
+            out,
+        );
 
         self.render_blocks(out);
         self.render_blips(out);
@@ -193,7 +202,7 @@ impl ExecView {
                 },
                 0.015,
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                &mut out.solid,
+                &mut out.plain,
             );
         }
     }
@@ -206,70 +215,58 @@ impl ExecView {
         out_t: f32,
         out: &mut RenderLists,
     ) {
-        let center = render::machine::block_center(block_pos);
+        let block_center = render::machine::block_center(block_pos);
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
-        let in_pos = center + in_vector;
 
-        // Interpolate both start and end position
-        // (although in practice at most one position is interpolated at the same time)
-        let start = in_pos + in_t * (center - in_pos);
-        let end = center + out_t * (in_pos - center);
+        // The cylinder object points in the direction of the x axis
+        let (pitch, yaw) = in_dir.to_pitch_yaw_x();
 
-        render::machine::render_arrow(
-            &render::machine::Line {
-                start,
-                end,
-                roll: 0.0,
-                thickness: 0.05,
-                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-            },
-            0.0,
-            &mut out.solid,
-        );
+        let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
+            * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+
+        let color = render::machine::wind_source_color();
+        let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
+
+        for &phase in &[0.0, 0.25, 0.5, 0.75] {
+            out.solid_conduit.add(
+                render::Object::TessellatedCylinder,
+                &conduit::Params {
+                    transform,
+                    color,
+                    start: in_t,
+                    end: out_t,
+                    phase: 2.0 * phase * std::f32::consts::PI,
+                    ..Default::default()
+                },
+            );
+        }
     }
 
     fn render_blocks(&self, out: &mut RenderLists) {
-        let wind_state = self.exec.wind_state();
-        let old_wind_state = self.exec.old_wind_state();
+        let blocks = &self.exec.machine().blocks;
 
-        for (block_index, (block_pos, _placed_block)) in self.exec.machine().blocks.data.iter() {
-            // Determine the set of wind in directions at this block
-            let wind_in_dirs: BTreeSet<Dir3> = Dir3::ALL
-                .iter()
-                .filter(|dir| wind_state[block_index].wind_in(**dir))
-                .cloned()
-                .collect();
+        for (block_index, (block_pos, _placed_block)) in blocks.data.iter() {
+            let anim_state = WindAnimState::from_exec_block(&self.exec, block_index);
 
-            // Also determine the set of wind in directions in the previous tick
-            let old_wind_in_dirs: BTreeSet<Dir3> = Dir3::ALL
-                .iter()
-                .filter(|dir| old_wind_state[block_index].wind_in(**dir))
-                .cloned()
-                .collect();
-
-            // For each incoming direction, one of the following cases holds:
-            // 1) The in direction is only in the new set, i.e. wind is appearing
-            for &in_dir in wind_in_dirs.difference(&old_wind_in_dirs) {
-                // Interpolate, i.e. draw partial line
-                let out_t = 1.0 - self.tick_timer.progress();
-                self.render_wind(block_pos, in_dir, 0.0, out_t, out);
+            for &dir in &Dir3::ALL {
+                match anim_state.wind_in(dir) {
+                    WindLife::None => {}
+                    WindLife::Appearing => {
+                        // Interpolate, i.e. draw partial line
+                        let out_t = self.tick_timer.progress();
+                        self.render_wind(block_pos, dir, 0.0, out_t, out);
+                    }
+                    WindLife::Existing => {
+                        // Draw full line
+                        self.render_wind(block_pos, dir, 0.0, 1.0, out);
+                    }
+                    WindLife::Disappearing => {
+                        // Interpolate, i.e. draw partial line
+                        let in_t = self.tick_timer.progress();
+                        self.render_wind(block_pos, dir, in_t, 1.0, out);
+                    }
+                }
             }
-
-            // 2) The in direction is in both sets:
-            for &in_dir in wind_in_dirs.intersection(&old_wind_in_dirs) {
-                // Draw full line
-                self.render_wind(block_pos, in_dir, 0.0, 0.0, out);
-            }
-
-            // 3) The in direction is only in the old set, i.e. wind is disappearing:
-            for &in_dir in old_wind_in_dirs.difference(&wind_in_dirs) {
-                // Interpolate, i.e. draw partial line
-                let in_t = self.tick_timer.progress();
-                self.render_wind(block_pos, in_dir, in_t, 0.0, out);
-            }
-
-            // 4) The pair is in neither set:
-            // Draw nothing.
         }
     }
 
@@ -335,7 +332,7 @@ impl ExecView {
                 Self::blip_spawn_size_animation(1.0 - self.tick_timer.progress())
             } else {
                 1.0
-            } * 0.3;
+            } * 0.25;
 
             let transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
@@ -350,7 +347,6 @@ impl ExecView {
             };
 
             out.solid.add_instance(&instance);
-            out.solid_shadow.add_instance(&instance);
 
             out.lights.push(render::pipeline::Light {
                 position: pos,
