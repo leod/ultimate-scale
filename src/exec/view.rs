@@ -241,6 +241,17 @@ impl ExecView {
                 ..Default::default()
             },
         );
+        out.solid_conduit.add(
+            render::Object::TessellatedCylinder,
+            &conduit::Params {
+                transform,
+                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+                start: in_t,
+                end: 1.0 - out_t,
+                phase: std::f32::consts::PI,
+                ..Default::default()
+            },
+        );
 
         /*render::machine::render_arrow(
             &render::machine::Line {
