@@ -300,11 +300,11 @@ impl ShadowMapping {
             .render(resources, context, &Default::default(), target)?;
 
         // Render wind
-        render_lists.solid_conduit.render_with_program(
+        render_lists.solid_wind.render_with_program(
             resources,
             context,
             &Default::default(),
-            &resources.conduit_program,
+            &resources.wind_program,
             target,
         )?;
 

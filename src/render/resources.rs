@@ -8,7 +8,7 @@ use crate::render::pipeline;
 pub struct Resources {
     pub object_buffers: Vec<ObjectBuffers>,
     pub program: glium::Program,
-    pub conduit_program: glium::Program,
+    pub wind_program: glium::Program,
     pub plain_program: glium::Program,
 }
 
@@ -47,12 +47,12 @@ impl Resources {
         let program = pipeline::simple::diffuse_core_transform(pipeline::simple::plain_core())
             .build_program(facade)?;
 
-        info!("Creating straight conduit program");
-        let conduit_core =
-            pipeline::simple::diffuse_core_transform(pipeline::conduit::core()).link();
-        println!("{}", conduit_core.vertex.compile());
-        println!("{}", conduit_core.fragment.compile());
-        let conduit_program = conduit_core.build_program(facade)?;
+        info!("Creating straight wind program");
+        let wind_core =
+            pipeline::simple::diffuse_core_transform(pipeline::wind::core()).link();
+        println!("{}", wind_core.vertex.compile());
+        println!("{}", wind_core.fragment.compile());
+        let wind_program = wind_core.build_program(facade)?;
 
         info!("Creating plain render program");
         let plain_program = pipeline::simple::plain_core().build_program(facade)?;
@@ -60,7 +60,7 @@ impl Resources {
         Ok(Resources {
             object_buffers,
             program,
-            conduit_program,
+            wind_program,
             plain_program,
         })
     }

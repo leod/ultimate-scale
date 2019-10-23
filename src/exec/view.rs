@@ -10,7 +10,7 @@ use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
-use crate::render::pipeline::{conduit, RenderLists};
+use crate::render::pipeline::{wind, RenderLists};
 use crate::render::{self, Camera, EditCameraView};
 use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
@@ -228,9 +228,9 @@ impl ExecView {
         let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
 
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
-            out.solid_conduit.add(
+            out.solid_wind.add(
                 render::Object::TessellatedCylinder,
-                &conduit::Params {
+                &wind::Params {
                     transform,
                     color,
                     start: in_t,
