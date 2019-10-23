@@ -9,6 +9,8 @@ use crate::render::Object;
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
 
+pub const PIPE_THICKNESS: f32 = 0.05;
+
 pub fn wind_source_color() -> na::Vector3<f32> {
     na::Vector3::new(1.0, 0.08, 0.24)
 }
@@ -190,6 +192,51 @@ pub fn render_bridge(
     );
 }
 
+pub fn render_pipe_bend(
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    color: &na::Vector4<f32>,
+    out: &mut RenderList<DefaultInstanceParams>,
+) {
+    let translation = na::Matrix4::new_translation(&center.coords);
+    let scaling =
+        na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(PIPE_THICKNESS, 0.5, PIPE_THICKNESS));
+    let offset = na::Matrix4::new_translation(&na::Vector3::new(0.0, -0.25, 0.0));
+
+    // One rail
+    out.add(
+        Object::Cube,
+        &DefaultInstanceParams {
+            transform: translation * transform * offset * scaling,
+            color: *color,
+            ..Default::default()
+        },
+    );
+
+    // Another rail
+    let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
+    out.add(
+        Object::Cube,
+        &DefaultInstanceParams {
+            transform: translation * transform * rotation * offset * scaling,
+            color: *color,
+            ..Default::default()
+        },
+    );
+
+    // Pulsator to hide our shame of twist
+    let size = PIPE_THICKNESS * 3.0;
+    let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(size, size, size));
+    out.add(
+        Object::Cube,
+        &DefaultInstanceParams {
+            transform: translation * transform * scaling,
+            color: *color,
+            ..Default::default()
+        },
+    );
+}
+
 pub fn render_block(
     placed_block: &PlacedBlock,
     tick_time: f32,
@@ -204,7 +251,11 @@ pub fn render_block(
 
     match placed_block.block {
         Block::PipeXY => {
-            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.05, 1.0, 0.05));
+            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                PIPE_THICKNESS,
+                1.0,
+                PIPE_THICKNESS,
+            ));
 
             out.solid.add(
                 Object::Cube,
@@ -215,17 +266,12 @@ pub fn render_block(
                 },
             );
         }
-        Block::PipeBendXY => {
-            let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
-            out.solid.add(
-                Object::PipeBend,
-                &DefaultInstanceParams {
-                    transform: translation * transform * rotation,
-                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
-                    ..Default::default()
-                },
-            );
-        }
+        Block::PipeBendXY => render_pipe_bend(
+            center,
+            transform,
+            color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+            &mut out.solid,
+        ),
         Block::PipeZ => {
             let rotation = na::Matrix4::new_rotation(na::Vector3::x() * std::f32::consts::PI / 2.0);
             out.solid.add(
@@ -239,15 +285,13 @@ pub fn render_block(
         }
         Block::PipeBendZ { sign_z } => {
             let angle_y = -sign_z.to_f32() * std::f32::consts::PI / 2.0;
-            let rotation = na::Matrix4::new_rotation(na::Vector3::y() * angle_y)
-                * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI);
-            out.solid.add(
-                Object::PipeBend,
-                &DefaultInstanceParams {
-                    transform: translation * transform * rotation,
-                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
-                    ..Default::default()
-                },
+            let rotation = na::Matrix4::new_rotation(na::Vector3::y() * angle_y);
+
+            render_pipe_bend(
+                center,
+                &(transform * rotation),
+                color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                &mut out.solid,
             );
         }
         Block::PipeSplitXY { .. } => {
