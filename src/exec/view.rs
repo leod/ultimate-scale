@@ -357,7 +357,7 @@ impl ExecView {
                 Self::blip_spawn_size_animation(1.0 - self.tick_timer.progress())
             } else {
                 1.0
-            } * 0.15;
+            } * 0.25;
 
             let transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);

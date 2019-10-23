@@ -65,8 +65,8 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
         ],
         defs: "
             const float PI = 3.141592;
-            const float radius = 0.15;
-            const float scale = 0.02;
+            const float radius = 0.05;
+            const float scale = 0.01;
         "
         .to_string(),
         body: "
@@ -77,10 +77,10 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
 
             vec3 scaled_pos = position;
             scaled_pos.yz *= scale;
-            //scaled_pos.z += radius;
-
+            scaled_pos.z += radius;
 
             if (bend) {
+                // Currently unused, for wind bending
                 float tau = (0.5 - position.x) * PI / 2.0;
                 scaled_pos.x = 0.5 * cos(tau);
                 scaled_pos.y += 0.5 * sin(tau);
@@ -89,12 +89,12 @@ pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
                 scaled_pos += normal * sin(angle) * 0.05;
             }
 
-            scaled_pos.y += sin(angle) * 0.05;
-            scaled_pos.z += cos(angle) * 0.05;
+            //scaled_pos.y += sin(angle) * radius;
+            //scaled_pos.z += cos(angle) * radius;
 
             vec3 rot_normal = normal;
-            //scaled_pos.yz = rot_m * scaled_pos.yz;
-            //rot_normal.yz = rot_m * rot_normal.yz;
+            scaled_pos.yz = rot_m * scaled_pos.yz;
+            rot_normal.yz = rot_m * rot_normal.yz;
 
             if (0.5 - position.x < start || 0.5 - position.x > end)
                 v_discard = 1.0;
