@@ -253,7 +253,7 @@ impl Editor {
                 },
                 0.015,
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                &mut out.solid,
+                &mut out.plain,
             );
 
             let block_center = render::machine::block_center(&mouse_grid_pos);
