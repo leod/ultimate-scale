@@ -82,7 +82,7 @@ pub fn render_frame_straight<S: glium::Surface>(
     render_lists.solid_conduit.render_with_program(
         resources,
         context,
-        &blend,
+        &Default::default(),
         &resources.conduit_program,
         target,
     )?;
