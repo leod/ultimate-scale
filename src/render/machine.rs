@@ -193,6 +193,8 @@ pub fn render_bridge(
 }
 
 pub fn render_pipe_bend(
+    tick_time: f32,
+    wind_anim_state: &Option<WindAnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: &na::Vector4<f32>,
@@ -225,7 +227,15 @@ pub fn render_pipe_bend(
     );
 
     // Pulsator to hide our shame of twist
-    let size = PIPE_THICKNESS * 3.0;
+    let size = if let Some(wind_anim_state) = wind_anim_state.as_ref() {
+        if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
+            1.0 + 0.1 * (tick_time.fract() * std::f32::consts::PI).cos().powf(2.0)
+        } else {
+            1.0
+        }
+    } else {
+        1.0
+    } * PIPE_THICKNESS * 3.0;
     let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(size, size, size));
     out.add(
         Object::Cube,
@@ -267,6 +277,8 @@ pub fn render_block(
             );
         }
         Block::PipeBendXY => render_pipe_bend(
+            tick_time,
+            wind_anim_state,
             center,
             transform,
             color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
@@ -288,6 +300,8 @@ pub fn render_block(
             let rotation = na::Matrix4::new_rotation(na::Vector3::y() * angle_y);
 
             render_pipe_bend(
+                tick_time,
+                wind_anim_state,
                 center,
                 &(transform * rotation),
                 color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
