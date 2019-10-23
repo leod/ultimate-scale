@@ -48,6 +48,7 @@ impl InstanceParams for Context {
             mat_projection: mat_projection,
             light_pos: light_pos,
             t: self.elapsed_time_secs,
+            tick_progress: self.tick_progress,
         }
     }
 }

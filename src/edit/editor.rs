@@ -129,6 +129,8 @@ impl Editor {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                 let edit = Edit::SetBlock(mouse_grid_pos, Some(self.place_block.clone()));
                 self.run_edit(edit);
+
+                println!("mouse at {:?}", mouse_grid_pos);
             }
         }
 
@@ -232,7 +234,7 @@ impl Editor {
             &mut out.solid,
         );
 
-        render::machine::render_machine(&self.machine, 0.0, out);
+        render::machine::render_machine(&self.machine, 0.0, None, out);
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + 0.01,
@@ -251,20 +253,21 @@ impl Editor {
                 },
                 0.015,
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                &mut out.solid,
+                &mut out.plain,
             );
 
             let block_center = render::machine::block_center(&mouse_grid_pos);
             let block_transform = render::machine::placed_block_transform(&self.place_block);
             render::machine::render_block(
-                &self.place_block.block,
+                &self.place_block,
                 0.0,
+                &None,
                 &block_center,
                 &block_transform,
                 //Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
                 None,
                 0.8,
-                &mut out.solid,
+                out,
             );
         }
 

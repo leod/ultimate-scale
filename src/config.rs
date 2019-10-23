@@ -28,7 +28,7 @@ impl Default for RenderConfig {
     fn default() -> RenderConfig {
         RenderConfig {
             shadow_mapping: Some(Default::default()),
-            deferred_shading: Some(Default::default()),
+            deferred_shading: None, //Some(Default::default()),
         }
     }
 }

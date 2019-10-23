@@ -34,7 +34,7 @@ impl<T: InstanceParams> RenderList<T> {
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         let params = glium::DrawParameters {
-            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            //backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
                 test: glium::DepthTest::IfLessOrEqual,
                 write: true,

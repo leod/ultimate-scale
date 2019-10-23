@@ -1,3 +1,4 @@
+pub mod anim;
 pub mod view;
 
 use log::debug;
