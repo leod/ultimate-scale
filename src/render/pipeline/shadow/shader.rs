@@ -66,6 +66,9 @@ pub fn render_shadowed_core_transform<P: InstanceParams, V: glium::vertex::Verte
                 vec3 proj_coords = light_space_pos.xyz / light_space_pos.w;
                 proj_coords = proj_coords * 0.5 + 0.5;
 
+                if (dot(light_dir, v_world_normal) < 0.0)
+                    return 0.5;
+
                 // TODO: Is there a way to do this on texture-level?
                 if (proj_coords.z > 1.0
                     || proj_coords.x < 0.0
