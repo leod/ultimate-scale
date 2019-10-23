@@ -1,4 +1,4 @@
-pub mod conduit;
+pub mod wind;
 pub mod deferred;
 pub mod instance;
 pub mod light;
@@ -38,7 +38,7 @@ impl Default for Context {
 #[derive(Default, Clone)]
 pub struct RenderLists {
     pub solid: RenderList<DefaultInstanceParams>,
-    pub solid_conduit: RenderList<conduit::Params>,
+    pub solid_wind: RenderList<wind::Params>,
 
     /// Transparent instances.
     pub transparent: RenderList<DefaultInstanceParams>,
@@ -56,7 +56,7 @@ impl RenderLists {
 
     pub fn clear(&mut self) {
         self.solid.clear();
-        self.solid_conduit.clear();
+        self.solid_wind.clear();
         self.transparent.clear();
         self.plain.clear();
         self.lights.clear();
@@ -79,11 +79,11 @@ pub fn render_frame_straight<S: glium::Surface>(
         .solid
         .render(resources, context, &Default::default(), target)?;
 
-    render_lists.solid_conduit.render_with_program(
+    render_lists.solid_wind.render_with_program(
         resources,
         context,
         &Default::default(),
-        &resources.conduit_program,
+        &resources.wind_program,
         target,
     )?;
 
