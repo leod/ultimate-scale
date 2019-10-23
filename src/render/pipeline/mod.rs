@@ -63,13 +63,18 @@ impl RenderLists {
     }
 }
 
-// TODO: Facter out into some struct that also holds the necessary programs
+// TODO: Factor out into some struct that also holds the necessary programs
 pub fn render_frame_straight<S: glium::Surface>(
     resources: &Resources,
     context: &Context,
     render_lists: &RenderLists,
     target: &mut S,
 ) -> Result<(), glium::DrawError> {
+    let blend = glium::DrawParameters {
+        blend: glium::draw_parameters::Blend::alpha_blending(),
+        ..Default::default()
+    };
+
     render_lists
         .solid
         .render(resources, context, &Default::default(), target)?;
@@ -77,7 +82,7 @@ pub fn render_frame_straight<S: glium::Surface>(
     render_lists.solid_conduit.render_with_program(
         resources,
         context,
-        &Default::default(),
+        &blend,
         &resources.conduit_program,
         target,
     )?;
@@ -86,15 +91,9 @@ pub fn render_frame_straight<S: glium::Surface>(
         .plain
         .render(resources, context, &Default::default(), target)?;
 
-    render_lists.transparent.render(
-        resources,
-        context,
-        &glium::DrawParameters {
-            blend: glium::draw_parameters::Blend::alpha_blending(),
-            ..Default::default()
-        },
-        target,
-    )?;
+    render_lists
+        .transparent
+        .render(resources, context, &blend, target)?;
 
     Ok(())
 }

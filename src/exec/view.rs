@@ -11,7 +11,7 @@ use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
-use crate::render::pipeline::RenderLists;
+use crate::render::pipeline::{conduit, RenderLists};
 use crate::render::{self, Camera, EditCameraView};
 use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
@@ -30,7 +30,7 @@ impl Default for Config {
             pause_resume_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
             frame_key: VirtualKeyCode::F,
-            default_ticks_per_sec: 0.1,
+            default_ticks_per_sec: 0.5,
         }
     }
 }
@@ -216,16 +216,33 @@ impl ExecView {
         out_t: f32,
         out: &mut RenderLists,
     ) {
-        let center = render::machine::block_center(block_pos);
+        let block_center = render::machine::block_center(block_pos);
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
-        let in_pos = center + in_vector;
+        let in_pos = block_center + in_vector;
 
         // Interpolate both start and end position
         // (although in practice at most one position is interpolated at the same time)
-        let start = in_pos + in_t * (center - in_pos);
-        let end = center + out_t * (in_pos - center);
+        let start = in_pos + in_t * (block_center - in_pos);
+        let end = block_center + out_t * (in_pos - block_center);
 
-        render::machine::render_arrow(
+        // The cylinder object points in the direction of the x axis
+        let (pitch, yaw) = in_dir.to_pitch_yaw_x();
+
+        let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
+            * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+
+        out.solid_conduit.add(
+            render::Object::TessellatedCylinder,
+            &conduit::Params {
+                transform,
+                color: na::Vector4::new(1.0, 0.0, 0.0, 1.0),
+                start: in_t,
+                end: 1.0 - out_t,
+                ..Default::default()
+            },
+        );
+
+        /*render::machine::render_arrow(
             &render::machine::Line {
                 start,
                 end,
@@ -235,7 +252,7 @@ impl ExecView {
             },
             0.0,
             &mut out.solid,
-        );
+        );*/
     }
 
     fn render_blocks(&self, out: &mut RenderLists) {
@@ -329,7 +346,7 @@ impl ExecView {
                 Self::blip_spawn_size_animation(1.0 - self.tick_timer.progress())
             } else {
                 1.0
-            } * 0.3;
+            } * 0.15;
 
             let transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
