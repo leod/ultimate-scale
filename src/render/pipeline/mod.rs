@@ -1,10 +1,10 @@
-pub mod wind;
 pub mod deferred;
 pub mod instance;
 pub mod light;
 pub mod render_list;
 pub mod shadow;
 pub mod simple;
+pub mod wind;
 
 use nalgebra as na;
 

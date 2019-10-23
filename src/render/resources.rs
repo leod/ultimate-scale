@@ -48,8 +48,7 @@ impl Resources {
             .build_program(facade)?;
 
         info!("Creating straight wind program");
-        let wind_core =
-            pipeline::simple::diffuse_core_transform(pipeline::wind::core()).link();
+        let wind_core = pipeline::simple::diffuse_core_transform(pipeline::wind::core()).link();
         println!("{}", wind_core.vertex.compile());
         println!("{}", wind_core.fragment.compile());
         let wind_program = wind_core.build_program(facade)?;
