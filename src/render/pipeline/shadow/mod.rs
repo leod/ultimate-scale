@@ -299,6 +299,15 @@ impl ShadowMapping {
             .plain
             .render(resources, context, &Default::default(), target)?;
 
+        // Render wind
+        render_lists.solid_conduit.render_with_program(
+            resources,
+            context,
+            &Default::default(),
+            &resources.conduit_program,
+            target,
+        )?;
+
         // Render transparent objects
         // TODO: "Integration" with deferred shading
         render_lists.transparent.render(
