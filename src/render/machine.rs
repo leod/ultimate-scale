@@ -219,6 +219,45 @@ pub fn render_mill(
     );
 }
 
+pub fn render_wind_mills(
+    placed_block: &PlacedBlock,
+    tick_time: f32,
+    wind_anim_state: &Option<WindAnimState>,
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    color: &na::Vector4<f32>,
+    out: &mut RenderLists,
+) {
+    for &dir in &Dir3::ALL {
+        if !placed_block.has_wind_hole_out(dir) {
+            continue;
+        }
+
+        let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
+            // We need to apply the rotation because here we render
+            // the blocks as if they were not rotated yet.
+            // (Any rotation is contained in `transform`).
+            let original_dir = placed_block.rotated_dir_xy(dir);
+
+            if anim.wind_out(original_dir).is_alive() {
+                tick_time.fract() * std::f32::consts::PI * 2.0
+            } else {
+                0.0
+            }
+        });
+        for &phase in &[0.0, 0.25] {
+            render_mill(
+                dir,
+                center,
+                transform,
+                roll + 2.0 * phase * std::f32::consts::PI,
+                color,
+                &mut out.solid,
+            );
+        }
+    }
+}
+
 pub fn render_pipe_bend(
     tick_time: f32,
     wind_anim_state: &Option<WindAnimState>,
@@ -396,30 +435,15 @@ pub fn render_block(
                 },
             );
 
-            for &dir in &Dir3::ALL {
-                let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
-                    // We need to apply the rotation because here we render
-                    // the blocks as if they were not rotated yet.
-                    // (Any rotation is contained in `transform`).
-                    let original_dir = placed_block.rotated_dir_xy(dir);
-
-                    if anim.wind_out(original_dir).is_alive() {
-                        tick_time.fract() * std::f32::consts::PI * 2.0
-                    } else {
-                        0.0
-                    }
-                });
-                for &phase in &[0.0, 0.25] {
-                    render_mill(
-                        dir,
-                        center,
-                        transform,
-                        roll + 2.0 * phase * std::f32::consts::PI,
-                        color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
-                        &mut out.solid,
-                    );
-                }
-            }
+            render_wind_mills(
+                placed_block,
+                tick_time,
+                wind_anim_state,
+                center,
+                transform,
+                &color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                out,
+            );
         }
         Block::BlipSpawn {
             kind,
