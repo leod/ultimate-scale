@@ -201,6 +201,8 @@ impl ShadowMapping {
 
         // Render scene from the light's point of view into depth buffer
         {
+            profile!("shadow_map");
+
             let camera = Camera {
                 viewport: na::Vector4::new(0.0, 0.0, 0.0, 0.0), // dummy value
                 projection: light_projection,
@@ -223,6 +225,8 @@ impl ShadowMapping {
 
         // Render scene from the camera's point of view
         {
+            profile!("shadowed_scene");
+
             let params = glium::DrawParameters {
                 backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
                 depth: glium::Depth {
@@ -295,18 +299,26 @@ impl ShadowMapping {
         }*/
 
         // Render plain objects
-        render_lists
-            .plain
-            .render(resources, context, &Default::default(), target)?;
+        {
+            profile!("plain");
+
+            render_lists
+                .plain
+                .render(resources, context, &Default::default(), target)?;
+        }
 
         // Render wind
-        render_lists.solid_wind.render_with_program(
-            resources,
-            context,
-            &Default::default(),
-            &resources.wind_program,
-            target,
-        )?;
+        {
+            profile!("wind");
+
+            render_lists.solid_wind.render_with_program(
+                resources,
+                context,
+                &Default::default(),
+                &resources.wind_program,
+                target,
+            )?;
+        }
 
         // Render transparent objects
         // TODO: "Integration" with deferred shading
