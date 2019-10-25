@@ -268,8 +268,6 @@ impl Editor {
                 &None,
                 &block_center,
                 &block_transform,
-                //Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
-                None,
                 0.8,
                 out,
             );
