@@ -45,11 +45,7 @@ impl Font {
     ) {
         let sub_trans = na::Matrix4::new_translation(&na::Vector3::new(0.0, -1.0, 0.0));
         let scale = na::Matrix4::new_scaling(size);
-        let trans = na::Matrix4::new_translation(&na::Vector3::new(
-            pos.x,
-            self.window_size.height as f32 - pos.y,
-            0.0,
-        ));
+        let trans = na::Matrix4::new_translation(&na::Vector3::new(pos.x, 1.0 - pos.y, 0.0));
         let matrix: [[f32; 4]; 4] = (self.projection * trans * scale * sub_trans).into();
 
         let text = glium_text::TextDisplay::new(&self.system, &self.texture, string);
@@ -63,14 +59,18 @@ impl Font {
     }
 
     fn orthographic_matrix(window_size: glutin::dpi::LogicalSize) -> na::Matrix4<f32> {
+        let aspect_ratio = 1.0; //9.0 / 16.0;
+
         na::Matrix4::new_orthographic(
             0.0,
-            window_size.width as f32,
+            1.0,
+            //window_size.width as f32,
             0.0,
-            window_size.height as f32,
+            //window_size.height as f32,
+            aspect_ratio,
             -1.0,
             0.0,
-        )
+        ) * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, aspect_ratio, 1.0))
     }
 }
 
