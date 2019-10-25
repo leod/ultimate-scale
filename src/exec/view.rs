@@ -315,12 +315,6 @@ impl ExecView {
 
     fn render_blips(&self, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
-            /*if blip.old_pos.is_none() {
-                // Workaround for the fact that we use old blip positions but
-                // render new machine state
-                continue;
-            }*/
-
             let center = render::machine::block_center(&blip.pos);
 
             let pos = if let Some(old_pos) = blip.old_pos {
@@ -329,6 +323,8 @@ impl ExecView {
             } else {
                 center
             };
+
+            let moving = blip.old_pos.map_or(false, |old_pos| blip.pos != old_pos);
 
             let size = if blip.old_pos.is_none() {
                 // Animate spawning the blip
@@ -340,8 +336,17 @@ impl ExecView {
                 1.0
             } * 0.25;
 
-            let transform =
+            let mut transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
+            if let Some(old_pos) = blip.old_pos {
+                if old_pos != blip.pos {
+                    let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
+                    let angle = self.tick_timer.progress() * std::f32::consts::PI;
+                    let rot = na::Rotation3::new(delta.normalize() * angle);
+                    transform = transform * rot.to_homogeneous();
+                }
+            }
+
             let color = render::machine::blip_color(blip.kind);
             let instance = render::pipeline::Instance {
                 object: render::Object::Cube,
