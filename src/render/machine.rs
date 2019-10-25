@@ -6,7 +6,7 @@ use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
 use crate::render::Object;
 
-use crate::exec::anim::WindAnimState;
+use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
 
 pub const PIPE_THICKNESS: f32 = 0.05;
@@ -239,12 +239,30 @@ pub fn render_wind_mills(
             // (Any rotation is contained in `transform`).
             let original_dir = placed_block.rotated_dir_xy(dir);
 
-            if anim.wind_out(original_dir).is_alive() {
-                tick_time.fract() * std::f32::consts::PI * 2.0
-            } else {
-                0.0
-            }
+            let t = tick_time.fract();
+
+            std::f32::consts::PI
+                * 2.0
+                * match anim.wind_out(original_dir) {
+                    WindLife::None => 0.0,
+                    WindLife::Appearing => {
+                        if t >= 0.5 {
+                            t - 0.5
+                        } else {
+                            0.0
+                        }
+                    }
+                    WindLife::Existing => t,
+                    WindLife::Disappearing => {
+                        if t < 0.5 {
+                            t
+                        } else {
+                            0.0
+                        }
+                    }
+                }
         });
+
         for &phase in &[0.0, 0.25] {
             render_mill(
                 dir,
