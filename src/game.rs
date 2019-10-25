@@ -186,8 +186,8 @@ impl Game {
         }
 
         self.font.draw(
-            na::Vector2::new(3.0, 3.0),
-            10.0,
+            na::Vector2::new(0.01, 0.01),
+            0.02,
             na::Vector4::new(1.0, 0.0, 0.0, 1.0),
             &format!("FPS: {:.0}", self.fps),
             &mut target,
