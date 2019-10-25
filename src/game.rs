@@ -118,6 +118,8 @@ impl Game {
         &mut self,
         display: &glium::backend::glutin::Display,
     ) -> Result<(), glium::DrawError> {
+        profile!("render");
+
         let render_context = render::pipeline::Context {
             camera: self.camera.clone(),
             elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
@@ -145,6 +147,8 @@ impl Game {
         }
 
         if let Some(deferred_shading) = &mut self.deferred_shading {
+            profile!("deferred");
+
             let intensity = 1.0;
             self.render_lists.lights.push(Light {
                 position: render_context.main_light_pos,
@@ -161,6 +165,8 @@ impl Game {
                 &mut target,
             )?;
         } else if let Some(shadow_mapping) = &mut self.shadow_mapping {
+            profile!("shadow");
+
             shadow_mapping.render_frame(
                 display,
                 &self.resources,
@@ -169,6 +175,8 @@ impl Game {
                 &mut target,
             )?;
         } else {
+            profile!("straight");
+
             render::pipeline::render_frame_straight(
                 &self.resources,
                 &render_context,
@@ -185,6 +193,8 @@ impl Game {
             &mut target,
         );
 
+        profile!("finish");
+
         // TODO: unwrap
         target.finish().unwrap();
 
@@ -192,6 +202,8 @@ impl Game {
     }
 
     pub fn update(&mut self, dt: Duration) {
+        profile!("update");
+
         self.elapsed_time += dt;
         let dt_secs = dt.as_fractional_secs() as f32;
         self.fps = 1.0 / dt_secs;

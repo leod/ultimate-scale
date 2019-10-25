@@ -75,25 +75,37 @@ pub fn render_frame_straight<S: glium::Surface>(
         ..Default::default()
     };
 
-    render_lists
-        .solid
-        .render(resources, context, &Default::default(), target)?;
+    {
+        profile!("solid");
+        render_lists
+            .solid
+            .render(resources, context, &Default::default(), target)?;
+    }
 
-    render_lists.solid_wind.render_with_program(
-        resources,
-        context,
-        &Default::default(),
-        &resources.wind_program,
-        target,
-    )?;
+    {
+        profile!("wind");
+        render_lists.solid_wind.render_with_program(
+            resources,
+            context,
+            &Default::default(),
+            &resources.wind_program,
+            target,
+        )?;
+    }
 
-    render_lists
-        .plain
-        .render(resources, context, &Default::default(), target)?;
+    {
+        profile!("plain");
+        render_lists
+            .plain
+            .render(resources, context, &Default::default(), target)?;
+    }
 
-    render_lists
-        .transparent
-        .render(resources, context, &blend, target)?;
+    {
+        profile!("transparent");
+        render_lists
+            .transparent
+            .render(resources, context, &blend, target)?;
+    }
 
     Ok(())
 }

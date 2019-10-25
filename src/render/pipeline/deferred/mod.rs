@@ -152,6 +152,7 @@ impl DeferredShading {
 
         // Before rendering plain non-deferred objects, copy depth buffer to
         // main surface
+        profile!("plain");
         let framebuffer =
             glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.depth_texture).unwrap(); // TODO: unwrap
         let rounded_size: (u32, u32) = self.window_size.into();
@@ -187,6 +188,8 @@ impl DeferredShading {
         context: &Context,
         render_lists: &RenderLists,
     ) -> Result<(), glium::DrawError> {
+        profile!("scene");
+
         let output = &[
             ("f_color", &self.scene_textures[0]),
             ("f_world_pos", &self.scene_textures[1]),
@@ -228,6 +231,8 @@ impl DeferredShading {
         facade: &F,
         lights: &[Light],
     ) -> Result<(), glium::DrawError> {
+        profile!("light");
+
         let draw_params = glium::DrawParameters {
             blend: glium::Blend {
                 color: glium::BlendingFunction::Addition {
@@ -277,6 +282,8 @@ impl DeferredShading {
         &mut self,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
+        profile!("composition");
+
         let uniforms = uniform! {
             mat_orthogonal: self.orthogonal_projection(),
             color_texture: &self.scene_textures[0],

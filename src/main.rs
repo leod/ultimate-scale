@@ -1,12 +1,13 @@
 #![feature(type_alias_impl_trait)]
 
+#[macro_use]
+mod util;
 mod config;
 mod edit;
 mod exec;
 mod game;
 mod machine;
 mod render;
-mod util;
 
 use std::fs::File;
 use std::io::BufReader;
