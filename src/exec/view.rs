@@ -76,6 +76,8 @@ impl ExecView {
     }
 
     pub fn update(&mut self, dt: Duration, camera: &Camera, edit_camera_view: &EditCameraView) {
+        profile!("exec_view");
+
         self.update_mouse_grid_pos(camera, edit_camera_view);
 
         match self.status {
@@ -85,6 +87,8 @@ impl ExecView {
                 // TODO: Run multiple ticks on lag spikes? If so, with some
                 //       upper limit?
                 if self.tick_timer.trigger_reset() {
+                    profile!("tick");
+
                     self.exec.update();
                 }
             }
@@ -180,6 +184,8 @@ impl ExecView {
     }
 
     pub fn render(&mut self, out: &mut RenderLists) {
+        profile!("exec_view");
+
         render::machine::render_machine(
             &self.exec.machine(),
             self.cur_tick_time(),

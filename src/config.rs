@@ -12,7 +12,7 @@ pub struct ViewConfig {
 impl Default for ViewConfig {
     fn default() -> ViewConfig {
         ViewConfig {
-            window_size: glutin::dpi::LogicalSize::new(640.0, 480.0),
+            window_size: glutin::dpi::LogicalSize::new(1280.0, 720.0),
             fov_degrees: 45.0,
         }
     }
