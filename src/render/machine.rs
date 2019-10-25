@@ -246,6 +246,9 @@ pub fn render_wind_mills(
                 * match anim.wind_out(original_dir) {
                     WindLife::None => 0.0,
                     WindLife::Appearing => {
+                        // The wind will start moving inside of the block, so
+                        // delay mill rotation until the wind reaches the
+                        // outside.
                         if t >= 0.5 {
                             t - 0.5
                         } else {
@@ -254,6 +257,8 @@ pub fn render_wind_mills(
                     }
                     WindLife::Existing => t,
                     WindLife::Disappearing => {
+                        // Stop mill rotation when wind reaches the inside of
+                        // the block.
                         if t < 0.5 {
                             t
                         } else {
@@ -317,7 +322,7 @@ pub fn render_pipe_bend(
             if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
                 1.0 + 0.1
                     * (tick_time.fract() * 2.0 * std::f32::consts::PI)
-                        .cos()
+                        .sin()
                         .powf(2.0)
             } else {
                 1.0
