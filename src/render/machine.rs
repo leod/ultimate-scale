@@ -158,12 +158,8 @@ pub fn bridge_length_animation(min: f32, max: f32, activated: bool, progress: f3
     }) * (max - min)
 }
 
-pub fn block_color(
-    color_override: Option<&na::Vector4<f32>>,
-    color: &na::Vector3<f32>,
-    alpha: f32,
-) -> na::Vector4<f32> {
-    *color_override.unwrap_or(&na::Vector4::new(color.x, color.y, color.z, alpha))
+pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
+    na::Vector4::new(color.x, color.y, color.z, alpha)
 }
 
 pub fn render_bridge(
@@ -348,7 +344,6 @@ pub fn render_block(
     wind_anim_state: &Option<WindAnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
-    color: Option<&na::Vector4<f32>>,
     alpha: f32,
     out: &mut RenderLists,
 ) {
@@ -366,7 +361,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
-                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
                     ..Default::default()
                 },
             );
@@ -376,7 +371,7 @@ pub fn render_block(
             wind_anim_state,
             center,
             transform,
-            color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+            &na::Vector4::new(0.75, 0.75, 0.75, alpha),
             &mut out.solid,
         ),
         Block::PipeZ => {
@@ -385,7 +380,7 @@ pub fn render_block(
                 Object::PipeSegment,
                 &DefaultInstanceParams {
                     transform: translation * transform * rotation,
-                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
                     ..Default::default()
                 },
             );
@@ -399,7 +394,7 @@ pub fn render_block(
                 wind_anim_state,
                 center,
                 &(transform * rotation),
-                color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                &na::Vector4::new(0.75, 0.75, 0.75, alpha),
                 &mut out.solid,
             );
         }
@@ -408,7 +403,7 @@ pub fn render_block(
                 Object::PipeSplit,
                 &DefaultInstanceParams {
                     transform: translation * transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.75, 0.75, 0.75, alpha)),
+                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
                     ..Default::default()
                 },
             );
@@ -423,7 +418,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
-                    color: *color.unwrap_or(&cube_color),
+                    color: cube_color,
                     ..Default::default()
                 },
             );
@@ -442,7 +437,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: input_transform,
-                    color: *color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                    color: na::Vector4::new(1.0, 1.0, 1.0, alpha),
                     ..Default::default()
                 },
             );
@@ -453,7 +448,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
-                    color: block_color(color, &wind_source_color(), alpha),
+                    color: block_color(&wind_source_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -464,7 +459,7 @@ pub fn render_block(
                 wind_anim_state,
                 center,
                 transform,
-                &color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                &na::Vector4::new(1.0, 1.0, 1.0, alpha),
                 out,
             );
         }
@@ -476,7 +471,7 @@ pub fn render_block(
             let cube_color = if num_spawns.is_some() {
                 na::Vector4::new(0.0, 0.5, 0.0, alpha)
             } else {
-                block_color(color, &blip_color(kind), alpha)
+                block_color(&blip_color(kind), alpha)
             };
             let cube_transform = translation
                 * transform
@@ -486,7 +481,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
-                    color: *color.unwrap_or(&cube_color),
+                    color: cube_color,
                     ..Default::default()
                 },
             );
@@ -521,7 +516,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
-                    color: block_color(color, &kind_color, alpha),
+                    color: block_color(&kind_color, alpha),
                     ..Default::default()
                 },
             );
@@ -550,7 +545,7 @@ pub fn render_block(
         }
         Block::BlipWindSource { activated } => {
             let cube_color = if activated {
-                block_color(color, &wind_source_color(), alpha)
+                block_color(&wind_source_color(), alpha)
             } else {
                 na::Vector4::new(0.5, 0.0, 0.0, alpha)
             };
@@ -563,7 +558,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
-                    color: *color.unwrap_or(&cube_color),
+                    color: cube_color,
                     ..Default::default()
                 },
             );
@@ -585,7 +580,7 @@ pub fn render_block(
                 wind_anim_state,
                 center,
                 transform,
-                &color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                &na::Vector4::new(1.0, 1.0, 1.0, alpha),
                 out,
             );
         }
@@ -594,7 +589,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform,
-                    color: *color.unwrap_or(&na::Vector4::new(0.3, 0.2, 0.9, alpha)),
+                    color: na::Vector4::new(0.3, 0.2, 0.9, alpha),
                     ..Default::default()
                 },
             );
@@ -656,22 +651,12 @@ pub fn render_machine(
 
         let wind_anim_state = exec.map(|exec| WindAnimState::from_exec_block(exec, block_index));
 
-        /*render_block(
-            &placed_block.block,
-            tick_time,
-            &center,
-            &transform,
-            None,
-            1.0,
-            &mut out.solid_shadow,
-        );*/
         render_block(
             &placed_block,
             tick_time,
             &wind_anim_state,
             &center,
             &transform,
-            None,
             1.0,
             out,
         );
