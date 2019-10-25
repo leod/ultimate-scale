@@ -65,6 +65,8 @@ fn main() {
     let mut quit = false;
 
     while !quit {
+        let _frame_guard = util::profile::start_frame();
+
         game.render(&display).unwrap();
 
         // Remember only the last (hopefully: newest) resize event. We do this
@@ -84,6 +86,17 @@ fn main() {
                     }
                     glutin::WindowEvent::Resized(viewport_size) => {
                         new_window_size = Some(viewport_size);
+                    }
+                    glutin::WindowEvent::KeyboardInput { input, .. } => {
+                        if input.state == glutin::ElementState::Pressed {
+                            match input.virtual_keycode {
+                                Some(glutin::VirtualKeyCode::P) => {
+                                    util::profile::print(&mut std::io::stdout());
+                                    util::profile::reset();
+                                }
+                                _ => {}
+                            }
+                        }
                     }
                     _ => (),
                 }
