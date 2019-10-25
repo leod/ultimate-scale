@@ -123,6 +123,10 @@ impl Block {
         match self {
             Block::FunnelXY => dir == Dir3::Y_POS,
             Block::BlipDuplicator { .. } => false,
+            Block::BlipWindSource { .. } => {
+                // No wind out in the direction of our activating button
+                dir != Dir3::Y_NEG
+            }
             _ => self.has_wind_hole(dir),
         }
     }

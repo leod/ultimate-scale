@@ -527,15 +527,15 @@ pub fn render_block(
         }
         Block::BlipWindSource { activated } => {
             let cube_color = if activated {
-                na::Vector4::new(0.5, 0.0, 0.0, alpha)
-            } else {
                 block_color(color, &wind_source_color(), alpha)
+            } else {
+                na::Vector4::new(0.5, 0.0, 0.0, alpha)
             };
 
             let cube_transform = translation
                 * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 1.0));
+                * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.75, 0.75, 0.75));
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
@@ -549,11 +549,21 @@ pub fn render_block(
             render_bridge(
                 Dir2::Y_NEG,
                 button_length,
-                0.6,
+                0.5,
                 center,
                 transform,
                 &na::Vector4::new(0.8, 0.8, 0.8, alpha),
                 &mut out.solid,
+            );
+
+            render_wind_mills(
+                placed_block,
+                tick_time,
+                wind_anim_state,
+                center,
+                transform,
+                &color.unwrap_or(&na::Vector4::new(1.0, 1.0, 1.0, alpha)),
+                out,
             );
         }
         Block::Solid => {
