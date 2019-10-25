@@ -67,6 +67,8 @@ impl Editor {
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
     ) -> Option<ExecView> {
+        profile!("editor");
+
         edit_camera_view.set_target(na::Point3::new(
             edit_camera_view.target().x,
             edit_camera_view.target().y,
@@ -223,6 +225,8 @@ impl Editor {
     }
 
     pub fn render(&mut self, out: &mut RenderLists) -> Result<(), glium::DrawError> {
+        profile!("editor");
+
         let grid_size: na::Vector3<f32> = na::convert(self.machine.size());
         render::machine::render_cuboid_wireframe(
             &render::machine::Cuboid {

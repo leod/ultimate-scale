@@ -52,7 +52,7 @@ pub fn reset() {
 #[macro_export]
 macro_rules! profile {
     ($name:expr) => {
-        let _guard = profile::PROFILER.with(|p| p.borrow_mut().enter($name));
+        let _guard = $crate::util::profile::PROFILER.with(|p| p.borrow_mut().enter($name));
     };
 }
 
@@ -119,7 +119,8 @@ impl Scope {
         }
         write!(
             out,
-            "{:3.2}% {:>4.2}ms/call @ {:.2}Hz\n",
+            "{}: {:3.2}% {:>4.2}ms/call @ {:.2}Hz\n",
+            self.name,
             percent,
             duration_sum_secs * 1000.0 / (self.num_calls as f64),
             self.num_calls as f64 / root_duration_sum_secs,
