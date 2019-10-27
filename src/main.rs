@@ -6,6 +6,7 @@ mod config;
 mod edit;
 mod exec;
 mod game;
+mod input_state;
 mod machine;
 mod render;
 
