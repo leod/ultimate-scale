@@ -95,17 +95,13 @@ impl Editor {
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
         let blocks_width = 160.0;
-        imgui::Window::new(imgui::im_str!("Blocks ►▶"))
-            .flags(
-                imgui::WindowFlags::HORIZONTAL_SCROLLBAR
-                    | imgui::WindowFlags::NO_MOVE
-                    | imgui::WindowFlags::NO_RESIZE,
-            )
-            .size([blocks_width, self.window_size.y], imgui::Condition::Always)
-            .position(
-                [self.window_size.x - blocks_width, 0.0],
-                imgui::Condition::Always,
-            )
+        let blocks_margin = 10.0;
+        imgui::Window::new(imgui::im_str!("Blocks"))
+            .horizontal_scrollbar(true)
+            .movable(false)
+            .always_auto_resize(true)
+            .position([self.window_size.x - 10.0, 10.0], imgui::Condition::Always)
+            .position_pivot([1.0, 0.0])
             .bg_alpha(0.8)
             .build(&ui, || {
                 for (block_key, block) in self.config.block_keys.iter() {
