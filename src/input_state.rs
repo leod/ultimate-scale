@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use glium::glutin::{ElementState, ModifiersState, MouseButton, VirtualKeyCode, WindowEvent};
+use glium::glutin::{ElementState, MouseButton, VirtualKeyCode, WindowEvent};
 
 /// Keep track of pressed keys and mouse buttons.
 pub struct InputState {

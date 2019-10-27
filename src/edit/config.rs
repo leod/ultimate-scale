@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use glium::glutin::{self, VirtualKeyCode};
+use glium::glutin::VirtualKeyCode;
 
 use crate::machine::grid;
 use crate::machine::{BlipKind, Block};

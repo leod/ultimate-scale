@@ -6,7 +6,6 @@ use log::info;
 use nalgebra as na;
 
 use glium::glutin;
-use glium::Surface;
 
 use crate::config::{self, Config};
 use crate::edit::Editor;
