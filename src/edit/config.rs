@@ -50,7 +50,7 @@ pub struct Config {
     pub save_key: ModifiedKey,
     pub layer_up_key: ModifiedKey,
     pub layer_down_key: ModifiedKey,
-    pub block_keys: HashMap<ModifiedKey, Block>,
+    pub block_keys: Vec<(ModifiedKey, Block)>,
     pub layer_keys: HashMap<ModifiedKey, isize>,
 }
 
@@ -123,9 +123,7 @@ impl Default for Config {
                     Block::BlipWindSource { activated: false },
                 ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
-            ]
-            .into_iter()
-            .collect(),
+            ],
             layer_keys: vec![
                 (ModifiedKey::new(VirtualKeyCode::F1), 0),
                 (ModifiedKey::new(VirtualKeyCode::F2), 1),

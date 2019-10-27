@@ -31,6 +31,8 @@ pub struct Editor {
     mouse_grid_pos: Option<grid::Point3>,
 
     start_exec: bool,
+
+    window_size: na::Vector2<f32>,
 }
 
 impl Editor {
@@ -47,6 +49,7 @@ impl Editor {
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
             start_exec: false,
+            window_size: na::Vector2::zeros(),
         }
     }
 
@@ -73,6 +76,8 @@ impl Editor {
             self.current_layer as f32,
         ));
 
+        self.window_size = na::Vector2::new(camera.viewport.z, camera.viewport.w);
+
         self.update_mouse_grid_pos(camera, edit_camera_view);
         self.update_input(input_state);
 
@@ -88,7 +93,24 @@ impl Editor {
         }
     }
 
-    pub fn ui(&mut self, ui: &imgui::Ui) {}
+    pub fn ui(&mut self, ui: &imgui::Ui) {
+        imgui::Window::new(imgui::im_str!("blocks"))
+            .flags(
+                imgui::WindowFlags::HORIZONTAL_SCROLLBAR
+                    | imgui::WindowFlags::NO_MOVE
+                    | imgui::WindowFlags::NO_RESIZE,
+            )
+            .size([140.0, self.window_size.y], imgui::Condition::Always)
+            .position([self.window_size.x - 140.0, 0.0], imgui::Condition::Always)
+            .bg_alpha(0.8)
+            .build(&ui, || {
+                for (_key, block) in self.config.block_keys.iter() {
+                    if ui.button(&imgui::ImString::new(block.name()), [120.0, 40.0]) {
+                        self.place_block.block = *block;
+                    }
+                }
+            })
+    }
 
     fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
         let p = self.mouse_window_pos;
@@ -131,8 +153,6 @@ impl Editor {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                 let edit = Edit::SetBlock(mouse_grid_pos, Some(self.place_block.clone()));
                 self.run_edit(edit);
-
-                println!("mouse at {:?}", mouse_grid_pos);
             }
         }
 
@@ -198,7 +218,12 @@ impl Editor {
             if self.machine.is_valid_layer(self.current_layer - 1) {
                 self.current_layer -= 1;
             }
-        } else if let Some(block) = self.config.block_keys.get(&key) {
+        } else if let Some((_key, block)) = self
+            .config
+            .block_keys
+            .iter()
+            .find(|(block_key, _block)| key == *block_key)
+        {
             self.place_block.block = *block;
         } else if let Some(&layer) = self.config.layer_keys.get(&key) {
             if self.machine.is_valid_layer(layer) {
