@@ -6,12 +6,7 @@ use glium::glutin;
 
 //use glium_text::{FontTexture, TextSystem};
 
-pub struct Font {
-    /*system: TextSystem,
-    texture: FontTexture,
-    window_size: glutin::dpi::LogicalSize,
-    projection: na::Matrix4<f32>,*/
-}
+pub struct Font {}
 
 impl Font {
     pub fn load<F: glium::backend::Facade>(

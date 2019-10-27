@@ -9,7 +9,7 @@ use log::info;
 
 use nalgebra as na;
 
-use glium::{uniform, Surface};
+use glium::{glutin, uniform, Surface};
 
 use crate::render::pipeline::instance::UniformsPair;
 use crate::render::pipeline::{self, shadow, Context, InstanceParams, Light, RenderLists};

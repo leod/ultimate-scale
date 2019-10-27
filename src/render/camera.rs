@@ -2,7 +2,7 @@ use nalgebra as na;
 
 use std::collections::HashSet;
 
-use glutin::{VirtualKeyCode, WindowEvent};
+use glium::glutin::{self, VirtualKeyCode, WindowEvent};
 
 #[derive(Debug, Clone)]
 pub struct Config {
