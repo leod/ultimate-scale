@@ -1,7 +1,5 @@
 use nalgebra as na;
 
-use std::collections::HashSet;
-
 use glium::glutin::{self, VirtualKeyCode, WindowEvent};
 
 use crate::input_state::InputState;
