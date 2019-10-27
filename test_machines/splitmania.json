@@ -1,0 +1,4935 @@
+{
+  "size": [
+    30,
+    30,
+    4
+  ],
+  "block_data": [
+    [
+      [
+        4,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        8,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        13,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        18,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        20,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        21,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        22,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": "A",
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        8,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        13,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        18,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        20,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        21,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        22,
+        13,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        12,
+        1
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        21,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        20,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        18,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        13,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        8,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        11,
+        1
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "PipeBendZ": {
+            "sign_z": "Neg"
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        5,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        6,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        7,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        8,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        9,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        10,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        11,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        12,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        13,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        14,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        15,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        16,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        17,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        18,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        19,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        20,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        22,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        22,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        21,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        21,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        20,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        18,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        13,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        8,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        10,
+        1
+      ],
+      {
+        "rotation_xy": 3,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        21,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        1,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        2,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        23,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        24,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        23,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        0,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        0,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        1,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        23,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        25,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        24,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        23,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        1,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        1,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        2,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        14,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        15,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        16,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        17,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        18,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        19,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        20,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        21,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        22,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        23,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        24,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        25,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "Solid"
+      }
+    ]
+  ]
+}
