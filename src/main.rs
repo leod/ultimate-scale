@@ -118,12 +118,21 @@ fn main() {
 
             match event {
                 glutin::Event::WindowEvent { event, .. } => {
-                    // Check if imgui wants to eat this event
+                    // Do not forward events to the game if imgui currently
+                    // wants to handle events (i.e. when the mouse is over a
+                    // window).
+                    //
+                    // Note that we always forward release events to the game,
+                    // so that e.g. we do not keep scrolling the view camera.
                     let forward_to_game = match event {
-                        glutin::WindowEvent::KeyboardInput { .. } => {
+                        glutin::WindowEvent::KeyboardInput { input, .. } => {
                             !imgui.io().want_capture_keyboard
+                                || input.state == glutin::ElementState::Released
                         }
-                        glutin::WindowEvent::MouseInput { .. } => !imgui.io().want_capture_mouse,
+                        glutin::WindowEvent::MouseInput { state, .. } => {
+                            !imgui.io().want_capture_mouse
+                                || state == glutin::ElementState::Released
+                        }
                         _ => true,
                     };
 
