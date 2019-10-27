@@ -73,25 +73,65 @@ pub enum Block {
 impl Block {
     pub fn name(&self) -> String {
         match self {
-            Block::PipeXY => "pipe".to_string(),
-            Block::PipeBendXY => "curve pipe".to_string(),
-            Block::PipeZ => "up/down pipe".to_string(),
+            Block::PipeXY => "Pipe".to_string(),
+            Block::PipeBendXY => "Curved pipe".to_string(),
+            Block::PipeZ => "Up/down pipe".to_string(),
             Block::PipeBendZ {
                 sign_z: Sign::Pos, ..
-            } => "up curve pipe".to_string(),
+            } => "Up curved pipe".to_string(),
             Block::PipeBendZ {
                 sign_z: Sign::Neg, ..
-            } => "down curve pipe".to_string(),
-            Block::PipeSplitXY { .. } => "pipe split".to_string(),
-            Block::FunnelXY => "funnel".to_string(),
-            Block::WindSource => "wind source".to_string(),
-            Block::BlipSpawn { kind, .. } => format!("blip {} spawn", kind.name()),
-            Block::BlipDuplicator {
-                kind: Some(kind), ..
-            } => format!("blip {} duplicator", kind.name()),
-            Block::BlipDuplicator { kind: None, .. } => "blip duplicator".to_string(),
-            Block::BlipWindSource { .. } => "blip wind source".to_string(),
-            Block::Solid => "solid".to_string(),
+            } => "Down curved pipe".to_string(),
+            Block::PipeSplitXY { .. } => "Pipe split".to_string(),
+            Block::FunnelXY => "Funnel".to_string(),
+            Block::WindSource => "Wind source".to_string(),
+            Block::BlipSpawn {
+                num_spawns: None, ..
+            } => "Blip source".to_string(),
+            Block::BlipSpawn {
+                num_spawns: Some(_),
+                ..
+            } => "Blip spawn".to_string(),
+            Block::BlipDuplicator { kind: Some(_), .. } => "Picky blip copier".to_string(),
+            Block::BlipDuplicator { kind: None, .. } => "Blip copier".to_string(),
+            Block::BlipWindSource { .. } => "Blipped wind spawn".to_string(),
+            Block::Solid => "Solid".to_string(),
+        }
+    }
+
+    pub fn description(&self) -> &'static str {
+        match self {
+            Block::PipeXY => "Conducts both wind and blips.",
+            Block::PipeBendXY => "Makes a curve.",
+            Block::PipeZ => "Moves up and down.",
+            Block::PipeBendZ {
+                sign_z: Sign::Pos, ..
+            } => "Makes a curve up.",
+            Block::PipeBendZ {
+                sign_z: Sign::Neg, ..
+            } => "Makes a curve down.",
+            Block::PipeSplitXY { .. } => "Useless.",
+            Block::FunnelXY => "Not so useful.",
+            Block::WindSource => "Produces a stream of wind in all directions.",
+            Block::BlipSpawn {
+                num_spawns: None, ..
+            } => "Produces a stream of blips.",
+            Block::BlipSpawn {
+                num_spawns: Some(1),
+                ..
+            } => "Spawns one blip.",
+            Block::BlipSpawn {
+                num_spawns: Some(_),
+                ..
+            } => "Spawns a limited number of blips.",
+            Block::BlipDuplicator { kind: None, .. } => {
+                "Produces two copies of whatever blip activates it."
+            }
+            Block::BlipDuplicator { kind: Some(_), .. } => {
+                "Produces two copies of a specific kind of blip that may activate it."
+            }
+            Block::BlipWindSource { .. } => "Spawns one thrust of wind when activated by a blip.",
+            Block::Solid => "Does nothing.",
         }
     }
 
