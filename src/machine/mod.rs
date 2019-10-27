@@ -21,6 +21,14 @@ impl Default for BlipKind {
 }
 
 impl BlipKind {
+    pub fn name(self) -> &'static str {
+        match self {
+            BlipKind::A => "a",
+            BlipKind::B => "b",
+            BlipKind::C => "c",
+        }
+    }
+
     pub fn next(self) -> BlipKind {
         match self {
             BlipKind::A => BlipKind::B,
@@ -63,6 +71,30 @@ pub enum Block {
 }
 
 impl Block {
+    pub fn name(&self) -> String {
+        match self {
+            Block::PipeXY => "pipe".to_string(),
+            Block::PipeBendXY => "curve pipe".to_string(),
+            Block::PipeZ => "up/down pipe".to_string(),
+            Block::PipeBendZ {
+                sign_z: Sign::Pos, ..
+            } => "up curve pipe".to_string(),
+            Block::PipeBendZ {
+                sign_z: Sign::Neg, ..
+            } => "down curve pipe".to_string(),
+            Block::PipeSplitXY { .. } => "pipe split".to_string(),
+            Block::FunnelXY => "funnel".to_string(),
+            Block::WindSource => "wind source".to_string(),
+            Block::BlipSpawn { kind, .. } => format!("blip {} spawn", kind.name()),
+            Block::BlipDuplicator {
+                kind: Some(kind), ..
+            } => format!("blip {} duplicator", kind.name()),
+            Block::BlipDuplicator { kind: None, .. } => "blip duplicator".to_string(),
+            Block::BlipWindSource { .. } => "blip wind source".to_string(),
+            Block::Solid => "solid".to_string(),
+        }
+    }
+
     pub fn kind(&self) -> Option<BlipKind> {
         match self {
             Block::BlipSpawn { kind, .. } => Some(*kind),
