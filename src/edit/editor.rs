@@ -104,9 +104,12 @@ impl Editor {
             .position([self.window_size.x - 140.0, 0.0], imgui::Condition::Always)
             .bg_alpha(0.8)
             .build(&ui, || {
-                for (_key, block) in self.config.block_keys.iter() {
+                for (block_key, block) in self.config.block_keys.iter() {
                     if ui.button(&imgui::ImString::new(block.name()), [120.0, 40.0]) {
                         self.place_block.block = *block;
+                    }
+                    if ui.is_item_hovered() {
+                        ui.tooltip(|| ui.text(&imgui::ImString::new(format!("{}", block_key))));
                     }
                 }
             })
