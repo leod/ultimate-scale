@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 use glium::glutin::VirtualKeyCode;
@@ -51,7 +50,7 @@ pub struct Config {
     pub layer_up_key: ModifiedKey,
     pub layer_down_key: ModifiedKey,
     pub block_keys: Vec<(ModifiedKey, Block)>,
-    pub layer_keys: HashMap<ModifiedKey, isize>,
+    pub layer_keys: Vec<(ModifiedKey, isize)>,
 }
 
 impl Default for Config {
@@ -129,9 +128,7 @@ impl Default for Config {
                 (ModifiedKey::new(VirtualKeyCode::F2), 1),
                 (ModifiedKey::new(VirtualKeyCode::F3), 2),
                 (ModifiedKey::new(VirtualKeyCode::F4), 3),
-            ]
-            .into_iter()
-            .collect(),
+            ],
         }
     }
 }
