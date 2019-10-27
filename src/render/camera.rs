@@ -4,6 +4,8 @@ use std::collections::HashSet;
 
 use glium::glutin::{self, VirtualKeyCode, WindowEvent};
 
+use crate::input_state::InputState;
+
 #[derive(Debug, Clone)]
 pub struct Config {
     pub forward_key: VirtualKeyCode,
@@ -131,62 +133,58 @@ impl EditCameraView {
     }
 }
 
-pub struct Input {
+pub struct EditCameraViewInput {
     config: Config,
-    pressed_keys: HashSet<VirtualKeyCode>,
-    modifiers_state: glutin::ModifiersState,
 
     /// Height delta is changed when mouse wheel events are received, but
     /// applied only later in the update function.
     height_delta: f32,
 }
 
-impl Input {
-    pub fn new(config: &Config) -> Input {
-        Input {
+impl EditCameraViewInput {
+    pub fn new(config: &Config) -> Self {
+        Self {
             config: config.clone(),
-            pressed_keys: HashSet::new(),
-            modifiers_state: Default::default(),
             height_delta: 0.0,
         }
     }
 
-    fn cur_move_speed_per_sec(&self) -> f32 {
+    fn move_speed_per_sec(&self, input_state: &InputState) -> f32 {
         self.config.move_units_per_sec
-            * if self.pressed_keys.contains(&self.config.fast_move_key) {
+            * if input_state.is_key_pressed(self.config.fast_move_key) {
                 self.config.fast_move_multiplier
             } else {
                 1.0
             }
     }
 
-    pub fn update(&mut self, dt_secs: f32, camera: &mut EditCameraView) {
-        let move_speed = dt_secs * self.cur_move_speed_per_sec();
+    pub fn update(&mut self, dt_secs: f32, input_state: &InputState, camera: &mut EditCameraView) {
+        let move_speed = dt_secs * self.move_speed_per_sec(input_state);
         let mut translation = na::Vector3::zeros();
 
-        if self.pressed_keys.contains(&self.config.forward_key) {
+        if input_state.is_key_pressed(self.config.forward_key) {
             translation += &na::Vector3::new(0.0, -move_speed, 0.0);
         }
-        if self.pressed_keys.contains(&self.config.backward_key) {
+        if input_state.is_key_pressed(self.config.backward_key) {
             translation += &na::Vector3::new(0.0, move_speed, 0.0);
         }
 
-        if self.pressed_keys.contains(&self.config.left_key) {
+        if input_state.is_key_pressed(self.config.left_key) {
             translation += &na::Vector3::new(move_speed, 0.0, 0.0);
         }
-        if self.pressed_keys.contains(&self.config.right_key) {
+        if input_state.is_key_pressed(self.config.right_key) {
             translation += &na::Vector3::new(-move_speed, 0.0, 0.0);
         }
 
-        if self.pressed_keys.contains(&self.config.zoom_in_key) {
+        if input_state.is_key_pressed(self.config.zoom_in_key) {
             camera.height -= move_speed;
         }
-        if self.pressed_keys.contains(&self.config.zoom_out_key) {
+        if input_state.is_key_pressed(self.config.zoom_out_key) {
             camera.height += move_speed;
         }
 
         // Apply height change from mouse wheel events
-        camera.height += self.height_delta;
+        camera.height += 0.25 * self.move_speed_per_sec(input_state) * self.height_delta;
         self.height_delta = 0.0;
 
         camera.height = camera.height.max(0.5).min(100.0);
@@ -200,42 +198,24 @@ impl Input {
 
         let rotation_speed = dt_secs * self.config.rotate_degrees_per_sec.to_radians();
 
-        if self.pressed_keys.contains(&self.config.rotate_cw_key) {
+        if input_state.is_key_pressed(self.config.rotate_cw_key) {
             camera.yaw_radians -= rotation_speed;
         }
-        if self.pressed_keys.contains(&self.config.rotate_ccw_key) {
+        if input_state.is_key_pressed(self.config.rotate_ccw_key) {
             camera.yaw_radians += rotation_speed;
         }
     }
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::KeyboardInput { input, .. } => {
-                if let Some(keycode) = input.virtual_keycode {
-                    match input.state {
-                        glutin::ElementState::Pressed => {
-                            if !input.modifiers.ctrl {
-                                self.pressed_keys.insert(keycode);
-                            }
-                        }
-                        glutin::ElementState::Released => {
-                            self.pressed_keys.remove(&keycode);
-                        }
-                    };
-                }
-
-                self.modifiers_state = input.modifiers;
-            }
             WindowEvent::MouseWheel { delta, .. } => {
-                let dt_secs = 0.5;
-
                 // TODO: Not sure what the different types of delta mean here
                 let delta_float = match delta {
                     glutin::MouseScrollDelta::LineDelta(_x, y) => *y,
                     glutin::MouseScrollDelta::PixelDelta(pos) => pos.y as f32,
                 };
 
-                self.height_delta += dt_secs * self.cur_move_speed_per_sec() * delta_float;
+                self.height_delta += delta_float;
             }
             _ => (),
         }

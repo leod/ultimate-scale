@@ -11,9 +11,10 @@ use glium::Surface;
 use crate::config::{self, Config};
 use crate::edit::Editor;
 use crate::exec::{self, ExecView};
+use crate::input_state::InputState;
 use crate::machine::Machine;
 
-use crate::render::camera::{self, Camera, EditCameraView};
+use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
 use crate::render::pipeline::deferred::DeferredShading;
 use crate::render::pipeline::shadow::{self, ShadowMapping};
 use crate::render::pipeline::{Light, RenderLists};
@@ -36,7 +37,7 @@ pub struct Game {
 
     camera: Camera,
     edit_camera_view: EditCameraView,
-    camera_input: camera::Input,
+    edit_camera_view_input: EditCameraViewInput,
 
     shadow_mapping: Option<ShadowMapping>,
     deferred_shading: Option<DeferredShading>,
@@ -72,7 +73,7 @@ impl Game {
             Self::perspective_matrix(&config.view, config.view.window_size),
         );
         let edit_camera_view = EditCameraView::new();
-        let camera_input = camera::Input::new(&config.camera);
+        let edit_camera_view_input = EditCameraViewInput::new(&config.camera);
 
         let shadow_mapping = config
             .render
@@ -105,7 +106,7 @@ impl Game {
             resources,
             camera,
             edit_camera_view,
-            camera_input,
+            edit_camera_view_input,
             shadow_mapping,
             deferred_shading,
             render_lists,
@@ -196,7 +197,7 @@ impl Game {
         Ok(())
     }
 
-    pub fn update(&mut self, dt: Duration) {
+    pub fn update(&mut self, dt: Duration, input_state: &InputState) {
         self.elapsed_time += dt;
         let dt_secs = dt.as_fractional_secs() as f32;
         self.fps = 1.0 / dt_secs;
@@ -217,13 +218,13 @@ impl Game {
             _ => {}
         }
 
-        self.camera_input
-            .update(dt_secs, &mut self.edit_camera_view);
+        self.edit_camera_view_input
+            .update(dt_secs, input_state, &mut self.edit_camera_view);
         self.camera.view = self.edit_camera_view.view();
     }
 
     pub fn on_event(&mut self, event: &glutin::WindowEvent) {
-        self.camera_input.on_event(event);
+        self.edit_camera_view_input.on_event(event);
 
         if let Some(exec_view) = self.exec_view.as_mut() {
             exec_view.on_event(event);

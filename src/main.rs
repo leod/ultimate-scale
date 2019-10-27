@@ -20,6 +20,7 @@ use glium::glutin;
 use log::info;
 
 use game::Game;
+use input_state::InputState;
 use machine::{grid, Machine, SavedMachine};
 
 fn main() {
@@ -96,6 +97,8 @@ fn main() {
         Machine::new(grid_size)
     };
 
+    let mut input_state = InputState::new();
+
     let mut game = Game::create(&display, &config, initial_machine).unwrap();
 
     let mut previous_clock = Instant::now();
@@ -125,6 +128,7 @@ fn main() {
                     };
 
                     if forward_to_game {
+                        input_state.on_event(&event);
                         game.on_event(&event);
                     }
 
@@ -169,7 +173,7 @@ fn main() {
 
         {
             profile!("update");
-            game.update(frame_duration);
+            game.update(frame_duration, &input_state);
         }
 
         let ui_draw_data = {
