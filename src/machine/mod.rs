@@ -21,6 +21,14 @@ impl Default for BlipKind {
 }
 
 impl BlipKind {
+    pub fn name(self) -> &'static str {
+        match self {
+            BlipKind::A => "a",
+            BlipKind::B => "b",
+            BlipKind::C => "c",
+        }
+    }
+
     pub fn next(self) -> BlipKind {
         match self {
             BlipKind::A => BlipKind::B,
@@ -63,6 +71,70 @@ pub enum Block {
 }
 
 impl Block {
+    pub fn name(&self) -> String {
+        match self {
+            Block::PipeXY => "Pipe".to_string(),
+            Block::PipeBendXY => "Curved pipe".to_string(),
+            Block::PipeZ => "Up/down pipe".to_string(),
+            Block::PipeBendZ {
+                sign_z: Sign::Pos, ..
+            } => "Up curved pipe".to_string(),
+            Block::PipeBendZ {
+                sign_z: Sign::Neg, ..
+            } => "Down curved pipe".to_string(),
+            Block::PipeSplitXY { .. } => "Pipe split".to_string(),
+            Block::FunnelXY => "Funnel".to_string(),
+            Block::WindSource => "Wind source".to_string(),
+            Block::BlipSpawn {
+                num_spawns: None, ..
+            } => "Blip source".to_string(),
+            Block::BlipSpawn {
+                num_spawns: Some(_),
+                ..
+            } => "Blip spawn".to_string(),
+            Block::BlipDuplicator { kind: Some(_), .. } => "Picky blip copier".to_string(),
+            Block::BlipDuplicator { kind: None, .. } => "Blip copier".to_string(),
+            Block::BlipWindSource { .. } => "Blipped wind spawn".to_string(),
+            Block::Solid => "Solid".to_string(),
+        }
+    }
+
+    pub fn description(&self) -> &'static str {
+        match self {
+            Block::PipeXY => "Conducts both wind and blips.",
+            Block::PipeBendXY => "Makes a curve.",
+            Block::PipeZ => "Moves up and down.",
+            Block::PipeBendZ {
+                sign_z: Sign::Pos, ..
+            } => "Makes a curve up.",
+            Block::PipeBendZ {
+                sign_z: Sign::Neg, ..
+            } => "Makes a curve down.",
+            Block::PipeSplitXY { .. } => "Useless.",
+            Block::FunnelXY => "Not so useful.",
+            Block::WindSource => "Produces a stream of wind in all directions.",
+            Block::BlipSpawn {
+                num_spawns: None, ..
+            } => "Produces a stream of blips.",
+            Block::BlipSpawn {
+                num_spawns: Some(1),
+                ..
+            } => "Spawns one blip.",
+            Block::BlipSpawn {
+                num_spawns: Some(_),
+                ..
+            } => "Spawns a limited number of blips.",
+            Block::BlipDuplicator { kind: None, .. } => {
+                "Produces two copies of whatever blip activates it."
+            }
+            Block::BlipDuplicator { kind: Some(_), .. } => {
+                "Produces two copies of a specific kind of blip that may activate it."
+            }
+            Block::BlipWindSource { .. } => "Spawns one thrust of wind when activated by a blip.",
+            Block::Solid => "Does nothing.",
+        }
+    }
+
     pub fn kind(&self) -> Option<BlipKind> {
         match self {
             Block::BlipSpawn { kind, .. } => Some(*kind),

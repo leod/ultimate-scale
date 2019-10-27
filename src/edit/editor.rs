@@ -5,9 +5,10 @@ use log::{info, warn};
 
 use nalgebra as na;
 
-use glutin::WindowEvent;
+use glium::glutin::{self, MouseButton, WindowEvent};
 
 use crate::exec::{self, ExecView};
+use crate::input_state::InputState;
 use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
 use crate::render::pipeline::RenderLists;
@@ -29,9 +30,9 @@ pub struct Editor {
     mouse_window_pos: na::Point2<f32>,
     mouse_grid_pos: Option<grid::Point3>,
 
-    left_mouse_button_pressed: bool,
-    right_mouse_button_pressed: bool,
     start_exec: bool,
+
+    window_size: na::Vector2<f32>,
 }
 
 impl Editor {
@@ -47,9 +48,8 @@ impl Editor {
             current_layer: 0,
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
-            left_mouse_button_pressed: false,
-            right_mouse_button_pressed: false,
             start_exec: false,
+            window_size: na::Vector2::zeros(),
         }
     }
 
@@ -64,6 +64,7 @@ impl Editor {
     pub fn update(
         &mut self,
         _dt_secs: f32,
+        input_state: &InputState,
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
     ) -> Option<ExecView> {
@@ -75,8 +76,10 @@ impl Editor {
             self.current_layer as f32,
         ));
 
+        self.window_size = na::Vector2::new(camera.viewport.z, camera.viewport.w);
+
         self.update_mouse_grid_pos(camera, edit_camera_view);
-        self.update_input();
+        self.update_input(input_state);
 
         if !self.start_exec {
             None
@@ -88,6 +91,36 @@ impl Editor {
             let exec_view = ExecView::new(&self.exec_config, self.machine.clone());
             Some(exec_view)
         }
+    }
+
+    pub fn ui(&mut self, ui: &imgui::Ui) {
+        let blocks_width = 160.0;
+        imgui::Window::new(imgui::im_str!("blocks"))
+            .flags(
+                imgui::WindowFlags::HORIZONTAL_SCROLLBAR
+                    | imgui::WindowFlags::NO_MOVE
+                    | imgui::WindowFlags::NO_RESIZE,
+            )
+            .size([blocks_width, self.window_size.y], imgui::Condition::Always)
+            .position(
+                [self.window_size.x - blocks_width, 0.0],
+                imgui::Condition::Always,
+            )
+            .bg_alpha(0.8)
+            .build(&ui, || {
+                for (block_key, block) in self.config.block_keys.iter() {
+                    if ui.button(
+                        &imgui::ImString::new(block.name()),
+                        [blocks_width - 20.0, 40.0],
+                    ) {
+                        self.place_block.block = *block;
+                    }
+                    if ui.is_item_hovered() {
+                        let text = format!("{}\nShortcut: {}", block.description(), block_key);
+                        ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                    }
+                }
+            })
     }
 
     fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
@@ -124,19 +157,17 @@ impl Editor {
         };
     }
 
-    fn update_input(&mut self) {
+    fn update_input(&mut self, input_state: &InputState) {
         // TODO: Only perform edits if something would actually change
 
-        if self.left_mouse_button_pressed {
+        if input_state.is_button_pressed(MouseButton::Left) {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                 let edit = Edit::SetBlock(mouse_grid_pos, Some(self.place_block.clone()));
                 self.run_edit(edit);
-
-                println!("mouse at {:?}", mouse_grid_pos);
             }
         }
 
-        if self.right_mouse_button_pressed {
+        if input_state.is_button_pressed(MouseButton::Right) {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                 let edit = Edit::SetBlock(mouse_grid_pos, None);
                 self.run_edit(edit);
@@ -198,30 +229,31 @@ impl Editor {
             if self.machine.is_valid_layer(self.current_layer - 1) {
                 self.current_layer -= 1;
             }
-        } else if let Some(block) = self.config.block_keys.get(&key) {
+        } else if let Some((_key, block)) = self
+            .config
+            .block_keys
+            .iter()
+            .find(|(block_key, _block)| key == *block_key)
+        {
             self.place_block.block = *block;
-        } else if let Some(&layer) = self.config.layer_keys.get(&key) {
-            if self.machine.is_valid_layer(layer) {
-                self.current_layer = layer;
+        } else if let Some((_key, layer)) = self
+            .config
+            .layer_keys
+            .iter()
+            .find(|(layer_key, _layer)| key == *layer_key)
+        {
+            if self.machine.is_valid_layer(*layer) {
+                self.current_layer = *layer;
             }
         }
     }
 
     fn on_mouse_input(
         &mut self,
-        state: glutin::ElementState,
-        button: glutin::MouseButton,
+        _state: glutin::ElementState,
+        _button: glutin::MouseButton,
         _modifiers: glutin::ModifiersState,
     ) {
-        match button {
-            glutin::MouseButton::Left => {
-                self.left_mouse_button_pressed = state == glutin::ElementState::Pressed
-            }
-            glutin::MouseButton::Right => {
-                self.right_mouse_button_pressed = state == glutin::ElementState::Pressed
-            }
-            _ => (),
-        }
     }
 
     pub fn render(&mut self, out: &mut RenderLists) -> Result<(), glium::DrawError> {
@@ -268,8 +300,6 @@ impl Editor {
                 &None,
                 &block_center,
                 &block_transform,
-                //Some(&na::Vector4::new(0.2, 0.4, 0.7, 0.8)),
-                None,
                 0.8,
                 out,
             );

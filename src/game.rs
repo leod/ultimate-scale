@@ -1,21 +1,21 @@
-use std::path::Path;
 use std::time::Duration;
 
 use floating_duration::TimeAsFloat;
-use glium::Surface;
 use log::info;
 use nalgebra as na;
+
+use glium::glutin;
 
 use crate::config::{self, Config};
 use crate::edit::Editor;
 use crate::exec::{self, ExecView};
+use crate::input_state::InputState;
 use crate::machine::Machine;
 
-use crate::render::camera::{self, Camera, EditCameraView};
+use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
 use crate::render::pipeline::deferred::DeferredShading;
 use crate::render::pipeline::shadow::{self, ShadowMapping};
 use crate::render::pipeline::{Light, RenderLists};
-use crate::render::text::{self, Font};
 use crate::render::Resources;
 use crate::render::{self, resources};
 
@@ -23,18 +23,16 @@ use crate::render::{self, resources};
 pub enum CreationError {
     ShadowMappingCreationError(shadow::CreationError),
     ResourcesCreationError(resources::CreationError),
-    FontCreationError(text::CreationError),
 }
 
 pub struct Game {
     config: Config,
 
     resources: Resources,
-    font: Font,
 
     camera: Camera,
     edit_camera_view: EditCameraView,
-    camera_input: camera::Input,
+    edit_camera_view_input: EditCameraViewInput,
 
     shadow_mapping: Option<ShadowMapping>,
     deferred_shading: Option<DeferredShading>,
@@ -55,11 +53,6 @@ impl Game {
     ) -> Result<Game, CreationError> {
         info!("Creating resources");
         let resources = Resources::create(facade)?;
-        let font = Font::load(
-            facade,
-            Path::new("resources/Readiness-Regular.ttf"),
-            config.view.window_size,
-        )?;
 
         let viewport_size = na::Vector2::new(
             config.view.window_size.width as f32,
@@ -70,7 +63,7 @@ impl Game {
             Self::perspective_matrix(&config.view, config.view.window_size),
         );
         let edit_camera_view = EditCameraView::new();
-        let camera_input = camera::Input::new(&config.camera);
+        let edit_camera_view_input = EditCameraViewInput::new(&config.camera);
 
         let shadow_mapping = config
             .render
@@ -99,11 +92,10 @@ impl Game {
 
         Ok(Game {
             config: config.clone(),
-            font,
             resources,
             camera,
             edit_camera_view,
-            camera_input,
+            edit_camera_view_input,
             shadow_mapping,
             deferred_shading,
             render_lists,
@@ -114,12 +106,11 @@ impl Game {
         })
     }
 
-    pub fn render(
+    pub fn render<S: glium::Surface>(
         &mut self,
         display: &glium::backend::glutin::Display,
+        target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        profile!("render");
-
         let render_context = render::pipeline::Context {
             camera: self.camera.clone(),
             elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
@@ -137,7 +128,6 @@ impl Game {
 
         self.render_lists.clear();
 
-        let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
         if let Some(exec_view) = self.exec_view.as_mut() {
@@ -162,7 +152,7 @@ impl Game {
                 &self.resources,
                 &render_context,
                 &self.render_lists,
-                &mut target,
+                target,
             )?;
         } else if let Some(shadow_mapping) = &mut self.shadow_mapping {
             profile!("shadow");
@@ -172,7 +162,7 @@ impl Game {
                 &self.resources,
                 &render_context,
                 &self.render_lists,
-                &mut target,
+                target,
             )?;
         } else {
             profile!("straight");
@@ -181,29 +171,14 @@ impl Game {
                 &self.resources,
                 &render_context,
                 &self.render_lists,
-                &mut target,
+                target,
             )?;
         }
-
-        self.font.draw(
-            na::Vector2::new(3.0, 3.0),
-            10.0,
-            na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-            &format!("FPS: {:.0}", self.fps),
-            &mut target,
-        );
-
-        profile!("finish");
-
-        // TODO: unwrap
-        target.finish().unwrap();
 
         Ok(())
     }
 
-    pub fn update(&mut self, dt: Duration) {
-        profile!("update");
-
+    pub fn update(&mut self, dt: Duration, input_state: &InputState) {
         self.elapsed_time += dt;
         let dt_secs = dt.as_fractional_secs() as f32;
         self.fps = 1.0 / dt_secs;
@@ -211,9 +186,12 @@ impl Game {
         if let Some(exec_view) = self.exec_view.as_mut() {
             exec_view.update(dt, &self.camera, &self.edit_camera_view);
         } else {
-            self.exec_view = self
-                .editor
-                .update(dt_secs, &self.camera, &mut self.edit_camera_view);
+            self.exec_view = self.editor.update(
+                dt_secs,
+                input_state,
+                &self.camera,
+                &mut self.edit_camera_view,
+            );
         }
 
         match self.exec_view.as_ref().map(|view| view.status()) {
@@ -224,13 +202,21 @@ impl Game {
             _ => {}
         }
 
-        self.camera_input
-            .update(dt_secs, &mut self.edit_camera_view);
+        self.edit_camera_view_input
+            .update(dt_secs, input_state, &mut self.edit_camera_view);
         self.camera.view = self.edit_camera_view.view();
     }
 
+    pub fn ui(&mut self, ui: &imgui::Ui) {
+        if let Some(exec_view) = self.exec_view.as_mut() {
+            exec_view.ui(ui);
+        } else {
+            self.editor.ui(ui);
+        }
+    }
+
     pub fn on_event(&mut self, event: &glutin::WindowEvent) {
-        self.camera_input.on_event(event);
+        self.edit_camera_view_input.on_event(event);
 
         if let Some(exec_view) = self.exec_view.as_mut() {
             exec_view.on_event(event);
@@ -257,8 +243,6 @@ impl Game {
                 .on_window_resize(facade, new_window_size)
                 .unwrap();
         }
-
-        self.font.on_window_resize(new_window_size);
     }
 
     fn perspective_matrix(
@@ -284,11 +268,5 @@ impl From<shadow::CreationError> for CreationError {
 impl From<resources::CreationError> for CreationError {
     fn from(err: resources::CreationError) -> CreationError {
         CreationError::ResourcesCreationError(err)
-    }
-}
-
-impl From<text::CreationError> for CreationError {
-    fn from(err: text::CreationError) -> CreationError {
-        CreationError::FontCreationError(err)
     }
 }

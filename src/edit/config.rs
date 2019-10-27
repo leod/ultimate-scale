@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::fmt;
 use std::path::PathBuf;
 
-use glutin::VirtualKeyCode;
+use glium::glutin::VirtualKeyCode;
 
 use crate::machine::grid;
 use crate::machine::{BlipKind, Block};
@@ -10,34 +10,61 @@ use crate::machine::{BlipKind, Block};
 //       for that.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct ModifiedKey {
-    pub shift: bool,
     pub ctrl: bool,
+    pub shift: bool,
     pub key: VirtualKeyCode,
 }
 
 impl ModifiedKey {
     pub fn new(key: VirtualKeyCode) -> Self {
         Self {
-            shift: false,
             ctrl: false,
+            shift: false,
             key,
         }
     }
 
     pub fn shift(key: VirtualKeyCode) -> Self {
         Self {
-            shift: true,
             ctrl: false,
+            shift: true,
             key,
         }
     }
 
     pub fn ctrl(key: VirtualKeyCode) -> Self {
         Self {
-            shift: false,
             ctrl: true,
+            shift: false,
             key,
         }
+    }
+}
+
+impl fmt::Display for ModifiedKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.ctrl {
+            write!(f, "Ctrl-")?;
+        }
+        if self.shift {
+            write!(f, "Shift-")?;
+        }
+
+        let key = match self.key {
+            VirtualKeyCode::Key1 => "1".to_string(),
+            VirtualKeyCode::Key2 => "2".to_string(),
+            VirtualKeyCode::Key3 => "3".to_string(),
+            VirtualKeyCode::Key4 => "4".to_string(),
+            VirtualKeyCode::Key5 => "5".to_string(),
+            VirtualKeyCode::Key6 => "6".to_string(),
+            VirtualKeyCode::Key7 => "7".to_string(),
+            VirtualKeyCode::Key8 => "8".to_string(),
+            VirtualKeyCode::Key9 => "9".to_string(),
+            VirtualKeyCode::Key0 => "0".to_string(),
+            key => format!("{:?}", key),
+        };
+
+        write!(f, "{}", key)
     }
 }
 
@@ -50,8 +77,8 @@ pub struct Config {
     pub save_key: ModifiedKey,
     pub layer_up_key: ModifiedKey,
     pub layer_down_key: ModifiedKey,
-    pub block_keys: HashMap<ModifiedKey, Block>,
-    pub layer_keys: HashMap<ModifiedKey, isize>,
+    pub block_keys: Vec<(ModifiedKey, Block)>,
+    pub layer_keys: Vec<(ModifiedKey, isize)>,
 }
 
 impl Default for Config {
@@ -123,17 +150,13 @@ impl Default for Config {
                     Block::BlipWindSource { activated: false },
                 ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
-            ]
-            .into_iter()
-            .collect(),
+            ],
             layer_keys: vec![
                 (ModifiedKey::new(VirtualKeyCode::F1), 0),
                 (ModifiedKey::new(VirtualKeyCode::F2), 1),
                 (ModifiedKey::new(VirtualKeyCode::F3), 2),
                 (ModifiedKey::new(VirtualKeyCode::F4), 3),
-            ]
-            .into_iter()
-            .collect(),
+            ],
         }
     }
 }
