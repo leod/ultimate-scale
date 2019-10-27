@@ -69,16 +69,15 @@ fn main() {
 
     {
         let hidpi_factor = imgui_platform.hidpi_factor();
-        let font_size = (13.0 * hidpi_factor) as f32;
+        let font_size = (18.0 * hidpi_factor) as f32;
 
-        imgui
-            .fonts()
-            .add_font(&[imgui::FontSource::DefaultFontData {
-                config: Some(imgui::FontConfig {
-                    size_pixels: font_size,
-                    ..imgui::FontConfig::default()
-                }),
-            }]);
+        imgui.fonts().add_font(&[imgui::FontSource::TtfData {
+            data: include_bytes!("../resources/Readiness-Regular.ttf"),
+            size_pixels: font_size,
+            config: Some(imgui::FontConfig {
+                ..imgui::FontConfig::default()
+            }),
+        }]);
 
         imgui.io_mut().font_global_scale = (1.0 / hidpi_factor) as f32;
     }
