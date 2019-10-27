@@ -821,6 +821,498 @@
         "rotation_xy": 0,
         "block": "PipeXY"
       }
+    ],
+    [
+      [
+        3,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        3,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "PipeSplitXY": {
+            "open_move_hole_y": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        2,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        4,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        4,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        26,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        27,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        2,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        3,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        5,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        26,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        27,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        4,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        5,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        6,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        7,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        8,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        9,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        10,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        27,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "PipeSplitXY": {
+            "open_move_hole_y": "Pos"
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        11,
+        27,
+        0
+      ],
+      {
+        "rotation_xy": 3,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        12,
+        26,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        11,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        12,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        29,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": "PipeBendXY"
+      }
+    ],
+    [
+      [
+        13,
+        28,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeXY"
+      }
+    ],
+    [
+      [
+        13,
+        27,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": "PipeBendXY"
+      }
     ]
   ]
 }
