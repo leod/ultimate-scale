@@ -94,22 +94,30 @@ impl Editor {
     }
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
+        let blocks_width = 160.0;
         imgui::Window::new(imgui::im_str!("blocks"))
             .flags(
                 imgui::WindowFlags::HORIZONTAL_SCROLLBAR
                     | imgui::WindowFlags::NO_MOVE
                     | imgui::WindowFlags::NO_RESIZE,
             )
-            .size([140.0, self.window_size.y], imgui::Condition::Always)
-            .position([self.window_size.x - 140.0, 0.0], imgui::Condition::Always)
+            .size([blocks_width, self.window_size.y], imgui::Condition::Always)
+            .position(
+                [self.window_size.x - blocks_width, 0.0],
+                imgui::Condition::Always,
+            )
             .bg_alpha(0.8)
             .build(&ui, || {
                 for (block_key, block) in self.config.block_keys.iter() {
-                    if ui.button(&imgui::ImString::new(block.name()), [120.0, 40.0]) {
+                    if ui.button(
+                        &imgui::ImString::new(block.name()),
+                        [blocks_width - 20.0, 40.0],
+                    ) {
                         self.place_block.block = *block;
                     }
                     if ui.is_item_hovered() {
-                        ui.tooltip(|| ui.text(&imgui::ImString::new(format!("{}", block_key))));
+                        let text = format!("{}\nShortcut: {}", block.description(), block_key);
+                        ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
                     }
                 }
             })
