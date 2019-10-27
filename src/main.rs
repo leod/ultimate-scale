@@ -114,7 +114,18 @@ fn main() {
 
             match event {
                 glutin::Event::WindowEvent { event, .. } => {
-                    game.on_event(&event);
+                    // Check if imgui wants to eat this event
+                    let forward_to_game = match event {
+                        glutin::WindowEvent::KeyboardInput { .. } => {
+                            !imgui.io().want_capture_keyboard
+                        }
+                        glutin::WindowEvent::MouseInput { .. } => !imgui.io().want_capture_mouse,
+                        _ => true,
+                    };
+
+                    if forward_to_game {
+                        game.on_event(&event);
+                    }
 
                     match event {
                         glutin::WindowEvent::CloseRequested => {
