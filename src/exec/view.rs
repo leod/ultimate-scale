@@ -183,6 +183,8 @@ impl ExecView {
         }
     }
 
+    pub fn ui(&mut self, ui: &imgui::Ui) {}
+
     pub fn render(&mut self, out: &mut RenderLists) {
         profile!("exec_view");
 

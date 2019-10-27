@@ -207,6 +207,28 @@ impl Game {
         self.camera.view = self.edit_camera_view.view();
     }
 
+    pub fn ui(&mut self, ui: &imgui::Ui) {
+        imgui::Window::new(imgui::im_str!("Hello world"))
+            .size([300.0, 100.0], imgui::Condition::FirstUseEver)
+            .build(&ui, || {
+                ui.text(imgui::im_str!("Hello world!"));
+                ui.text(imgui::im_str!("こんにちは世界！"));
+                ui.text(imgui::im_str!("This...is...imgui-rs!"));
+                ui.separator();
+                let mouse_pos = ui.io().mouse_pos;
+                ui.text(format!(
+                    "Mouse Position: ({:.1},{:.1})",
+                    mouse_pos[0], mouse_pos[1]
+                ));
+            });
+
+        if let Some(exec_view) = self.exec_view.as_mut() {
+            exec_view.ui(ui);
+        } else {
+            self.editor.ui(ui);
+        }
+    }
+
     pub fn on_event(&mut self, event: &glutin::WindowEvent) {
         self.edit_camera_view_input.on_event(event);
 
