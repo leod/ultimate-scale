@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::time::Duration;
 
 use floating_duration::TimeAsFloat;
@@ -17,7 +16,6 @@ use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
 use crate::render::pipeline::deferred::DeferredShading;
 use crate::render::pipeline::shadow::{self, ShadowMapping};
 use crate::render::pipeline::{Light, RenderLists};
-use crate::render::text::{self, Font};
 use crate::render::Resources;
 use crate::render::{self, resources};
 
@@ -25,14 +23,12 @@ use crate::render::{self, resources};
 pub enum CreationError {
     ShadowMappingCreationError(shadow::CreationError),
     ResourcesCreationError(resources::CreationError),
-    FontCreationError(text::CreationError),
 }
 
 pub struct Game {
     config: Config,
 
     resources: Resources,
-    font: Font,
 
     camera: Camera,
     edit_camera_view: EditCameraView,
@@ -57,11 +53,6 @@ impl Game {
     ) -> Result<Game, CreationError> {
         info!("Creating resources");
         let resources = Resources::create(facade)?;
-        let font = Font::load(
-            facade,
-            Path::new("resources/Readiness-Regular.ttf"),
-            config.view.window_size,
-        )?;
 
         let viewport_size = na::Vector2::new(
             config.view.window_size.width as f32,
@@ -101,7 +92,6 @@ impl Game {
 
         Ok(Game {
             config: config.clone(),
-            font,
             resources,
             camera,
             edit_camera_view,
@@ -185,14 +175,6 @@ impl Game {
             )?;
         }
 
-        self.font.draw(
-            na::Vector2::new(0.01, 0.01),
-            0.02,
-            na::Vector4::new(1.0, 0.0, 0.0, 1.0),
-            &format!("FPS: {:.0}", self.fps),
-            target,
-        );
-
         Ok(())
     }
 
@@ -253,8 +235,6 @@ impl Game {
                 .on_window_resize(facade, new_window_size)
                 .unwrap();
         }
-
-        self.font.on_window_resize(new_window_size);
     }
 
     fn perspective_matrix(
@@ -280,11 +260,5 @@ impl From<shadow::CreationError> for CreationError {
 impl From<resources::CreationError> for CreationError {
     fn from(err: resources::CreationError) -> CreationError {
         CreationError::ResourcesCreationError(err)
-    }
-}
-
-impl From<text::CreationError> for CreationError {
-    fn from(err: text::CreationError) -> CreationError {
-        CreationError::FontCreationError(err)
     }
 }
