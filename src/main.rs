@@ -40,7 +40,7 @@ fn main() {
     let config: config::Config = Default::default();
     info!("Running with config: {:?}", config);
 
-    info!("Opening window");
+    info!("Opening glutin window");
     let mut events_loop = glutin::EventsLoop::new();
     let display = {
         let window_builder = glutin::WindowBuilder::new()
@@ -49,6 +49,40 @@ fn main() {
         let context_builder = glutin::ContextBuilder::new();
         glium::Display::new(window_builder, context_builder, &events_loop).unwrap()
     };
+    let gl_window = display.gl_window();
+    let window = gl_window.window();
+
+    info!("Initializing imgui");
+    let mut imgui = imgui::Context::create();
+
+    // Disable saving window positions etc. for now
+    imgui.set_ini_filename(None);
+
+    let mut imgui_platform = imgui_winit_support::WinitPlatform::init(&mut imgui);
+    imgui_platform.attach_window(
+        imgui.io_mut(),
+        &window,
+        imgui_winit_support::HiDpiMode::Rounded,
+    );
+
+    {
+        let hidpi_factor = imgui_platform.hidpi_factor();
+        let font_size = (13.0 * hidpi_factor) as f32;
+
+        imgui
+            .fonts()
+            .add_font(&[imgui::FontSource::DefaultFontData {
+                config: Some(imgui::FontConfig {
+                    size_pixels: font_size,
+                    ..imgui::FontConfig::default()
+                }),
+            }]);
+
+        imgui.io_mut().font_global_scale = (1.0 / hidpi_factor) as f32;
+    }
+
+    let mut imgui_renderer = imgui_glium_renderer::Renderer::init(&mut imgui, &display)
+        .expect("Failed to initialize imgui_glium_renderer");
 
     let initial_machine = if let Some(file) = args.value_of("file") {
         info!("Loading machine from file `{}'", file);
@@ -64,46 +98,49 @@ fn main() {
     let mut game = Game::create(&display, &config, initial_machine).unwrap();
 
     let mut previous_clock = Instant::now();
+    let mut previous_clock_imgui = Instant::now();
     let mut quit = false;
 
     while !quit {
         let _frame_guard = util::profile::start_frame();
-
-        game.render(&display).unwrap();
 
         // Remember only the last (hopefully: newest) resize event. We do this
         // because resizing textures is somewhat costly, so it makes sense to
         // do it at most once per frame.
         let mut new_window_size = None;
 
-        events_loop.poll_events(|event| match event {
-            glutin::Event::WindowEvent { event, .. } => {
-                game.on_event(&event);
+        events_loop.poll_events(|event| {
+            imgui_platform.handle_event(imgui.io_mut(), &window, &event);
 
-                match event {
-                    glutin::WindowEvent::CloseRequested => {
-                        info!("Quitting");
+            match event {
+                glutin::Event::WindowEvent { event, .. } => {
+                    game.on_event(&event);
 
-                        quit = true;
-                    }
-                    glutin::WindowEvent::Resized(viewport_size) => {
-                        new_window_size = Some(viewport_size);
-                    }
-                    glutin::WindowEvent::KeyboardInput { input, .. } => {
-                        if input.state == glutin::ElementState::Pressed {
-                            match input.virtual_keycode {
-                                Some(glutin::VirtualKeyCode::P) => {
-                                    util::profile::print(&mut std::io::stdout());
-                                    util::profile::reset();
+                    match event {
+                        glutin::WindowEvent::CloseRequested => {
+                            info!("Quitting");
+
+                            quit = true;
+                        }
+                        glutin::WindowEvent::Resized(viewport_size) => {
+                            new_window_size = Some(viewport_size);
+                        }
+                        glutin::WindowEvent::KeyboardInput { input, .. } => {
+                            if input.state == glutin::ElementState::Pressed {
+                                match input.virtual_keycode {
+                                    Some(glutin::VirtualKeyCode::P) => {
+                                        util::profile::print(&mut std::io::stdout());
+                                        util::profile::reset();
+                                    }
+                                    _ => {}
                                 }
-                                _ => {}
                             }
                         }
+                        _ => (),
                     }
-                    _ => (),
                 }
+                _ => (),
             }
-            _ => (),
         });
 
         if let Some(new_window_size) = new_window_size {
@@ -117,7 +154,44 @@ fn main() {
         let now_clock = Instant::now();
         let frame_duration = now_clock - previous_clock;
         previous_clock = now_clock;
-        game.update(frame_duration);
+
+        {
+            profile!("update");
+            game.update(frame_duration);
+        }
+
+        let ui_draw_data = {
+            profile!("ui");
+
+            let imgui_io = imgui.io_mut();
+            imgui_platform
+                .prepare_frame(imgui_io, &window)
+                .expect("Failed to start imgui frame");
+            previous_clock_imgui = imgui_io.update_delta_time(previous_clock_imgui);
+            let mut ui = imgui.frame();
+
+            imgui_platform.prepare_render(&ui, &window);
+            ui.render()
+        };
+
+        {
+            profile!("render");
+
+            let mut target = display.draw();
+            game.render(&display, &mut target).unwrap();
+
+            {
+                profile!("ui");
+                imgui_renderer
+                    .render(&mut target, &ui_draw_data)
+                    .expect("Failed to render imgui frame");
+            }
+
+            {
+                profile!("finish");
+                target.finish().expect("Failed to swap buffers");
+            }
+        }
 
         thread::sleep(Duration::from_millis(0));
     }

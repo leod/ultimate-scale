@@ -116,12 +116,11 @@ impl Game {
         })
     }
 
-    pub fn render(
+    pub fn render<S: glium::Surface>(
         &mut self,
         display: &glium::backend::glutin::Display,
+        target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        profile!("render");
-
         let render_context = render::pipeline::Context {
             camera: self.camera.clone(),
             elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
@@ -139,7 +138,6 @@ impl Game {
 
         self.render_lists.clear();
 
-        let mut target = display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
         if let Some(exec_view) = self.exec_view.as_mut() {
@@ -164,7 +162,7 @@ impl Game {
                 &self.resources,
                 &render_context,
                 &self.render_lists,
-                &mut target,
+                target,
             )?;
         } else if let Some(shadow_mapping) = &mut self.shadow_mapping {
             profile!("shadow");
@@ -174,7 +172,7 @@ impl Game {
                 &self.resources,
                 &render_context,
                 &self.render_lists,
-                &mut target,
+                target,
             )?;
         } else {
             profile!("straight");
@@ -183,7 +181,7 @@ impl Game {
                 &self.resources,
                 &render_context,
                 &self.render_lists,
-                &mut target,
+                target,
             )?;
         }
 
@@ -192,20 +190,13 @@ impl Game {
             0.02,
             na::Vector4::new(1.0, 0.0, 0.0, 1.0),
             &format!("FPS: {:.0}", self.fps),
-            &mut target,
+            target,
         );
-
-        profile!("finish");
-
-        // TODO: unwrap
-        target.finish().unwrap();
 
         Ok(())
     }
 
     pub fn update(&mut self, dt: Duration) {
-        profile!("update");
-
         self.elapsed_time += dt;
         let dt_secs = dt.as_fractional_secs() as f32;
         self.fps = 1.0 / dt_secs;
