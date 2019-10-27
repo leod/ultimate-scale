@@ -26,3 +26,9 @@ impl Edit {
         }
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Mode {
+    Select,
+    PlaceBlock(PlacedBlock),
+}

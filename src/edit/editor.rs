@@ -16,7 +16,7 @@ use crate::render::{self, Camera, EditCameraView};
 use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
 use crate::edit::config::ModifiedKey;
-use crate::edit::{Config, Edit};
+use crate::edit::{Config, Edit, Mode};
 
 pub struct Editor {
     config: Config,
@@ -24,7 +24,7 @@ pub struct Editor {
 
     machine: Machine,
 
-    place_block: PlacedBlock,
+    mode: Mode,
 
     current_layer: isize,
     mouse_window_pos: na::Point2<f32>,
@@ -41,10 +41,10 @@ impl Editor {
             config: config.clone(),
             exec_config: exec_config.clone(),
             machine,
-            place_block: PlacedBlock {
+            mode: Mode::PlaceBlock(PlacedBlock {
                 rotation_xy: 1,
                 block: Block::PipeXY,
-            },
+            }),
             current_layer: 0,
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
@@ -113,7 +113,16 @@ impl Editor {
                         &imgui::ImString::new(block.name()),
                         [blocks_width - 20.0, 40.0],
                     ) {
-                        self.place_block.block = *block;
+                        self.mode = Mode::PlaceBlock(match &self.mode {
+                            Mode::PlaceBlock(placed_block) => PlacedBlock {
+                                block: *block,
+                                ..*placed_block
+                            },
+                            _ => PlacedBlock {
+                                rotation_xy: 1,
+                                block: *block,
+                            },
+                        });
                     }
                     if ui.is_item_hovered() {
                         let text = format!("{}\nShortcut: {}", block.description(), block_key);
@@ -160,17 +169,24 @@ impl Editor {
     fn update_input(&mut self, input_state: &InputState) {
         // TODO: Only perform edits if something would actually change
 
-        if input_state.is_button_pressed(MouseButton::Left) {
-            if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                let edit = Edit::SetBlock(mouse_grid_pos, Some(self.place_block.clone()));
-                self.run_edit(edit);
+        match &self.mode {
+            Mode::Select => {
+                // TODO
             }
-        }
+            Mode::PlaceBlock(placed_block) => {
+                if input_state.is_button_pressed(MouseButton::Left) {
+                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                        let edit = Edit::SetBlock(mouse_grid_pos, Some(placed_block.clone()));
+                        self.run_edit(edit);
+                    }
+                }
 
-        if input_state.is_button_pressed(MouseButton::Right) {
-            if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                let edit = Edit::SetBlock(mouse_grid_pos, None);
-                self.run_edit(edit);
+                if input_state.is_button_pressed(MouseButton::Right) {
+                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                        let edit = Edit::SetBlock(mouse_grid_pos, None);
+                        self.run_edit(edit);
+                    }
+                }
             }
         }
     }
@@ -207,17 +223,33 @@ impl Editor {
     }
 
     fn on_key_press(&mut self, key: ModifiedKey) {
-        if key.key == self.config.rotate_block_key.key {
-            if !key.shift {
-                self.place_block.rotate_cw();
-            } else {
-                self.place_block.rotate_ccw();
+        match &mut self.mode {
+            Mode::Select => {
+                // TODO
             }
-        } else if key == self.config.block_kind_key {
-            if let Some(current_kind) = self.place_block.block.kind() {
-                self.place_block.block = self.place_block.block.with_kind(current_kind.next());
+            Mode::PlaceBlock(placed_block) => {
+                if key.key == self.config.rotate_block_key.key {
+                    if !key.shift {
+                        placed_block.rotate_cw();
+                    } else {
+                        placed_block.rotate_ccw();
+                    }
+                } else if key == self.config.block_kind_key {
+                    if let Some(current_kind) = placed_block.block.kind() {
+                        placed_block.block = placed_block.block.with_kind(current_kind.next());
+                    }
+                } else if let Some((_key, block)) = self
+                    .config
+                    .block_keys
+                    .iter()
+                    .find(|(block_key, _block)| key == *block_key)
+                {
+                    placed_block.block = *block;
+                }
             }
-        } else if key == self.config.start_exec_key {
+        }
+
+        if key == self.config.start_exec_key {
             self.start_exec = true;
         } else if key == self.config.save_key {
             self.save(&self.config.default_save_path);
@@ -229,13 +261,6 @@ impl Editor {
             if self.machine.is_valid_layer(self.current_layer - 1) {
                 self.current_layer -= 1;
             }
-        } else if let Some((_key, block)) = self
-            .config
-            .block_keys
-            .iter()
-            .find(|(block_key, _block)| key == *block_key)
-        {
-            self.place_block.block = *block;
         } else if let Some((_key, layer)) = self
             .config
             .layer_keys
@@ -292,17 +317,24 @@ impl Editor {
                 &mut out.plain,
             );
 
-            let block_center = render::machine::block_center(&mouse_grid_pos);
-            let block_transform = render::machine::placed_block_transform(&self.place_block);
-            render::machine::render_block(
-                &self.place_block,
-                0.0,
-                &None,
-                &block_center,
-                &block_transform,
-                0.8,
-                out,
-            );
+            match &self.mode {
+                Mode::Select => {
+                    // TODO
+                }
+                Mode::PlaceBlock(placed_block) => {
+                    let block_center = render::machine::block_center(&mouse_grid_pos);
+                    let block_transform = render::machine::placed_block_transform(placed_block);
+                    render::machine::render_block(
+                        placed_block,
+                        0.0,
+                        &None,
+                        &block_center,
+                        &block_transform,
+                        0.8,
+                        out,
+                    );
+                }
+            }
         }
 
         Ok(())
