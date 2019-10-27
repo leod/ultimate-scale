@@ -193,21 +193,8 @@ fn main() {
                 .prepare_frame(imgui_io, &window)
                 .expect("Failed to start imgui frame");
             previous_clock_imgui = imgui_io.update_delta_time(previous_clock_imgui);
-            let mut ui = imgui.frame();
-
-            imgui::Window::new(imgui::im_str!("Hello world"))
-                .size([300.0, 100.0], imgui::Condition::FirstUseEver)
-                .build(&ui, || {
-                    ui.text(imgui::im_str!("Hello world!"));
-                    ui.text(imgui::im_str!("こんにちは世界！"));
-                    ui.text(imgui::im_str!("This...is...imgui-rs!"));
-                    ui.separator();
-                    let mouse_pos = ui.io().mouse_pos;
-                    ui.text(format!(
-                        "Mouse Position: ({:.1},{:.1})",
-                        mouse_pos[0], mouse_pos[1]
-                    ));
-                });
+            let ui = imgui.frame();
+            game.ui(&ui);
 
             imgui_platform.prepare_render(&ui, &window);
             ui.render()

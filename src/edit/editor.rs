@@ -88,6 +88,8 @@ impl Editor {
         }
     }
 
+    pub fn ui(&mut self, ui: &imgui::Ui) {}
+
     fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
         let p = self.mouse_window_pos;
         let p_near = camera.unproject(&na::Point3::new(p.x, p.y, -1.0));
