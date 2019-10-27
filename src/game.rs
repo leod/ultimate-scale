@@ -205,9 +205,12 @@ impl Game {
         if let Some(exec_view) = self.exec_view.as_mut() {
             exec_view.update(dt, &self.camera, &self.edit_camera_view);
         } else {
-            self.exec_view = self
-                .editor
-                .update(dt_secs, &self.camera, &mut self.edit_camera_view);
+            self.exec_view = self.editor.update(
+                dt_secs,
+                input_state,
+                &self.camera,
+                &mut self.edit_camera_view,
+            );
         }
 
         match self.exec_view.as_ref().map(|view| view.status()) {

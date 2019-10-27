@@ -5,9 +5,10 @@ use log::{info, warn};
 
 use nalgebra as na;
 
-use glium::glutin::{self, WindowEvent};
+use glium::glutin::{self, MouseButton, WindowEvent};
 
 use crate::exec::{self, ExecView};
+use crate::input_state::InputState;
 use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
 use crate::render::pipeline::RenderLists;
@@ -29,8 +30,6 @@ pub struct Editor {
     mouse_window_pos: na::Point2<f32>,
     mouse_grid_pos: Option<grid::Point3>,
 
-    left_mouse_button_pressed: bool,
-    right_mouse_button_pressed: bool,
     start_exec: bool,
 }
 
@@ -47,8 +46,6 @@ impl Editor {
             current_layer: 0,
             mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
-            left_mouse_button_pressed: false,
-            right_mouse_button_pressed: false,
             start_exec: false,
         }
     }
@@ -64,6 +61,7 @@ impl Editor {
     pub fn update(
         &mut self,
         _dt_secs: f32,
+        input_state: &InputState,
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
     ) -> Option<ExecView> {
@@ -76,7 +74,7 @@ impl Editor {
         ));
 
         self.update_mouse_grid_pos(camera, edit_camera_view);
-        self.update_input();
+        self.update_input(input_state);
 
         if !self.start_exec {
             None
@@ -124,10 +122,10 @@ impl Editor {
         };
     }
 
-    fn update_input(&mut self) {
+    fn update_input(&mut self, input_state: &InputState) {
         // TODO: Only perform edits if something would actually change
 
-        if self.left_mouse_button_pressed {
+        if input_state.is_button_pressed(MouseButton::Left) {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                 let edit = Edit::SetBlock(mouse_grid_pos, Some(self.place_block.clone()));
                 self.run_edit(edit);
@@ -136,7 +134,7 @@ impl Editor {
             }
         }
 
-        if self.right_mouse_button_pressed {
+        if input_state.is_button_pressed(MouseButton::Right) {
             if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                 let edit = Edit::SetBlock(mouse_grid_pos, None);
                 self.run_edit(edit);
@@ -209,19 +207,10 @@ impl Editor {
 
     fn on_mouse_input(
         &mut self,
-        state: glutin::ElementState,
-        button: glutin::MouseButton,
+        _state: glutin::ElementState,
+        _button: glutin::MouseButton,
         _modifiers: glutin::ModifiersState,
     ) {
-        match button {
-            glutin::MouseButton::Left => {
-                self.left_mouse_button_pressed = state == glutin::ElementState::Pressed
-            }
-            glutin::MouseButton::Right => {
-                self.right_mouse_button_pressed = state == glutin::ElementState::Pressed
-            }
-            _ => (),
-        }
     }
 
     pub fn render(&mut self, out: &mut RenderLists) -> Result<(), glium::DrawError> {
