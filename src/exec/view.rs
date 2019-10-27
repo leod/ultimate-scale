@@ -4,7 +4,7 @@ use log::info;
 
 use nalgebra as na;
 
-use glutin::{VirtualKeyCode, WindowEvent};
+use glium::glutin::{self, VirtualKeyCode, WindowEvent};
 
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
@@ -183,6 +183,8 @@ impl ExecView {
         }
     }
 
+    pub fn ui(&mut self, ui: &imgui::Ui) {}
+
     pub fn render(&mut self, out: &mut RenderLists) {
         profile!("exec_view");
 
@@ -324,8 +326,6 @@ impl ExecView {
                 center
             };
 
-            let moving = blip.old_pos.map_or(false, |old_pos| blip.pos != old_pos);
-
             let size = if blip.old_pos.is_none() {
                 // Animate spawning the blip
                 Self::blip_spawn_size_animation(self.tick_timer.progress())
@@ -341,7 +341,7 @@ impl ExecView {
             if let Some(old_pos) = blip.old_pos {
                 if old_pos != blip.pos {
                     let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                    let angle = self.tick_timer.progress() * std::f32::consts::PI;
+                    let angle = self.tick_timer.progress() * std::f32::consts::PI / 2.0;
                     let rot = na::Rotation3::new(delta.normalize() * angle);
                     transform = transform * rot.to_homogeneous();
                 }
