@@ -15,6 +15,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use clap::{App, Arg};
+use glium::glutin;
 use log::info;
 
 use game::Game;

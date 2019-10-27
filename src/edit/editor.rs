@@ -5,7 +5,7 @@ use log::{info, warn};
 
 use nalgebra as na;
 
-use glutin::WindowEvent;
+use glium::glutin::{self, WindowEvent};
 
 use crate::exec::{self, ExecView};
 use crate::machine::grid;

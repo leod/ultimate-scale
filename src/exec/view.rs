@@ -4,7 +4,7 @@ use log::info;
 
 use nalgebra as na;
 
-use glutin::{VirtualKeyCode, WindowEvent};
+use glium::glutin::{self, VirtualKeyCode, WindowEvent};
 
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
