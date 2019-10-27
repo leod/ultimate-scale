@@ -95,7 +95,7 @@ impl Editor {
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
         let blocks_width = 160.0;
-        imgui::Window::new(imgui::im_str!("Blocks"))
+        imgui::Window::new(imgui::im_str!("Blocks ►▶"))
             .flags(
                 imgui::WindowFlags::HORIZONTAL_SCROLLBAR
                     | imgui::WindowFlags::NO_MOVE
