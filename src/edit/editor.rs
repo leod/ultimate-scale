@@ -225,9 +225,14 @@ impl Editor {
             .find(|(block_key, _block)| key == *block_key)
         {
             self.place_block.block = *block;
-        } else if let Some(&layer) = self.config.layer_keys.get(&key) {
-            if self.machine.is_valid_layer(layer) {
-                self.current_layer = layer;
+        } else if let Some((_key, layer)) = self
+            .config
+            .layer_keys
+            .iter()
+            .find(|(layer_key, _layer)| key == *layer_key)
+        {
+            if self.machine.is_valid_layer(*layer) {
+                self.current_layer = *layer;
             }
         }
     }
