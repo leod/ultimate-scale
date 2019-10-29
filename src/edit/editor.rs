@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::fs::File;
 use std::path::Path;
 
@@ -19,6 +19,9 @@ use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 use crate::edit::config::ModifiedKey;
 use crate::edit::{Config, Edit, Mode};
 
+/// Maximal length of the undo queue.
+pub const MAX_UNDOS: usize = 1000;
+
 pub struct Editor {
     /// Configuration for the editor, e.g. shortcuts.
     config: Config,
@@ -31,6 +34,14 @@ pub struct Editor {
 
     /// The current editing mode.
     mode: Mode,
+
+    /// Edits that undo the last performed edits, in the order that the edits
+    /// were performed.
+    undo: VecDeque<Edit>,
+
+    /// Edits that redo the last performed undos, in the order that the undos
+    /// were performed.
+    redo: Vec<Edit>,
 
     /// Layer being edited. Blocks are placed only in the current layer.
     current_layer: isize,
@@ -56,6 +67,8 @@ impl Editor {
                 rotation_xy: 1,
                 block: Block::PipeXY,
             }),
+            undo: VecDeque::new(),
+            redo: Vec::new(),
             current_layer: 0,
             mouse_grid_pos: None,
             start_exec: false,
@@ -67,8 +80,40 @@ impl Editor {
         &self.machine
     }
 
-    pub fn run_edit(&mut self, edit: Edit) {
-        edit.run(&mut self.machine);
+    pub fn run_edit(&mut self, edit: Edit) -> Edit {
+        edit.run(&mut self.machine)
+    }
+
+    pub fn run_and_track_edit(&mut self, edit: Edit) {
+        let undo_edit = self.run_edit(edit);
+
+        match undo_edit {
+            Edit::NoOp => {
+                // Don't pollute undo queue with edits that do nothing
+            }
+            undo_edit => {
+                self.undo.push_back(undo_edit);
+                if self.undo.len() > MAX_UNDOS {
+                    self.undo.pop_front();
+                }
+
+                self.redo.clear();
+            }
+        }
+    }
+
+    pub fn undo_last_edit(&mut self) {
+        if let Some(undo_edit) = self.undo.pop_back() {
+            let redo_edit = self.run_edit(undo_edit);
+            self.redo.push(redo_edit);
+        }
+    }
+
+    pub fn redo_last_edit(&mut self) {
+        if let Some(redo_edit) = self.redo.pop() {
+            let undo_edit = self.run_edit(redo_edit);
+            self.undo.push_back(undo_edit);
+        }
     }
 
     pub fn update(
@@ -208,7 +253,7 @@ impl Editor {
                         let edit = Edit::SetBlocks(maplit::hashmap! {
                             mouse_grid_pos => Some(placed_block.clone()),
                         });
-                        self.run_edit(edit);
+                        self.run_and_track_edit(edit);
                     }
                 }
 
@@ -217,7 +262,7 @@ impl Editor {
                         let edit = Edit::SetBlocks(maplit::hashmap! {
                             mouse_grid_pos => None,
                         });
-                        self.run_edit(edit);
+                        self.run_and_track_edit(edit);
                     }
                 }
             }
@@ -290,10 +335,14 @@ impl Editor {
         };
 
         if let Some(edit) = edit {
-            self.run_edit(edit);
+            self.run_and_track_edit(edit);
         }
 
-        if key == self.config.start_exec_key {
+        if key == self.config.undo_key {
+            self.undo_last_edit();
+        } else if key == self.config.redo_key {
+            self.redo_last_edit();
+        } else if key == self.config.start_exec_key {
             self.start_exec = true;
         } else if key == self.config.save_key {
             self.save(&self.config.default_save_path);
