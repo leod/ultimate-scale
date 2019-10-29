@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use nalgebra as na;
+
 use glium::glutin::{ElementState, MouseButton, VirtualKeyCode, WindowEvent};
 
 /// Keep track of pressed keys and mouse buttons.
@@ -9,6 +11,9 @@ pub struct InputState {
 
     /// Currently pressed mouse buttons.
     pressed_buttons: HashSet<MouseButton>,
+
+    /// Current mouse position.
+    mouse_window_pos: na::Point2<f32>,
 }
 
 impl InputState {
@@ -16,6 +21,7 @@ impl InputState {
         Self {
             pressed_keys: HashSet::new(),
             pressed_buttons: HashSet::new(),
+            mouse_window_pos: na::Point2::origin(),
         }
     }
 
@@ -27,6 +33,11 @@ impl InputState {
     /// Check if a mouse button is currently pressed.
     pub fn is_button_pressed(&self, button: MouseButton) -> bool {
         self.pressed_buttons.contains(&button)
+    }
+
+    /// Returns the current mouse position.
+    pub fn mouse_window_pos(&self) -> na::Point2<f32> {
+        self.mouse_window_pos
     }
 
     /// Clear any state associated with the keyboard.
@@ -42,6 +53,9 @@ impl InputState {
     /// Handle a window event to update internal state.
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
+            WindowEvent::CursorMoved { position, .. } => {
+                self.mouse_window_pos = na::Point2::new(position.x as f32, position.y as f32);
+            }
             WindowEvent::KeyboardInput { input, .. } => {
                 if let Some(keycode) = input.virtual_keycode {
                     match input.state {
