@@ -191,14 +191,18 @@ impl Editor {
             Mode::PlaceBlock(placed_block) => {
                 if input_state.is_button_pressed(MouseButton::Left) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = Edit::SetBlock(mouse_grid_pos, Some(placed_block.clone()));
+                        let edit = Edit::SetBlocks(maplit::hashmap! {
+                            mouse_grid_pos => Some(placed_block.clone()),
+                        });
                         self.run_edit(edit);
                     }
                 }
 
                 if input_state.is_button_pressed(MouseButton::Right) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = Edit::SetBlock(mouse_grid_pos, None);
+                        let edit = Edit::SetBlocks(maplit::hashmap! {
+                            mouse_grid_pos => None,
+                        });
                         self.run_edit(edit);
                     }
                 }
