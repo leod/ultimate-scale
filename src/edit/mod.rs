@@ -27,6 +27,31 @@ impl Piece {
         }
     }
 
+    pub fn new_blocks_to_origin(blocks: HashMap<grid::Point3, PlacedBlock>) -> Piece {
+        let mut min = grid::Vector3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
+
+        for p in blocks.keys() {
+            if p.x < min.x {
+                min.x = p.x;
+            }
+            if p.y < min.y {
+                min.y = p.y;
+            }
+            if p.z < min.z {
+                min.z = p.z;
+            }
+        }
+
+        let blocks_at_origin = blocks
+            .into_iter()
+            .map(|(p, block)| (p - min, block))
+            .collect();
+
+        Piece {
+            blocks: blocks_at_origin,
+        }
+    }
+
     pub fn rotate_cw(&mut self) {
         // TODO
     }
