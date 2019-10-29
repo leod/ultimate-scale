@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::File;
 use std::path::Path;
 
@@ -35,6 +35,9 @@ pub struct Editor {
     /// The current editing mode.
     mode: Mode,
 
+    /// Clipboard.
+    clipboard: Option<Piece>,
+
     /// Edits that undo the last performed edits, in the order that the edits
     /// were performed.
     undo: VecDeque<Edit>,
@@ -67,6 +70,7 @@ impl Editor {
                 rotation_xy: 1,
                 block: Block::PipeXY,
             })),
+            clipboard: None,
             undo: VecDeque::new(),
             redo: Vec::new(),
             current_layer: 0,
@@ -260,8 +264,6 @@ impl Editor {
     }
 
     fn update_input(&mut self, input_state: &InputState) {
-        // TODO: Only perform edits if something would actually change
-
         match &self.mode {
             Mode::Select(_selection) => {
                 // TODO
@@ -315,12 +317,29 @@ impl Editor {
 
     fn on_key_press(&mut self, key: ModifiedKey) {
         let edit = match &mut self.mode {
-            Mode::Select(ref mut selection) => {
-                // TODO: Clipboard
+            Mode::Select(selection) => {
                 if key == self.config.cut_key {
                     let edit = Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
 
+                    let mut selected_blocks = HashMap::new();
+                    for p in selection.iter() {
+                        if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
+                            selected_blocks.insert(*p, placed_block.clone());
+                        }
+                    }
+                    self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+
                     Some(edit)
+                } else if key == self.config.copy_key {
+                    let mut selected_blocks = HashMap::new();
+                    for p in selection.iter() {
+                        if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
+                            selected_blocks.insert(*p, placed_block.clone());
+                        }
+                    }
+                    self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+
+                    None
                 } else {
                     None
                 }
@@ -351,6 +370,10 @@ impl Editor {
             self.undo_last_edit();
         } else if key == self.config.redo_key {
             self.redo_last_edit();
+        } else if key == self.config.paste_key && self.clipboard.is_some() {
+            if let Some(clipboard) = &self.clipboard {
+                self.mode = Mode::PlacePiece(clipboard.clone());
+            }
         } else if key == self.config.start_exec_key {
             self.start_exec = true;
         } else if key == self.config.save_key {
@@ -451,7 +474,6 @@ impl Editor {
 
             match &self.mode {
                 Mode::Select(selection) => {
-                    // TODO
                     for &grid_pos in selection.iter() {
                         let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
                         render::machine::render_cuboid_wireframe(
