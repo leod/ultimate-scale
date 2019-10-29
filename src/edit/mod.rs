@@ -15,7 +15,7 @@ pub use editor::Editor;
 pub struct Piece {
     /// Blocks that shall be placed. All point coordinates are assumed to be
     /// non-negative.
-    pub blocks: HashMap<grid::Point3, PlacedBlock>,
+    blocks: HashMap<grid::Point3, PlacedBlock>,
 }
 
 impl Piece {
@@ -52,11 +52,29 @@ impl Piece {
         }
     }
 
-    pub fn rotate_cw(&mut self) {
+    pub fn grid_size(&self) -> grid::Vector3 {
+        let mut max = grid::Vector3::zeros();
+
+        for p in self.blocks.keys() {
+            if p.x > max.x {
+                max.x = p.x;
+            }
+            if p.y > max.y {
+                max.y = p.y;
+            }
+            if p.z > max.z {
+                max.z = p.z;
+            }
+        }
+
+        max + grid::Vector3::new(1, 1, 1)
+    }
+
+    pub fn rotate_cw_xy(&mut self) {
         // TODO
     }
 
-    pub fn rotate_ccw(&mut self) {
+    pub fn rotate_ccw_xy(&mut self) {
         // TODO
     }
 
