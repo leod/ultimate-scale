@@ -298,6 +298,7 @@ impl Editor {
             Mode::Select(mut selection) => {
                 if button == glutin::MouseButton::Left && state == glutin::ElementState::Pressed {
                     // TODO: Switch to rect select etc.
+                    // TODO: Raycast?
                     if let Some(grid_pos) = self.mouse_grid_pos {
                         let has_block = self.machine.get_block_at_pos(&grid_pos).is_some();
 
@@ -336,7 +337,7 @@ impl Editor {
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + 0.01,
-            &mut out.solid,
+            &mut out.plain,
         );
 
         if let Some(mouse_grid_pos) = self.mouse_grid_pos {
