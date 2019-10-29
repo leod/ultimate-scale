@@ -20,19 +20,31 @@ use crate::edit::config::ModifiedKey;
 use crate::edit::{Config, Edit, Mode};
 
 pub struct Editor {
+    /// Configuration for the editor, e.g. shortcuts.
     config: Config,
+
+    /// Configuration for running a machine.
     exec_config: exec::view::Config,
 
+    /// The machine being edited.
     machine: Machine,
 
+    /// The current editing mode.
     mode: Mode,
 
+    /// Layer being edited. Blocks are placed only in the current layer.
     current_layer: isize,
+
     mouse_window_pos: na::Point2<f32>,
+
+    /// Grid position the mouse is currently pointing to, if any. The z
+    /// coordinate is always set to `current_layer`.
     mouse_grid_pos: Option<grid::Point3>,
 
+    /// Whether to start executing the machine in the next `update` call.
     start_exec: bool,
 
+    /// We keep track of the window size for fixing window positions in the UI.
     window_size: na::Vector2<f32>,
 }
 
@@ -246,9 +258,7 @@ impl Editor {
             Mode::Select(ref mut selection) => {
                 // TODO
                 if key == self.config.cut_key {
-                    let edit = Edit::SetBlocks(
-                        selection.iter().map(|p| (*p, None)).collect()
-                    );
+                    let edit = Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
                     selection.clear();
 
                     Some(edit)
