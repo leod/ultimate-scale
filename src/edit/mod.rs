@@ -13,18 +13,14 @@ pub use editor::Editor;
 /// clipboard and stuff like that.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Piece {
-    pub rotation_xy: usize,
+    /// Blocks that shall be placed. All point coordinates are assumed to be
+    /// non-negative.
     pub blocks: HashMap<grid::Point3, PlacedBlock>,
 }
 
 impl Piece {
     pub fn new_origin_block(block: PlacedBlock) -> Self {
-        Self::new_rotated_origin_block(0, block)
-    }
-
-    pub fn new_rotated_origin_block(rotation_xy: usize, block: PlacedBlock) -> Self {
         Self {
-            rotation_xy: rotation_xy,
             blocks: maplit::hashmap! {
                 grid::Point3::origin() => block,
             },
@@ -32,18 +28,11 @@ impl Piece {
     }
 
     pub fn rotate_cw(&mut self) {
-        self.rotation_xy += 1;
-        if self.rotation_xy == 4 {
-            self.rotation_xy = 0;
-        }
+        // TODO
     }
 
     pub fn rotate_ccw(&mut self) {
-        if self.rotation_xy == 0 {
-            self.rotation_xy = 3;
-        } else {
-            self.rotation_xy -= 1;
-        }
+        // TODO
     }
 
     pub fn place_edit(&self, offset: &grid::Vector3) -> Edit {
@@ -60,16 +49,9 @@ impl Piece {
         offset: &grid::Vector3,
     ) -> impl Iterator<Item = (grid::Point3, PlacedBlock)> + '_ {
         let offset = *offset;
-        // TODO: Rotate
-        self.blocks.iter().map(move |(pos, block)| {
-            (
-                pos + offset,
-                PlacedBlock {
-                    rotation_xy: block.rotation_xy + self.rotation_xy,
-                    ..block.clone()
-                },
-            )
-        })
+        self.blocks
+            .iter()
+            .map(move |(pos, block)| (pos + offset, block.clone()))
     }
 }
 
