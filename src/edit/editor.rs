@@ -292,18 +292,24 @@ impl Editor {
         &mut self,
         state: glutin::ElementState,
         button: glutin::MouseButton,
-        _modifiers: glutin::ModifiersState,
+        modifiers: glutin::ModifiersState,
     ) {
         self.mode = match self.mode.clone() {
             Mode::Select(mut selection) => {
                 if button == glutin::MouseButton::Left && state == glutin::ElementState::Pressed {
                     // TODO: Switch to rect select etc.
                     if let Some(grid_pos) = self.mouse_grid_pos {
-                        selection.insert(grid_pos);
-                        Mode::Select(selection)
-                    } else {
-                        Mode::Select(selection)
+                        let has_block = self.machine.get_block_at_pos(&grid_pos).is_some();
+
+                        if has_block {
+                            if !modifiers.shift && !modifiers.ctrl {
+                                selection = HashSet::new();
+                            }
+                            selection.insert(grid_pos);
+                        }
                     }
+
+                    Mode::Select(selection)
                 } else {
                     Mode::Select(selection)
                 }
