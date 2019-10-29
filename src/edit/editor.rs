@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::File;
 use std::path::Path;
 
@@ -95,14 +96,15 @@ impl Editor {
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
         let blocks_width = 160.0;
-        let blocks_margin = 10.0;
+        let bg_alpha = 0.8;
+
         imgui::Window::new(imgui::im_str!("Blocks"))
             .horizontal_scrollbar(true)
             .movable(false)
             .always_auto_resize(true)
             .position([self.window_size.x - 10.0, 10.0], imgui::Condition::Always)
             .position_pivot([1.0, 0.0])
-            .bg_alpha(0.8)
+            .bg_alpha(bg_alpha)
             .build(&ui, || {
                 for (block_key, block) in self.config.block_keys.iter() {
                     if ui.button(
@@ -125,7 +127,24 @@ impl Editor {
                         ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
                     }
                 }
-            })
+            });
+
+        imgui::Window::new(imgui::im_str!("Tools"))
+            .horizontal_scrollbar(true)
+            .movable(false)
+            .always_auto_resize(true)
+            .position([10.0, 10.0], imgui::Condition::Always)
+            .bg_alpha(bg_alpha)
+            .build(&ui, || {
+                if ui.button(imgui::im_str!("Select"), [blocks_width - 20.0, 40.0]) {
+                    self.mode = Mode::Select(HashSet::new());
+                }
+
+                if ui.is_item_hovered() {
+                    let text = format!("Shortcut: TODO");
+                    ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                }
+            });
     }
 
     fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
@@ -166,7 +185,7 @@ impl Editor {
         // TODO: Only perform edits if something would actually change
 
         match &self.mode {
-            Mode::Select => {
+            Mode::Select(_selection) => {
                 // TODO
             }
             Mode::PlaceBlock(placed_block) => {
@@ -220,7 +239,7 @@ impl Editor {
 
     fn on_key_press(&mut self, key: ModifiedKey) {
         match &mut self.mode {
-            Mode::Select => {
+            Mode::Select(_selection) => {
                 // TODO
             }
             Mode::PlaceBlock(placed_block) => {
@@ -271,10 +290,26 @@ impl Editor {
 
     fn on_mouse_input(
         &mut self,
-        _state: glutin::ElementState,
-        _button: glutin::MouseButton,
+        state: glutin::ElementState,
+        button: glutin::MouseButton,
         _modifiers: glutin::ModifiersState,
     ) {
+        self.mode = match self.mode.clone() {
+            Mode::Select(mut selection) => {
+                if button == glutin::MouseButton::Left && state == glutin::ElementState::Pressed {
+                    // TODO: Switch to rect select etc.
+                    if let Some(grid_pos) = self.mouse_grid_pos {
+                        selection.insert(grid_pos);
+                        Mode::Select(selection)
+                    } else {
+                        Mode::Select(selection)
+                    }
+                } else {
+                    Mode::Select(selection)
+                }
+            }
+            x => x,
+        }
     }
 
     pub fn render(&mut self, out: &mut RenderLists) -> Result<(), glium::DrawError> {
@@ -314,8 +349,20 @@ impl Editor {
             );
 
             match &self.mode {
-                Mode::Select => {
+                Mode::Select(selection) => {
                     // TODO
+                    for &grid_pos in selection.iter() {
+                        let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
+                        render::machine::render_cuboid_wireframe(
+                            &render::machine::Cuboid {
+                                center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
+                                size: na::Vector3::new(1.0, 1.0, 1.0),
+                            },
+                            0.025,
+                            &na::Vector4::new(0.9, 0.9, 0.0, 1.0),
+                            &mut out.plain,
+                        );
+                    }
                 }
                 Mode::PlaceBlock(placed_block) => {
                     let block_center = render::machine::block_center(&mouse_grid_pos);

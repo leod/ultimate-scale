@@ -1,6 +1,8 @@
 pub mod config;
 pub mod editor;
 
+use std::collections::HashSet;
+
 use crate::machine::grid;
 use crate::machine::{Machine, PlacedBlock};
 
@@ -29,6 +31,6 @@ impl Edit {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Mode {
-    Select,
+    Select(HashSet<grid::Point3>),
     PlaceBlock(PlacedBlock),
 }
