@@ -71,12 +71,19 @@ impl fmt::Display for ModifiedKey {
 #[derive(Debug, Clone)]
 pub struct Config {
     pub default_save_path: PathBuf,
+
     pub rotate_block_key: ModifiedKey,
     pub block_kind_key: ModifiedKey,
+
+    pub cut_key: ModifiedKey,
+
     pub start_exec_key: ModifiedKey,
+
     pub save_key: ModifiedKey,
+
     pub layer_up_key: ModifiedKey,
     pub layer_down_key: ModifiedKey,
+
     pub block_keys: Vec<(ModifiedKey, Block)>,
     pub layer_keys: Vec<(ModifiedKey, isize)>,
 }
@@ -87,6 +94,7 @@ impl Default for Config {
             default_save_path: PathBuf::from("machine.json"),
             rotate_block_key: ModifiedKey::new(VirtualKeyCode::R),
             block_kind_key: ModifiedKey::new(VirtualKeyCode::C),
+            cut_key: ModifiedKey::ctrl(VirtualKeyCode::X),
             start_exec_key: ModifiedKey::new(VirtualKeyCode::Space),
             save_key: ModifiedKey::ctrl(VirtualKeyCode::S),
             layer_up_key: ModifiedKey::new(VirtualKeyCode::Tab),

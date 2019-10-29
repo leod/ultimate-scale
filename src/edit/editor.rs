@@ -242,9 +242,19 @@ impl Editor {
     }
 
     fn on_key_press(&mut self, key: ModifiedKey) {
-        match &mut self.mode {
-            Mode::Select(_selection) => {
+        let edit = match &mut self.mode {
+            Mode::Select(ref mut selection) => {
                 // TODO
+                if key == self.config.cut_key {
+                    let edit = Edit::SetBlocks(
+                        selection.iter().map(|p| (*p, None)).collect()
+                    );
+                    selection.clear();
+
+                    Some(edit)
+                } else {
+                    None
+                }
             }
             Mode::PlaceBlock(placed_block) => {
                 if key.key == self.config.rotate_block_key.key {
@@ -265,7 +275,13 @@ impl Editor {
                 {
                     placed_block.block = *block;
                 }
+
+                None
             }
+        };
+
+        if let Some(edit) = edit {
+            self.run_edit(edit);
         }
 
         if key == self.config.start_exec_key {
