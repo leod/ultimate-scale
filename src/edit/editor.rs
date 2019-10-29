@@ -347,9 +347,9 @@ impl Editor {
             Mode::PlacePiece(piece) => {
                 if key.key == self.config.rotate_block_key.key {
                     if !key.shift {
-                        piece.rotate_cw();
+                        piece.rotate_cw_xy();
                     } else {
-                        piece.rotate_ccw();
+                        piece.rotate_ccw_xy();
                     }
                 } else if key == self.config.block_kind_key {
                     /*if let Some(current_kind) = placed_block.block.kind() {
@@ -462,16 +462,6 @@ impl Editor {
 
             let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
 
-            render::machine::render_cuboid_wireframe(
-                &render::machine::Cuboid {
-                    center: mouse_grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
-                    size: na::Vector3::new(1.0, 1.0, 1.0),
-                },
-                0.015,
-                &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                &mut out.plain,
-            );
-
             match &self.mode {
                 Mode::Select(selection) => {
                     for &grid_pos in selection.iter() {
@@ -486,6 +476,16 @@ impl Editor {
                             &mut out.plain,
                         );
                     }
+
+                    render::machine::render_cuboid_wireframe(
+                        &render::machine::Cuboid {
+                            center: mouse_grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
+                            size: na::Vector3::new(1.0, 1.0, 1.0),
+                        },
+                        0.015,
+                        &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                        &mut out.plain,
+                    );
                 }
                 Mode::PlacePiece(piece) => {
                     for (pos, placed_block) in piece.iter_blocks(&mouse_grid_pos.coords) {
@@ -502,6 +502,18 @@ impl Editor {
                             out,
                         );
                     }
+
+                    let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
+                    let wire_center = mouse_grid_pos_float + wire_size / 2.0;
+                    render::machine::render_cuboid_wireframe(
+                        &render::machine::Cuboid {
+                            center: wire_center,
+                            size: wire_size,
+                        },
+                        0.015,
+                        &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                        &mut out.plain,
+                    );
                 }
             }
         }
