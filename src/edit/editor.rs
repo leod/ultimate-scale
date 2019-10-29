@@ -17,7 +17,7 @@ use crate::render::{self, Camera, EditCameraView};
 use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
 use crate::edit::config::ModifiedKey;
-use crate::edit::{Config, Edit, Mode};
+use crate::edit::{Config, Edit, Mode, Piece};
 
 /// Maximal length of the undo queue.
 pub const MAX_UNDOS: usize = 1000;
@@ -63,10 +63,10 @@ impl Editor {
             config: config.clone(),
             exec_config: exec_config.clone(),
             machine,
-            mode: Mode::PlaceBlock(PlacedBlock {
+            mode: Mode::PlacePiece(Piece::new_origin_block(PlacedBlock {
                 rotation_xy: 1,
                 block: Block::PipeXY,
-            }),
+            })),
             undo: VecDeque::new(),
             redo: Vec::new(),
             current_layer: 0,
@@ -127,6 +127,21 @@ impl Editor {
         }
     }
 
+    pub fn switch_to_place_block_mode(&mut self, block: Block) {
+        // Maintain current rotation when switching to a different block to
+        // place.
+        let placed_block = PlacedBlock {
+            rotation_xy: 0,
+            block,
+        };
+        self.mode = Mode::PlacePiece(match &self.mode {
+            Mode::PlacePiece(piece) => {
+                Piece::new_rotated_origin_block(piece.rotation_xy, placed_block)
+            }
+            _ => Piece::new_origin_block(placed_block),
+        });
+    }
+
     pub fn update(
         &mut self,
         _dt_secs: f32,
@@ -171,22 +186,14 @@ impl Editor {
             .position_pivot([1.0, 0.0])
             .bg_alpha(bg_alpha)
             .build(&ui, || {
-                for (block_key, block) in self.config.block_keys.iter() {
+                for (block_key, block) in self.config.block_keys.clone().iter() {
                     if ui.button(
                         &imgui::ImString::new(block.name()),
                         [blocks_width - 20.0, 40.0],
                     ) {
-                        self.mode = Mode::PlaceBlock(match &self.mode {
-                            Mode::PlaceBlock(placed_block) => PlacedBlock {
-                                block: *block,
-                                ..*placed_block
-                            },
-                            _ => PlacedBlock {
-                                rotation_xy: 1,
-                                block: *block,
-                            },
-                        });
+                        self.switch_to_place_block_mode(*block);
                     }
+
                     if ui.is_item_hovered() {
                         let text = format!("{}\nShortcut: {}", block.description(), block_key);
                         ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
@@ -258,13 +265,10 @@ impl Editor {
             Mode::Select(_selection) => {
                 // TODO
             }
-            Mode::PlaceBlock(placed_block) => {
+            Mode::PlacePiece(piece) => {
                 if input_state.is_button_pressed(MouseButton::Left) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = Edit::SetBlocks(maplit::hashmap! {
-                            mouse_grid_pos => Some(placed_block.clone()),
-                        });
-                        self.run_and_track_edit(edit);
+                        self.run_and_track_edit(piece.place_edit(&mouse_grid_pos.coords));
                     }
                 }
 
@@ -311,7 +315,7 @@ impl Editor {
     fn on_key_press(&mut self, key: ModifiedKey) {
         let edit = match &mut self.mode {
             Mode::Select(ref mut selection) => {
-                // TODO
+                // TODO: Clipboard
                 if key == self.config.cut_key {
                     let edit = Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
 
@@ -320,24 +324,18 @@ impl Editor {
                     None
                 }
             }
-            Mode::PlaceBlock(placed_block) => {
+            Mode::PlacePiece(piece) => {
                 if key.key == self.config.rotate_block_key.key {
                     if !key.shift {
-                        placed_block.rotate_cw();
+                        piece.rotate_cw();
                     } else {
-                        placed_block.rotate_ccw();
+                        piece.rotate_ccw();
                     }
                 } else if key == self.config.block_kind_key {
-                    if let Some(current_kind) = placed_block.block.kind() {
+                    /*if let Some(current_kind) = placed_block.block.kind() {
                         placed_block.block = placed_block.block.with_kind(current_kind.next());
-                    }
-                } else if let Some((_key, block)) = self
-                    .config
-                    .block_keys
-                    .iter()
-                    .find(|(block_key, _block)| key == *block_key)
-                {
-                    placed_block.block = *block;
+                    }*/
+                    // TODO: Switching kind after piece update
                 }
 
                 None
@@ -373,6 +371,13 @@ impl Editor {
             if self.machine.is_valid_layer(*layer) {
                 self.current_layer = *layer;
             }
+        } else if let Some((_key, block)) = self
+            .config
+            .block_keys
+            .iter()
+            .find(|(block_key, _block)| key == *block_key)
+        {
+            self.switch_to_place_block_mode(*block);
         }
     }
 
@@ -459,18 +464,21 @@ impl Editor {
                         );
                     }
                 }
-                Mode::PlaceBlock(placed_block) => {
-                    let block_center = render::machine::block_center(&mouse_grid_pos);
-                    let block_transform = render::machine::placed_block_transform(placed_block);
-                    render::machine::render_block(
-                        placed_block,
-                        0.0,
-                        &None,
-                        &block_center,
-                        &block_transform,
-                        0.8,
-                        out,
-                    );
+                Mode::PlacePiece(piece) => {
+                    for (pos, placed_block) in piece.iter_blocks(&mouse_grid_pos.coords) {
+                        let block_center = render::machine::block_center(&pos);
+                        let block_transform =
+                            render::machine::placed_block_transform(&placed_block);
+                        render::machine::render_block(
+                            &placed_block,
+                            0.0,
+                            &None,
+                            &block_center,
+                            &block_transform,
+                            0.8,
+                            out,
+                        );
+                    }
                 }
             }
         }
