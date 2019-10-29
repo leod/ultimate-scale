@@ -9,13 +9,18 @@ use crate::machine::{Machine, PlacedBlock};
 pub use config::Config;
 pub use editor::Editor;
 
+#[derive(Debug, Clone)]
 pub enum Edit {
+    NoOp,
     SetBlocks(HashMap<grid::Point3, Option<PlacedBlock>>),
 }
 
 impl Edit {
+    /// Apply the edit operation to a machine and return an edit operation to
+    /// undo what was done.
     pub fn run(&self, machine: &mut Machine) -> Edit {
         match self {
+            Edit::NoOp => Edit::NoOp,
             Edit::SetBlocks(blocks) => {
                 let previous_blocks = blocks
                     .keys()
@@ -29,11 +34,15 @@ impl Edit {
                     })
                     .collect();
 
-                for (p, block) in blocks.iter() {
-                    machine.set_block_at_pos(p, block.clone());
-                }
+                if *blocks == previous_blocks {
+                    Edit::NoOp
+                } else {
+                    for (p, block) in blocks.iter() {
+                        machine.set_block_at_pos(p, block.clone());
+                    }
 
-                Edit::SetBlocks(previous_blocks)
+                    Edit::SetBlocks(previous_blocks)
+                }
             }
         }
     }
