@@ -305,6 +305,7 @@ pub type BlockIndex = usize;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Blocks {
+    // TODO: Make private -- this should not leak for when we extend to chunks
     pub indices: Grid3<Option<BlockIndex>>,
     pub data: VecOption<(Point3, PlacedBlock)>,
 }

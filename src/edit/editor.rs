@@ -81,7 +81,18 @@ impl Editor {
     }
 
     pub fn run_edit(&mut self, edit: Edit) -> Edit {
-        edit.run(&mut self.machine)
+        let undo_edit = edit.run(&mut self.machine);
+
+        // Make sure our state is in track with the edited machine
+        self.mode = match self.mode.clone() {
+            Mode::Select(mut selection) => {
+                selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
+                Mode::Select(selection)
+            }
+            mode => mode,
+        };
+
+        undo_edit
     }
 
     pub fn run_and_track_edit(&mut self, edit: Edit) {
@@ -303,7 +314,6 @@ impl Editor {
                 // TODO
                 if key == self.config.cut_key {
                     let edit = Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
-                    selection.clear();
 
                     Some(edit)
                 } else {

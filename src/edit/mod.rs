@@ -9,6 +9,8 @@ use crate::machine::{Machine, PlacedBlock};
 pub use config::Config;
 pub use editor::Editor;
 
+pub struct Piece(HashMap<grid::Point3, Option<PlacedBlock>>);
+
 #[derive(Debug, Clone)]
 pub enum Edit {
     NoOp,
