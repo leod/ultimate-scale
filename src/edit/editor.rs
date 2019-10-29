@@ -35,8 +35,6 @@ pub struct Editor {
     /// Layer being edited. Blocks are placed only in the current layer.
     current_layer: isize,
 
-    mouse_window_pos: na::Point2<f32>,
-
     /// Grid position the mouse is currently pointing to, if any. The z
     /// coordinate is always set to `current_layer`.
     mouse_grid_pos: Option<grid::Point3>,
@@ -59,7 +57,6 @@ impl Editor {
                 block: Block::PipeXY,
             }),
             current_layer: 0,
-            mouse_window_pos: na::Point2::origin(),
             mouse_grid_pos: None,
             start_exec: false,
             window_size: na::Vector2::zeros(),
@@ -91,7 +88,7 @@ impl Editor {
 
         self.window_size = na::Vector2::new(camera.viewport.z, camera.viewport.w);
 
-        self.update_mouse_grid_pos(camera, edit_camera_view);
+        self.update_mouse_grid_pos(input_state, camera, edit_camera_view);
         self.update_input(input_state);
 
         if !self.start_exec {
@@ -159,8 +156,13 @@ impl Editor {
             });
     }
 
-    fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
-        let p = self.mouse_window_pos;
+    fn update_mouse_grid_pos(
+        &mut self,
+        input_state: &InputState,
+        camera: &Camera,
+        edit_camera_view: &EditCameraView,
+    ) {
+        let p = input_state.mouse_window_pos();
         let p_near = camera.unproject(&na::Point3::new(p.x, p.y, -1.0));
         let p_far = camera.unproject(&na::Point3::new(p.x, p.y, 1.0));
 
@@ -224,9 +226,6 @@ impl Editor {
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::CursorMoved { position, .. } => {
-                self.mouse_window_pos = na::Point2::new(position.x as f32, position.y as f32);
-            }
             WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(input),
             WindowEvent::MouseInput {
                 state,
