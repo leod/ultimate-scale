@@ -142,7 +142,7 @@ impl ShadowMapping {
                     v_tex_coords = tex_coords;
                 }
             ",
-            // Fragement Shader
+            // Fragment Shader
             "
                 #version 140
                 uniform sampler2D tex;
