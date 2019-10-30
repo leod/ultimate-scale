@@ -168,7 +168,7 @@ impl Editor {
 
         self.window_size = na::Vector2::new(camera.viewport.z, camera.viewport.w);
 
-        self.mouse_grid_pos = pick::pick_in_layer(
+        self.mouse_grid_pos = pick::pick_in_layer_plane(
             &self.machine,
             self.current_layer,
             camera,
@@ -395,12 +395,13 @@ impl Editor {
             Mode::Select(mut selection) => {
                 if button == glutin::MouseButton::Left && state == glutin::ElementState::Pressed {
                     // TODO: Switch to rect select etc.
-                    // TODO: Raycast?
+                    let extend = modifiers.shift || modifiers.ctrl;
+
                     if let Some(grid_pos) = self.mouse_block_pos {
                         let has_block = self.machine.get_block_at_pos(&grid_pos).is_some();
 
                         if has_block {
-                            if !modifiers.shift && !modifiers.ctrl {
+                            if !extend {
                                 selection = HashSet::new();
                                 selection.insert(grid_pos);
                             } else {
@@ -412,7 +413,7 @@ impl Editor {
                                 }
                             }
                         }
-                    } else {
+                    } else if !extend {
                         selection.clear();
                     }
 
@@ -477,9 +478,8 @@ impl Editor {
             }
             Mode::PlacePiece(piece) => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    assert!(self.machine.is_valid_pos(&mouse_grid_pos));
-
                     let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
+                    let mut any_pos_valid = false;
 
                     for (pos, placed_block) in piece.iter_blocks(&mouse_grid_pos.coords) {
                         let block_center = render::machine::block_center(&pos);
@@ -494,19 +494,35 @@ impl Editor {
                             0.8,
                             out,
                         );
+
+                        if !self.machine.is_valid_pos(&pos) {
+                            render::machine::render_cuboid_wireframe(
+                                &render::machine::Cuboid {
+                                    center: block_center,
+                                    size: na::Vector3::new(1.0, 1.0, 1.0),
+                                },
+                                0.025,
+                                &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
+                                &mut out.plain,
+                            );
+                        } else {
+                            any_pos_valid = true;
+                        }
                     }
 
-                    let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
-                    let wire_center = mouse_grid_pos_float + wire_size / 2.0;
-                    render::machine::render_cuboid_wireframe(
-                        &render::machine::Cuboid {
-                            center: wire_center,
-                            size: wire_size,
-                        },
-                        0.015,
-                        &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                        &mut out.plain,
-                    );
+                    if any_pos_valid {
+                        let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
+                        let wire_center = mouse_grid_pos_float + wire_size / 2.0;
+                        render::machine::render_cuboid_wireframe(
+                            &render::machine::Cuboid {
+                                center: wire_center,
+                                size: wire_size,
+                            },
+                            0.015,
+                            &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                            &mut out.plain,
+                        );
+                    }
                 }
             }
         }
