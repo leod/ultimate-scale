@@ -47,6 +47,9 @@ pub struct RenderLists {
     pub plain: RenderList<DefaultInstanceParams>,
 
     pub lights: Vec<Light>,
+
+    /// Screen-space stuff.
+    pub ortho: RenderList<DefaultInstanceParams>,
 }
 
 impl RenderLists {
@@ -60,6 +63,7 @@ impl RenderLists {
         self.transparent.clear();
         self.plain.clear();
         self.lights.clear();
+        self.ortho.clear();
     }
 }
 

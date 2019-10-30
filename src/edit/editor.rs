@@ -506,6 +506,18 @@ impl Editor {
                         &mut out.plain,
                     );
                 }
+
+                let selection_transform =
+                    na::Matrix4::new_translation(&na::Vector3::new(30.0, 50.0, 0.0))
+                        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(300.0, 500.0, 1.0));
+                out.ortho.add(
+                    render::Object::Quad,
+                    &render::pipeline::DefaultInstanceParams {
+                        transform: selection_transform,
+                        color: na::Vector4::new(0.3, 0.3, 0.9, 0.4),
+                        ..Default::default()
+                    },
+                );
             }
             Mode::PlacePiece(piece) => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
