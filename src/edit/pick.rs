@@ -67,6 +67,7 @@ pub fn pick_block(
         };
 
         if let Some(distance) = ray_aabb_intersection(&ray, &aabb) {
+            // TODO: Perform a tighter intersection check if AABB is a hit
             closest_block = Some(closest_block.map_or(
                 (block_pos, distance),
                 |(closest_pos, closest_distance)| {

@@ -412,6 +412,8 @@ impl Editor {
                                 }
                             }
                         }
+                    } else {
+                        selection.clear();
                     }
 
                     Mode::Select(selection)
