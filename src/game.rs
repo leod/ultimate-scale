@@ -184,14 +184,11 @@ impl Game {
         self.fps = 1.0 / dt_secs;
 
         if let Some(exec_view) = self.exec_view.as_mut() {
-            exec_view.update(dt, &self.camera, &self.edit_camera_view);
+            exec_view.update(dt, input_state, &self.camera, &self.edit_camera_view);
         } else {
-            self.exec_view = self.editor.update(
-                dt_secs,
-                input_state,
-                &self.camera,
-                &mut self.edit_camera_view,
-            );
+            self.exec_view =
+                self.editor
+                    .update(dt, input_state, &self.camera, &mut self.edit_camera_view);
         }
 
         match self.exec_view.as_ref().map(|view| view.status()) {

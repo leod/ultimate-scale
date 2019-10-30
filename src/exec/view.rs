@@ -6,13 +6,14 @@ use nalgebra as na;
 
 use glium::glutin::{self, VirtualKeyCode, WindowEvent};
 
+use crate::edit::pick;
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::Exec;
+use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
 use crate::render::pipeline::{wind, RenderLists};
 use crate::render::{self, Camera, EditCameraView};
-use crate::util::intersection::{ray_aabb_intersection, Ray, AABB};
 use crate::util::timer::Timer;
 
 #[derive(Debug, Clone)]
@@ -75,10 +76,21 @@ impl ExecView {
         self.exec.cur_tick as f32 + self.tick_timer.progress()
     }
 
-    pub fn update(&mut self, dt: Duration, camera: &Camera, edit_camera_view: &EditCameraView) {
+    pub fn update(
+        &mut self,
+        dt: Duration,
+        input_state: &InputState,
+        camera: &Camera,
+        edit_camera_view: &EditCameraView,
+    ) {
         profile!("exec_view");
 
-        self.update_mouse_grid_pos(camera, edit_camera_view);
+        self.mouse_grid_pos = pick::pick_block(
+            self.exec.machine(),
+            camera,
+            &edit_camera_view.eye(),
+            &input_state.mouse_window_pos(),
+        );
 
         match self.status {
             Status::Playing => {
@@ -101,9 +113,6 @@ impl ExecView {
 
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::CursorMoved { position, .. } => {
-                self.mouse_window_pos = na::Point2::new(position.x as f32, position.y as f32);
-            }
             WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(*input),
             WindowEvent::MouseInput {
                 state,
@@ -338,6 +347,8 @@ impl ExecView {
 
             let mut transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
+
+            // Interpolate blip position if position changed
             if let Some(old_pos) = blip.old_pos {
                 if old_pos != blip.pos {
                     let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
@@ -366,42 +377,5 @@ impl ExecView {
                 radius: 10.0,
             });
         }
-    }
-
-    fn update_mouse_grid_pos(&mut self, camera: &Camera, edit_camera_view: &EditCameraView) {
-        let p = self.mouse_window_pos;
-        let p_near = camera.unproject(&na::Point3::new(p.x, p.y, -1.0));
-        let p_far = camera.unproject(&na::Point3::new(p.x, p.y, 1.0));
-
-        let ray = Ray {
-            origin: edit_camera_view.eye(),
-            velocity: p_far - p_near,
-        };
-
-        let mut closest_block = None;
-
-        for (_block_index, (block_pos, _placed_block)) in self.exec.machine().iter_blocks() {
-            let center = render::machine::block_center(&block_pos);
-
-            let aabb = AABB {
-                min: center - na::Vector3::new(0.5, 0.5, 0.5),
-                max: center + na::Vector3::new(0.5, 0.5, 0.5),
-            };
-
-            if let Some(distance) = ray_aabb_intersection(&ray, &aabb) {
-                closest_block = Some(closest_block.map_or(
-                    (block_pos, distance),
-                    |(closest_pos, closest_distance)| {
-                        if distance < closest_distance {
-                            (block_pos, distance)
-                        } else {
-                            (closest_pos, closest_distance)
-                        }
-                    },
-                ));
-            }
-        }
-
-        self.mouse_grid_pos = closest_block.map(|(pos, _distance)| *pos);
     }
 }
