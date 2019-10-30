@@ -2,7 +2,7 @@ use nalgebra as na;
 
 use crate::machine::{grid, Machine};
 use crate::render::{self, Camera};
-use crate::util::intersection::{ray_aabb_intersection, ray_quad_intersection, Plane, Ray, AABB};
+use crate::util::intersection::{ray_aabb_intersection, ray_plane_intersection, Plane, Ray, AABB};
 
 pub fn camera_ray(camera: &Camera, eye: &na::Point3<f32>, window_pos: &na::Point2<f32>) -> Ray {
     let p_near = camera.unproject(&na::Point3::new(window_pos.x, window_pos.y, -1.0));
@@ -14,7 +14,7 @@ pub fn camera_ray(camera: &Camera, eye: &na::Point3<f32>, window_pos: &na::Point
     }
 }
 
-pub fn pick_in_layer(
+pub fn pick_in_layer_plane(
     machine: &Machine,
     layer: isize,
     camera: &Camera,
@@ -28,7 +28,7 @@ pub fn pick_in_layer(
         direction_b: machine.size().y as f32 * na::Vector3::y(),
     };
 
-    if let Some((ray_t, _plane_pos)) = ray_quad_intersection(&ray, &quad) {
+    if let Some((ray_t, _plane_pos)) = ray_plane_intersection(&ray, &quad) {
         let ray_pos = ray.origin + ray_t * ray.velocity;
         let grid_pos = grid::Point3::new(
             ray_pos.x.floor() as isize,
@@ -36,13 +36,8 @@ pub fn pick_in_layer(
             layer,
         );
 
-        if machine.is_valid_pos(&grid_pos) {
-            // Intersection
-            Some(grid_pos)
-        } else {
-            // Intersection at invalid position
-            None
-        }
+        // Intersection -- possibly at position outside of the machine though!
+        Some(grid_pos)
     } else {
         // No intersection
         None

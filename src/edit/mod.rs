@@ -126,11 +126,16 @@ pub enum Edit {
 impl Edit {
     /// Apply the edit operation to a machine and return an edit operation to
     /// undo what was done.
-    pub fn run(&self, machine: &mut Machine) -> Edit {
+    pub fn run(self, machine: &mut Machine) -> Edit {
         match self {
             Edit::NoOp => Edit::NoOp,
             Edit::SetBlocks(blocks) => {
-                let previous_blocks = blocks
+                let valid_blocks = blocks
+                    .into_iter()
+                    .filter(|(p, block)| machine.is_valid_pos(p))
+                    .collect::<HashMap<_, _>>();
+
+                let previous_blocks = valid_blocks
                     .keys()
                     .map(|p| {
                         (
@@ -142,10 +147,10 @@ impl Edit {
                     })
                     .collect();
 
-                if *blocks == previous_blocks {
+                if previous_blocks == valid_blocks {
                     Edit::NoOp
                 } else {
-                    for (p, block) in blocks.iter() {
+                    for (p, block) in valid_blocks.iter() {
                         machine.set_block_at_pos(p, block.clone());
                     }
 
