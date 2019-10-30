@@ -116,6 +116,9 @@ fn main() {
             imgui_platform.handle_event(imgui.io_mut(), &window, &event);
 
             match event {
+                glutin::Event::Suspended(_) => {
+                    input_state.clear();
+                }
                 glutin::Event::WindowEvent { event, .. } => {
                     // Do not forward events to the game if imgui currently
                     // wants to handle events (i.e. when the mouse is over a
@@ -141,6 +144,9 @@ fn main() {
                     }
 
                     match event {
+                        glutin::WindowEvent::Focused(false) => {
+                            input_state.clear();
+                        }
                         glutin::WindowEvent::CloseRequested => {
                             info!("Quitting");
 
