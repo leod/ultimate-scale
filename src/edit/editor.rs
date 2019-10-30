@@ -364,6 +364,8 @@ impl Editor {
             if self.machine.is_valid_layer(self.current_layer - 1) {
                 self.current_layer -= 1;
             }
+        } else if key == self.config.select_key {
+            self.mode = Mode::Select(HashSet::new());
         } else if let Some((_key, layer)) = self
             .config
             .layer_keys
@@ -400,8 +402,15 @@ impl Editor {
                         if has_block {
                             if !modifiers.shift && !modifiers.ctrl {
                                 selection = HashSet::new();
+                                selection.insert(grid_pos);
+                            } else {
+                                // Toggle block selection
+                                if selection.contains(&grid_pos) {
+                                    selection.remove(&grid_pos);
+                                } else {
+                                    selection.insert(grid_pos);
+                                }
                             }
-                            selection.insert(grid_pos);
                         }
                     }
 
