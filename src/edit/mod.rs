@@ -28,27 +28,8 @@ impl Piece {
     }
 
     pub fn new_blocks_to_origin(blocks: HashMap<grid::Point3, PlacedBlock>) -> Piece {
-        let mut min = grid::Vector3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
-
-        for p in blocks.keys() {
-            if p.x < min.x {
-                min.x = p.x;
-            }
-            if p.y < min.y {
-                min.y = p.y;
-            }
-            if p.z < min.z {
-                min.z = p.z;
-            }
-        }
-
-        let blocks_at_origin = blocks
-            .into_iter()
-            .map(|(p, block)| (p - min, block))
-            .collect();
-
         Piece {
-            blocks: blocks_at_origin,
+            blocks: Self::blocks_to_origin(blocks),
         }
     }
 
@@ -71,11 +52,25 @@ impl Piece {
     }
 
     pub fn rotate_cw_xy(&mut self) {
-        // TODO
+        self.blocks = Self::blocks_to_origin(
+            self.blocks
+                .clone()
+                .into_iter()
+                .map(|(p, mut placed_block)| {
+                    let rotated_p = grid::Point3::new(p.y, self.grid_size().y - p.x, p.z);
+
+                    placed_block.rotate_cw_xy();
+
+                    (rotated_p, placed_block)
+                })
+                .collect(),
+        );
     }
 
     pub fn rotate_ccw_xy(&mut self) {
-        // TODO
+        for _ in 0..3 {
+            self.rotate_cw_xy();
+        }
     }
 
     pub fn place_edit(&self, offset: &grid::Vector3) -> Edit {
@@ -95,6 +90,29 @@ impl Piece {
         self.blocks
             .iter()
             .map(move |(pos, block)| (pos + offset, block.clone()))
+    }
+
+    pub fn blocks_to_origin(
+        blocks: HashMap<grid::Point3, PlacedBlock>,
+    ) -> HashMap<grid::Point3, PlacedBlock> {
+        let mut min = grid::Vector3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
+
+        for p in blocks.keys() {
+            if p.x < min.x {
+                min.x = p.x;
+            }
+            if p.y < min.y {
+                min.y = p.y;
+            }
+            if p.z < min.z {
+                min.z = p.z;
+            }
+        }
+
+        blocks
+            .into_iter()
+            .map(|(p, block)| (p - min, block))
+            .collect()
     }
 }
 
