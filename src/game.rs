@@ -175,6 +175,36 @@ impl Game {
             )?;
         }
 
+        // Render screen-space stuff on top
+        let ortho_projection = na::Matrix4::new_orthographic(
+            0.0,
+            self.camera.viewport.z,
+            self.camera.viewport.w,
+            0.0,
+            -10.0,
+            10.0,
+        );
+        let ortho_camera = Camera {
+            projection: ortho_projection,
+            view: na::Matrix4::identity(),
+            ..self.camera.clone()
+        };
+        let ortho_render_context = render::pipeline::Context {
+            camera: ortho_camera,
+            ..render_context
+        };
+        let ortho_parameters = glium::DrawParameters {
+            blend: glium::draw_parameters::Blend::alpha_blending(),
+            ..Default::default()
+        };
+        self.render_lists.ortho.render_with_program(
+            &self.resources,
+            &ortho_render_context,
+            &ortho_parameters,
+            &self.resources.plain_program,
+            target,
+        )?;
+
         Ok(())
     }
 
@@ -184,14 +214,11 @@ impl Game {
         self.fps = 1.0 / dt_secs;
 
         if let Some(exec_view) = self.exec_view.as_mut() {
-            exec_view.update(dt, &self.camera, &self.edit_camera_view);
+            exec_view.update(dt, input_state, &self.camera, &self.edit_camera_view);
         } else {
-            self.exec_view = self.editor.update(
-                dt_secs,
-                input_state,
-                &self.camera,
-                &mut self.edit_camera_view,
-            );
+            self.exec_view =
+                self.editor
+                    .update(dt, input_state, &self.camera, &mut self.edit_camera_view);
         }
 
         match self.exec_view.as_ref().map(|view| view.status()) {
@@ -215,13 +242,13 @@ impl Game {
         }
     }
 
-    pub fn on_event(&mut self, event: &glutin::WindowEvent) {
+    pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {
         self.edit_camera_view_input.on_event(event);
 
         if let Some(exec_view) = self.exec_view.as_mut() {
             exec_view.on_event(event);
         } else {
-            self.editor.on_event(event);
+            self.editor.on_event(input_state, event);
         }
     }
 

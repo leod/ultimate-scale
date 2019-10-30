@@ -69,16 +69,15 @@ fn main() {
 
     {
         let hidpi_factor = imgui_platform.hidpi_factor();
-        let font_size = (13.0 * hidpi_factor) as f32;
+        let font_size = (14.0 * hidpi_factor) as f32;
 
-        imgui
-            .fonts()
-            .add_font(&[imgui::FontSource::DefaultFontData {
-                config: Some(imgui::FontConfig {
-                    size_pixels: font_size,
-                    ..imgui::FontConfig::default()
-                }),
-            }]);
+        imgui.fonts().add_font(&[imgui::FontSource::TtfData {
+            data: include_bytes!("../resources/DejaVuSans.ttf"),
+            size_pixels: font_size,
+            config: Some(imgui::FontConfig {
+                ..imgui::FontConfig::default()
+            }),
+        }]);
 
         imgui.io_mut().font_global_scale = (1.0 / hidpi_factor) as f32;
     }
@@ -117,6 +116,9 @@ fn main() {
             imgui_platform.handle_event(imgui.io_mut(), &window, &event);
 
             match event {
+                glutin::Event::Suspended(_) => {
+                    input_state.clear();
+                }
                 glutin::Event::WindowEvent { event, .. } => {
                     // Do not forward events to the game if imgui currently
                     // wants to handle events (i.e. when the mouse is over a
@@ -138,10 +140,13 @@ fn main() {
 
                     if forward_to_game {
                         input_state.on_event(&event);
-                        game.on_event(&event);
+                        game.on_event(&input_state, &event);
                     }
 
                     match event {
+                        glutin::WindowEvent::Focused(false) => {
+                            input_state.clear();
+                        }
                         glutin::WindowEvent::CloseRequested => {
                             info!("Quitting");
 
