@@ -265,6 +265,7 @@ impl Editor {
                 }
 
                 ui.separator();
+                ui.separator();
 
                 if ui.button(im_str!("Paste"), [button_w, button_h]) {
                     self.action_paste();
@@ -302,7 +303,9 @@ impl Editor {
                 }
 
                 ui.separator();
+                ui.separator();
 
+                ui.set_window_font_scale(1.5);
                 if ui.button(im_str!("↻"), [small_button_w, button_h]) {
                     self.action_rotate_cw();
                 }
@@ -326,6 +329,7 @@ impl Editor {
                     );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
+                ui.set_window_font_scale(1.0);
             });
     }
 
@@ -751,7 +755,7 @@ impl Editor {
     pub fn action_cut(&mut self) {
         let edit = match &self.mode {
             Mode::Select(selection) => {
-                let mut selected_blocks = selection
+                let selected_blocks = selection
                     .iter()
                     .filter_map(|p| {
                         self.machine
@@ -781,7 +785,7 @@ impl Editor {
     pub fn action_copy(&mut self) {
         match &self.mode {
             Mode::Select(selection) => {
-                let mut selected_blocks = selection
+                let selected_blocks = selection
                     .iter()
                     .filter_map(|p| {
                         self.machine
