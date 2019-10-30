@@ -346,10 +346,14 @@ impl Editor {
     }
 
     fn on_key_press(&mut self, key: ModifiedKey) {
-        let edit = match &mut self.mode {
+        let mut edit = None;
+
+        match &mut self.mode {
             Mode::Select(selection) => {
                 if key == self.config.cut_key {
-                    let edit = Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
+                    edit = Some(Edit::SetBlocks(
+                        selection.iter().map(|p| (*p, None)).collect(),
+                    ));
 
                     let mut selected_blocks = HashMap::new();
                     for p in selection.iter() {
@@ -358,8 +362,6 @@ impl Editor {
                         }
                     }
                     self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
-
-                    Some(edit)
                 } else if key == self.config.copy_key {
                     let mut selected_blocks = HashMap::new();
                     for p in selection.iter() {
@@ -368,16 +370,11 @@ impl Editor {
                         }
                     }
                     self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
-
-                    None
-                } else {
-                    None
                 }
             }
             Mode::RectSelect { .. } => {
                 // Nothing here for now.
                 // Should we allow copy/paste/cut while in rect select?
-                None
             }
             Mode::PlacePiece(piece) => {
                 if key.key == self.config.rotate_block_key.key {
@@ -389,8 +386,6 @@ impl Editor {
                 } else if key == self.config.block_kind_key {
                     piece.next_kind();
                 }
-
-                None
             }
         };
 
@@ -447,81 +442,79 @@ impl Editor {
         modifiers: glutin::ModifiersState,
     ) {
         self.mode = match self.mode.clone() {
-            Mode::Select(mut selection) => {
-                if button == glutin::MouseButton::Left && state == glutin::ElementState::Pressed {
-                    // Double check that there actually is a block at the mouse
-                    // block position.
-                    let grid_pos = self
-                        .mouse_block_pos
-                        .filter(|p| self.machine.get_block_at_pos(p).is_some());
+            Mode::Select(mut selection)
+                if button == glutin::MouseButton::Left
+                    && state == glutin::ElementState::Pressed =>
+            {
+                // Double check that there actually is a block at the mouse block
+                // position.
+                let grid_pos = self
+                    .mouse_block_pos
+                    .filter(|p| self.machine.get_block_at_pos(p).is_some());
 
-                    if let Some(grid_pos) = grid_pos {
-                        if modifiers.shift && !selection.is_empty() {
-                            // Shift: Select in a line from the last to the
-                            // current grid position.
+                if let Some(grid_pos) = grid_pos {
+                    if modifiers.shift && !selection.is_empty() {
+                        // Shift: Select in a line from the last to the current
+                        // grid position.
 
-                            // Safe to unwrap due to `is_empty()` check above.
-                            let last = selection.last().unwrap();
+                        // Safe to unwrap due to `is_empty()` check above.
+                        let last = selection.last().unwrap();
 
-                            // For now draw line only if there are two shared
-                            // coordinates, otherwise behavior is too wonky.
-                            // Note that rust guarantees bools to be either 0 or
-                            // 1 when cast to integer types.
-                            let num_shared = (last.x == grid_pos.x) as usize
-                                + (last.y == grid_pos.y) as usize
-                                + (last.z == grid_pos.z) as usize;
-                            let line = if num_shared == 2 {
-                                pick::pick_line(&self.machine, last, &grid_pos)
-                            } else {
-                                vec![grid_pos]
-                            };
-
-                            // Push the selected line to the end of the vector,
-                            // so that it counts as the most newly selected.
-                            selection.retain(|p| !line.contains(p));
-
-                            if !modifiers.ctrl {
-                                for p in line {
-                                    selection.push(p);
-                                }
-                            }
-                        } else if modifiers.ctrl {
-                            // Control: Extend/toggle block selection.
-                            if selection.contains(&grid_pos) {
-                                selection.retain(|p| *p != grid_pos);
-                            } else {
-                                selection.push(grid_pos);
-                            }
+                        // For now draw line only if there are two shared
+                        // coordinates, otherwise behavior is too wonky.
+                        // Note that rust guarantees bools to be either 0 or
+                        // 1 when cast to integer types.
+                        let num_shared = (last.x == grid_pos.x) as usize
+                            + (last.y == grid_pos.y) as usize
+                            + (last.z == grid_pos.z) as usize;
+                        let line = if num_shared == 2 {
+                            pick::pick_line(&self.machine, last, &grid_pos)
                         } else {
-                            // No modifier: Only select new block.
-                            selection = Vec::new();
-                            selection.push(grid_pos);
-                        }
-
-                        // If clicked on a block, stay in select mode.
-                        Mode::Select(selection)
-                    } else {
-                        // Did not click on a block, switch to rect select.
-                        let existing_selection = if modifiers.ctrl {
-                            // Control: Keep existing selection.
-                            selection
-                        } else {
-                            // Start from scratch otherwise.
-                            Vec::new()
+                            vec![grid_pos]
                         };
 
-                        let start_pos = input_state.mouse_window_pos();
+                        // Push the selected line to the end of the vector, so
+                        // that it counts as the most recently selected.
+                        selection.retain(|p| !line.contains(p));
 
-                        Mode::RectSelect {
-                            existing_selection,
-                            new_selection: Vec::new(),
-                            start_pos,
-                            end_pos: start_pos,
+                        if !modifiers.ctrl {
+                            for p in line {
+                                selection.push(p);
+                            }
                         }
+                    } else if modifiers.ctrl {
+                        // Control: Extend/toggle block selection.
+                        if selection.contains(&grid_pos) {
+                            selection.retain(|p| *p != grid_pos);
+                        } else {
+                            selection.push(grid_pos);
+                        }
+                    } else {
+                        // No modifier: Only select new block.
+                        selection = Vec::new();
+                        selection.push(grid_pos);
                     }
-                } else {
-                    // Some irrelevant mouse event happened, just ignore.
+
+                    // If clicked on a block, stay in select mode.
                     Mode::Select(selection)
+                } else {
+                    // Did not click on a block, switch to rect select.
+                    let existing_selection = if modifiers.ctrl {
+                        // Control: Keep existing selection.
+                        selection
+                    } else {
+                        // Start from scratch otherwise.
+                        Vec::new()
+                    };
+
+                    let start_pos = input_state.mouse_window_pos();
+
+                    Mode::RectSelect {
+                        existing_selection,
+                        new_selection: Vec::new(),
+                        start_pos,
+                        end_pos: start_pos,
+                    }
                 }
             }
             x => x,
