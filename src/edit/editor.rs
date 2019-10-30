@@ -666,12 +666,14 @@ impl Editor {
     pub fn action_cut(&mut self) {
         let edit = match &self.mode {
             Mode::Select(selection) => {
-                let mut selected_blocks = HashMap::new();
-                for p in selection.iter() {
-                    if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
-                        selected_blocks.insert(*p, placed_block.clone());
-                    }
-                }
+                let mut selected_blocks = selection
+                    .iter()
+                    .filter_map(|p| {
+                        self.machine
+                            .get_block_at_pos(p)
+                            .map(|(_, b)| (*p, b.clone()))
+                    })
+                    .collect();
                 self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
 
                 // Note that `run_and_track_edit` will automatically clear the
@@ -694,12 +696,14 @@ impl Editor {
     pub fn action_copy(&mut self) {
         match &self.mode {
             Mode::Select(selection) => {
-                let mut selected_blocks = HashMap::new();
-                for p in selection.iter() {
-                    if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
-                        selected_blocks.insert(*p, placed_block.clone());
-                    }
-                }
+                let mut selected_blocks = selection
+                    .iter()
+                    .filter_map(|p| {
+                        self.machine
+                            .get_block_at_pos(p)
+                            .map(|(_, b)| (*p, b.clone()))
+                    })
+                    .collect();
                 self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
             }
             _ => {
