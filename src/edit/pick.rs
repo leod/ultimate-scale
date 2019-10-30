@@ -123,30 +123,27 @@ pub fn pick_line(machine: &Machine, a: &grid::Point3, b: &grid::Point3) -> Vec<g
     points
 }
 
-pub fn pick_window_rect(
-    machine: &Machine,
-    camera: &Camera,
-    window_a: &na::Point2<f32>,
-    window_b: &na::Point2<f32>,
-) -> Vec<grid::Point3> {
+pub fn pick_window_rect<'a>(
+    machine: &'a Machine,
+    camera: &'a Camera,
+    window_a: &'a na::Point2<f32>,
+    window_b: &'a na::Point2<f32>,
+) -> impl Iterator<Item = grid::Point3> + 'a {
     let min = na::Point2::new(window_a.x.min(window_b.x), window_a.y.min(window_b.y));
     let max = na::Point2::new(window_a.x.max(window_b.x), window_a.y.max(window_b.y));
 
-    let mut result = Vec::new();
-    for (_block_index, (block_pos, _placed_block)) in machine.iter_blocks() {
-        let center = render::machine::block_center(&block_pos);
+    machine
+        .iter_blocks()
+        .map(|(_block_index, (block_pos, _placed_block))| *block_pos)
+        .filter(move |block_pos| {
+            let center = render::machine::block_center(block_pos);
 
-        let block_pos_float: na::Point3<f32> = na::convert(*block_pos);
-        let viewport_pos = camera.project_to_viewport(&block_pos_float);
+            let block_pos_float: na::Point3<f32> = na::convert(*block_pos);
+            let viewport_pos = camera.project_to_viewport(&block_pos_float);
 
-        if viewport_pos.x >= min.x
-            && viewport_pos.x <= max.x
-            && viewport_pos.y >= min.y
-            && viewport_pos.y <= max.y
-        {
-            result.push(*block_pos);
-        }
-    }
-
-    result
+            viewport_pos.x >= min.x
+                && viewport_pos.x <= max.x
+                && viewport_pos.y >= min.y
+                && viewport_pos.y <= max.y
+        })
 }

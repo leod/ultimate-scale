@@ -288,7 +288,7 @@ impl Editor {
 
                     new_mode = Some(Mode::RectSelect {
                         existing_selection: existing_selection.clone(),
-                        new_selection,
+                        new_selection: new_selection.collect(),
                         start_pos: *start_pos,
                         end_pos: input_state.mouse_window_pos(),
                     });
@@ -556,7 +556,7 @@ impl Editor {
 
         match &self.mode {
             Mode::Select(selection) => {
-                self.render_selection(selection, true, out);
+                self.render_selection(selection, false, out);
 
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
                     let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
