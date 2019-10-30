@@ -175,6 +175,36 @@ impl Game {
             )?;
         }
 
+        // Render screen-space stuff on top
+        let ortho_projection = na::Matrix4::new_orthographic(
+            0.0,
+            self.camera.viewport.z,
+            0.0,
+            self.camera.viewport.w,
+            -10.0,
+            10.0,
+        );
+        let ortho_camera = Camera {
+            projection: ortho_projection,
+            view: na::Matrix4::identity(),
+            ..self.camera.clone()
+        };
+        let ortho_render_context = render::pipeline::Context {
+            camera: ortho_camera,
+            ..render_context
+        };
+        let ortho_parameters = glium::DrawParameters {
+            blend: glium::draw_parameters::Blend::alpha_blending(),
+            ..Default::default()
+        };
+        self.render_lists.ortho.render_with_program(
+            &self.resources,
+            &ortho_render_context,
+            &ortho_parameters,
+            &self.resources.plain_program,
+            target,
+        )?;
+
         Ok(())
     }
 
