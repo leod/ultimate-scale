@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::File;
 use std::path::Path;
+use std::time::Duration;
 
 use log::{info, warn};
 
@@ -148,7 +149,7 @@ impl Editor {
 
     pub fn update(
         &mut self,
-        _dt_secs: f32,
+        _dt: Duration,
         input_state: &InputState,
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
@@ -167,7 +168,7 @@ impl Editor {
             &self.machine,
             self.current_layer,
             camera,
-            edit_camera_view,
+            &edit_camera_view.eye(),
             &input_state.mouse_window_pos(),
         );
 
