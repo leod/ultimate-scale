@@ -179,8 +179,8 @@ impl Game {
         let ortho_projection = na::Matrix4::new_orthographic(
             0.0,
             self.camera.viewport.z,
-            0.0,
             self.camera.viewport.w,
+            0.0,
             -10.0,
             10.0,
         );
@@ -242,13 +242,13 @@ impl Game {
         }
     }
 
-    pub fn on_event(&mut self, event: &glutin::WindowEvent) {
+    pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {
         self.edit_camera_view_input.on_event(event);
 
         if let Some(exec_view) = self.exec_view.as_mut() {
             exec_view.on_event(event);
         } else {
-            self.editor.on_event(event);
+            self.editor.on_event(input_state, event);
         }
     }
 

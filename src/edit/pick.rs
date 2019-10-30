@@ -7,8 +7,8 @@ use crate::render::{self, Camera};
 use crate::util::intersection::{ray_aabb_intersection, ray_plane_intersection, Plane, Ray, AABB};
 
 pub fn camera_ray(camera: &Camera, eye: &na::Point3<f32>, window_pos: &na::Point2<f32>) -> Ray {
-    let p_near = camera.unproject(&na::Point3::new(window_pos.x, window_pos.y, -1.0));
-    let p_far = camera.unproject(&na::Point3::new(window_pos.x, window_pos.y, 1.0));
+    let p_near = camera.unproject_from_viewport(&na::Point3::new(window_pos.x, window_pos.y, -1.0));
+    let p_far = camera.unproject_from_viewport(&na::Point3::new(window_pos.x, window_pos.y, 1.0));
 
     Ray {
         origin: *eye,
@@ -38,7 +38,7 @@ pub fn pick_in_layer_plane(
             layer,
         );
 
-        // Intersection -- possibly at position outside of the machine though!
+        // Intersection -- possibly at position outside of the grid though!
         Some(grid_pos)
     } else {
         // No intersection
@@ -116,10 +116,37 @@ pub fn pick_line(machine: &Machine, a: &grid::Point3, b: &grid::Point3) -> Vec<g
         // to keep the order (if b is included it should always be the last
         // element). We expect `points` to be relatively small anyway.
         if machine.get_block_at_pos(&c).is_some() && !points.contains(&c) {
-            println!("add {:?}", c);
             points.push(c);
         }
     }
 
     points
+}
+
+pub fn pick_window_rect(
+    machine: &Machine,
+    camera: &Camera,
+    window_a: &na::Point2<f32>,
+    window_b: &na::Point2<f32>,
+) -> Vec<grid::Point3> {
+    let min = na::Point2::new(window_a.x.min(window_b.x), window_a.y.min(window_b.y));
+    let max = na::Point2::new(window_a.x.max(window_b.x), window_a.y.max(window_b.y));
+
+    let mut result = Vec::new();
+    for (_block_index, (block_pos, _placed_block)) in machine.iter_blocks() {
+        let center = render::machine::block_center(&block_pos);
+
+        let block_pos_float: na::Point3<f32> = na::convert(*block_pos);
+        let viewport_pos = camera.project_to_viewport(&block_pos_float);
+
+        if viewport_pos.x >= min.x
+            && viewport_pos.x <= max.x
+            && viewport_pos.y >= min.y
+            && viewport_pos.y <= max.y
+        {
+            result.push(*block_pos);
+        }
+    }
+
+    result
 }
