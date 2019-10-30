@@ -76,6 +76,14 @@ impl Piece {
         }
     }
 
+    pub fn next_kind(&mut self) {
+        for placed_block in self.blocks.values_mut() {
+            if let Some(kind) = placed_block.block.kind() {
+                placed_block.block = placed_block.block.with_kind(kind.next());
+            }
+        }
+    }
+
     pub fn place_edit(&self, offset: &grid::Vector3) -> Edit {
         let set_blocks = self
             .iter_blocks(offset)
