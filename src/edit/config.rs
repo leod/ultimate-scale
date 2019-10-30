@@ -89,6 +89,8 @@ pub struct Config {
     pub layer_up_key: ModifiedKey,
     pub layer_down_key: ModifiedKey,
 
+    pub select_key: ModifiedKey,
+
     pub block_keys: Vec<(ModifiedKey, Block)>,
     pub layer_keys: Vec<(ModifiedKey, isize)>,
 }
@@ -108,32 +110,33 @@ impl Default for Config {
             save_key: ModifiedKey::ctrl(VirtualKeyCode::S),
             layer_up_key: ModifiedKey::new(VirtualKeyCode::Tab),
             layer_down_key: ModifiedKey::shift(VirtualKeyCode::Tab),
+            select_key: ModifiedKey::new(VirtualKeyCode::Key1),
             block_keys: vec![
-                (ModifiedKey::new(VirtualKeyCode::Key1), Block::PipeXY),
-                (ModifiedKey::new(VirtualKeyCode::Key2), Block::PipeBendXY),
+                (ModifiedKey::new(VirtualKeyCode::Key2), Block::PipeXY),
+                (ModifiedKey::new(VirtualKeyCode::Key3), Block::PipeBendXY),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key3),
+                    ModifiedKey::new(VirtualKeyCode::Key4),
                     Block::PipeSplitXY {
                         open_move_hole_y: grid::Sign::Pos,
                     },
                 ),
-                (ModifiedKey::new(VirtualKeyCode::Key4), Block::PipeZ),
+                (ModifiedKey::new(VirtualKeyCode::Key5), Block::PipeZ),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key5),
+                    ModifiedKey::new(VirtualKeyCode::Key6),
                     Block::PipeBendZ {
                         sign_z: grid::Sign::Pos,
                     },
                 ),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key6),
+                    ModifiedKey::new(VirtualKeyCode::Key7),
                     Block::PipeBendZ {
                         sign_z: grid::Sign::Neg,
                     },
                 ),
-                (ModifiedKey::new(VirtualKeyCode::Key7), Block::FunnelXY),
-                (ModifiedKey::ctrl(VirtualKeyCode::Key1), Block::WindSource),
+                (ModifiedKey::new(VirtualKeyCode::Key8), Block::FunnelXY),
+                (ModifiedKey::ctrl(VirtualKeyCode::Key2), Block::WindSource),
                 (
-                    ModifiedKey::ctrl(VirtualKeyCode::Key2),
+                    ModifiedKey::ctrl(VirtualKeyCode::Key3),
                     Block::BlipSpawn {
                         kind: BlipKind::A,
                         num_spawns: None,
@@ -141,7 +144,7 @@ impl Default for Config {
                     },
                 ),
                 (
-                    ModifiedKey::ctrl(VirtualKeyCode::Key3),
+                    ModifiedKey::ctrl(VirtualKeyCode::Key4),
                     Block::BlipSpawn {
                         kind: BlipKind::A,
                         num_spawns: Some(1),
@@ -149,21 +152,21 @@ impl Default for Config {
                     },
                 ),
                 (
-                    ModifiedKey::ctrl(VirtualKeyCode::Key4),
+                    ModifiedKey::ctrl(VirtualKeyCode::Key5),
                     Block::BlipDuplicator {
                         kind: Some(BlipKind::A),
                         activated: None,
                     },
                 ),
                 (
-                    ModifiedKey::ctrl(VirtualKeyCode::Key5),
+                    ModifiedKey::ctrl(VirtualKeyCode::Key6),
                     Block::BlipDuplicator {
                         kind: None,
                         activated: None,
                     },
                 ),
                 (
-                    ModifiedKey::ctrl(VirtualKeyCode::Key6),
+                    ModifiedKey::ctrl(VirtualKeyCode::Key7),
                     Block::BlipWindSource { activated: false },
                 ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
