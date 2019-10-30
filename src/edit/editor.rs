@@ -94,6 +94,24 @@ impl Editor {
                 selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
                 Mode::Select(selection)
             }
+            Mode::RectSelect {
+                mut existing_selection,
+                mut new_selection,
+                start_pos,
+                end_pos,
+            } => {
+                // Not sure if we will ever have the case of running an edit
+                // *while* rect selecting, but let's add this case to be sure.
+                existing_selection
+                    .retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
+                new_selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
+                Mode::RectSelect {
+                    existing_selection,
+                    new_selection,
+                    start_pos,
+                    end_pos,
+                }
+            }
             mode => mode,
         };
 
@@ -179,7 +197,7 @@ impl Editor {
             &input_state.mouse_window_pos(),
         );
 
-        self.update_input(input_state);
+        self.update_input(input_state, camera);
 
         if !self.start_exec {
             None
@@ -238,10 +256,43 @@ impl Editor {
             });
     }
 
-    fn update_input(&mut self, input_state: &InputState) {
+    fn update_input(&mut self, input_state: &InputState, camera: &Camera) {
+        let mut new_mode = None;
+
         match &self.mode {
             Mode::Select(_selection) => {
-                // TODO
+                // Nothing here for now.
+            }
+            Mode::RectSelect {
+                existing_selection,
+                new_selection,
+                start_pos,
+                end_pos: _,
+            } => {
+                if !input_state.is_button_pressed(MouseButton::Left) {
+                    // Note: We do not use the mouse button released event for
+                    // leaving rect select mode, since this event could be
+                    // dropped, e.g. when the window loses focus.
+                    let mut selection = existing_selection.clone();
+                    for p in new_selection.iter() {
+                        if !selection.contains(p) {
+                            selection.push(*p);
+                        }
+                    }
+                    new_mode = Some(Mode::Select(selection));
+                } else {
+                    // TODO: Could move here, but wouldn't be fun I guess
+                    let end_pos = input_state.mouse_window_pos();
+                    let new_selection =
+                        pick::pick_window_rect(&self.machine, camera, start_pos, &end_pos);
+
+                    new_mode = Some(Mode::RectSelect {
+                        existing_selection: existing_selection.clone(),
+                        new_selection,
+                        start_pos: *start_pos,
+                        end_pos: input_state.mouse_window_pos(),
+                    });
+                }
             }
             Mode::PlacePiece(piece) => {
                 if input_state.is_button_pressed(MouseButton::Left) {
@@ -260,23 +311,27 @@ impl Editor {
                 }
             }
         }
+
+        if let Some(new_mode) = new_mode {
+            self.mode = new_mode;
+        }
     }
 
-    pub fn on_event(&mut self, event: &WindowEvent) {
+    pub fn on_event(&mut self, input_state: &InputState, event: &WindowEvent) {
         match event {
-            WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(input),
+            WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(input_state, input),
             WindowEvent::MouseInput {
                 state,
                 button,
                 modifiers,
                 ..
-            } => self.on_mouse_input(*state, *button, *modifiers),
+            } => self.on_mouse_input(input_state, *state, *button, *modifiers),
 
             _ => (),
         }
     }
 
-    fn on_keyboard_input(&mut self, input: &glutin::KeyboardInput) {
+    fn on_keyboard_input(&mut self, _input_state: &InputState, input: &glutin::KeyboardInput) {
         if input.state == glutin::ElementState::Pressed {
             if let Some(keycode) = input.virtual_keycode {
                 let modified_key = ModifiedKey {
@@ -318,6 +373,11 @@ impl Editor {
                 } else {
                     None
                 }
+            }
+            Mode::RectSelect { .. } => {
+                // Nothing here for now.
+                // Should we allow copy/paste/cut while in rect select?
+                None
             }
             Mode::PlacePiece(piece) => {
                 if key.key == self.config.rotate_block_key.key {
@@ -384,6 +444,7 @@ impl Editor {
 
     fn on_mouse_input(
         &mut self,
+        input_state: &InputState,
         state: glutin::ElementState,
         button: glutin::MouseButton,
         modifiers: glutin::ModifiersState,
@@ -391,59 +452,80 @@ impl Editor {
         self.mode = match self.mode.clone() {
             Mode::Select(mut selection) => {
                 if button == glutin::MouseButton::Left && state == glutin::ElementState::Pressed {
-                    // TODO: Switch to rect select etc.
-                    let extend = modifiers.shift || modifiers.ctrl;
+                    // Double check that there actually is a block at the mouse
+                    // block position.
+                    let grid_pos = self
+                        .mouse_block_pos
+                        .filter(|p| self.machine.get_block_at_pos(p).is_some());
 
-                    if let Some(grid_pos) = self.mouse_block_pos {
-                        let has_block = self.machine.get_block_at_pos(&grid_pos).is_some();
+                    if let Some(grid_pos) = grid_pos {
+                        if modifiers.shift && !selection.is_empty() {
+                            // Shift: Select in a line from the last to the
+                            // current grid position.
 
-                        if has_block {
-                            if modifiers.shift && !selection.is_empty() {
-                                // Safe to unwrap due to `is_empty()` check above
-                                let last = selection.last().unwrap();
+                            // Safe to unwrap due to `is_empty()` check above.
+                            let last = selection.last().unwrap();
 
-                                // For now draw line only if there are two
-                                // shared coordinates, otherwise behavior is
-                                // too wonky.
-                                // Note that rust guarantees bools to be either
-                                // 0 or 1 when cast to integer types.
-                                let num_shared = (last.x == grid_pos.x) as usize
-                                    + (last.y == grid_pos.y) as usize
-                                    + (last.z == grid_pos.z) as usize;
-                                let line = if num_shared == 2 {
-                                    pick::pick_line(&self.machine, last, &grid_pos)
-                                } else {
-                                    vec![grid_pos]
-                                };
-
-                                // Push the selected line to the end of the
-                                // vector, so that it counts as the most newly
-                                // selected.
-                                selection.retain(|p| !line.contains(p));
-
-                                if !modifiers.ctrl {
-                                    for p in line {
-                                        selection.push(p);
-                                    }
-                                }
-                            } else if modifiers.ctrl {
-                                // Toggle block selection
-                                if selection.contains(&grid_pos) {
-                                    selection.retain(|p| *p != grid_pos);
-                                } else {
-                                    selection.push(grid_pos);
-                                }
+                            // For now draw line only if there are two
+                            // shared coordinates, otherwise behavior is
+                            // too wonky.
+                            // Note that rust guarantees bools to be either
+                            // 0 or 1 when cast to integer types.
+                            let num_shared = (last.x == grid_pos.x) as usize
+                                + (last.y == grid_pos.y) as usize
+                                + (last.z == grid_pos.z) as usize;
+                            let line = if num_shared == 2 {
+                                pick::pick_line(&self.machine, last, &grid_pos)
                             } else {
-                                selection = Vec::new();
+                                vec![grid_pos]
+                            };
+
+                            // Push the selected line to the end of the
+                            // vector, so that it counts as the most newly
+                            // selected.
+                            selection.retain(|p| !line.contains(p));
+
+                            if !modifiers.ctrl {
+                                for p in line {
+                                    selection.push(p);
+                                }
+                            }
+                        } else if modifiers.ctrl {
+                            // Control: Extend/toggle block selection.
+                            if selection.contains(&grid_pos) {
+                                selection.retain(|p| *p != grid_pos);
+                            } else {
                                 selection.push(grid_pos);
                             }
+                        } else {
+                            // No modifier: Only select new block.
+                            selection = Vec::new();
+                            selection.push(grid_pos);
                         }
-                    } else if !extend {
-                        selection.clear();
-                    }
 
-                    Mode::Select(selection)
+                        // If clicked on a block, stay in select mode.
+                        Mode::Select(selection)
+                    } else {
+                        // Did not click on a block, switch to rect select.
+                        let existing_selection = if modifiers.ctrl {
+                            // Control: Keep existing selection.
+                            selection
+                        } else {
+                            // Start from scratch otherwise.
+                            Vec::new()
+                        };
+
+                        let start_pos = input_state.mouse_window_pos();
+
+                        Mode::RectSelect {
+                            existing_selection,
+                            new_selection: Vec::new(),
+                            start_pos,
+                            end_pos: start_pos,
+                        }
+                    }
                 } else {
+                    // Some irrelevant mouse event happened, just ignore.
                     Mode::Select(selection)
                 }
             }
@@ -474,24 +556,7 @@ impl Editor {
 
         match &self.mode {
             Mode::Select(selection) => {
-                for (i, &grid_pos) in selection.iter().enumerate() {
-                    let color = if i + 1 == selection.len() {
-                        na::Vector4::new(0.9, 0.9, 0.5, 1.0)
-                    } else {
-                        na::Vector4::new(0.0, 0.9, 0.0, 1.0)
-                    };
-
-                    let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
-                    render::machine::render_cuboid_wireframe(
-                        &render::machine::Cuboid {
-                            center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
-                            size: na::Vector3::new(1.0, 1.0, 1.0),
-                        },
-                        0.025,
-                        &color,
-                        &mut out.plain,
-                    );
-                }
+                self.render_selection(selection, true, out);
 
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
                     let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
@@ -506,15 +571,31 @@ impl Editor {
                         &mut out.plain,
                     );
                 }
+            }
+            Mode::RectSelect {
+                existing_selection,
+                new_selection,
+                start_pos,
+                end_pos,
+            } => {
+                self.render_selection(existing_selection, false, out);
+                self.render_selection(new_selection, false, out);
 
-                let selection_transform =
-                    na::Matrix4::new_translation(&na::Vector3::new(30.0, 50.0, 0.0))
-                        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(300.0, 500.0, 1.0));
+                let min = na::Point2::new(start_pos.x.min(end_pos.x), start_pos.y.min(end_pos.y));
+                let max = na::Point2::new(start_pos.x.max(end_pos.x), start_pos.y.max(end_pos.y));
+
+                let rect_transform =
+                    na::Matrix4::new_translation(&na::Vector3::new(min.x, min.y, 0.0))
+                        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                            max.x - min.x,
+                            max.y - min.y,
+                            1.0,
+                        ));
                 out.ortho.add(
                     render::Object::Quad,
                     &render::pipeline::DefaultInstanceParams {
-                        transform: selection_transform,
-                        color: na::Vector4::new(0.3, 0.3, 0.9, 0.4),
+                        transform: rect_transform,
+                        color: na::Vector4::new(0.3, 0.3, 0.9, 0.3),
                         ..Default::default()
                     },
                 );
@@ -573,6 +654,32 @@ impl Editor {
         }
 
         Ok(())
+    }
+
+    fn render_selection(
+        &self,
+        selection: &[grid::Point3],
+        highlight_last: bool,
+        out: &mut RenderLists,
+    ) {
+        for (i, &grid_pos) in selection.iter().enumerate() {
+            let color = if highlight_last && i + 1 == selection.len() {
+                na::Vector4::new(0.9, 0.9, 0.0, 1.0)
+            } else {
+                na::Vector4::new(0.9, 0.5, 0.0, 1.0)
+            };
+
+            let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
+            render::machine::render_cuboid_wireframe(
+                &render::machine::Cuboid {
+                    center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
+                    size: na::Vector3::new(1.0, 1.0, 1.0),
+                },
+                0.025,
+                &color,
+                &mut out.plain,
+            );
+        }
     }
 
     fn save(&self, path: &Path) {

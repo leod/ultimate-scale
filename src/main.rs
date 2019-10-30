@@ -140,7 +140,7 @@ fn main() {
 
                     if forward_to_game {
                         input_state.on_event(&event);
-                        game.on_event(&event);
+                        game.on_event(&input_state, &event);
                     }
 
                     match event {

@@ -4,6 +4,8 @@ pub mod pick;
 
 use std::collections::HashMap;
 
+use nalgebra as na;
+
 use crate::machine::grid;
 use crate::machine::{Machine, PlacedBlock};
 
@@ -162,14 +164,29 @@ impl Edit {
 }
 
 /// Modes that the editor can be in.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Mode {
-    /// Select grid positions in the machine.
+    /// Select blocks in the machine.
     ///
     /// For consistency, the selected positions must always contain a block.
     /// There must be no duplicate positions. The order corresponds to the
     /// selection order.
     Select(Vec<grid::Point3>),
+
+    /// Select blocks in the machine by a screen rectangle.
+    RectSelect {
+        /// Blocks that were already selected when entering this mode.
+        existing_selection: Vec<grid::Point3>,
+
+        /// New blocks currently selected by the rectangle
+        new_selection: Vec<grid::Point3>,
+
+        /// Start position of the rectangle.
+        start_pos: na::Point2<f32>,
+
+        /// Current end position of the rectangle
+        end_pos: na::Point2<f32>,
+    },
 
     PlacePiece(Piece),
 }

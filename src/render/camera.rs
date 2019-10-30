@@ -76,7 +76,18 @@ impl Camera {
         }
     }
 
-    pub fn unproject(&self, win: &na::Point3<f32>) -> na::Point3<f32> {
+    pub fn project_to_viewport(&self, p: &na::Point3<f32>) -> na::Point3<f32> {
+        let q = self.projection * self.view * na::Vector4::new(p.x, p.y, p.z, 1.0);
+        let h = q.fixed_rows::<na::U3>(0) / q.w;
+
+        na::Point3::new(
+            self.viewport.x + (h.x + 1.0) / 2.0 * self.viewport.z,
+            self.viewport.y + (1.0 - (h.y + 1.0) / 2.0) * self.viewport.w,
+            h.z,
+        )
+    }
+
+    pub fn unproject_from_viewport(&self, win: &na::Point3<f32>) -> na::Point3<f32> {
         // As in:
         // https://www.nalgebra.org/rustdoc_glm/src/nalgebra_glm/ext/matrix_projection.rs.html#163
 
