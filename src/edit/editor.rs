@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::path::Path;
 use std::time::Duration;
@@ -69,10 +69,7 @@ impl Editor {
             config: config.clone(),
             exec_config: exec_config.clone(),
             machine,
-            mode: Mode::PlacePiece(Piece::new_origin_block(PlacedBlock {
-                rotation_xy: 1,
-                block: Block::PipeXY,
-            })),
+            mode: Mode::Select(Vec::new()),
             clipboard: None,
             undo: VecDeque::new(),
             redo: Vec::new(),
@@ -231,7 +228,7 @@ impl Editor {
             .bg_alpha(bg_alpha)
             .build(&ui, || {
                 if ui.button(imgui::im_str!("Select"), [blocks_width - 20.0, 40.0]) {
-                    self.mode = Mode::Select(HashSet::new());
+                    self.mode = Mode::Select(Vec::new());
                 }
 
                 if ui.is_item_hovered() {
@@ -365,7 +362,7 @@ impl Editor {
                 self.current_layer -= 1;
             }
         } else if key == self.config.select_key || key == self.config.cancel_key {
-            self.mode = Mode::Select(HashSet::new());
+            self.mode = Mode::Select(Vec::new());
         } else if let Some((_key, layer)) = self
             .config
             .layer_keys
@@ -401,16 +398,44 @@ impl Editor {
                         let has_block = self.machine.get_block_at_pos(&grid_pos).is_some();
 
                         if has_block {
-                            if !extend {
-                                selection = HashSet::new();
-                                selection.insert(grid_pos);
-                            } else {
+                            if modifiers.shift && !selection.is_empty() {
+                                // Safe to unwrap due to `is_empty()` check above
+                                let last = selection.last().unwrap();
+
+                                // For now draw line only if there are two
+                                // shared coordinates, otherwise behavior is
+                                // too wonky.
+                                // Note that rust guarantees bools to be either
+                                // 0 or 1 when cast to integer types.
+                                let num_shared = (last.x == grid_pos.x) as usize
+                                    + (last.y == grid_pos.y) as usize
+                                    + (last.z == grid_pos.z) as usize;
+                                let line = if num_shared == 2 {
+                                    pick::pick_line(&self.machine, last, &grid_pos)
+                                } else {
+                                    vec![grid_pos]
+                                };
+
+                                // Push the selected line to the end of the
+                                // vector, so that it counts as the most newly
+                                // selected.
+                                selection.retain(|p| !line.contains(p));
+
+                                if !modifiers.ctrl {
+                                    for p in line {
+                                        selection.push(p);
+                                    }
+                                }
+                            } else if modifiers.ctrl {
                                 // Toggle block selection
                                 if selection.contains(&grid_pos) {
-                                    selection.remove(&grid_pos);
+                                    selection.retain(|p| *p != grid_pos);
                                 } else {
-                                    selection.insert(grid_pos);
+                                    selection.push(grid_pos);
                                 }
+                            } else {
+                                selection = Vec::new();
+                                selection.push(grid_pos);
                             }
                         }
                     } else if !extend {
@@ -449,7 +474,13 @@ impl Editor {
 
         match &self.mode {
             Mode::Select(selection) => {
-                for &grid_pos in selection.iter() {
+                for (i, &grid_pos) in selection.iter().enumerate() {
+                    let color = if i + 1 == selection.len() {
+                        na::Vector4::new(0.9, 0.9, 0.5, 1.0)
+                    } else {
+                        na::Vector4::new(0.0, 0.9, 0.0, 1.0)
+                    };
+
                     let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
                     render::machine::render_cuboid_wireframe(
                         &render::machine::Cuboid {
@@ -457,7 +488,7 @@ impl Editor {
                             size: na::Vector3::new(1.0, 1.0, 1.0),
                         },
                         0.025,
-                        &na::Vector4::new(0.9, 0.9, 0.0, 1.0),
+                        &color,
                         &mut out.plain,
                     );
                 }

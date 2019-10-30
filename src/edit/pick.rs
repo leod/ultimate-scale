@@ -1,3 +1,5 @@
+use std::iter;
+
 use nalgebra as na;
 
 use crate::machine::{grid, Machine};
@@ -77,4 +79,47 @@ pub fn pick_block(
     }
 
     closest_block.map(|(pos, _distance)| *pos)
+}
+
+pub fn pick_line(machine: &Machine, a: &grid::Point3, b: &grid::Point3) -> Vec<grid::Point3> {
+    let range = |a: isize, b: isize| {
+        if a < b {
+            (a..b).collect::<Vec<_>>()
+        } else {
+            (b..a).rev().collect::<Vec<_>>()
+        }
+    };
+
+    // Move dimension by dimension from a to b.
+    // (I think this doesn't fully make sense, but it's good enough for now.)
+
+    let x = range(a.x, b.x)
+        .into_iter()
+        .map(|x| grid::Point3::new(x, a.y, a.z));
+    let y = range(a.y, b.y)
+        .into_iter()
+        .map(|y| grid::Point3::new(b.x, y, a.z));
+    let z = range(a.z, b.z)
+        .into_iter()
+        .map(|z| grid::Point3::new(b.x, b.y, z));
+
+    let candidates = iter::once(*a)
+        .chain(x)
+        .chain(y)
+        .chain(z)
+        .chain(iter::once(*b));
+
+    let mut points = Vec::new();
+
+    for c in candidates {
+        // We remove duplicates in a simple and costly way here that allows us
+        // to keep the order (if b is included it should always be the last
+        // element). We expect `points` to be relatively small anyway.
+        if machine.get_block_at_pos(&c).is_some() && !points.contains(&c) {
+            println!("add {:?}", c);
+            points.push(c);
+        }
+    }
+
+    points
 }
