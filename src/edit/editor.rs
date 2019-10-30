@@ -387,10 +387,7 @@ impl Editor {
                         piece.rotate_ccw_xy();
                     }
                 } else if key == self.config.block_kind_key {
-                    /*if let Some(current_kind) = placed_block.block.kind() {
-                        placed_block.block = placed_block.block.with_kind(current_kind.next());
-                    }*/
-                    // TODO: Switching kind after piece update
+                    piece.next_kind();
                 }
 
                 None
@@ -466,11 +463,10 @@ impl Editor {
                             // Safe to unwrap due to `is_empty()` check above.
                             let last = selection.last().unwrap();
 
-                            // For now draw line only if there are two
-                            // shared coordinates, otherwise behavior is
-                            // too wonky.
-                            // Note that rust guarantees bools to be either
-                            // 0 or 1 when cast to integer types.
+                            // For now draw line only if there are two shared
+                            // coordinates, otherwise behavior is too wonky.
+                            // Note that rust guarantees bools to be either 0 or
+                            // 1 when cast to integer types.
                             let num_shared = (last.x == grid_pos.x) as usize
                                 + (last.y == grid_pos.y) as usize
                                 + (last.z == grid_pos.z) as usize;
@@ -480,9 +476,8 @@ impl Editor {
                                 vec![grid_pos]
                             };
 
-                            // Push the selected line to the end of the
-                            // vector, so that it counts as the most newly
-                            // selected.
+                            // Push the selected line to the end of the vector,
+                            // so that it counts as the most newly selected.
                             selection.retain(|p| !line.contains(p));
 
                             if !modifiers.ctrl {
