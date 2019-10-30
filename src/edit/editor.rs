@@ -100,8 +100,6 @@ impl Editor {
                 start_pos,
                 end_pos,
             } => {
-                // Not sure if we will ever have the case of running an edit
-                // *while* rect selecting, but let's add this case to be sure.
                 existing_selection
                     .retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
                 new_selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
@@ -133,20 +131,6 @@ impl Editor {
 
                 self.redo.clear();
             }
-        }
-    }
-
-    pub fn undo_last_edit(&mut self) {
-        if let Some(undo_edit) = self.undo.pop_back() {
-            let redo_edit = self.run_edit(undo_edit);
-            self.redo.push(redo_edit);
-        }
-    }
-
-    pub fn redo_last_edit(&mut self) {
-        if let Some(redo_edit) = self.redo.pop() {
-            let undo_edit = self.run_edit(redo_edit);
-            self.undo.push_back(undo_edit);
         }
     }
 
@@ -253,6 +237,8 @@ impl Editor {
                     let text = format!("Shortcut: {}", self.config.select_key);
                     ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
                 }
+
+                ui.separator();
             });
     }
 
@@ -346,76 +332,39 @@ impl Editor {
     }
 
     fn on_key_press(&mut self, key: ModifiedKey) {
-        let mut edit = None;
-
-        match &mut self.mode {
-            Mode::Select(selection) => {
-                if key == self.config.cut_key {
-                    edit = Some(Edit::SetBlocks(
-                        selection.iter().map(|p| (*p, None)).collect(),
-                    ));
-
-                    let mut selected_blocks = HashMap::new();
-                    for p in selection.iter() {
-                        if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
-                            selected_blocks.insert(*p, placed_block.clone());
-                        }
-                    }
-                    self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
-                } else if key == self.config.copy_key {
-                    let mut selected_blocks = HashMap::new();
-                    for p in selection.iter() {
-                        if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
-                            selected_blocks.insert(*p, placed_block.clone());
-                        }
-                    }
-                    self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
-                }
-            }
-            Mode::RectSelect { .. } => {
-                // Nothing here for now.
-                // Should we allow copy/paste/cut while in rect select?
-            }
-            Mode::PlacePiece(piece) => {
-                if key.key == self.config.rotate_block_key.key {
-                    if !key.shift {
-                        piece.rotate_cw_xy();
-                    } else {
-                        piece.rotate_ccw_xy();
-                    }
-                } else if key == self.config.block_kind_key {
-                    piece.next_kind();
-                }
-            }
-        };
-
-        if let Some(edit) = edit {
-            self.run_and_track_edit(edit);
-        }
-
+        // Action shortcuts
         if key == self.config.undo_key {
-            self.undo_last_edit();
+            self.action_undo_last_edit();
         } else if key == self.config.redo_key {
-            self.redo_last_edit();
+            self.action_redo_last_edit();
         } else if key == self.config.paste_key && self.clipboard.is_some() {
-            if let Some(clipboard) = &self.clipboard {
-                self.mode = Mode::PlacePiece(clipboard.clone());
-            }
+            self.action_paste();
         } else if key == self.config.start_exec_key {
             self.start_exec = true;
         } else if key == self.config.save_key {
-            self.save(&self.config.default_save_path);
+            self.action_save();
         } else if key == self.config.layer_up_key {
-            if self.machine.is_valid_layer(self.current_layer + 1) {
-                self.current_layer += 1;
-            }
+            self.action_layer_up();
         } else if key == self.config.layer_down_key {
-            if self.machine.is_valid_layer(self.current_layer - 1) {
-                self.current_layer -= 1;
-            }
+            self.action_layer_down();
         } else if key == self.config.select_key || key == self.config.cancel_key {
-            self.mode = Mode::Select(Vec::new());
-        } else if let Some((_key, layer)) = self
+            self.action_select_mode();
+        } else if key == self.config.cut_key {
+            self.action_cut();
+        } else if key == self.config.copy_key {
+            self.action_copy();
+        } else if key == self.config.block_kind_key {
+            self.action_next_kind();
+        } else if key.key == self.config.rotate_block_key.key {
+            if !key.shift {
+                self.action_rotate_cw();
+            } else {
+                self.action_rotate_ccw();
+            }
+        }
+
+        // Switch to specific layer
+        if let Some((_key, layer)) = self
             .config
             .layer_keys
             .iter()
@@ -424,7 +373,10 @@ impl Editor {
             if self.machine.is_valid_layer(*layer) {
                 self.current_layer = *layer;
             }
-        } else if let Some((_key, block)) = self
+        }
+
+        // Switch to specific place block mode
+        if let Some((_key, block)) = self
             .config
             .block_keys
             .iter()
@@ -690,6 +642,127 @@ impl Editor {
                     path.to_str(),
                     err
                 );
+            }
+        };
+    }
+}
+
+/// Actions that can be accessed by buttons and shortcuts in the editor.
+impl Editor {
+    pub fn action_undo_last_edit(&mut self) {
+        if let Some(undo_edit) = self.undo.pop_back() {
+            let redo_edit = self.run_edit(undo_edit);
+            self.redo.push(redo_edit);
+        }
+    }
+
+    pub fn action_redo_last_edit(&mut self) {
+        if let Some(redo_edit) = self.redo.pop() {
+            let undo_edit = self.run_edit(redo_edit);
+            self.undo.push_back(undo_edit);
+        }
+    }
+
+    pub fn action_cut(&mut self) {
+        let edit = match &self.mode {
+            Mode::Select(selection) => {
+                let mut selected_blocks = HashMap::new();
+                for p in selection.iter() {
+                    if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
+                        selected_blocks.insert(*p, placed_block.clone());
+                    }
+                }
+                self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+
+                // Note that `run_and_track_edit` will automatically clear the
+                // selection, corresponding to the mutated machine.
+                Some(Edit::SetBlocks(
+                    selection.iter().map(|p| (*p, None)).collect(),
+                ))
+            }
+            _ => {
+                // No op in other modes.
+                None
+            }
+        };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
+        }
+    }
+
+    pub fn action_copy(&mut self) {
+        match &self.mode {
+            Mode::Select(selection) => {
+                let mut selected_blocks = HashMap::new();
+                for p in selection.iter() {
+                    if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
+                        selected_blocks.insert(*p, placed_block.clone());
+                    }
+                }
+                self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+            }
+            _ => {
+                // No op in other modes.
+            }
+        }
+    }
+
+    pub fn action_paste(&mut self) {
+        if let Some(clipboard) = &self.clipboard {
+            self.mode = Mode::PlacePiece(clipboard.clone());
+        }
+    }
+
+    pub fn action_save(&mut self) {
+        self.save(&self.config.default_save_path);
+    }
+
+    pub fn action_layer_up(&mut self) {
+        if self.machine.is_valid_layer(self.current_layer + 1) {
+            self.current_layer += 1;
+        }
+    }
+
+    pub fn action_layer_down(&mut self) {
+        if self.machine.is_valid_layer(self.current_layer - 1) {
+            self.current_layer -= 1;
+        }
+    }
+
+    pub fn action_select_mode(&mut self) {
+        self.mode = Mode::Select(Vec::new());
+    }
+
+    pub fn action_rotate_cw(&mut self) {
+        match &mut self.mode {
+            Mode::PlacePiece(piece) => {
+                piece.rotate_cw_xy();
+            }
+            _ => {
+                // No op in other modes.
+            }
+        };
+    }
+
+    pub fn action_rotate_ccw(&mut self) {
+        match &mut self.mode {
+            Mode::PlacePiece(piece) => {
+                piece.rotate_ccw_xy();
+            }
+            _ => {
+                // No op in other modes.
+            }
+        };
+    }
+
+    pub fn action_next_kind(&mut self) {
+        match &mut self.mode {
+            Mode::PlacePiece(piece) => {
+                piece.next_kind();
+            }
+            _ => {
+                // No op in other modes.
             }
         };
     }

@@ -71,10 +71,18 @@ fn main() {
         let hidpi_factor = imgui_platform.hidpi_factor();
         let font_size = (14.0 * hidpi_factor) as f32;
 
+        // Include some special characters in the glyph ranges
+        let glyph_ranges = imgui::FontGlyphRanges::from_slice(&[
+            0x0020, 0x00FF, // Basic Latin + Latin Supplement
+            0x25A0, 0x25FF, // Geometric shapes
+            0,
+        ]);
+
         imgui.fonts().add_font(&[imgui::FontSource::TtfData {
             data: include_bytes!("../resources/DejaVuSans.ttf"),
             size_pixels: font_size,
             config: Some(imgui::FontConfig {
+                glyph_ranges,
                 ..imgui::FontConfig::default()
             }),
         }]);
