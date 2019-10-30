@@ -495,7 +495,11 @@ impl Editor {
                             out,
                         );
 
-                        if !self.machine.is_valid_pos(&pos) {
+                        any_pos_valid = any_pos_valid || self.machine.is_valid_pos(&pos);
+
+                        if !self.machine.is_valid_pos(&pos)
+                            || self.machine.get_block_at_pos(&pos).is_some()
+                        {
                             render::machine::render_cuboid_wireframe(
                                 &render::machine::Cuboid {
                                     center: block_center,
@@ -505,8 +509,6 @@ impl Editor {
                                 &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
                                 &mut out.plain,
                             );
-                        } else {
-                            any_pos_valid = true;
                         }
                     }
 
