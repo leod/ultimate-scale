@@ -198,7 +198,7 @@ impl Editor {
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
         let button_w = 140.0;
-        let button_h = 40.0;
+        let button_h = 25.0;
         let small_button_w = 66.25;
         let bg_alpha = 0.8;
 
@@ -238,6 +238,7 @@ impl Editor {
                 }
 
                 ui.separator();
+                ui.separator();
 
                 if ui.button(im_str!("Undo"), [small_button_w, button_h]) {
                     self.action_undo();
@@ -254,6 +255,54 @@ impl Editor {
                 }
                 if ui.is_item_hovered() {
                     let text = format!("Shortcut: {}", self.config.redo_key);
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.separator();
+
+                if ui.button(im_str!("Paste"), [button_w, button_h]) {
+                    self.action_paste();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Shortcut: {}", self.config.paste_key);
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                if ui.button(im_str!("Copy"), [small_button_w, button_h]) {
+                    self.action_copy();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Shortcut: {}", self.config.copy_key);
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.same_line(0.0);
+
+                if ui.button(im_str!("Cut"), [small_button_w, button_h]) {
+                    self.action_cut();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Shortcut: {}", self.config.cut_key);
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.separator();
+
+                if ui.button(im_str!("↻"), [small_button_w, button_h]) {
+                    self.action_rotate_cw();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Shortcut: {}", self.config.rotate_block_cw_key);
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.same_line(0.0);
+
+                if ui.button(im_str!("↺"), [small_button_w, button_h]) {
+                    self.action_rotate_ccw();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Shortcut: {}", self.config.rotate_block_ccw_key);
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
             });
@@ -372,12 +421,10 @@ impl Editor {
             self.action_copy();
         } else if key == self.config.block_kind_key {
             self.action_next_kind();
-        } else if key.key == self.config.rotate_block_key.key {
-            if !key.shift {
-                self.action_rotate_cw();
-            } else {
-                self.action_rotate_ccw();
-            }
+        } else if key == self.config.rotate_block_cw_key {
+            self.action_rotate_cw();
+        } else if key == self.config.rotate_block_ccw_key {
+            self.action_rotate_ccw();
         }
 
         // Switch to specific layer
