@@ -50,6 +50,12 @@ impl InputState {
         self.pressed_buttons.clear();
     }
 
+    /// Clear any state.
+    pub fn clear(&mut self) {
+        self.clear_keyboard();
+        self.clear_mouse();
+    }
+
     /// Handle a window event to update internal state.
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
