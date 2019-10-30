@@ -2,7 +2,7 @@ pub mod config;
 pub mod editor;
 pub mod pick;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use crate::machine::grid;
 use crate::machine::{Machine, PlacedBlock};
@@ -132,7 +132,7 @@ impl Edit {
             Edit::SetBlocks(blocks) => {
                 let valid_blocks = blocks
                     .into_iter()
-                    .filter(|(p, block)| machine.is_valid_pos(p))
+                    .filter(|(p, _block)| machine.is_valid_pos(p))
                     .collect::<HashMap<_, _>>();
 
                 let previous_blocks = valid_blocks
@@ -161,8 +161,15 @@ impl Edit {
     }
 }
 
+/// Modes that the editor can be in.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Mode {
-    Select(HashSet<grid::Point3>),
+    /// Select grid positions in the machine.
+    ///
+    /// For consistency, the selected positions must always contain a block.
+    /// There must be no duplicate positions. The order corresponds to the
+    /// selection order.
+    Select(Vec<grid::Point3>),
+
     PlacePiece(Piece),
 }
