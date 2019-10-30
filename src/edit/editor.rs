@@ -233,7 +233,10 @@ impl Editor {
                     self.mode = Mode::Select(Vec::new());
                 }
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.select_key);
+                    let text = format!(
+                        "Switch to block selection mode.\n\nShortcut: {}",
+                        self.config.select_key
+                    );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
@@ -244,7 +247,7 @@ impl Editor {
                     self.action_undo();
                 }
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.undo_key);
+                    let text = format!("Undo the last edit.\n\nShortcut: {}", self.config.undo_key);
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
@@ -254,7 +257,10 @@ impl Editor {
                     self.action_redo();
                 }
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.redo_key);
+                    let text = format!(
+                        "Take back the last undo.\n\nShortcut: {}",
+                        self.config.redo_key
+                    );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
@@ -264,7 +270,10 @@ impl Editor {
                     self.action_paste();
                 }
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.paste_key);
+                    let text = format!(
+                        "Start placing the last copied blocks.\n\nShortcut: {}",
+                        self.config.paste_key
+                    );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
@@ -272,7 +281,10 @@ impl Editor {
                     self.action_copy();
                 }
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.copy_key);
+                    let text = format!(
+                        "Copy selected blocks.\n\nShortcut: {}",
+                        self.config.copy_key
+                    );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
@@ -282,7 +294,10 @@ impl Editor {
                     self.action_cut();
                 }
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.cut_key);
+                    let text = format!(
+                        "Copy and remove selected blocks.\n\nShortcut: {}",
+                        self.config.cut_key
+                    );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
@@ -292,7 +307,10 @@ impl Editor {
                     self.action_rotate_cw();
                 }
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.rotate_block_cw_key);
+                    let text = format!(
+                        "Rotate blocks to be placed clockwise.\n\nShortcut: {}",
+                        self.config.rotate_block_cw_key
+                    );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
@@ -302,7 +320,10 @@ impl Editor {
                     self.action_rotate_ccw();
                 }
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.rotate_block_ccw_key);
+                    let text = format!(
+                        "Rotate blocks to be placed counterclockwise.\n\nShortcut: {}",
+                        self.config.rotate_block_ccw_key
+                    );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
             });
