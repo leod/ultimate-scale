@@ -235,7 +235,7 @@ impl Editor {
                 }
 
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: TODO");
+                    let text = format!("Shortcut: {}", self.config.select_key);
                     ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
                 }
             });
@@ -364,7 +364,7 @@ impl Editor {
             if self.machine.is_valid_layer(self.current_layer - 1) {
                 self.current_layer -= 1;
             }
-        } else if key == self.config.select_key {
+        } else if key == self.config.select_key || key == self.config.cancel_key {
             self.mode = Mode::Select(HashSet::new());
         } else if let Some((_key, layer)) = self
             .config
