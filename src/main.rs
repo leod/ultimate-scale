@@ -75,6 +75,7 @@ fn main() {
         let glyph_ranges = imgui::FontGlyphRanges::from_slice(&[
             0x0020, 0x00FF, // Basic Latin + Latin Supplement
             0x25A0, 0x25FF, // Geometric shapes
+            0x2190, 0x21FF, // Arrows
             0,
         ]);
 
@@ -185,8 +186,6 @@ fn main() {
             info!("Window resized to: {:?}", new_window_size);
 
             game.on_window_resize(&display, new_window_size);
-
-            //font.on_window_resize(new_window_size);
         }
 
         let now_clock = Instant::now();
