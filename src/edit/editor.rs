@@ -8,7 +8,7 @@ use log::{info, warn};
 use nalgebra as na;
 
 use glium::glutin::{self, MouseButton, WindowEvent};
-use imgui::im_str;
+use imgui::{im_str, ImString};
 
 use crate::exec::{self, ExecView};
 use crate::input_state::InputState;
@@ -211,13 +211,13 @@ impl Editor {
             .bg_alpha(bg_alpha)
             .build(&ui, || {
                 for (block_key, block) in self.config.block_keys.clone().iter() {
-                    if ui.button(&imgui::ImString::new(block.name()), [button_w, button_h]) {
+                    if ui.button(&ImString::new(block.name()), [button_w, button_h]) {
                         self.switch_to_place_block_mode(*block);
                     }
 
                     if ui.is_item_hovered() {
                         let text = format!("{}\n\nShortcut: {}", block.description(), block_key);
-                        ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                        ui.tooltip(|| ui.text(&ImString::new(text)));
                     }
                 }
             });
@@ -234,7 +234,7 @@ impl Editor {
                 }
                 if ui.is_item_hovered() {
                     let text = format!("Shortcut: {}", self.config.select_key);
-                    ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
                 ui.separator();
@@ -244,7 +244,7 @@ impl Editor {
                 }
                 if ui.is_item_hovered() {
                     let text = format!("Shortcut: {}", self.config.undo_key);
-                    ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
                 ui.same_line(0.0);
@@ -254,7 +254,7 @@ impl Editor {
                 }
                 if ui.is_item_hovered() {
                     let text = format!("Shortcut: {}", self.config.redo_key);
-                    ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
             });
     }
