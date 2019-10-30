@@ -1,5 +1,6 @@
 pub mod config;
 pub mod editor;
+pub mod pick;
 
 use std::collections::{HashMap, HashSet};
 

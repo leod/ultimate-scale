@@ -14,10 +14,9 @@ use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
 use crate::render::pipeline::RenderLists;
 use crate::render::{self, Camera, EditCameraView};
-use crate::util::intersection::{ray_quad_intersection, Plane, Ray};
 
 use crate::edit::config::ModifiedKey;
-use crate::edit::{Config, Edit, Mode, Piece};
+use crate::edit::{pick, Config, Edit, Mode, Piece};
 
 /// Maximal length of the undo queue.
 pub const MAX_UNDOS: usize = 1000;
@@ -164,7 +163,14 @@ impl Editor {
 
         self.window_size = na::Vector2::new(camera.viewport.z, camera.viewport.w);
 
-        self.update_mouse_grid_pos(input_state, camera, edit_camera_view);
+        self.mouse_grid_pos = pick::pick_in_layer(
+            &self.machine,
+            self.current_layer,
+            camera,
+            edit_camera_view,
+            &input_state.mouse_window_pos(),
+        );
+
         self.update_input(input_state);
 
         if !self.start_exec {
@@ -222,45 +228,6 @@ impl Editor {
                     ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
                 }
             });
-    }
-
-    fn update_mouse_grid_pos(
-        &mut self,
-        input_state: &InputState,
-        camera: &Camera,
-        edit_camera_view: &EditCameraView,
-    ) {
-        let p = input_state.mouse_window_pos();
-        let p_near = camera.unproject(&na::Point3::new(p.x, p.y, -1.0));
-        let p_far = camera.unproject(&na::Point3::new(p.x, p.y, 1.0));
-
-        let ray = Ray {
-            origin: edit_camera_view.eye(),
-            velocity: p_far - p_near,
-        };
-        let quad = Plane {
-            origin: na::Point3::new(0.0, 0.0, self.current_layer as f32),
-            direction_a: self.machine.size().x as f32 * na::Vector3::x(),
-            direction_b: self.machine.size().y as f32 * na::Vector3::y(),
-        };
-
-        let intersection = ray_quad_intersection(&ray, &quad);
-        self.mouse_grid_pos = if let Some((ray_t, _plane_pos)) = intersection {
-            let ray_pos = ray.origin + ray_t * ray.velocity;
-            let grid_pos = grid::Point3::new(
-                ray_pos.x.floor() as isize,
-                ray_pos.y.floor() as isize,
-                self.current_layer,
-            );
-
-            if self.machine.is_valid_pos(&grid_pos) {
-                Some(grid_pos)
-            } else {
-                None
-            }
-        } else {
-            None
-        };
     }
 
     fn update_input(&mut self, input_state: &InputState) {
