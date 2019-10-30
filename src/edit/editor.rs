@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::fs::File;
 use std::path::Path;
 use std::time::Duration;
@@ -8,6 +8,7 @@ use log::{info, warn};
 use nalgebra as na;
 
 use glium::glutin::{self, MouseButton, WindowEvent};
+use imgui::im_str;
 
 use crate::exec::{self, ExecView};
 use crate::input_state::InputState;
@@ -196,10 +197,12 @@ impl Editor {
     }
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
-        let blocks_width = 160.0;
+        let button_w = 140.0;
+        let button_h = 40.0;
+        let small_button_w = 66.25;
         let bg_alpha = 0.8;
 
-        imgui::Window::new(imgui::im_str!("Blocks"))
+        imgui::Window::new(im_str!("Blocks"))
             .horizontal_scrollbar(true)
             .movable(false)
             .always_auto_resize(true)
@@ -208,37 +211,51 @@ impl Editor {
             .bg_alpha(bg_alpha)
             .build(&ui, || {
                 for (block_key, block) in self.config.block_keys.clone().iter() {
-                    if ui.button(
-                        &imgui::ImString::new(block.name()),
-                        [blocks_width - 20.0, 40.0],
-                    ) {
+                    if ui.button(&imgui::ImString::new(block.name()), [button_w, button_h]) {
                         self.switch_to_place_block_mode(*block);
                     }
 
                     if ui.is_item_hovered() {
-                        let text = format!("{}\nShortcut: {}", block.description(), block_key);
+                        let text = format!("{}\n\nShortcut: {}", block.description(), block_key);
                         ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
                     }
                 }
             });
 
-        imgui::Window::new(imgui::im_str!("Tools"))
+        imgui::Window::new(im_str!("Tools"))
             .horizontal_scrollbar(true)
             .movable(false)
             .always_auto_resize(true)
             .position([10.0, 10.0], imgui::Condition::Always)
             .bg_alpha(bg_alpha)
             .build(&ui, || {
-                if ui.button(imgui::im_str!("Select"), [blocks_width - 20.0, 40.0]) {
+                if ui.button(im_str!("Select"), [button_w, button_h]) {
                     self.mode = Mode::Select(Vec::new());
                 }
-
                 if ui.is_item_hovered() {
                     let text = format!("Shortcut: {}", self.config.select_key);
                     ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
                 }
 
                 ui.separator();
+
+                if ui.button(im_str!("Undo"), [small_button_w, button_h]) {
+                    self.action_undo();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Shortcut: {}", self.config.undo_key);
+                    ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                }
+
+                ui.same_line(0.0);
+
+                if ui.button(im_str!("Redo"), [small_button_w, button_h]) {
+                    self.action_redo();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Shortcut: {}", self.config.redo_key);
+                    ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                }
             });
     }
 
@@ -334,9 +351,9 @@ impl Editor {
     fn on_key_press(&mut self, key: ModifiedKey) {
         // Action shortcuts
         if key == self.config.undo_key {
-            self.action_undo_last_edit();
+            self.action_undo();
         } else if key == self.config.redo_key {
-            self.action_redo_last_edit();
+            self.action_redo();
         } else if key == self.config.paste_key && self.clipboard.is_some() {
             self.action_paste();
         } else if key == self.config.start_exec_key {
@@ -649,14 +666,14 @@ impl Editor {
 
 /// Actions that can be accessed by buttons and shortcuts in the editor.
 impl Editor {
-    pub fn action_undo_last_edit(&mut self) {
+    pub fn action_undo(&mut self) {
         if let Some(undo_edit) = self.undo.pop_back() {
             let redo_edit = self.run_edit(undo_edit);
             self.redo.push(redo_edit);
         }
     }
 
-    pub fn action_redo_last_edit(&mut self) {
+    pub fn action_redo(&mut self) {
         if let Some(redo_edit) = self.redo.pop() {
             let undo_edit = self.run_edit(redo_edit);
             self.undo.push_back(undo_edit);
