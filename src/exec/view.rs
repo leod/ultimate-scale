@@ -49,7 +49,7 @@ pub struct ExecView {
     status: Status,
 
     mouse_window_pos: na::Point2<f32>,
-    mouse_grid_pos: Option<grid::Point3>,
+    mouse_block_pos: Option<grid::Point3>,
 }
 
 impl ExecView {
@@ -60,7 +60,7 @@ impl ExecView {
             tick_timer: Timer::from_hz(config.default_ticks_per_sec),
             status: Status::Playing,
             mouse_window_pos: na::Point2::origin(),
-            mouse_grid_pos: None,
+            mouse_block_pos: None,
         }
     }
 
@@ -85,7 +85,7 @@ impl ExecView {
     ) {
         profile!("exec_view");
 
-        self.mouse_grid_pos = pick::pick_block(
+        self.mouse_block_pos = pick::pick_block(
             self.exec.machine(),
             camera,
             &edit_camera_view.eye(),
@@ -165,11 +165,11 @@ impl ExecView {
     ) {
         match button {
             glutin::MouseButton::Left if state == glutin::ElementState::Pressed => {
-                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
                     Exec::try_spawn_blip(
                         false,
                         BlipKind::A,
-                        &mouse_grid_pos,
+                        &mouse_block_pos,
                         &self.exec.machine.blocks.indices,
                         &mut self.exec.blip_state,
                         &mut self.exec.blips,
@@ -177,11 +177,11 @@ impl ExecView {
                 }
             }
             glutin::MouseButton::Right if state == glutin::ElementState::Pressed => {
-                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
                     Exec::try_spawn_blip(
                         false,
                         BlipKind::B,
-                        &mouse_grid_pos,
+                        &mouse_block_pos,
                         &self.exec.machine.blocks.indices,
                         &mut self.exec.blip_state,
                         &mut self.exec.blips,
@@ -207,14 +207,14 @@ impl ExecView {
         self.render_blocks(out);
         self.render_blips(out);
 
-        if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-            assert!(self.exec.machine().is_valid_pos(&mouse_grid_pos));
+        if let Some(mouse_block_pos) = self.mouse_block_pos {
+            assert!(self.exec.machine().is_valid_pos(&mouse_block_pos));
 
-            let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
+            let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
 
             render::machine::render_cuboid_wireframe(
                 &render::machine::Cuboid {
-                    center: mouse_grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
+                    center: mouse_block_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
                     size: na::Vector3::new(1.0, 1.0, 1.0),
                 },
                 0.015,

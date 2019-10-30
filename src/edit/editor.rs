@@ -53,6 +53,9 @@ pub struct Editor {
     /// coordinate is always set to `current_layer`.
     mouse_grid_pos: Option<grid::Point3>,
 
+    /// Position of the *block* the mouse is currently pointing to, if any.
+    mouse_block_pos: Option<grid::Point3>,
+
     /// Whether to start executing the machine in the next `update` call.
     start_exec: bool,
 
@@ -75,6 +78,7 @@ impl Editor {
             redo: Vec::new(),
             current_layer: 0,
             mouse_grid_pos: None,
+            mouse_block_pos: None,
             start_exec: false,
             window_size: na::Vector2::zeros(),
         }
@@ -167,6 +171,12 @@ impl Editor {
         self.mouse_grid_pos = pick::pick_in_layer(
             &self.machine,
             self.current_layer,
+            camera,
+            &edit_camera_view.eye(),
+            &input_state.mouse_window_pos(),
+        );
+        self.mouse_block_pos = pick::pick_block(
+            &self.machine,
             camera,
             &edit_camera_view.eye(),
             &input_state.mouse_window_pos(),
@@ -384,7 +394,7 @@ impl Editor {
                 if button == glutin::MouseButton::Left && state == glutin::ElementState::Pressed {
                     // TODO: Switch to rect select etc.
                     // TODO: Raycast?
-                    if let Some(grid_pos) = self.mouse_grid_pos {
+                    if let Some(grid_pos) = self.mouse_block_pos {
                         let has_block = self.machine.get_block_at_pos(&grid_pos).is_some();
 
                         if has_block {
@@ -425,29 +435,27 @@ impl Editor {
             &mut out.plain,
         );
 
-        if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-            assert!(self.machine.is_valid_pos(&mouse_grid_pos));
+        match &self.mode {
+            Mode::Select(selection) => {
+                for &grid_pos in selection.iter() {
+                    let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
+                    render::machine::render_cuboid_wireframe(
+                        &render::machine::Cuboid {
+                            center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
+                            size: na::Vector3::new(1.0, 1.0, 1.0),
+                        },
+                        0.025,
+                        &na::Vector4::new(0.9, 0.9, 0.0, 1.0),
+                        &mut out.plain,
+                    );
+                }
 
-            let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
-
-            match &self.mode {
-                Mode::Select(selection) => {
-                    for &grid_pos in selection.iter() {
-                        let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
-                        render::machine::render_cuboid_wireframe(
-                            &render::machine::Cuboid {
-                                center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
-                                size: na::Vector3::new(1.0, 1.0, 1.0),
-                            },
-                            0.025,
-                            &na::Vector4::new(0.9, 0.9, 0.0, 1.0),
-                            &mut out.plain,
-                        );
-                    }
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
+                    let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
 
                     render::machine::render_cuboid_wireframe(
                         &render::machine::Cuboid {
-                            center: mouse_grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
+                            center: mouse_block_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
                             size: na::Vector3::new(1.0, 1.0, 1.0),
                         },
                         0.015,
@@ -455,7 +463,13 @@ impl Editor {
                         &mut out.plain,
                     );
                 }
-                Mode::PlacePiece(piece) => {
+            }
+            Mode::PlacePiece(piece) => {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    assert!(self.machine.is_valid_pos(&mouse_grid_pos));
+
+                    let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
+
                     for (pos, placed_block) in piece.iter_blocks(&mouse_grid_pos.coords) {
                         let block_center = render::machine::block_center(&pos);
                         let block_transform =
