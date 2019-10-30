@@ -222,14 +222,14 @@ pub struct PlacedBlock {
 }
 
 impl PlacedBlock {
-    pub fn rotate_cw(&mut self) {
+    pub fn rotate_cw_xy(&mut self) {
         self.rotation_xy += 1;
         if self.rotation_xy == 4 {
             self.rotation_xy = 0;
         }
     }
 
-    pub fn rotate_ccw(&mut self) {
+    pub fn rotate_ccw_xy(&mut self) {
         if self.rotation_xy == 0 {
             self.rotation_xy = 3;
         } else {
@@ -305,6 +305,7 @@ pub type BlockIndex = usize;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Blocks {
+    // TODO: Make private -- this should not leak for when we extend to chunks
     pub indices: Grid3<Option<BlockIndex>>,
     pub data: VecOption<(Point3, PlacedBlock)>,
 }
