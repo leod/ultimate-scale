@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::fs::File;
 use std::path::Path;
 use std::time::Duration;
@@ -8,6 +8,7 @@ use log::{info, warn};
 use nalgebra as na;
 
 use glium::glutin::{self, MouseButton, WindowEvent};
+use imgui::{im_str, ImString};
 
 use crate::exec::{self, ExecView};
 use crate::input_state::InputState;
@@ -100,8 +101,6 @@ impl Editor {
                 start_pos,
                 end_pos,
             } => {
-                // Not sure if we will ever have the case of running an edit
-                // *while* rect selecting, but let's add this case to be sure.
                 existing_selection
                     .retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
                 new_selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
@@ -133,20 +132,6 @@ impl Editor {
 
                 self.redo.clear();
             }
-        }
-    }
-
-    pub fn undo_last_edit(&mut self) {
-        if let Some(undo_edit) = self.undo.pop_back() {
-            let redo_edit = self.run_edit(undo_edit);
-            self.redo.push(redo_edit);
-        }
-    }
-
-    pub fn redo_last_edit(&mut self) {
-        if let Some(redo_edit) = self.redo.pop() {
-            let undo_edit = self.run_edit(redo_edit);
-            self.undo.push_back(undo_edit);
         }
     }
 
@@ -212,10 +197,12 @@ impl Editor {
     }
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
-        let blocks_width = 160.0;
+        let button_w = 140.0;
+        let button_h = 25.0;
+        let small_button_w = 66.25;
         let bg_alpha = 0.8;
 
-        imgui::Window::new(imgui::im_str!("Blocks"))
+        imgui::Window::new(im_str!("Blocks"))
             .horizontal_scrollbar(true)
             .movable(false)
             .always_auto_resize(true)
@@ -223,36 +210,134 @@ impl Editor {
             .position_pivot([1.0, 0.0])
             .bg_alpha(bg_alpha)
             .build(&ui, || {
+                let cur_block = match &self.mode {
+                    Mode::PlacePiece(piece) => piece.get_singleton(),
+                    _ => None,
+                };
+
                 for (block_key, block) in self.config.block_keys.clone().iter() {
-                    if ui.button(
-                        &imgui::ImString::new(block.name()),
-                        [blocks_width - 20.0, 40.0],
-                    ) {
+                    let name = &ImString::new(block.name());
+                    let selected = cur_block
+                        .as_ref()
+                        .map_or(false, |placed_block| placed_block.block == *block);
+                    let selectable = imgui::Selectable::new(name).selected(selected);
+
+                    if selectable.build(ui) {
                         self.switch_to_place_block_mode(*block);
                     }
 
                     if ui.is_item_hovered() {
-                        let text = format!("{}\nShortcut: {}", block.description(), block_key);
-                        ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                        let text = format!("{}\n\nShortcut: {}", block.description(), block_key);
+                        ui.tooltip(|| ui.text(&ImString::new(text)));
                     }
                 }
             });
 
-        imgui::Window::new(imgui::im_str!("Tools"))
+        imgui::Window::new(im_str!("Tools"))
             .horizontal_scrollbar(true)
             .movable(false)
             .always_auto_resize(true)
             .position([10.0, 10.0], imgui::Condition::Always)
             .bg_alpha(bg_alpha)
             .build(&ui, || {
-                if ui.button(imgui::im_str!("Select"), [blocks_width - 20.0, 40.0]) {
+                if ui.button(im_str!("Select"), [button_w, button_h]) {
                     self.mode = Mode::Select(Vec::new());
                 }
-
                 if ui.is_item_hovered() {
-                    let text = format!("Shortcut: {}", self.config.select_key);
-                    ui.tooltip(|| ui.text(&imgui::ImString::new(text)));
+                    let text = format!(
+                        "Switch to block selection mode.\n\nShortcut: {}",
+                        self.config.select_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
+
+                ui.separator();
+
+                if ui.button(im_str!("Undo"), [small_button_w, button_h]) {
+                    self.action_undo();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Undo the last edit.\n\nShortcut: {}", self.config.undo_key);
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.same_line(0.0);
+
+                if ui.button(im_str!("Redo"), [small_button_w, button_h]) {
+                    self.action_redo();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Take back the last undo.\n\nShortcut: {}",
+                        self.config.redo_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.separator();
+
+                if ui.button(im_str!("Paste"), [button_w, button_h]) {
+                    self.action_paste();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Start placing the last copied blocks.\n\nShortcut: {}",
+                        self.config.paste_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                if ui.button(im_str!("Copy"), [small_button_w, button_h]) {
+                    self.action_copy();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Copy selected blocks.\n\nShortcut: {}",
+                        self.config.copy_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.same_line(0.0);
+
+                if ui.button(im_str!("Cut"), [small_button_w, button_h]) {
+                    self.action_cut();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Copy and remove selected blocks.\n\nShortcut: {}",
+                        self.config.cut_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.separator();
+
+                ui.set_window_font_scale(1.5);
+                if ui.button(im_str!("↻"), [small_button_w, button_h]) {
+                    self.action_rotate_cw();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Rotate blocks to be placed clockwise.\n\nShortcut: {}",
+                        self.config.rotate_block_cw_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.same_line(0.0);
+
+                if ui.button(im_str!("↺"), [small_button_w, button_h]) {
+                    self.action_rotate_ccw();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Rotate blocks to be placed counterclockwise.\n\nShortcut: {}",
+                        self.config.rotate_block_ccw_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+                ui.set_window_font_scale(1.0);
             });
     }
 
@@ -346,76 +431,37 @@ impl Editor {
     }
 
     fn on_key_press(&mut self, key: ModifiedKey) {
-        let mut edit = None;
-
-        match &mut self.mode {
-            Mode::Select(selection) => {
-                if key == self.config.cut_key {
-                    edit = Some(Edit::SetBlocks(
-                        selection.iter().map(|p| (*p, None)).collect(),
-                    ));
-
-                    let mut selected_blocks = HashMap::new();
-                    for p in selection.iter() {
-                        if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
-                            selected_blocks.insert(*p, placed_block.clone());
-                        }
-                    }
-                    self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
-                } else if key == self.config.copy_key {
-                    let mut selected_blocks = HashMap::new();
-                    for p in selection.iter() {
-                        if let Some((_, placed_block)) = self.machine.get_block_at_pos(p) {
-                            selected_blocks.insert(*p, placed_block.clone());
-                        }
-                    }
-                    self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
-                }
-            }
-            Mode::RectSelect { .. } => {
-                // Nothing here for now.
-                // Should we allow copy/paste/cut while in rect select?
-            }
-            Mode::PlacePiece(piece) => {
-                if key.key == self.config.rotate_block_key.key {
-                    if !key.shift {
-                        piece.rotate_cw_xy();
-                    } else {
-                        piece.rotate_ccw_xy();
-                    }
-                } else if key == self.config.block_kind_key {
-                    piece.next_kind();
-                }
-            }
-        };
-
-        if let Some(edit) = edit {
-            self.run_and_track_edit(edit);
-        }
-
+        // Action shortcuts
         if key == self.config.undo_key {
-            self.undo_last_edit();
+            self.action_undo();
         } else if key == self.config.redo_key {
-            self.redo_last_edit();
+            self.action_redo();
         } else if key == self.config.paste_key && self.clipboard.is_some() {
-            if let Some(clipboard) = &self.clipboard {
-                self.mode = Mode::PlacePiece(clipboard.clone());
-            }
+            self.action_paste();
         } else if key == self.config.start_exec_key {
             self.start_exec = true;
         } else if key == self.config.save_key {
-            self.save(&self.config.default_save_path);
+            self.action_save();
         } else if key == self.config.layer_up_key {
-            if self.machine.is_valid_layer(self.current_layer + 1) {
-                self.current_layer += 1;
-            }
+            self.action_layer_up();
         } else if key == self.config.layer_down_key {
-            if self.machine.is_valid_layer(self.current_layer - 1) {
-                self.current_layer -= 1;
-            }
+            self.action_layer_down();
         } else if key == self.config.select_key || key == self.config.cancel_key {
-            self.mode = Mode::Select(Vec::new());
-        } else if let Some((_key, layer)) = self
+            self.action_select_mode();
+        } else if key == self.config.cut_key {
+            self.action_cut();
+        } else if key == self.config.copy_key {
+            self.action_copy();
+        } else if key == self.config.block_kind_key {
+            self.action_next_kind();
+        } else if key == self.config.rotate_block_cw_key {
+            self.action_rotate_cw();
+        } else if key == self.config.rotate_block_ccw_key {
+            self.action_rotate_ccw();
+        }
+
+        // Switch to specific layer
+        if let Some((_key, layer)) = self
             .config
             .layer_keys
             .iter()
@@ -424,7 +470,10 @@ impl Editor {
             if self.machine.is_valid_layer(*layer) {
                 self.current_layer = *layer;
             }
-        } else if let Some((_key, block)) = self
+        }
+
+        // Switch to specific place block mode
+        if let Some((_key, block)) = self
             .config
             .block_keys
             .iter()
@@ -690,6 +739,149 @@ impl Editor {
                     path.to_str(),
                     err
                 );
+            }
+        };
+    }
+}
+
+/// Actions that can be accessed by buttons and shortcuts in the editor.
+impl Editor {
+    pub fn action_undo(&mut self) {
+        if let Some(undo_edit) = self.undo.pop_back() {
+            let redo_edit = self.run_edit(undo_edit);
+            self.redo.push(redo_edit);
+        }
+    }
+
+    pub fn action_redo(&mut self) {
+        if let Some(redo_edit) = self.redo.pop() {
+            let undo_edit = self.run_edit(redo_edit);
+            self.undo.push_back(undo_edit);
+        }
+    }
+
+    pub fn action_cut(&mut self) {
+        let edit = match &self.mode {
+            Mode::Select(selection) => {
+                let selected_blocks = selection
+                    .iter()
+                    .filter_map(|p| {
+                        self.machine
+                            .get_block_at_pos(p)
+                            .map(|(_, b)| (*p, b.clone()))
+                    })
+                    .collect();
+                self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+
+                // Note that `run_and_track_edit` will automatically clear the
+                // selection, corresponding to the mutated machine.
+                Some(Edit::SetBlocks(
+                    selection.iter().map(|p| (*p, None)).collect(),
+                ))
+            }
+            _ => {
+                // No op in other modes.
+                None
+            }
+        };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
+        }
+    }
+
+    pub fn action_copy(&mut self) {
+        match &self.mode {
+            Mode::Select(selection) => {
+                let selected_blocks = selection
+                    .iter()
+                    .filter_map(|p| {
+                        self.machine
+                            .get_block_at_pos(p)
+                            .map(|(_, b)| (*p, b.clone()))
+                    })
+                    .collect();
+                self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+            }
+            _ => {
+                // No op in other modes.
+            }
+        }
+    }
+
+    pub fn action_paste(&mut self) {
+        if let Some(clipboard) = &self.clipboard {
+            self.mode = Mode::PlacePiece(clipboard.clone());
+        }
+    }
+
+    pub fn action_save(&mut self) {
+        self.save(&self.config.default_save_path);
+    }
+
+    pub fn action_layer_up(&mut self) {
+        if self.machine.is_valid_layer(self.current_layer + 1) {
+            self.current_layer += 1;
+        }
+    }
+
+    pub fn action_layer_down(&mut self) {
+        if self.machine.is_valid_layer(self.current_layer - 1) {
+            self.current_layer -= 1;
+        }
+    }
+
+    pub fn action_select_mode(&mut self) {
+        self.mode = Mode::Select(Vec::new());
+    }
+
+    pub fn action_rotate_cw(&mut self) {
+        let mut edit = None;
+
+        match &mut self.mode {
+            Mode::PlacePiece(piece) => {
+                piece.rotate_cw_xy();
+            }
+            Mode::Select(selection) => {
+                edit = Some(Edit::RotateCWXY(selection.clone()));
+            }
+            _ => {
+                // No op in other modes.
+            }
+        };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
+        }
+    }
+
+    pub fn action_rotate_ccw(&mut self) {
+        let mut edit = None;
+
+        match &mut self.mode {
+            Mode::PlacePiece(piece) => {
+                piece.rotate_ccw_xy();
+            }
+            Mode::Select(selection) => {
+                edit = Some(Edit::RotateCCWXY(selection.clone()));
+            }
+            _ => {
+                // No op in other modes.
+            }
+        };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
+        }
+    }
+
+    pub fn action_next_kind(&mut self) {
+        match &mut self.mode {
+            Mode::PlacePiece(piece) => {
+                piece.next_kind();
+            }
+            _ => {
+                // No op in other modes.
             }
         };
     }

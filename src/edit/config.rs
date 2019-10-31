@@ -74,7 +74,8 @@ pub struct Config {
 
     pub cancel_key: ModifiedKey,
 
-    pub rotate_block_key: ModifiedKey,
+    pub rotate_block_cw_key: ModifiedKey,
+    pub rotate_block_ccw_key: ModifiedKey,
     pub block_kind_key: ModifiedKey,
 
     pub undo_key: ModifiedKey,
@@ -99,7 +100,8 @@ impl Default for Config {
         Config {
             default_save_path: PathBuf::from("machine.json"),
             cancel_key: ModifiedKey::new(VirtualKeyCode::Escape),
-            rotate_block_key: ModifiedKey::new(VirtualKeyCode::R),
+            rotate_block_cw_key: ModifiedKey::new(VirtualKeyCode::R),
+            rotate_block_ccw_key: ModifiedKey::shift(VirtualKeyCode::R),
             block_kind_key: ModifiedKey::new(VirtualKeyCode::C),
             undo_key: ModifiedKey::ctrl(VirtualKeyCode::Z),
             redo_key: ModifiedKey::ctrl(VirtualKeyCode::Y),
