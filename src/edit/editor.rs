@@ -332,6 +332,7 @@ impl Editor {
 
     fn update_input(&mut self, input_state: &InputState, camera: &Camera) {
         let mut new_mode = None;
+        let mut edit = None;
 
         match &self.mode {
             Mode::Select(_selection) => {
@@ -386,13 +387,43 @@ impl Editor {
                     }
                 }
             }
-            Mode::DragAndDrop { .. } => {
-                // Nothing here for now.
+            Mode::DragAndDrop {
+                selection,
+                center_pos,
+            } => {
+                if !input_state.is_button_pressed(MouseButton::Left) {
+                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                        let selected_blocks =
+                            Piece::selected_blocks(&self.machine, selection.iter().cloned())
+                                .collect();
+                        let min_pos = Piece::blocks_min_pos(&selected_blocks);
+                        let piece = Piece::new_blocks_to_origin(selected_blocks);
+                        let offset = &(mouse_grid_pos - (center_pos - min_pos));
+
+                        // 1) Remove the selected blocks.
+                        let remove_edit =
+                            Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
+
+                        // 2) Place the piece at the new position.
+                        let place_edit = piece.place_edit(&offset.coords);
+
+                        edit = Some(Edit::Pair(Box::new(remove_edit), Box::new(place_edit)));
+                        new_mode = Some(Mode::Select(Vec::new()));
+                    }
+                }
+
+                if input_state.is_button_pressed(MouseButton::Right) {
+                    new_mode = Some(Mode::Select(selection.clone()));
+                }
             }
         }
 
         if let Some(new_mode) = new_mode {
             self.mode = new_mode;
+        }
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
         }
     }
 
@@ -496,6 +527,8 @@ impl Editor {
                     .filter(|p| self.machine.get_block_at_pos(p).is_some());
 
                 if let Some(grid_pos) = grid_pos {
+                    // Clicked on a block!
+
                     if modifiers.shift && !selection.is_empty() {
                         // Shift: Select in a line from the last to the current
                         // grid position.
@@ -525,6 +558,9 @@ impl Editor {
                                 selection.push(p);
                             }
                         }
+
+                        // Stay in selection mode.
+                        Mode::Select(selection)
                     } else if modifiers.ctrl {
                         // Control: Extend/toggle block selection.
                         if selection.contains(&grid_pos) {
@@ -532,14 +568,24 @@ impl Editor {
                         } else {
                             selection.push(grid_pos);
                         }
-                    } else {
-                        // No modifier: Only select new block.
-                        selection = Vec::new();
-                        selection.push(grid_pos);
-                    }
 
-                    // If clicked on a block, stay in select mode.
-                    Mode::Select(selection)
+                        // Stay in selection mode.
+                        Mode::Select(selection)
+                    } else {
+                        // No modifier, but clicked on a block...
+                        if selection.contains(&grid_pos) {
+                            // Already selected this one.
+                        } else {
+                            // Different block, select only this one.
+                            selection = Vec::new();
+                            selection.push(grid_pos);
+                        }
+
+                        Mode::DragAndDrop {
+                            selection,
+                            center_pos: grid_pos,
+                        }
+                    }
                 } else {
                     // Did not click on a block, switch to rect select.
                     let existing_selection = if modifiers.ctrl {
@@ -631,8 +677,22 @@ impl Editor {
                     self.render_piece_to_place(piece, &(mouse_grid_pos + offset), out);
                 }
             }
-            Mode::DragAndDrop { selection, center } => {
-                if let Some(mouse_grid_pos) = self.mouse_grid_pos {}
+            Mode::DragAndDrop {
+                selection,
+                center_pos,
+            } => {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    let selected_blocks =
+                        Piece::selected_blocks(&self.machine, selection.iter().cloned()).collect();
+                    let min_pos = Piece::blocks_min_pos(&selected_blocks);
+                    let piece = Piece::new_blocks_to_origin(selected_blocks);
+                    let offset = self.render_piece_to_place(
+                        &piece,
+                        &(mouse_grid_pos - (center_pos - min_pos)),
+                        out,
+                    );
+                    self.render_selection(selection, false, out);
+                }
             }
         }
 
