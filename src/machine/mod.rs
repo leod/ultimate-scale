@@ -363,8 +363,16 @@ impl Machine {
         self.blocks
             .indices
             .get(p)
-            .and_then(|id| id.as_ref())
-            .map(|&id| (id, &self.blocks.data[id].1))
+            .and_then(|id| *id)
+            .map(|id| (id, &self.blocks.data[id].1))
+    }
+
+    pub fn get_block_at_pos_mut(&mut self, p: &Point3) -> Option<(BlockIndex, &mut PlacedBlock)> {
+        self.blocks
+            .indices
+            .get(p)
+            .and_then(|id| *id)
+            .map(move |id| (id, &mut self.blocks.data[id].1))
     }
 
     pub fn block_at_index(&self, index: BlockIndex) -> &(Point3, PlacedBlock) {
