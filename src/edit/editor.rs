@@ -210,8 +210,19 @@ impl Editor {
             .position_pivot([1.0, 0.0])
             .bg_alpha(bg_alpha)
             .build(&ui, || {
+                let cur_block = match &self.mode {
+                    Mode::PlacePiece(piece) => piece.get_singleton(),
+                    _ => None,
+                };
+
                 for (block_key, block) in self.config.block_keys.clone().iter() {
-                    if ui.button(&ImString::new(block.name()), [button_w, button_h]) {
+                    let name = &ImString::new(block.name());
+                    let selected = cur_block
+                        .as_ref()
+                        .map_or(false, |placed_block| placed_block.block == *block);
+                    let selectable = imgui::Selectable::new(name).selected(selected);
+
+                    if selectable.build(ui) {
                         self.switch_to_place_block_mode(*block);
                     }
 

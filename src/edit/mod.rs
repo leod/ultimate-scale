@@ -103,6 +103,18 @@ impl Piece {
             .map(move |(pos, block)| (pos + offset, block.clone()))
     }
 
+    pub fn get_singleton(&self) -> Option<PlacedBlock> {
+        if let Some(block) = self.blocks.values().next() {
+            if self.blocks.len() == 1 {
+                Some(block.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn blocks_to_origin(
         blocks: HashMap<grid::Point3, PlacedBlock>,
     ) -> HashMap<grid::Point3, PlacedBlock> {
