@@ -92,6 +92,7 @@ impl Editor {
 
         // Now that the machine has been mutated, we need to make sure there is
         // no spurious state left in the editing mode.
+        // TODO: use take_mut or mem::replace
         self.mode = self
             .mode
             .clone()
@@ -385,6 +386,9 @@ impl Editor {
                     }
                 }
             }
+            Mode::DragAndDrop { .. } => {
+                // Nothing here for now.
+            }
         }
 
         if let Some(new_mode) = new_mode {
@@ -627,6 +631,9 @@ impl Editor {
                     self.render_piece_to_place(piece, &(mouse_grid_pos + offset), out);
                 }
             }
+            Mode::DragAndDrop { selection, center } => {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {}
+            }
         }
 
         Ok(())
@@ -774,7 +781,10 @@ impl Editor {
     pub fn action_cut(&mut self) {
         let edit = match &self.mode {
             Mode::Select(selection) => {
-                self.clipboard = Some(Piece::new_from_selection(&self.machine, selection.iter()));
+                self.clipboard = Some(Piece::new_from_selection(
+                    &self.machine,
+                    selection.iter().cloned(),
+                ));
 
                 // Note that `run_and_track_edit` will automatically clear the
                 // selection, corresponding to the mutated machine.
@@ -796,7 +806,10 @@ impl Editor {
     pub fn action_copy(&mut self) {
         match &self.mode {
             Mode::Select(selection) => {
-                self.clipboard = Some(Piece::new_from_selection(&self.machine, selection.iter()));
+                self.clipboard = Some(Piece::new_from_selection(
+                    &self.machine,
+                    selection.iter().cloned(),
+                ));
             }
             _ => {
                 // No op in other modes.

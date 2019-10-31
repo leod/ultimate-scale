@@ -36,15 +36,18 @@ impl Piece {
         }
     }
 
-    pub fn new_from_selection<'a>(
+    pub fn new_from_selection(
         machine: &Machine,
-        selection: impl Iterator<Item = &'a grid::Point3>,
+        selection: impl Iterator<Item = grid::Point3>,
     ) -> Self {
-        let blocks = selection
-            .filter_map(|p| machine.get_block_at_pos(p).map(|(_, b)| (*p, b.clone())))
-            .collect();
+        Piece::new_blocks_to_origin(Self::selection_blocks(machine, selection).collect())
+    }
 
-        Piece::new_blocks_to_origin(blocks)
+    pub fn selection_blocks<'a>(
+        machine: &'a Machine,
+        selection: impl Iterator<Item = grid::Point3> + 'a,
+    ) -> impl Iterator<Item = (grid::Point3, PlacedBlock)> + 'a {
+        selection.filter_map(move |p| machine.get_block_at_pos(&p).map(|(_, b)| (p, b.clone())))
     }
 
     pub fn grid_size(&self) -> grid::Vector3 {
@@ -137,9 +140,7 @@ impl Piece {
         }
     }
 
-    pub fn blocks_to_origin(
-        blocks: HashMap<grid::Point3, PlacedBlock>,
-    ) -> HashMap<grid::Point3, PlacedBlock> {
+    pub fn blocks_min_offset(blocks: &HashMap<grid::Point3, PlacedBlock>) -> grid::Vector3 {
         let mut min = grid::Vector3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
 
         for p in blocks.keys() {
@@ -153,6 +154,14 @@ impl Piece {
                 min.z = p.z;
             }
         }
+
+        min
+    }
+
+    pub fn blocks_to_origin(
+        blocks: HashMap<grid::Point3, PlacedBlock>,
+    ) -> HashMap<grid::Point3, PlacedBlock> {
+        let min = Self::blocks_min_offset(&blocks);
 
         blocks
             .into_iter()
@@ -266,6 +275,16 @@ pub enum Mode {
         piece: Piece,
         offset: grid::Vector3,
     },
+
+    DragAndDrop {
+        /// Selection that is being dragged. No duplicate positions, and each
+        /// must contain a block in the machine.
+        selection: Vec<grid::Point3>,
+
+        /// Center position that is being dragged, i.e. the block that was
+        /// grabbed by the user.
+        center: grid::Point3,
+    },
 }
 
 impl Mode {
@@ -294,6 +313,20 @@ impl Mode {
                     new_selection,
                     start_pos,
                     end_pos,
+                }
+            }
+            Mode::DragAndDrop {
+                mut selection,
+                center,
+            } => {
+                selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+
+                if !selection.contains(&center) {
+                    // If the center block is not selected anymore, why even
+                    // bother?
+                    Mode::Select(selection)
+                } else {
+                    Mode::DragAndDrop { selection, center }
                 }
             }
             mode => mode,
