@@ -54,6 +54,17 @@ impl Piece {
         max + grid::Vector3::new(1, 1, 1)
     }
 
+    pub fn grid_center_xy(&self) -> grid::Vector3 {
+        let size = self.grid_size();
+
+        // Bias towards the origin for even sizes
+        grid::Vector3::new(
+            size.x / 2 - (size.x > 0 && size.x % 2 == 0) as isize,
+            size.y / 2 - (size.y > 0 && size.y % 2 == 0) as isize,
+            0,
+        )
+    }
+
     pub fn rotate_cw_xy(&mut self) {
         self.blocks = Self::blocks_to_origin(
             self.blocks
@@ -230,15 +241,18 @@ pub enum Mode {
         /// Blocks that were already selected when entering this mode.
         existing_selection: Vec<grid::Point3>,
 
-        /// New blocks currently selected by the rectangle
+        /// New blocks currently selected by the rectangle.
         new_selection: Vec<grid::Point3>,
 
         /// Start position of the rectangle.
         start_pos: na::Point2<f32>,
 
-        /// Current end position of the rectangle
+        /// Current end position of the rectangle.
         end_pos: na::Point2<f32>,
     },
 
-    PlacePiece(Piece),
+    PlacePiece {
+        piece: Piece,
+        offset: grid::Vector3,
+    },
 }
