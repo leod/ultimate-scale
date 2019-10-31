@@ -141,14 +141,19 @@ impl Editor {
             block,
         };
 
-        self.mode = Mode::PlacePiece(match &self.mode {
-            Mode::PlacePiece(piece) => {
+        let piece = match &self.mode {
+            Mode::PlacePiece { piece, .. } => {
                 // TODO: Maintain current rotation when switching to a
                 // different block to place.
                 Piece::new_origin_block(placed_block)
             }
             _ => Piece::new_origin_block(placed_block),
-        });
+        };
+
+        self.mode = Mode::PlacePiece {
+            piece,
+            offset: grid::Vector3::zeros(),
+        };
     }
 
     pub fn update(
@@ -211,7 +216,7 @@ impl Editor {
             .bg_alpha(bg_alpha)
             .build(&ui, || {
                 let cur_block = match &self.mode {
-                    Mode::PlacePiece(piece) => piece.get_singleton(),
+                    Mode::PlacePiece { piece, .. } => piece.get_singleton(),
                     _ => None,
                 };
 
@@ -379,10 +384,12 @@ impl Editor {
                     });
                 }
             }
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, offset } => {
                 if input_state.is_button_pressed(MouseButton::Left) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        self.run_and_track_edit(piece.place_edit(&mouse_grid_pos.coords));
+                        self.run_and_track_edit(
+                            piece.place_edit(&(mouse_grid_pos.coords + offset)),
+                        );
                     }
                 }
 
@@ -637,12 +644,12 @@ impl Editor {
                     },
                 );
             }
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, offset } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
                     let mut any_pos_valid = false;
 
-                    for (pos, placed_block) in piece.iter_blocks(&mouse_grid_pos.coords) {
+                    for (pos, placed_block) in piece.iter_blocks(&(mouse_grid_pos.coords + offset))
+                    {
                         let block_center = render::machine::block_center(&pos);
                         let block_transform =
                             render::machine::placed_block_transform(&placed_block);
@@ -674,8 +681,9 @@ impl Editor {
                     }
 
                     if any_pos_valid {
+                        let center_pos: na::Point3<f32> = na::convert(mouse_grid_pos + offset);
                         let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
-                        let wire_center = mouse_grid_pos_float + wire_size / 2.0;
+                        let wire_center = center_pos + wire_size / 2.0;
                         render::machine::render_cuboid_wireframe(
                             &render::machine::Cuboid {
                                 center: wire_center,
@@ -811,7 +819,11 @@ impl Editor {
 
     pub fn action_paste(&mut self) {
         if let Some(clipboard) = &self.clipboard {
-            self.mode = Mode::PlacePiece(clipboard.clone());
+            // Kinda center the piece at the mouse
+            self.mode = Mode::PlacePiece {
+                piece: clipboard.clone(),
+                offset: -clipboard.grid_center_xy(),
+            };
         }
     }
 
@@ -839,8 +851,10 @@ impl Editor {
         let mut edit = None;
 
         match &mut self.mode {
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, offset } => {
                 piece.rotate_cw_xy();
+                *offset = -piece.grid_center_xy();
+                println!("offset: {:?}", offset);
             }
             Mode::Select(selection) => {
                 edit = Some(Edit::RotateCWXY(selection.clone()));
@@ -859,8 +873,9 @@ impl Editor {
         let mut edit = None;
 
         match &mut self.mode {
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, offset } => {
                 piece.rotate_ccw_xy();
+                *offset = -piece.grid_center_xy();
             }
             Mode::Select(selection) => {
                 edit = Some(Edit::RotateCCWXY(selection.clone()));
@@ -877,7 +892,7 @@ impl Editor {
 
     pub fn action_next_kind(&mut self) {
         match &mut self.mode {
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, .. } => {
                 piece.next_kind();
             }
             _ => {
