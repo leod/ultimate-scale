@@ -18,19 +18,17 @@ pub use editor::Editor;
 pub struct Piece {
     /// Blocks that shall be placed. All point coordinates are assumed to be
     /// non-negative.
-    blocks: HashMap<grid::Point3, PlacedBlock>,
+    blocks: Vec<(grid::Point3, PlacedBlock)>,
 }
 
 impl Piece {
     pub fn new_origin_block(block: PlacedBlock) -> Self {
         Self {
-            blocks: maplit::hashmap! {
-                grid::Point3::origin() => block,
-            },
+            blocks: vec![(grid::Point3::origin(), block)],
         }
     }
 
-    pub fn new_blocks_to_origin(blocks: HashMap<grid::Point3, PlacedBlock>) -> Self {
+    pub fn new_blocks_to_origin(blocks: &[(grid::Point3, PlacedBlock)]) -> Self {
         Self {
             blocks: Self::blocks_to_origin(blocks),
         }
@@ -40,7 +38,11 @@ impl Piece {
         machine: &Machine,
         selection: impl Iterator<Item = grid::Point3>,
     ) -> Self {
-        Piece::new_blocks_to_origin(Self::selected_blocks(machine, selection).collect())
+        Piece::new_blocks_to_origin(&Self::selected_blocks(machine, selection).collect::<Vec<_>>())
+    }
+
+    pub fn block_at_index(&self, index: usize) -> &(grid::Point3, PlacedBlock) {
+        &self.blocks[index]
     }
 
     pub fn selected_blocks<'a>(
@@ -53,7 +55,7 @@ impl Piece {
     pub fn grid_size(&self) -> grid::Vector3 {
         let mut max = grid::Vector3::zeros();
 
-        for p in self.blocks.keys() {
+        for (p, _) in self.blocks.iter() {
             if p.x > max.x {
                 max.x = p.x;
             }
@@ -81,7 +83,8 @@ impl Piece {
 
     pub fn rotate_cw_xy(&mut self) {
         self.blocks = Self::blocks_to_origin(
-            self.blocks
+            &self
+                .blocks
                 .clone()
                 .into_iter()
                 .map(|(p, mut placed_block)| {
@@ -91,7 +94,7 @@ impl Piece {
 
                     (rotated_p, placed_block)
                 })
-                .collect(),
+                .collect::<Vec<_>>(),
         );
     }
 
@@ -102,7 +105,7 @@ impl Piece {
     }
 
     pub fn next_kind(&mut self) {
-        for placed_block in self.blocks.values_mut() {
+        for (_, placed_block) in self.blocks.iter_mut() {
             if let Some(kind) = placed_block.block.kind() {
                 placed_block.block = placed_block.block.with_kind(kind.next());
             }
@@ -128,10 +131,10 @@ impl Piece {
             .map(move |(pos, block)| (pos + offset, block.clone()))
     }
 
-    pub fn get_singleton(&self) -> Option<PlacedBlock> {
-        if let Some(block) = self.blocks.values().next() {
+    pub fn get_singleton(&self) -> Option<(grid::Point3, PlacedBlock)> {
+        if let Some(entry) = self.blocks.iter().next() {
             if self.blocks.len() == 1 {
-                Some(block.clone())
+                Some(entry.clone())
             } else {
                 None
             }
@@ -140,10 +143,10 @@ impl Piece {
         }
     }
 
-    pub fn blocks_min_pos(blocks: &HashMap<grid::Point3, PlacedBlock>) -> grid::Point3 {
+    pub fn blocks_min_pos(blocks: &[(grid::Point3, PlacedBlock)]) -> grid::Point3 {
         let mut min = grid::Point3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
 
-        for p in blocks.keys() {
+        for (p, _) in blocks {
             if p.x < min.x {
                 min.x = p.x;
             }
@@ -159,13 +162,13 @@ impl Piece {
     }
 
     pub fn blocks_to_origin(
-        blocks: HashMap<grid::Point3, PlacedBlock>,
-    ) -> HashMap<grid::Point3, PlacedBlock> {
-        let min = Self::blocks_min_pos(&blocks);
+        blocks: &[(grid::Point3, PlacedBlock)],
+    ) -> Vec<(grid::Point3, PlacedBlock)> {
+        let min = Self::blocks_min_pos(blocks);
 
         blocks
-            .into_iter()
-            .map(|(p, block)| (p - min.coords, block))
+            .iter()
+            .map(|(p, block)| (p - min.coords, block.clone()))
             .collect()
     }
 }
@@ -293,6 +296,9 @@ pub enum Mode {
         /// Position that is being dragged, i.e. the block that was grabbed by
         /// the user.
         center_pos: grid::Point3,
+
+        /// Rotation to be applied to the piece.
+        rotation_xy: usize,
     },
 }
 
@@ -327,6 +333,7 @@ impl Mode {
             Mode::DragAndDrop {
                 mut selection,
                 center_pos,
+                rotation_xy,
             } => {
                 selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
 
@@ -338,6 +345,7 @@ impl Mode {
                     Mode::DragAndDrop {
                         selection,
                         center_pos,
+                        rotation_xy,
                     }
                 }
             }

@@ -208,7 +208,7 @@ impl Editor {
                     let name = &ImString::new(block.name());
                     let selected = cur_block
                         .as_ref()
-                        .map_or(false, |placed_block| placed_block.block == *block);
+                        .map_or(false, |(_, placed_block)| placed_block.block == *block);
                     let selectable = imgui::Selectable::new(name).selected(selected);
 
                     if selectable.build(ui) {
@@ -390,15 +390,24 @@ impl Editor {
             Mode::DragAndDrop {
                 selection,
                 center_pos,
+                rotation_xy,
             } => {
                 if !input_state.is_button_pressed(MouseButton::Left) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                         let selected_blocks =
                             Piece::selected_blocks(&self.machine, selection.iter().cloned())
-                                .collect();
-                        let min_pos = Piece::blocks_min_pos(&selected_blocks);
-                        let piece = Piece::new_blocks_to_origin(selected_blocks);
-                        let offset = &(mouse_grid_pos - (center_pos - min_pos));
+                                .collect::<Vec<_>>();
+                        let mut piece = Piece::new_blocks_to_origin(&selected_blocks);
+                        for _ in 0..*rotation_xy {
+                            piece.rotate_cw_xy();
+                        }
+
+                        let center_pos_index = selected_blocks
+                            .iter()
+                            .position(|(p, _)| p == center_pos)
+                            .unwrap_or(0);
+                        let center_pos_transformed = piece.block_at_index(center_pos_index).0;
+                        let offset = mouse_grid_pos - center_pos_transformed.coords;
 
                         // 1) Remove the selected blocks.
                         let remove_edit =
@@ -573,9 +582,7 @@ impl Editor {
                         Mode::Select(selection)
                     } else {
                         // No modifier, but clicked on a block...
-                        if selection.contains(&grid_pos) {
-                            // Already selected this one.
-                        } else {
+                        if !selection.contains(&grid_pos) {
                             // Different block, select only this one.
                             selection = Vec::new();
                             selection.push(grid_pos);
@@ -584,6 +591,7 @@ impl Editor {
                         Mode::DragAndDrop {
                             selection,
                             center_pos: grid::Point3::new(grid_pos.x, grid_pos.y, 0),
+                            rotation_xy: 0,
                         }
                     }
                 } else {
@@ -680,17 +688,26 @@ impl Editor {
             Mode::DragAndDrop {
                 selection,
                 center_pos,
+                rotation_xy,
             } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                     let selected_blocks =
-                        Piece::selected_blocks(&self.machine, selection.iter().cloned()).collect();
-                    let min_pos = Piece::blocks_min_pos(&selected_blocks);
-                    let piece = Piece::new_blocks_to_origin(selected_blocks);
-                    let offset = self.render_piece_to_place(
-                        &piece,
-                        &(mouse_grid_pos - (center_pos - min_pos)),
-                        out,
-                    );
+                        Piece::selected_blocks(&self.machine, selection.iter().cloned())
+                            .collect::<Vec<_>>();
+                    let mut piece = Piece::new_blocks_to_origin(&selected_blocks);
+                    for _ in 0..*rotation_xy {
+                        piece.rotate_cw_xy();
+                    }
+
+                    let center_pos_index = selected_blocks
+                        .iter()
+                        .position(|(p, _)| p == center_pos)
+                        .unwrap_or(0);
+                    let center_pos_transformed = piece.block_at_index(center_pos_index).0;
+                    let offset = mouse_grid_pos - center_pos_transformed.coords;
+
+                    self.render_piece_to_place(&piece, &offset, out);
+
                     self.render_selection(selection, false, out);
                 }
             }
@@ -918,6 +935,12 @@ impl Editor {
             Mode::Select(selection) => {
                 edit = Some(Edit::RotateCWXY(selection.clone()));
             }
+            Mode::DragAndDrop { rotation_xy, .. } => {
+                *rotation_xy += 1;
+                if *rotation_xy == 4 {
+                    *rotation_xy = 0;
+                }
+            }
             _ => {
                 // No op in other modes.
             }
@@ -938,6 +961,13 @@ impl Editor {
             }
             Mode::Select(selection) => {
                 edit = Some(Edit::RotateCCWXY(selection.clone()));
+            }
+            Mode::DragAndDrop { rotation_xy, .. } => {
+                if *rotation_xy == 0 {
+                    *rotation_xy = 3;
+                } else {
+                    *rotation_xy -= 1;
+                }
             }
             _ => {
                 // No op in other modes.
