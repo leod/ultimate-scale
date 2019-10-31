@@ -394,30 +394,23 @@ impl Editor {
             } => {
                 if !input_state.is_button_pressed(MouseButton::Left) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let selected_blocks =
-                            Piece::selected_blocks(&self.machine, selection.iter().cloned())
-                                .collect::<Vec<_>>();
-                        let mut piece = Piece::new_blocks_to_origin(&selected_blocks);
-                        for _ in 0..*rotation_xy {
-                            piece.rotate_cw_xy();
-                        }
-
-                        let center_pos_index = selected_blocks
-                            .iter()
-                            .position(|(p, _)| p == center_pos)
-                            .unwrap_or(0);
-                        let center_pos_transformed = piece.block_at_index(center_pos_index).0;
-                        let offset = mouse_grid_pos - center_pos_transformed.coords;
+                        let (piece, center_pos_transformed) = self
+                            .drag_and_drop_piece_from_selection(
+                                selection,
+                                center_pos,
+                                *rotation_xy,
+                            );
+                        let offset = mouse_grid_pos - center_pos_transformed;
 
                         // First remove the selected blocks.
                         let remove_edit =
                             Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
 
                         // Then place the piece at the new position.
-                        let place_edit = piece.place_edit(&offset.coords);
+                        let place_edit = piece.place_edit(&offset);
 
                         let new_selection = piece
-                            .iter_blocks(&offset.coords)
+                            .iter_blocks(&offset)
                             .map(|(p, _)| p)
                             .filter(|p| self.machine.is_valid_pos(p))
                             .collect();
@@ -697,22 +690,14 @@ impl Editor {
                 rotation_xy,
             } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let selected_blocks =
-                        Piece::selected_blocks(&self.machine, selection.iter().cloned())
-                            .collect::<Vec<_>>();
-                    let mut piece = Piece::new_blocks_to_origin(&selected_blocks);
-                    for _ in 0..*rotation_xy {
-                        piece.rotate_cw_xy();
-                    }
+                    let (piece, center_pos_transformed) = self.drag_and_drop_piece_from_selection(
+                        selection,
+                        center_pos,
+                        *rotation_xy,
+                    );
+                    let offset = mouse_grid_pos - center_pos_transformed;
 
-                    let center_pos_index = selected_blocks
-                        .iter()
-                        .position(|(p, _)| p == center_pos)
-                        .unwrap_or(0);
-                    let center_pos_transformed = piece.block_at_index(center_pos_index).0;
-                    let offset = mouse_grid_pos - center_pos_transformed.coords;
-
-                    self.render_piece_to_place(&piece, &offset, out);
+                    self.render_piece_to_place(&piece, &grid::Point3::from(offset), out);
 
                     self.render_selection(selection, false, out);
                 }
@@ -842,6 +827,30 @@ impl Editor {
                 );
             }
         };
+    }
+
+    fn drag_and_drop_piece_from_selection(
+        &self,
+        selection: &[grid::Point3],
+        center_pos: &grid::Point3,
+        rotation_xy: usize,
+    ) -> (Piece, grid::Point3) {
+        let selected_blocks =
+            Piece::selected_blocks(&self.machine, selection.iter().cloned()).collect::<Vec<_>>();
+        let mut piece = Piece::new_blocks_to_origin(&selected_blocks);
+        for _ in 0..rotation_xy {
+            piece.rotate_cw_xy();
+        }
+
+        // Get the `center_pos` after it was transformed by centering and
+        // rotation.
+        let center_pos_index = selected_blocks
+            .iter()
+            .position(|(p, _)| p == center_pos)
+            .expect("Mode::DragAndDrop must always contain center_pos in selection");
+        let center_pos_transformed = piece.block_at_index(center_pos_index).0;
+
+        (piece, center_pos_transformed)
     }
 }
 
