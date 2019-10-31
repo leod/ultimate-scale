@@ -18,28 +18,44 @@ pub use editor::Editor;
 pub struct Piece {
     /// Blocks that shall be placed. All point coordinates are assumed to be
     /// non-negative.
-    blocks: HashMap<grid::Point3, PlacedBlock>,
+    blocks: Vec<(grid::Point3, PlacedBlock)>,
 }
 
 impl Piece {
     pub fn new_origin_block(block: PlacedBlock) -> Self {
         Self {
-            blocks: maplit::hashmap! {
-                grid::Point3::origin() => block,
-            },
+            blocks: vec![(grid::Point3::origin(), block)],
         }
     }
 
-    pub fn new_blocks_to_origin(blocks: HashMap<grid::Point3, PlacedBlock>) -> Piece {
-        Piece {
+    pub fn new_blocks_to_origin(blocks: &[(grid::Point3, PlacedBlock)]) -> Self {
+        Self {
             blocks: Self::blocks_to_origin(blocks),
         }
+    }
+
+    pub fn new_from_selection(
+        machine: &Machine,
+        selection: impl Iterator<Item = grid::Point3>,
+    ) -> Self {
+        Piece::new_blocks_to_origin(&Self::selected_blocks(machine, selection).collect::<Vec<_>>())
+    }
+
+    pub fn block_at_index(&self, index: usize) -> &(grid::Point3, PlacedBlock) {
+        &self.blocks[index]
+    }
+
+    pub fn selected_blocks<'a>(
+        machine: &'a Machine,
+        selection: impl Iterator<Item = grid::Point3> + 'a,
+    ) -> impl Iterator<Item = (grid::Point3, PlacedBlock)> + 'a {
+        selection.filter_map(move |p| machine.get_block_at_pos(&p).map(|(_, b)| (p, b.clone())))
     }
 
     pub fn grid_size(&self) -> grid::Vector3 {
         let mut max = grid::Vector3::zeros();
 
-        for p in self.blocks.keys() {
+        for (p, _) in self.blocks.iter() {
             if p.x > max.x {
                 max.x = p.x;
             }
@@ -54,9 +70,21 @@ impl Piece {
         max + grid::Vector3::new(1, 1, 1)
     }
 
+    pub fn grid_center_xy(&self) -> grid::Vector3 {
+        let size = self.grid_size();
+
+        // Bias towards the origin for even sizes
+        grid::Vector3::new(
+            size.x / 2 - (size.x > 0 && size.x % 2 == 0) as isize,
+            size.y / 2 - (size.y > 0 && size.y % 2 == 0) as isize,
+            0,
+        )
+    }
+
     pub fn rotate_cw_xy(&mut self) {
         self.blocks = Self::blocks_to_origin(
-            self.blocks
+            &self
+                .blocks
                 .clone()
                 .into_iter()
                 .map(|(p, mut placed_block)| {
@@ -66,7 +94,7 @@ impl Piece {
 
                     (rotated_p, placed_block)
                 })
-                .collect(),
+                .collect::<Vec<_>>(),
         );
     }
 
@@ -77,7 +105,7 @@ impl Piece {
     }
 
     pub fn next_kind(&mut self) {
-        for placed_block in self.blocks.values_mut() {
+        for (_, placed_block) in self.blocks.iter_mut() {
             if let Some(kind) = placed_block.block.kind() {
                 placed_block.block = placed_block.block.with_kind(kind.next());
             }
@@ -103,10 +131,10 @@ impl Piece {
             .map(move |(pos, block)| (pos + offset, block.clone()))
     }
 
-    pub fn get_singleton(&self) -> Option<PlacedBlock> {
-        if let Some(block) = self.blocks.values().next() {
+    pub fn get_singleton(&self) -> Option<(grid::Point3, PlacedBlock)> {
+        if let Some(entry) = self.blocks.iter().next() {
             if self.blocks.len() == 1 {
-                Some(block.clone())
+                Some(entry.clone())
             } else {
                 None
             }
@@ -115,12 +143,10 @@ impl Piece {
         }
     }
 
-    pub fn blocks_to_origin(
-        blocks: HashMap<grid::Point3, PlacedBlock>,
-    ) -> HashMap<grid::Point3, PlacedBlock> {
-        let mut min = grid::Vector3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
+    pub fn blocks_min_pos(blocks: &[(grid::Point3, PlacedBlock)]) -> grid::Point3 {
+        let mut min = grid::Point3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
 
-        for p in blocks.keys() {
+        for (p, _) in blocks {
             if p.x < min.x {
                 min.x = p.x;
             }
@@ -132,9 +158,17 @@ impl Piece {
             }
         }
 
+        min
+    }
+
+    pub fn blocks_to_origin(
+        blocks: &[(grid::Point3, PlacedBlock)],
+    ) -> Vec<(grid::Point3, PlacedBlock)> {
+        let min = Self::blocks_min_pos(blocks);
+
         blocks
-            .into_iter()
-            .map(|(p, block)| (p - min, block))
+            .iter()
+            .map(|(p, block)| (p - min.coords, block.clone()))
             .collect()
     }
 }
@@ -149,6 +183,9 @@ pub enum Edit {
 
     /// Rotate blocks counterclockwise.
     RotateCCWXY(Vec<grid::Point3>),
+
+    /// Run two edits in sequence.
+    Pair(Box<Edit>, Box<Edit>),
 }
 
 impl Edit {
@@ -211,6 +248,26 @@ impl Edit {
                     Edit::RotateCWXY(points)
                 }
             }
+            Edit::Pair(a, b) => {
+                let undo_a = a.run(machine);
+                let undo_b = b.run(machine);
+
+                Self::compose(undo_b, undo_a)
+            }
+        }
+    }
+
+    pub fn compose(a: Edit, b: Edit) -> Edit {
+        match (a, b) {
+            (Edit::NoOp, Edit::NoOp) => Edit::NoOp,
+            (Edit::SetBlocks(mut a), Edit::SetBlocks(b)) => {
+                for (p, block) in b.into_iter() {
+                    a.insert(p, block);
+                }
+
+                Edit::SetBlocks(a)
+            }
+            (a, b) => Edit::Pair(Box::new(a), Box::new(b)),
         }
     }
 }
@@ -230,15 +287,83 @@ pub enum Mode {
         /// Blocks that were already selected when entering this mode.
         existing_selection: Vec<grid::Point3>,
 
-        /// New blocks currently selected by the rectangle
+        /// New blocks currently selected by the rectangle.
         new_selection: Vec<grid::Point3>,
 
         /// Start position of the rectangle.
         start_pos: na::Point2<f32>,
 
-        /// Current end position of the rectangle
+        /// Current end position of the rectangle.
         end_pos: na::Point2<f32>,
     },
 
-    PlacePiece(Piece),
+    PlacePiece {
+        piece: Piece,
+        offset: grid::Vector3,
+    },
+
+    DragAndDrop {
+        /// Selection that is being dragged. No duplicate positions, and each
+        /// must contain a block in the machine.
+        selection: Vec<grid::Point3>,
+
+        /// Position that is being dragged, i.e. the block that was grabbed by
+        /// the user.
+        center_pos: grid::Point3,
+
+        /// Rotation to be applied to the piece.
+        rotation_xy: usize,
+    },
+}
+
+impl Mode {
+    /// Make sure the mode state is consistent with the edited machine.
+    ///
+    /// The main case is for this to be called after an edit has been applied to
+    /// the machine. In that case, the edit may have cleared out a block
+    /// position which is currently selected in a `Mode`, so we need to remove
+    /// it from the selection.
+    pub fn make_consistent_with_machine(self, machine: &Machine) -> Self {
+        match self {
+            Mode::Select(mut selection) => {
+                selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                Mode::Select(selection)
+            }
+            Mode::RectSelect {
+                mut existing_selection,
+                mut new_selection,
+                start_pos,
+                end_pos,
+            } => {
+                existing_selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                new_selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                Mode::RectSelect {
+                    existing_selection,
+                    new_selection,
+                    start_pos,
+                    end_pos,
+                }
+            }
+            Mode::DragAndDrop {
+                mut selection,
+                center_pos,
+                rotation_xy,
+            } => {
+                selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+
+                if !selection.contains(&center_pos) {
+                    // If the center block is not selected anymore, let's just
+                    // not bother with this.
+                    Mode::Select(selection)
+                } else {
+                    Mode::DragAndDrop {
+                        selection,
+                        center_pos,
+                        rotation_xy,
+                    }
+                }
+            }
+            mode => mode,
+        }
+    }
 }

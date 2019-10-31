@@ -51,7 +51,8 @@ pub struct Editor {
     current_layer: isize,
 
     /// Grid position the mouse is currently pointing to, if any. The z
-    /// coordinate is always set to `current_layer`.
+    /// coordinate is always set to `current_layer`. Note that the grid
+    /// position may point outside of the grid.
     mouse_grid_pos: Option<grid::Point3>,
 
     /// Position of the *block* the mouse is currently pointing to, if any.
@@ -89,30 +90,13 @@ impl Editor {
     pub fn run_edit(&mut self, edit: Edit) -> Edit {
         let undo_edit = edit.run(&mut self.machine);
 
-        // Make sure our state is in track with the edited machine
-        self.mode = match self.mode.clone() {
-            Mode::Select(mut selection) => {
-                selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
-                Mode::Select(selection)
-            }
-            Mode::RectSelect {
-                mut existing_selection,
-                mut new_selection,
-                start_pos,
-                end_pos,
-            } => {
-                existing_selection
-                    .retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
-                new_selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
-                Mode::RectSelect {
-                    existing_selection,
-                    new_selection,
-                    start_pos,
-                    end_pos,
-                }
-            }
-            mode => mode,
-        };
+        // Now that the machine has been mutated, we need to make sure there is
+        // no spurious state left in the editing mode.
+        // TODO: use take_mut or mem::replace
+        self.mode = self
+            .mode
+            .clone()
+            .make_consistent_with_machine(&self.machine);
 
         undo_edit
     }
@@ -141,14 +125,19 @@ impl Editor {
             block,
         };
 
-        self.mode = Mode::PlacePiece(match &self.mode {
-            Mode::PlacePiece(piece) => {
+        let piece = match &self.mode {
+            Mode::PlacePiece { piece, .. } => {
                 // TODO: Maintain current rotation when switching to a
                 // different block to place.
                 Piece::new_origin_block(placed_block)
             }
             _ => Piece::new_origin_block(placed_block),
-        });
+        };
+
+        self.mode = Mode::PlacePiece {
+            piece,
+            offset: grid::Vector3::zeros(),
+        };
     }
 
     pub fn update(
@@ -211,7 +200,7 @@ impl Editor {
             .bg_alpha(bg_alpha)
             .build(&ui, || {
                 let cur_block = match &self.mode {
-                    Mode::PlacePiece(piece) => piece.get_singleton(),
+                    Mode::PlacePiece { piece, .. } => piece.get_singleton(),
                     _ => None,
                 };
 
@@ -219,7 +208,7 @@ impl Editor {
                     let name = &ImString::new(block.name());
                     let selected = cur_block
                         .as_ref()
-                        .map_or(false, |placed_block| placed_block.block == *block);
+                        .map_or(false, |(_, placed_block)| placed_block.block == *block);
                     let selectable = imgui::Selectable::new(name).selected(selected);
 
                     if selectable.build(ui) {
@@ -343,6 +332,7 @@ impl Editor {
 
     fn update_input(&mut self, input_state: &InputState, camera: &Camera) {
         let mut new_mode = None;
+        let mut edit = None;
 
         match &self.mode {
             Mode::Select(_selection) => {
@@ -379,10 +369,12 @@ impl Editor {
                     });
                 }
             }
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, offset } => {
                 if input_state.is_button_pressed(MouseButton::Left) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        self.run_and_track_edit(piece.place_edit(&mouse_grid_pos.coords));
+                        self.run_and_track_edit(
+                            piece.place_edit(&(mouse_grid_pos.coords + offset)),
+                        );
                     }
                 }
 
@@ -395,10 +387,51 @@ impl Editor {
                     }
                 }
             }
+            Mode::DragAndDrop {
+                selection,
+                center_pos,
+                rotation_xy,
+            } => {
+                if !input_state.is_button_pressed(MouseButton::Left) {
+                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                        let (piece, center_pos_transformed) = self
+                            .drag_and_drop_piece_from_selection(
+                                selection,
+                                center_pos,
+                                *rotation_xy,
+                            );
+                        let offset = mouse_grid_pos - center_pos_transformed;
+
+                        // First remove the selected blocks.
+                        let remove_edit =
+                            Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
+
+                        // Then place the piece at the new position.
+                        let place_edit = piece.place_edit(&offset);
+
+                        let new_selection = piece
+                            .iter_blocks(&offset)
+                            .map(|(p, _)| p)
+                            .filter(|p| self.machine.is_valid_pos(p))
+                            .collect();
+
+                        edit = Some(Edit::compose(remove_edit, place_edit));
+                        new_mode = Some(Mode::Select(new_selection));
+                    }
+                }
+
+                if input_state.is_button_pressed(MouseButton::Right) {
+                    new_mode = Some(Mode::Select(selection.clone()));
+                }
+            }
         }
 
         if let Some(new_mode) = new_mode {
             self.mode = new_mode;
+        }
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
         }
     }
 
@@ -502,6 +535,8 @@ impl Editor {
                     .filter(|p| self.machine.get_block_at_pos(p).is_some());
 
                 if let Some(grid_pos) = grid_pos {
+                    // Clicked on a block!
+
                     if modifiers.shift && !selection.is_empty() {
                         // Shift: Select in a line from the last to the current
                         // grid position.
@@ -531,6 +566,9 @@ impl Editor {
                                 selection.push(p);
                             }
                         }
+
+                        // Stay in selection mode.
+                        Mode::Select(selection)
                     } else if modifiers.ctrl {
                         // Control: Extend/toggle block selection.
                         if selection.contains(&grid_pos) {
@@ -538,14 +576,23 @@ impl Editor {
                         } else {
                             selection.push(grid_pos);
                         }
-                    } else {
-                        // No modifier: Only select new block.
-                        selection = Vec::new();
-                        selection.push(grid_pos);
-                    }
 
-                    // If clicked on a block, stay in select mode.
-                    Mode::Select(selection)
+                        // Stay in selection mode.
+                        Mode::Select(selection)
+                    } else {
+                        // No modifier, but clicked on a block...
+                        if !selection.contains(&grid_pos) {
+                            // Different block, select only this one.
+                            selection = Vec::new();
+                            selection.push(grid_pos);
+                        }
+
+                        Mode::DragAndDrop {
+                            selection,
+                            center_pos: grid::Point3::new(grid_pos.x, grid_pos.y, 0),
+                            rotation_xy: 0,
+                        }
+                    }
                 } else {
                     // Did not click on a block, switch to rect select.
                     let existing_selection = if modifiers.ctrl {
@@ -596,16 +643,11 @@ impl Editor {
                 self.render_selection(selection, false, out);
 
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
-
-                    render::machine::render_cuboid_wireframe(
-                        &render::machine::Cuboid {
-                            center: mouse_block_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
-                            size: na::Vector3::new(1.0, 1.0, 1.0),
-                        },
+                    self.render_block_wireframe(
+                        &mouse_block_pos,
                         0.015,
                         &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                        &mut out.plain,
+                        out,
                     );
                 }
             }
@@ -637,55 +679,27 @@ impl Editor {
                     },
                 );
             }
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, offset } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let mouse_grid_pos_float: na::Point3<f32> = na::convert(mouse_grid_pos);
-                    let mut any_pos_valid = false;
+                    self.render_piece_to_place(piece, &(mouse_grid_pos + offset), out);
+                }
+            }
+            Mode::DragAndDrop {
+                selection,
+                center_pos,
+                rotation_xy,
+            } => {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    let (piece, center_pos_transformed) = self.drag_and_drop_piece_from_selection(
+                        selection,
+                        center_pos,
+                        *rotation_xy,
+                    );
+                    let offset = mouse_grid_pos - center_pos_transformed;
 
-                    for (pos, placed_block) in piece.iter_blocks(&mouse_grid_pos.coords) {
-                        let block_center = render::machine::block_center(&pos);
-                        let block_transform =
-                            render::machine::placed_block_transform(&placed_block);
-                        render::machine::render_block(
-                            &placed_block,
-                            0.0,
-                            &None,
-                            &block_center,
-                            &block_transform,
-                            0.8,
-                            out,
-                        );
+                    self.render_piece_to_place(&piece, &grid::Point3::from(offset), out);
 
-                        any_pos_valid = any_pos_valid || self.machine.is_valid_pos(&pos);
-
-                        if !self.machine.is_valid_pos(&pos)
-                            || self.machine.get_block_at_pos(&pos).is_some()
-                        {
-                            render::machine::render_cuboid_wireframe(
-                                &render::machine::Cuboid {
-                                    center: block_center,
-                                    size: na::Vector3::new(1.0, 1.0, 1.0),
-                                },
-                                0.025,
-                                &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
-                                &mut out.plain,
-                            );
-                        }
-                    }
-
-                    if any_pos_valid {
-                        let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
-                        let wire_center = mouse_grid_pos_float + wire_size / 2.0;
-                        render::machine::render_cuboid_wireframe(
-                            &render::machine::Cuboid {
-                                center: wire_center,
-                                size: wire_size,
-                            },
-                            0.015,
-                            &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                            &mut out.plain,
-                        );
-                    }
+                    self.render_selection(selection, false, out);
                 }
             }
         }
@@ -719,6 +733,78 @@ impl Editor {
         }
     }
 
+    fn render_block_wireframe(
+        &self,
+        pos: &grid::Point3,
+        thickness: f32,
+        color: &na::Vector4<f32>,
+        out: &mut RenderLists,
+    ) {
+        let pos: na::Point3<f32> = na::convert(*pos);
+
+        render::machine::render_cuboid_wireframe(
+            &render::machine::Cuboid {
+                // Slight z offset so that there is less overlap with e.g. the floor
+                center: pos + na::Vector3::new(0.5, 0.5, 0.51),
+                size: na::Vector3::new(1.0, 1.0, 1.0),
+            },
+            thickness,
+            color,
+            &mut out.plain,
+        );
+    }
+
+    fn render_piece_to_place(
+        &self,
+        piece: &Piece,
+        piece_pos: &grid::Point3,
+        out: &mut RenderLists,
+    ) {
+        let mut any_pos_valid = false;
+
+        for (pos, placed_block) in piece.iter_blocks(&piece_pos.coords) {
+            let block_center = render::machine::block_center(&pos);
+            let block_transform = render::machine::placed_block_transform(&placed_block);
+            render::machine::render_block(
+                &placed_block,
+                0.0,
+                &None,
+                &block_center,
+                &block_transform,
+                0.8,
+                out,
+            );
+
+            any_pos_valid = any_pos_valid || self.machine.is_valid_pos(&pos);
+
+            if !self.machine.is_valid_pos(&pos) || self.machine.get_block_at_pos(&pos).is_some() {
+                self.render_block_wireframe(
+                    &pos,
+                    0.020,
+                    &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
+                    out,
+                );
+            }
+        }
+
+        // Show wireframe around whole piece only if there is at
+        // least one block we can place at a valid position.
+        if any_pos_valid {
+            let piece_pos: na::Point3<f32> = na::convert(*piece_pos);
+            let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
+            let wire_center = piece_pos + wire_size / 2.0;
+            render::machine::render_cuboid_wireframe(
+                &render::machine::Cuboid {
+                    center: wire_center,
+                    size: wire_size,
+                },
+                0.015,
+                &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                &mut out.plain,
+            );
+        }
+    }
+
     fn save(&self, path: &Path) {
         info!("Saving current machine to file {:?}", path);
 
@@ -742,6 +828,30 @@ impl Editor {
             }
         };
     }
+
+    fn drag_and_drop_piece_from_selection(
+        &self,
+        selection: &[grid::Point3],
+        center_pos: &grid::Point3,
+        rotation_xy: usize,
+    ) -> (Piece, grid::Point3) {
+        let selected_blocks =
+            Piece::selected_blocks(&self.machine, selection.iter().cloned()).collect::<Vec<_>>();
+        let mut piece = Piece::new_blocks_to_origin(&selected_blocks);
+        for _ in 0..rotation_xy {
+            piece.rotate_cw_xy();
+        }
+
+        // Get the `center_pos` after it was transformed by centering and
+        // rotation.
+        let center_pos_index = selected_blocks
+            .iter()
+            .position(|(p, _)| p == center_pos)
+            .expect("Mode::DragAndDrop must always contain center_pos in selection");
+        let center_pos_transformed = piece.block_at_index(center_pos_index).0;
+
+        (piece, center_pos_transformed)
+    }
 }
 
 /// Actions that can be accessed by buttons and shortcuts in the editor.
@@ -763,15 +873,10 @@ impl Editor {
     pub fn action_cut(&mut self) {
         let edit = match &self.mode {
             Mode::Select(selection) => {
-                let selected_blocks = selection
-                    .iter()
-                    .filter_map(|p| {
-                        self.machine
-                            .get_block_at_pos(p)
-                            .map(|(_, b)| (*p, b.clone()))
-                    })
-                    .collect();
-                self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+                self.clipboard = Some(Piece::new_from_selection(
+                    &self.machine,
+                    selection.iter().cloned(),
+                ));
 
                 // Note that `run_and_track_edit` will automatically clear the
                 // selection, corresponding to the mutated machine.
@@ -793,15 +898,10 @@ impl Editor {
     pub fn action_copy(&mut self) {
         match &self.mode {
             Mode::Select(selection) => {
-                let selected_blocks = selection
-                    .iter()
-                    .filter_map(|p| {
-                        self.machine
-                            .get_block_at_pos(p)
-                            .map(|(_, b)| (*p, b.clone()))
-                    })
-                    .collect();
-                self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+                self.clipboard = Some(Piece::new_from_selection(
+                    &self.machine,
+                    selection.iter().cloned(),
+                ));
             }
             _ => {
                 // No op in other modes.
@@ -811,7 +911,11 @@ impl Editor {
 
     pub fn action_paste(&mut self) {
         if let Some(clipboard) = &self.clipboard {
-            self.mode = Mode::PlacePiece(clipboard.clone());
+            // Kinda center the piece at the mouse
+            self.mode = Mode::PlacePiece {
+                piece: clipboard.clone(),
+                offset: -clipboard.grid_center_xy(),
+            };
         }
     }
 
@@ -839,11 +943,18 @@ impl Editor {
         let mut edit = None;
 
         match &mut self.mode {
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, offset } => {
                 piece.rotate_cw_xy();
+                *offset = -piece.grid_center_xy();
             }
             Mode::Select(selection) => {
                 edit = Some(Edit::RotateCWXY(selection.clone()));
+            }
+            Mode::DragAndDrop { rotation_xy, .. } => {
+                *rotation_xy += 1;
+                if *rotation_xy == 4 {
+                    *rotation_xy = 0;
+                }
             }
             _ => {
                 // No op in other modes.
@@ -859,11 +970,19 @@ impl Editor {
         let mut edit = None;
 
         match &mut self.mode {
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, offset } => {
                 piece.rotate_ccw_xy();
+                *offset = -piece.grid_center_xy();
             }
             Mode::Select(selection) => {
                 edit = Some(Edit::RotateCCWXY(selection.clone()));
+            }
+            Mode::DragAndDrop { rotation_xy, .. } => {
+                if *rotation_xy == 0 {
+                    *rotation_xy = 3;
+                } else {
+                    *rotation_xy -= 1;
+                }
             }
             _ => {
                 // No op in other modes.
@@ -877,7 +996,7 @@ impl Editor {
 
     pub fn action_next_kind(&mut self) {
         match &mut self.mode {
-            Mode::PlacePiece(piece) => {
+            Mode::PlacePiece { piece, .. } => {
                 piece.next_kind();
             }
             _ => {

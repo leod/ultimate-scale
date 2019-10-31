@@ -21,3 +21,6 @@ imgui = "0.2.1"
 imgui-glium-renderer = "0.2.0"
 imgui-winit-support = "0.2.0"
 maplit = "1.0"
+
+[profile.dev]
+opt-level = 1
