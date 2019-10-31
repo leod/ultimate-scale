@@ -30,10 +30,21 @@ impl Piece {
         }
     }
 
-    pub fn new_blocks_to_origin(blocks: HashMap<grid::Point3, PlacedBlock>) -> Piece {
-        Piece {
+    pub fn new_blocks_to_origin(blocks: HashMap<grid::Point3, PlacedBlock>) -> Self {
+        Self {
             blocks: Self::blocks_to_origin(blocks),
         }
+    }
+
+    pub fn new_from_selection<'a>(
+        machine: &Machine,
+        selection: impl Iterator<Item = &'a grid::Point3>,
+    ) -> Self {
+        let blocks = selection
+            .filter_map(|p| machine.get_block_at_pos(p).map(|(_, b)| (*p, b.clone())))
+            .collect();
+
+        Piece::new_blocks_to_origin(blocks)
     }
 
     pub fn grid_size(&self) -> grid::Vector3 {
