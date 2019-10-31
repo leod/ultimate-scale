@@ -792,15 +792,7 @@ impl Editor {
     pub fn action_cut(&mut self) {
         let edit = match &self.mode {
             Mode::Select(selection) => {
-                let selected_blocks = selection
-                    .iter()
-                    .filter_map(|p| {
-                        self.machine
-                            .get_block_at_pos(p)
-                            .map(|(_, b)| (*p, b.clone()))
-                    })
-                    .collect();
-                self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+                self.clipboard = Some(Piece::new_from_selection(&self.machine, selection.iter()));
 
                 // Note that `run_and_track_edit` will automatically clear the
                 // selection, corresponding to the mutated machine.
@@ -822,15 +814,7 @@ impl Editor {
     pub fn action_copy(&mut self) {
         match &self.mode {
             Mode::Select(selection) => {
-                let selected_blocks = selection
-                    .iter()
-                    .filter_map(|p| {
-                        self.machine
-                            .get_block_at_pos(p)
-                            .map(|(_, b)| (*p, b.clone()))
-                    })
-                    .collect();
-                self.clipboard = Some(Piece::new_blocks_to_origin(selected_blocks));
+                self.clipboard = Some(Piece::new_from_selection(&self.machine, selection.iter()));
             }
             _ => {
                 // No op in other modes.
