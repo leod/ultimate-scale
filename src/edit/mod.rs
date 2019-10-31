@@ -103,6 +103,18 @@ impl Piece {
             .map(move |(pos, block)| (pos + offset, block.clone()))
     }
 
+    pub fn get_singleton(&self) -> Option<PlacedBlock> {
+        if let Some(block) = self.blocks.values().next() {
+            if self.blocks.len() == 1 {
+                Some(block.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn blocks_to_origin(
         blocks: HashMap<grid::Point3, PlacedBlock>,
     ) -> HashMap<grid::Point3, PlacedBlock> {
@@ -131,6 +143,12 @@ impl Piece {
 pub enum Edit {
     NoOp,
     SetBlocks(HashMap<grid::Point3, Option<PlacedBlock>>),
+
+    /// Rotate blocks clockwise.
+    RotateCWXY(Vec<grid::Point3>),
+
+    /// Rotate blocks counterclockwise.
+    RotateCCWXY(Vec<grid::Point3>),
 }
 
 impl Edit {
@@ -165,6 +183,32 @@ impl Edit {
                     }
 
                     Edit::SetBlocks(previous_blocks)
+                }
+            }
+            Edit::RotateCWXY(points) => {
+                for p in &points {
+                    if let Some((_, placed_block)) = machine.get_block_at_pos_mut(p) {
+                        placed_block.rotate_cw_xy();
+                    }
+                }
+
+                if points.is_empty() {
+                    Edit::NoOp
+                } else {
+                    Edit::RotateCCWXY(points)
+                }
+            }
+            Edit::RotateCCWXY(points) => {
+                for p in &points {
+                    if let Some((_, placed_block)) = machine.get_block_at_pos_mut(p) {
+                        placed_block.rotate_ccw_xy();
+                    }
+                }
+
+                if points.is_empty() {
+                    Edit::NoOp
+                } else {
+                    Edit::RotateCWXY(points)
                 }
             }
         }

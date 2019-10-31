@@ -71,10 +71,19 @@ fn main() {
         let hidpi_factor = imgui_platform.hidpi_factor();
         let font_size = (14.0 * hidpi_factor) as f32;
 
+        // Include some special characters in the glyph ranges
+        let glyph_ranges = imgui::FontGlyphRanges::from_slice(&[
+            0x0020, 0x00FF, // Basic Latin + Latin Supplement
+            0x25A0, 0x25FF, // Geometric shapes
+            0x2190, 0x21FF, // Arrows
+            0,
+        ]);
+
         imgui.fonts().add_font(&[imgui::FontSource::TtfData {
             data: include_bytes!("../resources/DejaVuSans.ttf"),
             size_pixels: font_size,
             config: Some(imgui::FontConfig {
+                glyph_ranges,
                 ..imgui::FontConfig::default()
             }),
         }]);
@@ -177,8 +186,6 @@ fn main() {
             info!("Window resized to: {:?}", new_window_size);
 
             game.on_window_resize(&display, new_window_size);
-
-            //font.on_window_resize(new_window_size);
         }
 
         let now_clock = Instant::now();
