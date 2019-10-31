@@ -40,10 +40,10 @@ impl Piece {
         machine: &Machine,
         selection: impl Iterator<Item = grid::Point3>,
     ) -> Self {
-        Piece::new_blocks_to_origin(Self::selection_blocks(machine, selection).collect())
+        Piece::new_blocks_to_origin(Self::selected_blocks(machine, selection).collect())
     }
 
-    pub fn selection_blocks<'a>(
+    pub fn selected_blocks<'a>(
         machine: &'a Machine,
         selection: impl Iterator<Item = grid::Point3> + 'a,
     ) -> impl Iterator<Item = (grid::Point3, PlacedBlock)> + 'a {
@@ -140,8 +140,8 @@ impl Piece {
         }
     }
 
-    pub fn blocks_min_offset(blocks: &HashMap<grid::Point3, PlacedBlock>) -> grid::Vector3 {
-        let mut min = grid::Vector3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
+    pub fn blocks_min_pos(blocks: &HashMap<grid::Point3, PlacedBlock>) -> grid::Point3 {
+        let mut min = grid::Point3::new(std::isize::MAX, std::isize::MAX, std::isize::MAX);
 
         for p in blocks.keys() {
             if p.x < min.x {
@@ -161,11 +161,11 @@ impl Piece {
     pub fn blocks_to_origin(
         blocks: HashMap<grid::Point3, PlacedBlock>,
     ) -> HashMap<grid::Point3, PlacedBlock> {
-        let min = Self::blocks_min_offset(&blocks);
+        let min = Self::blocks_min_pos(&blocks);
 
         blocks
             .into_iter()
-            .map(|(p, block)| (p - min, block))
+            .map(|(p, block)| (p - min.coords, block))
             .collect()
     }
 }
@@ -180,6 +180,9 @@ pub enum Edit {
 
     /// Rotate blocks counterclockwise.
     RotateCCWXY(Vec<grid::Point3>),
+
+    /// Run two edits in sequence.
+    Pair(Box<Edit>, Box<Edit>),
 }
 
 impl Edit {
@@ -242,6 +245,12 @@ impl Edit {
                     Edit::RotateCWXY(points)
                 }
             }
+            Edit::Pair(a, b) => {
+                let undo_a = a.run(machine);
+                let undo_b = b.run(machine);
+
+                Edit::Pair(Box::new(undo_b), Box::new(undo_a))
+            }
         }
     }
 }
@@ -281,9 +290,9 @@ pub enum Mode {
         /// must contain a block in the machine.
         selection: Vec<grid::Point3>,
 
-        /// Center position that is being dragged, i.e. the block that was
-        /// grabbed by the user.
-        center: grid::Point3,
+        /// Position that is being dragged, i.e. the block that was grabbed by
+        /// the user.
+        center_pos: grid::Point3,
     },
 }
 
@@ -317,16 +326,19 @@ impl Mode {
             }
             Mode::DragAndDrop {
                 mut selection,
-                center,
+                center_pos,
             } => {
                 selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
 
-                if !selection.contains(&center) {
-                    // If the center block is not selected anymore, why even
-                    // bother?
+                if !selection.contains(&center_pos) {
+                    // If the center block is not selected anymore, let's just
+                    // not bother with this.
                     Mode::Select(selection)
                 } else {
-                    Mode::DragAndDrop { selection, center }
+                    Mode::DragAndDrop {
+                        selection,
+                        center_pos,
+                    }
                 }
             }
             mode => mode,
