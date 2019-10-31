@@ -577,6 +577,27 @@ impl Editor {
         }
     }
 
+    fn render_block_wireframe(
+        &self,
+        pos: &grid::Point3,
+        thickness: f32,
+        color: &na::Vector4<f32>,
+        out: &mut RenderLists,
+    ) {
+        let pos: na::Point3<f32> = na::convert(*pos);
+
+        render::machine::render_cuboid_wireframe(
+            &render::machine::Cuboid {
+                // Slight z offset so that there is less overlap with e.g. the floor
+                center: pos + na::Vector3::new(0.5, 0.5, 0.51),
+                size: na::Vector3::new(1.0, 1.0, 1.0),
+            },
+            thickness,
+            color,
+            &mut out.plain,
+        );
+    }
+
     pub fn render(&mut self, out: &mut RenderLists) -> Result<(), glium::DrawError> {
         profile!("editor");
 
@@ -603,16 +624,11 @@ impl Editor {
                 self.render_selection(selection, false, out);
 
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
-
-                    render::machine::render_cuboid_wireframe(
-                        &render::machine::Cuboid {
-                            center: mouse_block_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
-                            size: na::Vector3::new(1.0, 1.0, 1.0),
-                        },
+                    self.render_block_wireframe(
+                        &mouse_block_pos,
                         0.015,
                         &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                        &mut out.plain,
+                        out,
                     );
                 }
             }
@@ -668,18 +684,17 @@ impl Editor {
                         if !self.machine.is_valid_pos(&pos)
                             || self.machine.get_block_at_pos(&pos).is_some()
                         {
-                            render::machine::render_cuboid_wireframe(
-                                &render::machine::Cuboid {
-                                    center: block_center,
-                                    size: na::Vector3::new(1.0, 1.0, 1.0),
-                                },
+                            self.render_block_wireframe(
+                                &pos,
                                 0.025,
                                 &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
-                                &mut out.plain,
+                                out,
                             );
                         }
                     }
 
+                    // Show wireframe around whole piece only if there is at
+                    // least one block we can place at a valid position.
                     if any_pos_valid {
                         let center_pos: na::Point3<f32> = na::convert(mouse_grid_pos + offset);
                         let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
@@ -854,7 +869,6 @@ impl Editor {
             Mode::PlacePiece { piece, offset } => {
                 piece.rotate_cw_xy();
                 *offset = -piece.grid_center_xy();
-                println!("offset: {:?}", offset);
             }
             Mode::Select(selection) => {
                 edit = Some(Edit::RotateCWXY(selection.clone()));
