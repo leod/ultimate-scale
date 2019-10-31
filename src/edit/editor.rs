@@ -90,30 +90,12 @@ impl Editor {
     pub fn run_edit(&mut self, edit: Edit) -> Edit {
         let undo_edit = edit.run(&mut self.machine);
 
-        // Make sure our state is in track with the edited machine
-        self.mode = match self.mode.clone() {
-            Mode::Select(mut selection) => {
-                selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
-                Mode::Select(selection)
-            }
-            Mode::RectSelect {
-                mut existing_selection,
-                mut new_selection,
-                start_pos,
-                end_pos,
-            } => {
-                existing_selection
-                    .retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
-                new_selection.retain(|grid_pos| self.machine.get_block_at_pos(grid_pos).is_some());
-                Mode::RectSelect {
-                    existing_selection,
-                    new_selection,
-                    start_pos,
-                    end_pos,
-                }
-            }
-            mode => mode,
-        };
+        // Now that the machine has been mutated, we need to make sure there is
+        // no spurious state left in the editing mode.
+        self.mode = self
+            .mode
+            .clone()
+            .make_consistent_with_machine(&self.machine);
 
         undo_edit
     }

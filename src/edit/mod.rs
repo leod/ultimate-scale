@@ -267,3 +267,36 @@ pub enum Mode {
         offset: grid::Vector3,
     },
 }
+
+impl Mode {
+    /// Make sure the mode state is consistent with the edited machine.
+    ///
+    /// The main case is for this to be called after an edit has been applied to
+    /// the machine. In that case, the edit may have cleared out a block
+    /// position which is currently selected in a `Mode`, so we need to remove
+    /// it from the selection.
+    pub fn make_consistent_with_machine(self, machine: &Machine) -> Self {
+        match self {
+            Mode::Select(mut selection) => {
+                selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                Mode::Select(selection)
+            }
+            Mode::RectSelect {
+                mut existing_selection,
+                mut new_selection,
+                start_pos,
+                end_pos,
+            } => {
+                existing_selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                new_selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                Mode::RectSelect {
+                    existing_selection,
+                    new_selection,
+                    start_pos,
+                    end_pos,
+                }
+            }
+            mode => mode,
+        }
+    }
+}
