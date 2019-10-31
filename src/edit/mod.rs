@@ -252,8 +252,22 @@ impl Edit {
                 let undo_a = a.run(machine);
                 let undo_b = b.run(machine);
 
-                Edit::Pair(Box::new(undo_b), Box::new(undo_a))
+                Self::compose(undo_b, undo_a)
             }
+        }
+    }
+
+    pub fn compose(a: Edit, b: Edit) -> Edit {
+        match (a, b) {
+            (Edit::NoOp, Edit::NoOp) => Edit::NoOp,
+            (Edit::SetBlocks(mut a), Edit::SetBlocks(b)) => {
+                for (p, block) in b.into_iter() {
+                    a.insert(p, block);
+                }
+
+                Edit::SetBlocks(a)
+            }
+            (a, b) => Edit::Pair(Box::new(a), Box::new(b)),
         }
     }
 }

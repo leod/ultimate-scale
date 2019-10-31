@@ -422,7 +422,7 @@ impl Editor {
                             .filter(|p| self.machine.is_valid_pos(p))
                             .collect();
 
-                        edit = Some(Edit::Pair(Box::new(remove_edit), Box::new(place_edit)));
+                        edit = Some(Edit::compose(remove_edit, place_edit));
                         new_mode = Some(Mode::Select(new_selection));
                     }
                 }
