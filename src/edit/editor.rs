@@ -583,7 +583,7 @@ impl Editor {
 
                         Mode::DragAndDrop {
                             selection,
-                            center_pos: grid_pos,
+                            center_pos: grid::Point3::new(grid_pos.x, grid_pos.y, 0),
                         }
                     }
                 } else {
@@ -772,7 +772,7 @@ impl Editor {
             if !self.machine.is_valid_pos(&pos) || self.machine.get_block_at_pos(&pos).is_some() {
                 self.render_block_wireframe(
                     &pos,
-                    0.025,
+                    0.020,
                     &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
                     out,
                 );
