@@ -252,7 +252,6 @@ impl Editor {
                 }
 
                 ui.separator();
-                ui.separator();
 
                 if ui.button(im_str!("Undo"), [small_button_w, button_h]) {
                     self.action_undo();
@@ -275,7 +274,6 @@ impl Editor {
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
-                ui.separator();
                 ui.separator();
 
                 if ui.button(im_str!("Paste"), [button_w, button_h]) {
@@ -313,7 +311,6 @@ impl Editor {
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
-                ui.separator();
                 ui.separator();
 
                 ui.set_window_font_scale(1.5);
@@ -839,25 +836,43 @@ impl Editor {
     }
 
     pub fn action_rotate_cw(&mut self) {
+        let mut edit = None;
+
         match &mut self.mode {
             Mode::PlacePiece(piece) => {
                 piece.rotate_cw_xy();
             }
+            Mode::Select(selection) => {
+                edit = Some(Edit::RotateCWXY(selection.clone()));
+            }
             _ => {
                 // No op in other modes.
             }
         };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
+        }
     }
 
     pub fn action_rotate_ccw(&mut self) {
+        let mut edit = None;
+
         match &mut self.mode {
             Mode::PlacePiece(piece) => {
                 piece.rotate_ccw_xy();
             }
+            Mode::Select(selection) => {
+                edit = Some(Edit::RotateCCWXY(selection.clone()));
+            }
             _ => {
                 // No op in other modes.
             }
         };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
+        }
     }
 
     pub fn action_next_kind(&mut self) {
