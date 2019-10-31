@@ -51,7 +51,8 @@ pub struct Editor {
     current_layer: isize,
 
     /// Grid position the mouse is currently pointing to, if any. The z
-    /// coordinate is always set to `current_layer`.
+    /// coordinate is always set to `current_layer`. Note that the grid
+    /// position may point outside of the grid.
     mouse_grid_pos: Option<grid::Point3>,
 
     /// Position of the *block* the mouse is currently pointing to, if any.
@@ -577,27 +578,6 @@ impl Editor {
         }
     }
 
-    fn render_block_wireframe(
-        &self,
-        pos: &grid::Point3,
-        thickness: f32,
-        color: &na::Vector4<f32>,
-        out: &mut RenderLists,
-    ) {
-        let pos: na::Point3<f32> = na::convert(*pos);
-
-        render::machine::render_cuboid_wireframe(
-            &render::machine::Cuboid {
-                // Slight z offset so that there is less overlap with e.g. the floor
-                center: pos + na::Vector3::new(0.5, 0.5, 0.51),
-                size: na::Vector3::new(1.0, 1.0, 1.0),
-            },
-            thickness,
-            color,
-            &mut out.plain,
-        );
-    }
-
     pub fn render(&mut self, out: &mut RenderLists) -> Result<(), glium::DrawError> {
         profile!("editor");
 
@@ -662,53 +642,7 @@ impl Editor {
             }
             Mode::PlacePiece { piece, offset } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let mut any_pos_valid = false;
-
-                    for (pos, placed_block) in piece.iter_blocks(&(mouse_grid_pos.coords + offset))
-                    {
-                        let block_center = render::machine::block_center(&pos);
-                        let block_transform =
-                            render::machine::placed_block_transform(&placed_block);
-                        render::machine::render_block(
-                            &placed_block,
-                            0.0,
-                            &None,
-                            &block_center,
-                            &block_transform,
-                            0.8,
-                            out,
-                        );
-
-                        any_pos_valid = any_pos_valid || self.machine.is_valid_pos(&pos);
-
-                        if !self.machine.is_valid_pos(&pos)
-                            || self.machine.get_block_at_pos(&pos).is_some()
-                        {
-                            self.render_block_wireframe(
-                                &pos,
-                                0.025,
-                                &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
-                                out,
-                            );
-                        }
-                    }
-
-                    // Show wireframe around whole piece only if there is at
-                    // least one block we can place at a valid position.
-                    if any_pos_valid {
-                        let center_pos: na::Point3<f32> = na::convert(mouse_grid_pos + offset);
-                        let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
-                        let wire_center = center_pos + wire_size / 2.0;
-                        render::machine::render_cuboid_wireframe(
-                            &render::machine::Cuboid {
-                                center: wire_center,
-                                size: wire_size,
-                            },
-                            0.015,
-                            &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                            &mut out.plain,
-                        );
-                    }
+                    self.render_piece_to_place(piece, &(mouse_grid_pos + offset), out);
                 }
             }
         }
@@ -737,6 +671,78 @@ impl Editor {
                 },
                 0.025,
                 &color,
+                &mut out.plain,
+            );
+        }
+    }
+
+    fn render_block_wireframe(
+        &self,
+        pos: &grid::Point3,
+        thickness: f32,
+        color: &na::Vector4<f32>,
+        out: &mut RenderLists,
+    ) {
+        let pos: na::Point3<f32> = na::convert(*pos);
+
+        render::machine::render_cuboid_wireframe(
+            &render::machine::Cuboid {
+                // Slight z offset so that there is less overlap with e.g. the floor
+                center: pos + na::Vector3::new(0.5, 0.5, 0.51),
+                size: na::Vector3::new(1.0, 1.0, 1.0),
+            },
+            thickness,
+            color,
+            &mut out.plain,
+        );
+    }
+
+    fn render_piece_to_place(
+        &self,
+        piece: &Piece,
+        piece_pos: &grid::Point3,
+        out: &mut RenderLists,
+    ) {
+        let mut any_pos_valid = false;
+
+        for (pos, placed_block) in piece.iter_blocks(&piece_pos.coords) {
+            let block_center = render::machine::block_center(&pos);
+            let block_transform = render::machine::placed_block_transform(&placed_block);
+            render::machine::render_block(
+                &placed_block,
+                0.0,
+                &None,
+                &block_center,
+                &block_transform,
+                0.8,
+                out,
+            );
+
+            any_pos_valid = any_pos_valid || self.machine.is_valid_pos(&pos);
+
+            if !self.machine.is_valid_pos(&pos) || self.machine.get_block_at_pos(&pos).is_some() {
+                self.render_block_wireframe(
+                    &pos,
+                    0.025,
+                    &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
+                    out,
+                );
+            }
+        }
+
+        // Show wireframe around whole piece only if there is at
+        // least one block we can place at a valid position.
+        if any_pos_valid {
+            let piece_pos: na::Point3<f32> = na::convert(*piece_pos);
+            let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
+            let wire_center = piece_pos + wire_size / 2.0;
+            render::machine::render_cuboid_wireframe(
+                &render::machine::Cuboid {
+                    center: wire_center,
+                    size: wire_size,
+                },
+                0.015,
+                &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
                 &mut out.plain,
             );
         }
