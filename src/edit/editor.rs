@@ -409,15 +409,21 @@ impl Editor {
                         let center_pos_transformed = piece.block_at_index(center_pos_index).0;
                         let offset = mouse_grid_pos - center_pos_transformed.coords;
 
-                        // 1) Remove the selected blocks.
+                        // First remove the selected blocks.
                         let remove_edit =
                             Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
 
-                        // 2) Place the piece at the new position.
+                        // Then place the piece at the new position.
                         let place_edit = piece.place_edit(&offset.coords);
 
+                        let new_selection = piece
+                            .iter_blocks(&offset.coords)
+                            .map(|(p, _)| p)
+                            .filter(|p| self.machine.is_valid_pos(p))
+                            .collect();
+
                         edit = Some(Edit::Pair(Box::new(remove_edit), Box::new(place_edit)));
-                        new_mode = Some(Mode::Select(Vec::new()));
+                        new_mode = Some(Mode::Select(new_selection));
                     }
                 }
 
