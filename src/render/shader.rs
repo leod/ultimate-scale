@@ -322,7 +322,7 @@ fn compile_uniform_type(t: UniformType) -> &'static str {
     }
 }
 
-fn uniform_value_to_type<'a>(v: UniformValue<'a>) -> UniformType {
+fn uniform_value_to_type(v: UniformValue) -> UniformType {
     match v {
         UniformValue::Float(_) => UniformType::Float,
         UniformValue::Vec2(_) => UniformType::FloatVec2,
@@ -344,7 +344,7 @@ fn compile_variable_def(prefix: &str, (name, t): &VariableDef) -> String {
     prefix.to_string() + " " + &compile_uniform_type(*t).to_string() + " " + name + ";\n"
 }
 
-fn compile_variable_defs<'a>(prefix: &str, defs: impl Iterator<Item = VariableDef>) -> String {
+fn compile_variable_defs(prefix: &str, defs: impl Iterator<Item = VariableDef>) -> String {
     defs.map(|def| compile_variable_def(prefix, &def))
         .collect::<Vec<_>>()
         .join("")
