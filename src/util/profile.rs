@@ -117,9 +117,9 @@ impl Scope {
         for _ in 0..depth {
             write!(out, "  ").unwrap();
         }
-        write!(
+        writeln!(
             out,
-            "{}: {:3.2}% {:>4.2}ms/call @ {:.2}Hz\n",
+            "{}: {:3.2}% {:>4.2}ms/call @ {:.2}Hz",
             self.name,
             percent,
             duration_sum_secs * 1000.0 / (self.num_calls as f64),
@@ -163,7 +163,7 @@ impl Profiler {
 
         Profiler {
             root: root.clone(),
-            current: root.clone(),
+            current: root,
         }
     }
 
@@ -196,7 +196,7 @@ impl Profiler {
                 .succs
                 .iter()
                 .find(|succ| succ.borrow().name == name)
-                .map(|succ| succ.clone())
+                .cloned()
         };
 
         let succ = if let Some(existing_succ) = existing_succ {
@@ -223,10 +223,8 @@ impl Profiler {
 
         // Set current scope back to the parent node.
         if self.current.borrow().pred.is_some() {
-            self.current = {
-                let pred = self.current.borrow().pred.clone().unwrap();
-                pred
-            }
+            let pred = self.current.borrow().pred.clone().unwrap();
+            self.current = pred;
         }
     }
 
