@@ -390,6 +390,7 @@ impl Editor {
                 selection,
                 center_pos,
                 rotation_xy,
+                layer_offset,
             } => {
                 if !input_state.is_button_pressed(MouseButton::Left) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
@@ -398,6 +399,7 @@ impl Editor {
                                 selection,
                                 center_pos,
                                 *rotation_xy,
+                                *layer_offset,
                             );
                         let offset = mouse_grid_pos - center_pos_transformed;
 
@@ -587,10 +589,19 @@ impl Editor {
                             selection.push(grid_pos);
                         }
 
+                        // Consider the case that we are selecting a block in
+                        // layer 1 while the placement layer is at 0. Then the
+                        // block would immediately be dragged into layer 0,
+                        // which is undesirable.
+                        // Thus, we calculate a `layer_offset` here, which is
+                        // subtracted from the piece z coords before placing.
+                        let layer_offset = grid_pos.z - self.current_layer as isize;
+
                         Mode::DragAndDrop {
                             selection,
                             center_pos: grid_pos,
                             rotation_xy: 0,
+                            layer_offset,
                         }
                     }
                 } else {
@@ -688,12 +699,14 @@ impl Editor {
                 selection,
                 center_pos,
                 rotation_xy,
+                layer_offset,
             } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                     let (piece, center_pos_transformed) = self.drag_and_drop_piece_from_selection(
                         selection,
                         center_pos,
                         *rotation_xy,
+                        *layer_offset,
                     );
                     let offset = mouse_grid_pos - center_pos_transformed;
 
@@ -834,6 +847,7 @@ impl Editor {
         selection: &[grid::Point3],
         center_pos: &grid::Point3,
         rotation_xy: usize,
+        layer_offset: isize,
     ) -> (Piece, grid::Point3) {
         let selected_blocks =
             Piece::selected_blocks(&self.machine, selection.iter().cloned()).collect::<Vec<_>>();
@@ -848,8 +862,8 @@ impl Editor {
             .iter()
             .position(|(p, _)| p == center_pos)
             .expect("Mode::DragAndDrop must always contain center_pos in selection");
-        let center_pos_transformed = piece.block_at_index(center_pos_index).0
-            - grid::Vector3::new(0, 0, piece.grid_size().z - 1);
+        let mut center_pos_transformed = piece.block_at_index(center_pos_index).0;
+        center_pos_transformed.z -= layer_offset;
 
         (piece, center_pos_transformed)
     }
