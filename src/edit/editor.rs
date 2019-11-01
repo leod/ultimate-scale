@@ -265,17 +265,6 @@ impl Editor {
 
                 ui.separator();
 
-                if ui.button(im_str!("Paste"), [button_w, button_h]) {
-                    self.action_paste();
-                }
-                if ui.is_item_hovered() {
-                    let text = format!(
-                        "Start placing the last copied blocks.\n\nShortcut: {}",
-                        self.config.paste_key
-                    );
-                    ui.tooltip(|| ui.text(&ImString::new(text)));
-                }
-
                 if ui.button(im_str!("Copy"), [small_button_w, button_h]) {
                     self.action_copy();
                 }
@@ -289,6 +278,17 @@ impl Editor {
 
                 ui.same_line(0.0);
 
+                if ui.button(im_str!("Paste"), [small_button_w, button_h]) {
+                    self.action_paste();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Start placing the last copied blocks.\n\nShortcut: {}",
+                        self.config.paste_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
                 if ui.button(im_str!("Cut"), [small_button_w, button_h]) {
                     self.action_cut();
                 }
@@ -296,6 +296,19 @@ impl Editor {
                     let text = format!(
                         "Copy and remove selected blocks.\n\nShortcut: {}",
                         self.config.cut_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.same_line(0.0);
+
+                if ui.button(im_str!("Delete"), [small_button_w, button_h]) {
+                    self.action_delete();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Delete selected blocks.\n\nShortcut: {}",
+                        self.config.delete_key
                     );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
@@ -486,6 +499,8 @@ impl Editor {
             self.action_cut();
         } else if key == self.config.copy_key {
             self.action_copy();
+        } else if key == self.config.delete_key {
+            self.action_delete();
         } else if key == self.config.block_kind_key {
             self.action_next_kind();
         } else if key == self.config.rotate_block_cw_key {
@@ -931,6 +946,26 @@ impl Editor {
                 piece: clipboard.clone(),
                 offset: -clipboard.grid_center_xy(),
             };
+        }
+    }
+
+    pub fn action_delete(&mut self) {
+        let edit = match &self.mode {
+            Mode::Select(selection) => {
+                // Note that `run_and_track_edit` will automatically clear the
+                // selection, corresponding to the mutated machine.
+                Some(Edit::SetBlocks(
+                    selection.iter().map(|p| (*p, None)).collect(),
+                ))
+            }
+            _ => {
+                // No op in other modes.
+                None
+            }
+        };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
         }
     }
 
