@@ -25,30 +25,30 @@ pub const MAX_UNDOS: usize = 1000;
 
 pub struct Editor {
     /// Configuration for the editor, e.g. shortcuts.
-    config: Config,
+    pub(super) config: Config,
 
     /// Configuration for running a machine.
     exec_config: exec::view::Config,
 
     /// The machine being edited.
-    machine: Machine,
+    pub(super) machine: Machine,
 
     /// The current editing mode.
-    mode: Mode,
+    pub(super) mode: Mode,
 
     /// Clipboard.
-    clipboard: Option<Piece>,
+    pub(super) clipboard: Option<Piece>,
 
     /// Edits that undo the last performed edits, in the order that the edits
     /// were performed.
-    undo: VecDeque<Edit>,
+    pub(super) undo: VecDeque<Edit>,
 
     /// Edits that redo the last performed undos, in the order that the undos
     /// were performed.
-    redo: Vec<Edit>,
+    pub(super) redo: Vec<Edit>,
 
     /// Layer being edited. Blocks are placed only in the current layer.
-    current_layer: isize,
+    pub(super) current_layer: isize,
 
     /// Grid position the mouse is currently pointing to, if any. The z
     /// coordinate is always set to `current_layer`. Note that the grid
@@ -59,7 +59,7 @@ pub struct Editor {
     mouse_block_pos: Option<grid::Point3>,
 
     /// Whether to start executing the machine in the next `update` call.
-    start_exec: bool,
+    pub(super) start_exec: bool,
 
     /// We keep track of the window size for fixing window positions in the UI.
     window_size: na::Vector2<f32>,
@@ -835,7 +835,7 @@ impl Editor {
         }
     }
 
-    fn save(&self, path: &Path) {
+    pub(super) fn save(&self, path: &Path) {
         info!("Saving current machine to file {:?}", path);
 
         match File::create(path) {
@@ -883,184 +883,5 @@ impl Editor {
         center_pos_transformed.z -= layer_offset;
 
         (piece, center_pos_transformed)
-    }
-}
-
-/// Actions that can be accessed by buttons and shortcuts in the editor.
-impl Editor {
-    pub fn action_undo(&mut self) {
-        if let Some(undo_edit) = self.undo.pop_back() {
-            let redo_edit = self.run_edit(undo_edit);
-            self.redo.push(redo_edit);
-        }
-    }
-
-    pub fn action_redo(&mut self) {
-        if let Some(redo_edit) = self.redo.pop() {
-            let undo_edit = self.run_edit(redo_edit);
-            self.undo.push_back(undo_edit);
-        }
-    }
-
-    pub fn action_cut(&mut self) {
-        let edit = match &self.mode {
-            Mode::Select(selection) => {
-                self.clipboard = Some(Piece::new_from_selection(
-                    &self.machine,
-                    selection.iter().cloned(),
-                ));
-
-                // Note that `run_and_track_edit` will automatically clear the
-                // selection, corresponding to the mutated machine.
-                Some(Edit::SetBlocks(
-                    selection.iter().map(|p| (*p, None)).collect(),
-                ))
-            }
-            _ => {
-                // No op in other modes.
-                None
-            }
-        };
-
-        if let Some(edit) = edit {
-            self.run_and_track_edit(edit);
-        }
-    }
-
-    pub fn action_copy(&mut self) {
-        match &self.mode {
-            Mode::Select(selection) => {
-                self.clipboard = Some(Piece::new_from_selection(
-                    &self.machine,
-                    selection.iter().cloned(),
-                ));
-            }
-            _ => {
-                // No op in other modes.
-            }
-        }
-    }
-
-    pub fn action_paste(&mut self) {
-        if let Some(clipboard) = &self.clipboard {
-            // Kinda center the piece at the mouse
-            self.mode = Mode::PlacePiece {
-                piece: clipboard.clone(),
-                offset: -clipboard.grid_center_xy(),
-            };
-        }
-    }
-
-    pub fn action_delete(&mut self) {
-        let edit = match &self.mode {
-            Mode::Select(selection) => {
-                // Note that `run_and_track_edit` will automatically clear the
-                // selection, corresponding to the mutated machine.
-                Some(Edit::SetBlocks(
-                    selection.iter().map(|p| (*p, None)).collect(),
-                ))
-            }
-            _ => {
-                // No op in other modes.
-                None
-            }
-        };
-
-        if let Some(edit) = edit {
-            self.run_and_track_edit(edit);
-        }
-    }
-
-    pub fn action_save(&mut self) {
-        self.save(&self.config.default_save_path);
-    }
-
-    pub fn action_layer_up(&mut self) {
-        if self.machine.is_valid_layer(self.current_layer + 1) {
-            self.current_layer += 1;
-        }
-    }
-
-    pub fn action_layer_down(&mut self) {
-        if self.machine.is_valid_layer(self.current_layer - 1) {
-            self.current_layer -= 1;
-        }
-    }
-
-    pub fn action_select_mode(&mut self) {
-        self.mode = Mode::Select(Vec::new());
-    }
-
-    pub fn action_cancel(&mut self) {
-        self.mode = match &self.mode {
-            Mode::DragAndDrop { selection, .. } => Mode::Select(selection.clone()),
-            _ => Mode::Select(Vec::new()),
-        };
-    }
-
-    pub fn action_rotate_cw(&mut self) {
-        let mut edit = None;
-
-        match &mut self.mode {
-            Mode::PlacePiece { piece, offset } => {
-                piece.rotate_cw_xy();
-                *offset = -piece.grid_center_xy();
-            }
-            Mode::Select(selection) => {
-                edit = Some(Edit::RotateCWXY(selection.clone()));
-            }
-            Mode::DragAndDrop { rotation_xy, .. } => {
-                *rotation_xy += 1;
-                if *rotation_xy == 4 {
-                    *rotation_xy = 0;
-                }
-            }
-            _ => {
-                // No op in other modes.
-            }
-        };
-
-        if let Some(edit) = edit {
-            self.run_and_track_edit(edit);
-        }
-    }
-
-    pub fn action_rotate_ccw(&mut self) {
-        let mut edit = None;
-
-        match &mut self.mode {
-            Mode::PlacePiece { piece, offset } => {
-                piece.rotate_ccw_xy();
-                *offset = -piece.grid_center_xy();
-            }
-            Mode::Select(selection) => {
-                edit = Some(Edit::RotateCCWXY(selection.clone()));
-            }
-            Mode::DragAndDrop { rotation_xy, .. } => {
-                if *rotation_xy == 0 {
-                    *rotation_xy = 3;
-                } else {
-                    *rotation_xy -= 1;
-                }
-            }
-            _ => {
-                // No op in other modes.
-            }
-        };
-
-        if let Some(edit) = edit {
-            self.run_and_track_edit(edit);
-        }
-    }
-
-    pub fn action_next_kind(&mut self) {
-        match &mut self.mode {
-            Mode::PlacePiece { piece, .. } => {
-                piece.next_kind();
-            }
-            _ => {
-                // No op in other modes.
-            }
-        };
     }
 }
