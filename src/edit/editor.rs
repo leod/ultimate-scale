@@ -589,7 +589,7 @@ impl Editor {
 
                         Mode::DragAndDrop {
                             selection,
-                            center_pos: grid::Point3::new(grid_pos.x, grid_pos.y, 0),
+                            center_pos: grid_pos,
                             rotation_xy: 0,
                         }
                     }
@@ -848,7 +848,8 @@ impl Editor {
             .iter()
             .position(|(p, _)| p == center_pos)
             .expect("Mode::DragAndDrop must always contain center_pos in selection");
-        let center_pos_transformed = piece.block_at_index(center_pos_index).0;
+        let center_pos_transformed = piece.block_at_index(center_pos_index).0
+            - grid::Vector3::new(0, 0, piece.grid_size().z - 1);
 
         (piece, center_pos_transformed)
     }
