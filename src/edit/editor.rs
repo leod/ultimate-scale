@@ -493,8 +493,10 @@ impl Editor {
             self.action_layer_up();
         } else if key == self.config.layer_down_key {
             self.action_layer_down();
-        } else if key == self.config.select_key || key == self.config.cancel_key {
+        } else if key == self.config.select_key {
             self.action_select_mode();
+        } else if key == self.config.cancel_key {
+            self.action_cancel();
         } else if key == self.config.cut_key {
             self.action_cut();
         } else if key == self.config.copy_key {
@@ -987,6 +989,13 @@ impl Editor {
 
     pub fn action_select_mode(&mut self) {
         self.mode = Mode::Select(Vec::new());
+    }
+
+    pub fn action_cancel(&mut self) {
+        self.mode = match &self.mode {
+            Mode::DragAndDrop { selection, .. } => Mode::Select(selection.clone()),
+            _ => Mode::Select(Vec::new()),
+        };
     }
 
     pub fn action_rotate_cw(&mut self) {
