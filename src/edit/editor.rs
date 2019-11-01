@@ -372,9 +372,8 @@ impl Editor {
             Mode::PlacePiece { piece, offset } => {
                 if input_state.is_button_pressed(MouseButton::Left) {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        self.run_and_track_edit(
-                            piece.place_edit(&(mouse_grid_pos.coords + offset)),
-                        );
+                        let edit = piece.place_edit(&(mouse_grid_pos.coords + offset));
+                        self.run_and_track_edit(edit);
                     }
                 }
 
@@ -510,9 +509,10 @@ impl Editor {
             .config
             .block_keys
             .iter()
+            .cloned()
             .find(|(block_key, _block)| key == *block_key)
         {
-            self.switch_to_place_block_mode(*block);
+            self.switch_to_place_block_mode(block);
         }
     }
 
