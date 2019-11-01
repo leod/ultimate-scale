@@ -1,6 +1,9 @@
+pub mod action;
 pub mod config;
 pub mod editor;
 pub mod pick;
+pub mod render;
+pub mod ui;
 
 use std::collections::HashMap;
 
@@ -313,6 +316,8 @@ pub enum Mode {
 
         /// Rotation to be applied to the piece.
         rotation_xy: usize,
+
+        layer_offset: isize,
     },
 }
 
@@ -348,6 +353,7 @@ impl Mode {
                 mut selection,
                 center_pos,
                 rotation_xy,
+                layer_offset,
             } => {
                 selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
 
@@ -360,6 +366,7 @@ impl Mode {
                         selection,
                         center_pos,
                         rotation_xy,
+                        layer_offset,
                     }
                 }
             }

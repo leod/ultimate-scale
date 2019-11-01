@@ -137,9 +137,7 @@ pub fn pick_window_rect<'a>(
         .map(|(_block_index, (block_pos, _placed_block))| *block_pos)
         .filter(move |block_pos| {
             let center = render::machine::block_center(block_pos);
-
-            let block_pos_float: na::Point3<f32> = na::convert(*block_pos);
-            let viewport_pos = camera.project_to_viewport(&block_pos_float);
+            let viewport_pos = camera.project_to_viewport(&center);
 
             viewport_pos.x >= min.x
                 && viewport_pos.x <= max.x
