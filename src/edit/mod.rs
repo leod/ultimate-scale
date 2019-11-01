@@ -2,6 +2,7 @@ pub mod action;
 pub mod config;
 pub mod editor;
 pub mod pick;
+pub mod ui;
 
 use std::collections::HashMap;
 
