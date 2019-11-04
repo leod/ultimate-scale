@@ -1,4 +1,5 @@
 pub mod anim;
+pub mod play;
 pub mod view;
 
 use log::debug;
@@ -7,6 +8,7 @@ use crate::machine::grid::{Dir3, Grid3, Point3};
 use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 
+pub use play::TickTime;
 pub use view::ExecView;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]

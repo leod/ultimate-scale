@@ -8,7 +8,8 @@ use glium::glutin;
 
 use crate::config::{self, Config};
 use crate::edit::Editor;
-use crate::exec::{self, ExecView};
+use crate::exec::play::{self, Play};
+use crate::exec::ExecView;
 use crate::input_state::InputState;
 use crate::machine::Machine;
 
@@ -39,7 +40,8 @@ pub struct Game {
     render_lists: RenderLists,
 
     editor: Editor,
-    exec_view: Option<ExecView>,
+    play: Play,
+    exec: Option<(play::Status, ExecView)>,
 
     elapsed_time: Duration,
     fps: f32,
@@ -88,7 +90,8 @@ impl Game {
 
         let render_lists = RenderLists::new();
 
-        let editor = Editor::new(&config.editor, &config.exec, initial_machine);
+        let editor = Editor::new(&config.editor, initial_machine);
+        let play = Play::new(&config.play);
 
         Ok(Game {
             config: config.clone(),
@@ -100,7 +103,8 @@ impl Game {
             deferred_shading,
             render_lists,
             editor,
-            exec_view: None,
+            play,
+            exec: None,
             elapsed_time: Default::default(),
             fps: 0.0,
         })
@@ -115,9 +119,9 @@ impl Game {
             camera: self.camera.clone(),
             elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
             tick_progress: self
-                .exec_view
+                .exec
                 .as_ref()
-                .map_or(0.0, |exec_view| exec_view.cur_tick_progress()),
+                .map_or(0.0, |(play_status, _)| play_status.tick_progress()),
             main_light_pos: na::Point3::new(
                 15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos(),
                 15.0 + 20.0 * (std::f32::consts::PI / 4.0).sin(),
@@ -130,8 +134,8 @@ impl Game {
 
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 
-        if let Some(exec_view) = self.exec_view.as_mut() {
-            exec_view.render(&mut self.render_lists);
+        if let Some((play_status, exec)) = self.exec.as_mut() {
+            exec.render(&play_status.time(), &mut self.render_lists);
         } else {
             self.editor.render(&mut self.render_lists)?;
         }
@@ -213,20 +217,45 @@ impl Game {
         let dt_secs = dt.as_fractional_secs() as f32;
         self.fps = 1.0 / dt_secs;
 
-        if let Some(exec_view) = self.exec_view.as_mut() {
-            exec_view.update(dt, input_state, &self.camera, &self.edit_camera_view);
-        } else {
-            self.exec_view =
-                self.editor
-                    .update(dt, input_state, &self.camera, &mut self.edit_camera_view);
+        // Update play status
+        let play_status = self
+            .play
+            .update_status(dt, self.exec.as_ref().map(|(play_status, _)| play_status));
+
+        match (self.exec.is_some(), play_status) {
+            (false, Some(play_status @ play::Status::Playing { .. })) => {
+                // Start execution
+                let exec = ExecView::new(&self.config.exec, self.editor.machine().clone());
+                self.exec = Some((play_status, exec));
+            }
+            (true, None) => {
+                // Stop execution
+                self.exec = None;
+            }
+            (true, Some(play_status)) => {
+                // Advance execution
+                self.exec.as_mut().map(|(s, exec)| {
+                    *s = play_status;
+
+                    if let play::Status::Playing {
+                        num_ticks_since_last_update,
+                        ..
+                    } = s
+                    {
+                        for _ in 0..*num_ticks_since_last_update {
+                            exec.run_tick();
+                        }
+                    }
+                });
+            }
+            _ => (),
         }
 
-        match self.exec_view.as_ref().map(|view| view.status()) {
-            Some(exec::view::Status::Stopped) => {
-                info!("Stopping exec, returning to editor");
-                self.exec_view = None
-            }
-            _ => {}
+        if let Some((_, exec)) = self.exec.as_mut() {
+            exec.update(dt, input_state, &self.camera, &self.edit_camera_view);
+        } else {
+            self.editor
+                .update(dt, input_state, &self.camera, &mut self.edit_camera_view);
         }
 
         self.edit_camera_view_input
@@ -235,7 +264,7 @@ impl Game {
     }
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
-        if let Some(exec_view) = self.exec_view.as_mut() {
+        if let Some((_, exec_view)) = self.exec.as_mut() {
             exec_view.ui(ui);
         } else {
             self.editor.ui(ui);
@@ -244,8 +273,9 @@ impl Game {
 
     pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {
         self.edit_camera_view_input.on_event(event);
+        self.play.on_event(event);
 
-        if let Some(exec_view) = self.exec_view.as_mut() {
+        if let Some((_, exec_view)) = self.exec.as_mut() {
             exec_view.on_event(event);
         } else {
             self.editor.on_event(input_state, event);
