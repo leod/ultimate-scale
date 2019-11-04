@@ -1,52 +1,30 @@
 use std::time::Duration;
 
-use log::info;
-
 use nalgebra as na;
 
-use glium::glutin::{self, VirtualKeyCode, WindowEvent};
+use glium::glutin::{self, WindowEvent};
 
 use crate::edit::pick;
 use crate::exec::anim::{WindAnimState, WindLife};
-use crate::exec::Exec;
+use crate::exec::{Exec, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
 use crate::render::pipeline::{wind, RenderLists};
 use crate::render::{self, Camera, EditCameraView};
-use crate::util::timer::Timer;
 
 #[derive(Debug, Clone)]
-pub struct Config {
-    pub pause_resume_key: VirtualKeyCode,
-    pub stop_key: VirtualKeyCode,
-    pub frame_key: VirtualKeyCode,
-    pub default_ticks_per_sec: f32,
-}
+pub struct Config {}
 
 impl Default for Config {
     fn default() -> Config {
-        Config {
-            pause_resume_key: VirtualKeyCode::Space,
-            stop_key: VirtualKeyCode::Escape,
-            frame_key: VirtualKeyCode::F,
-            default_ticks_per_sec: 1.0,
-        }
+        Config {}
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Status {
-    Playing,
-    Paused,
-    Stopped,
 }
 
 pub struct ExecView {
     config: Config,
     exec: Exec,
-    tick_timer: Timer,
-    status: Status,
 
     mouse_window_pos: na::Point2<f32>,
     mouse_block_pos: Option<grid::Point3>,
@@ -57,28 +35,14 @@ impl ExecView {
         ExecView {
             config: config.clone(),
             exec: Exec::new(machine),
-            tick_timer: Timer::from_hz(config.default_ticks_per_sec),
-            status: Status::Playing,
             mouse_window_pos: na::Point2::origin(),
             mouse_block_pos: None,
         }
     }
 
-    pub fn status(&self) -> Status {
-        self.status
-    }
-
-    pub fn cur_tick_progress(&self) -> f32 {
-        self.tick_timer.progress()
-    }
-
-    pub fn cur_tick_time(&self) -> f32 {
-        self.exec.cur_tick as f32 + self.tick_timer.progress()
-    }
-
     pub fn update(
         &mut self,
-        dt: Duration,
+        _dt: Duration,
         input_state: &InputState,
         camera: &Camera,
         edit_camera_view: &EditCameraView,
@@ -91,24 +55,12 @@ impl ExecView {
             &edit_camera_view.eye(),
             &input_state.mouse_window_pos(),
         );
+    }
 
-        match self.status {
-            Status::Playing => {
-                self.tick_timer += dt;
+    pub fn run_tick(&mut self) {
+        profile!("tick");
 
-                // TODO: Run multiple ticks on lag spikes? If so, with some
-                //       upper limit?
-                if self.tick_timer.trigger_reset() {
-                    profile!("tick");
-
-                    self.exec.update();
-                }
-            }
-            Status::Paused => (),
-            Status::Stopped => {
-                // Game::update will return to editor
-            }
-        }
+        self.exec.update();
     }
 
     pub fn on_event(&mut self, event: &WindowEvent) {
@@ -124,38 +76,7 @@ impl ExecView {
         }
     }
 
-    fn on_keyboard_input(&mut self, input: glutin::KeyboardInput) {
-        if input.state == glutin::ElementState::Pressed {
-            if let Some(keycode) = input.virtual_keycode {
-                self.on_key_press(keycode);
-            }
-        }
-    }
-
-    fn on_key_press(&mut self, keycode: VirtualKeyCode) {
-        if keycode == self.config.pause_resume_key {
-            match self.status {
-                Status::Playing => {
-                    info!("Pausing exec");
-                    self.status = Status::Paused;
-                }
-                Status::Paused => {
-                    info!("Resuming exec");
-                    self.status = Status::Playing;
-                }
-                Status::Stopped => {
-                    // Should happen only if pause is pressed after stop in the
-                    // same frame -- just ignore.
-                }
-            }
-        } else if keycode == self.config.stop_key {
-            self.status = Status::Stopped;
-        } else if keycode == self.config.frame_key {
-            info!("Running single frame");
-            self.exec.update();
-            self.tick_timer.reset();
-        }
-    }
+    fn on_keyboard_input(&mut self, _input: glutin::KeyboardInput) {}
 
     fn on_mouse_input(
         &mut self,
@@ -194,18 +115,13 @@ impl ExecView {
 
     pub fn ui(&mut self, _ui: &imgui::Ui) {}
 
-    pub fn render(&mut self, out: &mut RenderLists) {
+    pub fn render(&mut self, time: &TickTime, out: &mut RenderLists) {
         profile!("exec_view");
 
-        render::machine::render_machine(
-            &self.exec.machine(),
-            self.cur_tick_time(),
-            Some(&self.exec),
-            out,
-        );
+        render::machine::render_machine(&self.exec.machine(), time.as_f32(), Some(&self.exec), out);
 
-        self.render_blocks(out);
-        self.render_blips(out);
+        self.render_blocks(time, out);
+        self.render_blips(time, out);
 
         if let Some(mouse_block_pos) = self.mouse_block_pos {
             assert!(self.exec.machine().is_valid_pos(&mouse_block_pos));
@@ -259,7 +175,7 @@ impl ExecView {
         }
     }
 
-    fn render_blocks(&self, out: &mut RenderLists) {
+    fn render_blocks(&self, time: &TickTime, out: &mut RenderLists) {
         let blocks = &self.exec.machine().blocks;
 
         for (block_index, (block_pos, _placed_block)) in blocks.data.iter() {
@@ -270,7 +186,7 @@ impl ExecView {
                     WindLife::None => {}
                     WindLife::Appearing => {
                         // Interpolate, i.e. draw partial line
-                        let out_t = self.tick_timer.progress();
+                        let out_t = time.tick_progress();
                         self.render_wind(block_pos, dir, 0.0, out_t, out);
                     }
                     WindLife::Existing => {
@@ -279,7 +195,7 @@ impl ExecView {
                     }
                     WindLife::Disappearing => {
                         // Interpolate, i.e. draw partial line
-                        let in_t = self.tick_timer.progress();
+                        let in_t = time.tick_progress();
                         self.render_wind(block_pos, dir, in_t, 1.0, out);
                     }
                 }
@@ -324,23 +240,23 @@ impl ExecView {
         }
     }
 
-    fn render_blips(&self, out: &mut RenderLists) {
+    fn render_blips(&self, time: &TickTime, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
             let center = render::machine::block_center(&blip.pos);
 
             let pos = if let Some(old_pos) = blip.old_pos {
                 let old_center = render::machine::block_center(&old_pos);
-                old_center + self.tick_timer.progress() * (center - old_center)
+                old_center + time.tick_progress() * (center - old_center)
             } else {
                 center
             };
 
             let size = if blip.old_pos.is_none() {
                 // Animate spawning the blip
-                Self::blip_spawn_size_animation(self.tick_timer.progress())
+                Self::blip_spawn_size_animation(time.tick_progress())
             } else if blip.dead {
                 // Animate killing the blip
-                Self::blip_spawn_size_animation(1.0 - self.tick_timer.progress())
+                Self::blip_spawn_size_animation(1.0 - time.tick_progress())
             } else {
                 1.0
             } * 0.25;
@@ -352,7 +268,7 @@ impl ExecView {
             if let Some(old_pos) = blip.old_pos {
                 if old_pos != blip.pos {
                     let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                    let angle = self.tick_timer.progress() * std::f32::consts::PI / 2.0;
+                    let angle = time.tick_progress() * std::f32::consts::PI / 2.0;
                     let rot = na::Rotation3::new(delta.normalize() * angle);
                     transform = transform * rot.to_homogeneous();
                 }

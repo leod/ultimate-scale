@@ -9,7 +9,6 @@ use nalgebra as na;
 
 use glium::glutin::{self, MouseButton, WindowEvent};
 
-use crate::exec::{self, ExecView};
 use crate::input_state::InputState;
 use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
@@ -24,9 +23,6 @@ pub const MAX_UNDOS: usize = 1000;
 pub struct Editor {
     /// Configuration for the editor, e.g. shortcuts.
     pub(super) config: Config,
-
-    /// Configuration for running a machine.
-    exec_config: exec::view::Config,
 
     /// The machine being edited.
     pub(super) machine: Machine,
@@ -56,18 +52,14 @@ pub struct Editor {
     /// Position of the *block* the mouse is currently pointing to, if any.
     pub(super) mouse_block_pos: Option<grid::Point3>,
 
-    /// Whether to start executing the machine in the next `update` call.
-    pub(super) start_exec: bool,
-
     /// We keep track of the window size for fixing window positions in the UI.
     pub(super) window_size: na::Vector2<f32>,
 }
 
 impl Editor {
-    pub fn new(config: &Config, exec_config: &exec::view::Config, machine: Machine) -> Editor {
+    pub fn new(config: &Config, machine: Machine) -> Editor {
         Editor {
             config: config.clone(),
-            exec_config: exec_config.clone(),
             machine,
             mode: Mode::Select(Vec::new()),
             clipboard: None,
@@ -76,7 +68,6 @@ impl Editor {
             current_layer: 0,
             mouse_grid_pos: None,
             mouse_block_pos: None,
-            start_exec: false,
             window_size: na::Vector2::zeros(),
         }
     }
@@ -144,7 +135,7 @@ impl Editor {
         input_state: &InputState,
         camera: &Camera,
         edit_camera_view: &mut EditCameraView,
-    ) -> Option<ExecView> {
+    ) {
         profile!("editor");
 
         edit_camera_view.set_target(na::Point3::new(
@@ -170,17 +161,6 @@ impl Editor {
         );
 
         self.update_input(input_state, camera);
-
-        if !self.start_exec {
-            None
-        } else {
-            info!("Starting exec");
-
-            self.start_exec = false;
-
-            let exec_view = ExecView::new(&self.exec_config, self.machine.clone());
-            Some(exec_view)
-        }
     }
 
     fn update_input(&mut self, input_state: &InputState, camera: &Camera) {
@@ -325,8 +305,6 @@ impl Editor {
             self.action_redo();
         } else if key == self.config.paste_key && self.clipboard.is_some() {
             self.action_paste();
-        } else if key == self.config.start_exec_key {
-            self.start_exec = true;
         } else if key == self.config.save_key {
             self.action_save();
         } else if key == self.config.layer_up_key {
