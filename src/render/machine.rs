@@ -7,7 +7,7 @@ use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
 use crate::render::Object;
 
 use crate::exec::anim::{WindAnimState, WindLife};
-use crate::exec::Exec;
+use crate::exec::{Exec, TickTime};
 
 pub const PIPE_THICKNESS: f32 = 0.05;
 
@@ -217,7 +217,7 @@ pub fn render_mill(
 
 pub fn render_wind_mills(
     placed_block: &PlacedBlock,
-    tick_time: f32,
+    tick_time: &TickTime,
     wind_anim_state: &Option<WindAnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
@@ -235,7 +235,7 @@ pub fn render_wind_mills(
             // (Any rotation is contained in `transform`).
             let original_dir = placed_block.rotated_dir_xy(dir);
 
-            let t = tick_time.fract();
+            let t = tick_time.tick_progress();
 
             std::f32::consts::PI
                 * 2.0
@@ -278,7 +278,7 @@ pub fn render_wind_mills(
 }
 
 pub fn render_pipe_bend(
-    tick_time: f32,
+    tick_time: &TickTime,
     wind_anim_state: &Option<WindAnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
@@ -317,7 +317,7 @@ pub fn render_pipe_bend(
         * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
             if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
                 1.0 + 0.1
-                    * (tick_time.fract() * 2.0 * std::f32::consts::PI)
+                    * (tick_time.tick_progress() * 2.0 * std::f32::consts::PI)
                         .sin()
                         .powf(2.0)
             } else {
@@ -340,7 +340,7 @@ pub fn render_pipe_bend(
 
 pub fn render_block(
     placed_block: &PlacedBlock,
-    tick_time: f32,
+    tick_time: &TickTime,
     wind_anim_state: &Option<WindAnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
@@ -488,7 +488,7 @@ pub fn render_block(
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
             let bridge_length =
-                bridge_length_animation(0.15, 0.75, activated.is_some(), tick_time.fract());
+                bridge_length_animation(0.15, 0.75, activated.is_some(), tick_time.tick_progress());
 
             render_bridge(
                 Dir2::X_POS,
@@ -522,7 +522,7 @@ pub fn render_block(
             );
 
             let bridge_length =
-                bridge_length_animation(0.35, 0.75, activated.is_some(), tick_time.fract());
+                bridge_length_animation(0.35, 0.75, activated.is_some(), tick_time.tick_progress());
 
             render_bridge(
                 Dir2::X_NEG,
@@ -628,7 +628,7 @@ pub fn placed_block_transform(placed_block: &PlacedBlock) -> na::Matrix4<f32> {
 
 pub fn render_machine(
     machine: &Machine,
-    tick_time: f32,
+    tick_time: &TickTime,
     exec: Option<&Exec>,
     out: &mut RenderLists,
 ) {

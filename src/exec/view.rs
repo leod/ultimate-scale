@@ -118,7 +118,7 @@ impl ExecView {
     pub fn render(&mut self, time: &TickTime, out: &mut RenderLists) {
         profile!("exec_view");
 
-        render::machine::render_machine(&self.exec.machine(), time.as_f32(), Some(&self.exec), out);
+        render::machine::render_machine(&self.exec.machine(), time, Some(&self.exec), out);
 
         self.render_blocks(time, out);
         self.render_blips(time, out);
