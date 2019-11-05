@@ -1,6 +1,6 @@
+use crate::edit::Edit;
 use crate::machine::grid;
 use crate::machine::{Machine, PlacedBlock};
-use crate::edit::Edit;
 
 /// A piece of a machine that can be kept around as edit actions, or in the
 /// clipboard and stuff like that.
@@ -162,4 +162,3 @@ impl Piece {
             .collect()
     }
 }
-
