@@ -137,7 +137,7 @@ impl Play {
                 // This also ensures that `Timer::progress` will be between
                 // 0 and 1.
                 let mut new_time = time.clone();
-                new_time.next_tick_timer.period = tick_period;
+                new_time.next_tick_timer.set_period(tick_period);
                 new_time.next_tick_timer += dt;
 
                 let num_ticks_since_last_update = new_time.next_tick_timer.trigger_n();

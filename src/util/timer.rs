@@ -18,8 +18,8 @@ pub fn hz_to_period(hz: f32) -> Duration {
 /// A timer that can be used to trigger events that happen periodically.
 #[derive(Debug, Clone, Copy)]
 pub struct Timer {
-    pub period: Duration,
-    pub accum: Duration,
+    period: Duration,
+    accum: Duration,
 }
 
 impl Timer {
@@ -32,6 +32,18 @@ impl Timer {
 
     pub fn period(&self) -> Duration {
         self.period
+    }
+
+    pub fn accum(&self) -> Duration {
+        self.accum
+    }
+
+    /// Change the period, updating the accumulated time so that the percentual
+    /// progress is unchanged.
+    pub fn set_period(&mut self, new_period: Duration) {
+        let progress = self.progress();
+        self.accum = secs_to_duration(progress * new_period.as_fractional_secs() as f32);
+        self.period = new_period;
     }
 
     /// Has the timer accumulated enough time for one period?
@@ -78,10 +90,6 @@ impl Timer {
     /// Percentual progress until the next period.
     pub fn progress(&self) -> f32 {
         (self.accum.as_fractional_secs() / self.period.as_fractional_secs()) as f32
-    }
-
-    pub fn accum(&self) -> Duration {
-        self.accum
     }
 }
 
