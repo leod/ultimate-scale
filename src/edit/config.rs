@@ -86,7 +86,6 @@ pub struct Config {
     pub cut_key: ModifiedKey,
     pub delete_key: ModifiedKey,
 
-    pub start_exec_key: ModifiedKey,
     pub save_key: ModifiedKey,
 
     pub layer_up_key: ModifiedKey,
@@ -110,7 +109,6 @@ impl Default for Config {
             paste_key: ModifiedKey::ctrl(VirtualKeyCode::V),
             cut_key: ModifiedKey::ctrl(VirtualKeyCode::X),
             delete_key: ModifiedKey::new(VirtualKeyCode::Delete),
-            start_exec_key: ModifiedKey::new(VirtualKeyCode::Space),
             save_key: ModifiedKey::ctrl(VirtualKeyCode::S),
             layer_up_key: ModifiedKey::new(VirtualKeyCode::Tab),
             layer_down_key: ModifiedKey::shift(VirtualKeyCode::Tab),

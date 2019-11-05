@@ -42,4 +42,5 @@ pub struct Config {
     pub render: RenderConfig,
     pub editor: edit::Config,
     pub exec: exec::view::Config,
+    pub play: exec::play::Config,
 }

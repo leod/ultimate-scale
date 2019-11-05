@@ -1,6 +1,7 @@
 use nalgebra as na;
 
 use crate::edit::{Editor, Mode, Piece};
+use crate::exec::TickTime;
 use crate::machine::grid;
 use crate::render;
 use crate::render::pipeline::RenderLists;
@@ -20,7 +21,7 @@ impl Editor {
             &mut out.solid,
         );
 
-        render::machine::render_machine(&self.machine, 0.0, None, out);
+        render::machine::render_machine(&self.machine, &TickTime::zero(), None, out);
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + 0.01,
@@ -158,7 +159,7 @@ impl Editor {
             let block_transform = render::machine::placed_block_transform(&placed_block);
             render::machine::render_block(
                 &placed_block,
-                0.0,
+                &TickTime::zero(),
                 &None,
                 &block_center,
                 &block_transform,
