@@ -18,7 +18,8 @@ pub const MAX_TICKS_PER_UPDATE: usize = 100;
 pub struct Config {
     pub play_pause_key: VirtualKeyCode,
     pub stop_key: VirtualKeyCode,
-    pub single_tick_key: VirtualKeyCode,
+    pub faster_key: VirtualKeyCode,
+    pub slower_key: VirtualKeyCode,
 }
 
 impl Default for Config {
@@ -26,7 +27,8 @@ impl Default for Config {
         Self {
             play_pause_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
-            single_tick_key: VirtualKeyCode::F,
+            faster_key: VirtualKeyCode::Add,
+            slower_key: VirtualKeyCode::Subtract,
         }
     }
 }
@@ -106,7 +108,7 @@ impl Status {
 
 pub struct Play {
     config: Config,
-    ticks_per_sec: f32,
+    ticks_per_sec_index: usize,
 
     play_pause_pressed: bool,
     stop_pressed: bool,
@@ -116,7 +118,7 @@ impl Play {
     pub fn new(config: &Config) -> Self {
         Play {
             config: config.clone(),
-            ticks_per_sec: 1.0,
+            ticks_per_sec_index: 2,
             play_pause_pressed: false,
             stop_pressed: false,
         }
@@ -129,7 +131,13 @@ impl Play {
         self.play_pause_pressed = false;
         self.stop_pressed = false;
 
-        let tick_period = timer::hz_to_period(self.ticks_per_sec);
+        // Can unwrap here since TICKS_PER_SEC_CHOICES contains
+        // only valid floats.
+        let tick_period = timer::hz_to_period(
+            TICKS_PER_SEC_CHOICES[self.ticks_per_sec_index]
+                .parse()
+                .unwrap(),
+        );
 
         match &status {
             Some(Status::Playing { time, .. }) if play_pause_pressed => {
@@ -197,8 +205,14 @@ impl Play {
             self.play_pause_pressed = true;
         } else if keycode == self.config.stop_key {
             self.stop_pressed = true;
-        } else if keycode == self.config.single_tick_key {
-            // TODO
+        } else if keycode == self.config.faster_key {
+            if self.ticks_per_sec_index + 1 < TICKS_PER_SEC_CHOICES.len() {
+                self.ticks_per_sec_index += 1;
+            }
+        } else if keycode == self.config.slower_key {
+            if self.ticks_per_sec_index > 0 {
+                self.ticks_per_sec_index -= 1;
+            }
         }
     }
 
@@ -210,7 +224,11 @@ impl Play {
         let is_stopped = status.is_none();
         let is_paused = status.map_or(false, |status| status.is_paused());
 
-        imgui::Window::new(im_str!("Play"))
+        let title = format!(
+            "Play @ {}Hz###Play",
+            TICKS_PER_SEC_CHOICES[self.ticks_per_sec_index]
+        );
+        imgui::Window::new(&ImString::new(title))
             .horizontal_scrollbar(true)
             .movable(false)
             .always_auto_resize(true)
@@ -223,7 +241,9 @@ impl Play {
             .build(&ui, || {
                 ui.set_window_font_scale(1.5);
 
-                let selectable = imgui::Selectable::new(im_str!("⏹")).size([25.0, 0.0]);
+                let selectable = imgui::Selectable::new(im_str!("⏹"))
+                    .disabled(is_stopped)
+                    .size([21.0, 0.0]);
                 if selectable.build(ui) {
                     self.stop_pressed = true;
                 }
@@ -241,7 +261,7 @@ impl Play {
                 } else {
                     im_str!("⏸")
                 };
-                let selectable = imgui::Selectable::new(symbol).size([25.0, 0.0]);
+                let selectable = imgui::Selectable::new(symbol).size([21.0, 0.0]);
                 if selectable.build(ui) {
                     self.play_pause_pressed = true;
                 }
@@ -253,29 +273,59 @@ impl Play {
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
+                ui.set_window_font_scale(1.5);
+
+                ui.same_line(0.0);
+                let selectable = imgui::Selectable::new(im_str!("-"))
+                    .disabled(self.ticks_per_sec_index == 0)
+                    .size([15.0, 0.0]);
+                if selectable.build(ui) {
+                    if self.ticks_per_sec_index > 0 {
+                        self.ticks_per_sec_index -= 1;
+                    }
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Slow down execution.\n\nShortcut: {:?}",
+                        self.config.slower_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
+                ui.same_line(0.0);
+                let selectable = imgui::Selectable::new(im_str!("+"))
+                    .disabled(self.ticks_per_sec_index + 1 == TICKS_PER_SEC_CHOICES.len())
+                    .size([15.0, 0.0]);
+                if selectable.build(ui) {
+                    if self.ticks_per_sec_index + 1 < TICKS_PER_SEC_CHOICES.len() {
+                        self.ticks_per_sec_index += 1;
+                    }
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Speed up execution.\n\nShortcut: {:?}",
+                        self.config.faster_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
+
                 ui.set_window_font_scale(1.0);
 
-                //ui.same_line(0.0);
-                //ui.separator();
-
-                for (i, &ticks_per_sec) in TICKS_PER_SEC_CHOICES.iter().enumerate() {
-                    // Can unwrap here since TICKS_PER_SEC_CHOICES contains
-                    // only valid floats.
-                    let value: f32 = ticks_per_sec.parse().unwrap();
-
-                    if i == 4 {
+                // Pick speed directly:
+                /*for (index, &ticks_per_sec) in TICKS_PER_SEC_CHOICES.iter().enumerate() {
+                    if index == 4 {
                         ui.dummy([58.0, 0.0]);
                     }
                     ui.same_line(0.0);
 
                     let text = ImString::new(format!("{}x", ticks_per_sec));
                     let selectable = imgui::Selectable::new(&text)
-                        .selected(self.ticks_per_sec == value)
+                        .selected(self.ticks_per_sec_index == index)
                         .size([35.0, 0.0]);
                     if selectable.build(ui) {
-                        self.ticks_per_sec = value;
+                        self.ticks_per_sec_index = index;
                     }
-                }
+                }*/
             });
     }
 }
