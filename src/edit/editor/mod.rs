@@ -1,3 +1,7 @@
+mod action;
+mod render;
+mod ui;
+
 use std::collections::VecDeque;
 use std::fs::File;
 use std::path::Path;
@@ -22,38 +26,38 @@ pub const MAX_UNDOS: usize = 1000;
 
 pub struct Editor {
     /// Configuration for the editor, e.g. shortcuts.
-    pub(super) config: Config,
+    config: Config,
 
     /// The machine being edited.
-    pub(super) machine: Machine,
+    machine: Machine,
 
     /// The current editing mode.
-    pub(super) mode: Mode,
+    mode: Mode,
 
     /// Clipboard.
-    pub(super) clipboard: Option<Piece>,
+    clipboard: Option<Piece>,
 
     /// Edits that undo the last performed edits, in the order that the edits
     /// were performed.
-    pub(super) undo: VecDeque<Edit>,
+    undo: VecDeque<Edit>,
 
     /// Edits that redo the last performed undos, in the order that the undos
     /// were performed.
-    pub(super) redo: Vec<Edit>,
+    redo: Vec<Edit>,
 
     /// Layer being edited. Blocks are placed only in the current layer.
-    pub(super) current_layer: isize,
+    current_layer: isize,
 
     /// Grid position the mouse is currently pointing to, if any. The z
     /// coordinate is always set to `current_layer`. Note that the grid
     /// position may point outside of the grid.
-    pub(super) mouse_grid_pos: Option<grid::Point3>,
+    mouse_grid_pos: Option<grid::Point3>,
 
     /// Position of the *block* the mouse is currently pointing to, if any.
-    pub(super) mouse_block_pos: Option<grid::Point3>,
+    mouse_block_pos: Option<grid::Point3>,
 
     /// We keep track of the window size for fixing window positions in the UI.
-    pub(super) window_size: na::Vector2<f32>,
+    window_size: na::Vector2<f32>,
 }
 
 impl Editor {
@@ -463,7 +467,7 @@ impl Editor {
         }
     }
 
-    pub(super) fn save(&self, path: &Path) {
+    fn save(&self, path: &Path) {
         info!("Saving current machine to file {:?}", path);
 
         match File::create(path) {
@@ -487,7 +491,7 @@ impl Editor {
         };
     }
 
-    pub(super) fn drag_and_drop_piece_from_selection(
+    fn drag_and_drop_piece_from_selection(
         &self,
         selection: &[grid::Point3],
         center_pos: &grid::Point3,
