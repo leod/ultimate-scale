@@ -96,6 +96,13 @@ impl Status {
             _ => false,
         }
     }
+
+    pub fn is_paused(&self) -> bool {
+        match self {
+            Status::Paused { .. } => true,
+            _ => false,
+        }
+    }
 }
 
 pub struct Play {
@@ -201,7 +208,14 @@ impl Play {
         let button_w = 60.0;
         let button_h = 25.0;
 
+        let is_stopped = status.is_none();
         let is_playing = status.map_or(false, |status| status.is_playing());
+        let is_paused = status.map_or(false, |status| status.is_paused());
+        let playing_period = if let Some(Status::Playing { time, .. }) = status {
+            Some(time.next_tick_timer.period())
+        } else {
+            None
+        };
 
         imgui::Window::new(im_str!("Play"))
             .horizontal_scrollbar(true)
@@ -214,40 +228,44 @@ impl Play {
             .position_pivot([0.5, 1.0])
             .bg_alpha(bg_alpha)
             .build(&ui, || {
-                if ui.button(im_str!("⏹"), [button_w, button_h]) {
+                ui.set_window_font_scale(1.5);
+
+                let selectable = imgui::Selectable::new(im_str!("⏹"))
+                    .selected(is_stopped)
+                    .size([27.5, 0.0]);
+                if selectable.build(ui) {
                     self.stop_pressed = true;
                 }
 
                 ui.same_line(0.0);
-                if ui.button(im_str!("⏸"), [button_w, button_h]) {
-                    if is_playing {
-                        self.play_pause_pressed = true;
+                let selectable = imgui::Selectable::new(im_str!("⏸"))
+                    .selected(is_paused)
+                    .disabled(is_stopped)
+                    .size([27.5, 0.0]);
+                if selectable.build(ui) && is_playing {
+                    self.play_pause_pressed = true;
+                }
+
+                let speeds = [
+                    (im_str!("▶"), TICKS_PER_SEC_NORMAL, 27.5),
+                    (im_str!("▶▶"), TICKS_PER_SEC_FAST, 35.0),
+                    (im_str!("▶▶▶"), TICKS_PER_SEC_FASTEST, 42.5),
+                ];
+
+                for (symbol, ticks_per_sec, size) in speeds.into_iter() {
+                    ui.same_line(0.0);
+                    let selectable = imgui::Selectable::new(symbol)
+                        .selected(playing_period == Some(timer::hz_to_period(*ticks_per_sec)))
+                        .size([*size, 0.0]);
+                    if selectable.build(ui) {
+                        self.ticks_per_sec = *ticks_per_sec;
+                        if !is_playing {
+                            self.play_pause_pressed = true;
+                        }
                     }
                 }
 
-                ui.same_line(0.0);
-                if ui.button(im_str!("▶"), [button_w, button_h]) {
-                    self.ticks_per_sec = TICKS_PER_SEC_NORMAL;
-                    if !is_playing {
-                        self.play_pause_pressed = true;
-                    }
-                }
-
-                ui.same_line(0.0);
-                if ui.button(im_str!("▶▶"), [button_w, button_h]) {
-                    self.ticks_per_sec = TICKS_PER_SEC_FAST;
-                    if !is_playing {
-                        self.play_pause_pressed = true;
-                    }
-                }
-
-                ui.same_line(0.0);
-                if ui.button(im_str!("▶▶▶"), [button_w, button_h]) {
-                    self.ticks_per_sec = TICKS_PER_SEC_FASTEST;
-                    if !is_playing {
-                        self.play_pause_pressed = true;
-                    }
-                }
+                ui.set_window_font_scale(1.0);
             });
     }
 }
