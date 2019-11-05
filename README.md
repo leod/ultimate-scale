@@ -14,5 +14,6 @@
 - Install FreeType libraries as detailed [here](https://github.com/PistonDevelopers/freetype-sys). Place `freetype.dll` next to `ultimate_scale.exe`.
 
 ## Credits
-- `resources/Readiness-Regular.ttf`: Created by Christiano Sobral, downloaded from [Open Font Library](https://fontlibrary.org/en/font/readiness)
+- `resources/Readiness-Regular.ttf`: Created by Christiano Sobral, downloaded from [Open Font Library](https://fontlibrary.org/en/font/readiness).
+- `resources/Symbola_hint.ttf`: Created by George Douros, downloaded from [Open Font Library](https://fontlibrary.org/en/font/symbola).
 - `resources/DeJaVuSans.ttf`: See [https://dejavu-fonts.github.io/](https://dejavu-fonts.github.io/).

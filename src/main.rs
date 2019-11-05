@@ -74,19 +74,35 @@ fn main() {
         // Include some special characters in the glyph ranges
         let glyph_ranges = imgui::FontGlyphRanges::from_slice(&[
             0x0020, 0x00FF, // Basic Latin + Latin Supplement
-            0x25A0, 0x25FF, // Geometric shapes
-            0x2190, 0x21FF, // Arrows
             0,
         ]);
 
-        imgui.fonts().add_font(&[imgui::FontSource::TtfData {
-            data: include_bytes!("../resources/DejaVuSans.ttf"),
-            size_pixels: font_size,
-            config: Some(imgui::FontConfig {
-                glyph_ranges,
-                ..imgui::FontConfig::default()
-            }),
-        }]);
+        // Symbola has some additional symbols that DeJaVu lacks
+        let glyph_ranges_symbola = imgui::FontGlyphRanges::from_slice(&[
+            0x2190, 0x21FF, // Arrows
+            0x2300, 0x23FF, // Miscellaneous technical
+            0x25A0, 0x25FF, // Geometric shapes
+            0,
+        ]);
+
+        imgui.fonts().add_font(&[
+            imgui::FontSource::TtfData {
+                data: include_bytes!("../resources/DejaVuSans.ttf"),
+                size_pixels: font_size,
+                config: Some(imgui::FontConfig {
+                    glyph_ranges,
+                    ..imgui::FontConfig::default()
+                }),
+            },
+            imgui::FontSource::TtfData {
+                data: include_bytes!("../resources/Symbola_hint.ttf"),
+                size_pixels: font_size,
+                config: Some(imgui::FontConfig {
+                    glyph_ranges: glyph_ranges_symbola,
+                    ..imgui::FontConfig::default()
+                }),
+            },
+        ]);
 
         imgui.io_mut().font_global_scale = (1.0 / hidpi_factor) as f32;
     }
