@@ -51,6 +51,7 @@ pub enum Block {
     PipeSplitXY {
         open_move_hole_y: Sign,
     },
+    PipeMergeXY,
     FunnelXY,
     WindSource,
     BlipSpawn {
@@ -83,6 +84,7 @@ impl Block {
                 sign_z: Sign::Neg, ..
             } => "Down curved pipe".to_string(),
             Block::PipeSplitXY { .. } => "Pipe split".to_string(),
+            Block::PipeMergeXY => "Pipe crossing".to_string(),
             Block::FunnelXY => "Funnel".to_string(),
             Block::WindSource => "Wind source".to_string(),
             Block::BlipSpawn {
@@ -111,6 +113,7 @@ impl Block {
                 sign_z: Sign::Neg, ..
             } => "Makes a curve down.",
             Block::PipeSplitXY { .. } => "Useless.",
+            Block::PipeMergeXY => "Four-way pipe. But why?",
             Block::FunnelXY => "Not so useful.",
             Block::WindSource => "Produces a stream of wind in all directions.",
             Block::BlipSpawn {
@@ -171,6 +174,7 @@ impl Block {
             Block::PipeSplitXY { .. } => {
                 dir == Dir3::Y_NEG || dir == Dir3::Y_POS || dir == Dir3::X_POS
             }
+            Block::PipeMergeXY => dir != Dir3::Z_NEG && dir != Dir3::Z_POS,
             Block::FunnelXY => {
                 // Has restricted cases for in/out below
                 dir == Dir3::Y_NEG || dir == Dir3::Y_POS
