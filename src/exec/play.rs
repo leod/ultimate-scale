@@ -7,11 +7,10 @@ use nalgebra as na;
 
 use crate::util::timer::{self, Timer};
 
-pub const TICKS_PER_SEC_SLOW: f32 = 0.5;
-pub const TICKS_PER_SEC_NORMAL: f32 = 1.0;
-pub const TICKS_PER_SEC_FAST: f32 = 2.0;
-pub const TICKS_PER_SEC_FASTER: f32 = 4.0;
-pub const TICKS_PER_SEC_FASTEST: f32 = 8.0;
+/// Possible choices in the UI for number of ticks per second to play.
+/// (Specifying these as strings instead of floats here is easier than figuring
+///  out how to format floats nicely.)
+pub const TICKS_PER_SEC_CHOICES: &[&str] = &["0.25", "0.5", "1", "2", "4", "8", "16", "32"];
 
 pub const MAX_TICKS_PER_UPDATE: usize = 100;
 
@@ -45,7 +44,7 @@ impl TickTime {
     pub fn zero() -> Self {
         Self {
             num_ticks_passed: 0,
-            next_tick_timer: Timer::new(timer::hz_to_period(TICKS_PER_SEC_NORMAL)),
+            next_tick_timer: Timer::new(timer::hz_to_period(1.0)),
         }
     }
 
@@ -117,7 +116,7 @@ impl Play {
     pub fn new(config: &Config) -> Self {
         Play {
             config: config.clone(),
-            ticks_per_sec: TICKS_PER_SEC_NORMAL,
+            ticks_per_sec: 1.0,
             play_pause_pressed: false,
             stop_pressed: false,
         }
@@ -209,13 +208,7 @@ impl Play {
         let button_h = 25.0;
 
         let is_stopped = status.is_none();
-        let is_playing = status.map_or(false, |status| status.is_playing());
         let is_paused = status.map_or(false, |status| status.is_paused());
-        let playing_period = if let Some(Status::Playing { time, .. }) = status {
-            Some(time.next_tick_timer.period())
-        } else {
-            None
-        };
 
         imgui::Window::new(im_str!("Play"))
             .horizontal_scrollbar(true)
@@ -230,9 +223,7 @@ impl Play {
             .build(&ui, || {
                 ui.set_window_font_scale(1.5);
 
-                let selectable = imgui::Selectable::new(im_str!("⏹"))
-                    .selected(is_stopped)
-                    .size([27.5, 0.0]);
+                let selectable = imgui::Selectable::new(im_str!("⏹")).size([25.0, 0.0]);
                 if selectable.build(ui) {
                     self.stop_pressed = true;
                 }
@@ -245,41 +236,46 @@ impl Play {
                 }
 
                 ui.same_line(0.0);
-                let selectable = imgui::Selectable::new(im_str!("⏸"))
-                    .selected(is_paused)
-                    .disabled(is_stopped)
-                    .size([27.5, 0.0]);
-                if selectable.build(ui) && is_playing {
+                let symbol = if is_paused || is_stopped {
+                    im_str!("▶")
+                } else {
+                    im_str!("⏸")
+                };
+                let selectable = imgui::Selectable::new(symbol).size([25.0, 0.0]);
+                if selectable.build(ui) {
                     self.play_pause_pressed = true;
                 }
                 if ui.is_item_hovered() {
                     let text = format!(
-                        "Pause machine execution.\n\nShortcut: {:?}",
+                        "Run/pause machine execution.\n\nShortcut: {:?}",
                         self.config.play_pause_key
                     );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
-                let speeds = [
-                    (im_str!("▶"), TICKS_PER_SEC_NORMAL, 27.5),
-                    (im_str!("▶▶"), TICKS_PER_SEC_FAST, 35.0),
-                    (im_str!("▶▶▶"), TICKS_PER_SEC_FASTEST, 42.5),
-                ];
+                ui.set_window_font_scale(1.0);
 
-                for (symbol, ticks_per_sec, size) in speeds.into_iter() {
+                //ui.same_line(0.0);
+                //ui.separator();
+
+                for (i, &ticks_per_sec) in TICKS_PER_SEC_CHOICES.iter().enumerate() {
+                    // Can unwrap here since TICKS_PER_SEC_CHOICES contains
+                    // only valid floats.
+                    let value: f32 = ticks_per_sec.parse().unwrap();
+
+                    if i == 4 {
+                        ui.dummy([58.0, 0.0]);
+                    }
                     ui.same_line(0.0);
-                    let selectable = imgui::Selectable::new(symbol)
-                        .selected(playing_period == Some(timer::hz_to_period(*ticks_per_sec)))
-                        .size([*size, 0.0]);
+
+                    let text = ImString::new(format!("{}x", ticks_per_sec));
+                    let selectable = imgui::Selectable::new(&text)
+                        .selected(self.ticks_per_sec == value)
+                        .size([35.0, 0.0]);
                     if selectable.build(ui) {
-                        self.ticks_per_sec = *ticks_per_sec;
-                        if !is_playing {
-                            self.play_pause_pressed = true;
-                        }
+                        self.ticks_per_sec = value;
                     }
                 }
-
-                ui.set_window_font_scale(1.0);
             });
     }
 }
