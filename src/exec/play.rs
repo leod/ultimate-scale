@@ -214,19 +214,19 @@ impl Play {
             .position_pivot([0.5, 1.0])
             .bg_alpha(bg_alpha)
             .build(&ui, || {
-                if ui.button(im_str!("Stop"), [button_w, button_h]) {
+                if ui.button(im_str!("⏹"), [button_w, button_h]) {
                     self.stop_pressed = true;
                 }
 
                 ui.same_line(0.0);
-                if ui.button(im_str!("Pause"), [button_w, button_h]) {
+                if ui.button(im_str!("⏸"), [button_w, button_h]) {
                     if is_playing {
                         self.play_pause_pressed = true;
                     }
                 }
 
                 ui.same_line(0.0);
-                if ui.button(im_str!("Play"), [button_w, button_h]) {
+                if ui.button(im_str!("▶"), [button_w, button_h]) {
                     self.ticks_per_sec = TICKS_PER_SEC_NORMAL;
                     if !is_playing {
                         self.play_pause_pressed = true;
@@ -234,7 +234,7 @@ impl Play {
                 }
 
                 ui.same_line(0.0);
-                if ui.button(im_str!("Fast"), [button_w, button_h]) {
+                if ui.button(im_str!("▶▶"), [button_w, button_h]) {
                     self.ticks_per_sec = TICKS_PER_SEC_FAST;
                     if !is_playing {
                         self.play_pause_pressed = true;
@@ -242,15 +242,7 @@ impl Play {
                 }
 
                 ui.same_line(0.0);
-                if ui.button(im_str!("Faster"), [button_w, button_h]) {
-                    self.ticks_per_sec = TICKS_PER_SEC_FASTER;
-                    if !is_playing {
-                        self.play_pause_pressed = true;
-                    }
-                }
-
-                ui.same_line(0.0);
-                if ui.button(im_str!("Fastest"), [button_w, button_h]) {
+                if ui.button(im_str!("▶▶▶"), [button_w, button_h]) {
                     self.ticks_per_sec = TICKS_PER_SEC_FASTEST;
                     if !is_playing {
                         self.play_pause_pressed = true;
