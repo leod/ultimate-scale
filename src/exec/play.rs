@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use glium::glutin::{ElementState, VirtualKeyCode, WindowEvent};
-use imgui::im_str;
+use imgui::{im_str, ImString};
 use log::info;
 use nalgebra as na;
 
@@ -236,6 +236,13 @@ impl Play {
                 if selectable.build(ui) {
                     self.stop_pressed = true;
                 }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Stop machine execution.\n\nShortcut: {:?}",
+                        self.config.stop_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
 
                 ui.same_line(0.0);
                 let selectable = imgui::Selectable::new(im_str!("⏸"))
@@ -244,6 +251,13 @@ impl Play {
                     .size([27.5, 0.0]);
                 if selectable.build(ui) && is_playing {
                     self.play_pause_pressed = true;
+                }
+                if ui.is_item_hovered() {
+                    let text = format!(
+                        "Pause machine execution.\n\nShortcut: {:?}",
+                        self.config.play_pause_key
+                    );
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
                 let speeds = [
