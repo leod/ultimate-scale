@@ -7,14 +7,19 @@ use nalgebra as na;
 
 use crate::util::timer::{self, Timer};
 
+pub const TICKS_PER_SEC_SLOW: f32 = 0.5;
+pub const TICKS_PER_SEC_NORMAL: f32 = 1.0;
+pub const TICKS_PER_SEC_FAST: f32 = 2.0;
+pub const TICKS_PER_SEC_FASTER: f32 = 4.0;
+pub const TICKS_PER_SEC_FASTEST: f32 = 8.0;
+
+pub const MAX_TICKS_PER_UPDATE: usize = 100;
+
 #[derive(Debug, Clone)]
 pub struct Config {
     pub play_pause_key: VirtualKeyCode,
     pub stop_key: VirtualKeyCode,
     pub single_tick_key: VirtualKeyCode,
-
-    pub default_ticks_per_sec: f32,
-    pub max_ticks_per_update: usize,
 }
 
 impl Default for Config {
@@ -23,9 +28,6 @@ impl Default for Config {
             play_pause_key: VirtualKeyCode::Space,
             stop_key: VirtualKeyCode::Escape,
             single_tick_key: VirtualKeyCode::F,
-
-            default_ticks_per_sec: 0.5,
-            max_ticks_per_update: 100,
         }
     }
 }
@@ -80,6 +82,13 @@ impl Status {
     pub fn tick_progress(&self) -> f32 {
         self.time().tick_progress()
     }
+
+    pub fn is_playing(&self) -> bool {
+        match self {
+            Status::Playing { .. } => true,
+            _ => false,
+        }
+    }
 }
 
 pub struct Play {
@@ -94,7 +103,7 @@ impl Play {
     pub fn new(config: &Config) -> Self {
         Play {
             config: config.clone(),
-            ticks_per_sec: config.default_ticks_per_sec,
+            ticks_per_sec: TICKS_PER_SEC_NORMAL,
             play_pause_pressed: false,
             stop_pressed: false,
         }
@@ -185,6 +194,8 @@ impl Play {
         let button_w = 60.0;
         let button_h = 25.0;
 
+        let is_playing = status.map_or(false, |status| status.is_playing());
+
         imgui::Window::new(im_str!("Play"))
             .horizontal_scrollbar(true)
             .movable(false)
@@ -196,14 +207,47 @@ impl Play {
             .position_pivot([0.5, 1.0])
             .bg_alpha(bg_alpha)
             .build(&ui, || {
-                if ui.button(im_str!("P/P"), [button_w, button_h]) {
-                    self.play_pause_pressed = true;
+                if ui.button(im_str!("Stop"), [button_w, button_h]) {
+                    self.stop_pressed = true;
                 }
 
                 ui.same_line(0.0);
+                if ui.button(im_str!("Pause"), [button_w, button_h]) {
+                    if is_playing {
+                        self.play_pause_pressed = true;
+                    }
+                }
 
-                if ui.button(im_str!("S"), [button_w, button_h]) {
-                    self.stop_pressed = true;
+                ui.same_line(0.0);
+                if ui.button(im_str!("Play"), [button_w, button_h]) {
+                    self.ticks_per_sec = TICKS_PER_SEC_NORMAL;
+                    if !is_playing {
+                        self.play_pause_pressed = true;
+                    }
+                }
+
+                ui.same_line(0.0);
+                if ui.button(im_str!("Fast"), [button_w, button_h]) {
+                    self.ticks_per_sec = TICKS_PER_SEC_FAST;
+                    if !is_playing {
+                        self.play_pause_pressed = true;
+                    }
+                }
+
+                ui.same_line(0.0);
+                if ui.button(im_str!("Faster"), [button_w, button_h]) {
+                    self.ticks_per_sec = TICKS_PER_SEC_FASTER;
+                    if !is_playing {
+                        self.play_pause_pressed = true;
+                    }
+                }
+
+                ui.same_line(0.0);
+                if ui.button(im_str!("Fastest"), [button_w, button_h]) {
+                    self.ticks_per_sec = TICKS_PER_SEC_FASTEST;
+                    if !is_playing {
+                        self.play_pause_pressed = true;
+                    }
                 }
             });
     }
