@@ -42,6 +42,13 @@ pub struct TickTime {
 }
 
 impl TickTime {
+    pub fn zero() -> Self {
+        Self {
+            num_ticks_passed: 0,
+            next_tick_timer: Timer::new(timer::hz_to_period(TICKS_PER_SEC_NORMAL)),
+        }
+    }
+
     pub fn as_f32(&self) -> f32 {
         self.num_ticks_passed as f32 + self.next_tick_timer.progress()
     }
