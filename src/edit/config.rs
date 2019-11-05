@@ -135,7 +135,8 @@ impl Default for Config {
                         sign_z: grid::Sign::Neg,
                     },
                 ),
-                (ModifiedKey::new(VirtualKeyCode::Key8), Block::FunnelXY),
+                (ModifiedKey::new(VirtualKeyCode::Key8), Block::PipeMergeXY),
+                (ModifiedKey::new(VirtualKeyCode::Key9), Block::FunnelXY),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key2), Block::WindSource),
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key3),

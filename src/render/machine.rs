@@ -408,6 +408,33 @@ pub fn render_block(
                 },
             );
         }
+        Block::PipeMergeXY => {
+            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                PIPE_THICKNESS,
+                1.0,
+                PIPE_THICKNESS,
+            ));
+
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * transform * scaling,
+                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
+                    ..Default::default()
+                },
+            );
+
+            let transform = transform
+                * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * transform * scaling,
+                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
+                    ..Default::default()
+                },
+            );
+        }
         Block::FunnelXY => {
             let cube_color = na::Vector4::new(1.0, 0.5, 0.5, alpha);
             let cube_transform = translation
