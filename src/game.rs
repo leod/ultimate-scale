@@ -264,11 +264,16 @@ impl Game {
     }
 
     pub fn ui(&mut self, ui: &imgui::Ui) {
+        let window_size = na::Vector2::new(self.camera.viewport.z, self.camera.viewport.w);
+
         if let Some((_, exec_view)) = self.exec.as_mut() {
             exec_view.ui(ui);
         } else {
             self.editor.ui(ui);
         }
+
+        let play_state = self.exec.as_ref().map(|(play_state, _)| play_state);
+        self.play.ui(window_size, play_state, ui);
     }
 
     pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {

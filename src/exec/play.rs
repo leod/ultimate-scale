@@ -1,8 +1,9 @@
 use std::time::Duration;
 
-use log::info;
-
 use glium::glutin::{ElementState, VirtualKeyCode, WindowEvent};
+use imgui::im_str;
+use log::info;
+use nalgebra as na;
 
 use crate::util::timer::{self, Timer};
 
@@ -177,5 +178,33 @@ impl Play {
         } else if keycode == self.config.single_tick_key {
             // TODO
         }
+    }
+
+    pub fn ui(&mut self, window_size: na::Vector2<f32>, status: Option<&Status>, ui: &imgui::Ui) {
+        let bg_alpha = 0.8;
+        let button_w = 60.0;
+        let button_h = 25.0;
+
+        imgui::Window::new(im_str!("Play"))
+            .horizontal_scrollbar(true)
+            .movable(false)
+            .always_auto_resize(true)
+            .position(
+                [window_size.x / 2.0, window_size.y - 10.0],
+                imgui::Condition::Always,
+            )
+            .position_pivot([0.5, 1.0])
+            .bg_alpha(bg_alpha)
+            .build(&ui, || {
+                if ui.button(im_str!("P/P"), [button_w, button_h]) {
+                    self.play_pause_pressed = true;
+                }
+
+                ui.same_line(0.0);
+
+                if ui.button(im_str!("S"), [button_w, button_h]) {
+                    self.stop_pressed = true;
+                }
+            });
     }
 }
