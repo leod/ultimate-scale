@@ -94,6 +94,9 @@ impl Editor {
                     self.render_selection(selection, false, out);
                 }
             }
+            Mode::PipeTool { .. } => {
+                // TODO
+            }
         }
 
         Ok(())
