@@ -277,61 +277,25 @@ pub fn render_wind_mills(
     }
 }
 
-pub fn render_pipe_bend(
-    tick_time: &TickTime,
-    wind_anim_state: &Option<WindAnimState>,
+pub fn render_half_pipe(
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
+    dir: Dir3,
     color: &na::Vector4<f32>,
     out: &mut RenderList<DefaultInstanceParams>,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
     let scaling =
-        na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(PIPE_THICKNESS, 0.5, PIPE_THICKNESS));
-    let offset = na::Matrix4::new_translation(&na::Vector3::new(0.0, -0.25, 0.0));
+        na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.5, PIPE_THICKNESS, PIPE_THICKNESS));
+    let offset = na::Matrix4::new_translation(&na::Vector3::new(-0.25, 0.0, 0.0));
 
-    // One rail
-    out.add(
-        Object::Cube,
-        &DefaultInstanceParams {
-            transform: translation * transform * offset * scaling,
-            color: *color,
-            ..Default::default()
-        },
-    );
+    let (pitch, yaw) = dir.invert().to_pitch_yaw_x();
+    let rotation = na::Matrix4::from_euler_angles(0.0, pitch, yaw);
 
-    // Another rail
-    let rotation = na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
     out.add(
         Object::Cube,
         &DefaultInstanceParams {
             transform: translation * transform * rotation * offset * scaling,
-            color: *color,
-            ..Default::default()
-        },
-    );
-
-    // Pulsator to hide our shame of twist
-    let size = 3.0
-        * PIPE_THICKNESS
-        * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
-            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
-                1.0 + 0.1
-                    * (tick_time.tick_progress() * 2.0 * std::f32::consts::PI)
-                        .sin()
-                        .powf(2.0)
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
-
-    let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(size, size, size));
-    out.add(
-        Object::Cube,
-        &DefaultInstanceParams {
-            transform: translation * transform * scaling,
             color: *color,
             ..Default::default()
         },
@@ -350,53 +314,41 @@ pub fn render_block(
     let translation = na::Matrix4::new_translation(&center.coords);
 
     match placed_block.block {
-        Block::PipeXY => {
-            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                PIPE_THICKNESS,
-                1.0,
-                PIPE_THICKNESS,
-            ));
+        Block::Pipe(dir_a, dir_b) => {
+            let color = na::Vector4::new(0.75, 0.75, 0.75, alpha);
 
-            out.solid.add(
-                Object::Cube,
-                &DefaultInstanceParams {
-                    transform: translation * transform * scaling,
-                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
-                    ..Default::default()
-                },
-            );
-        }
-        Block::PipeBendXY => render_pipe_bend(
-            tick_time,
-            wind_anim_state,
-            center,
-            transform,
-            &na::Vector4::new(0.75, 0.75, 0.75, alpha),
-            &mut out.solid,
-        ),
-        Block::PipeZ => {
-            let rotation = na::Matrix4::new_rotation(na::Vector3::x() * std::f32::consts::PI / 2.0);
-            out.solid.add(
-                Object::PipeSegment,
-                &DefaultInstanceParams {
-                    transform: translation * transform * rotation,
-                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
-                    ..Default::default()
-                },
-            );
-        }
-        Block::PipeBendZ { sign_z } => {
-            let angle_y = -sign_z.to_f32() * std::f32::consts::PI / 2.0;
-            let rotation = na::Matrix4::new_rotation(na::Vector3::y() * angle_y);
+            render_half_pipe(center, transform, dir_a, &color, &mut out.solid);
+            render_half_pipe(center, transform, dir_b, &color, &mut out.solid);
 
-            render_pipe_bend(
-                tick_time,
-                wind_anim_state,
-                center,
-                &(transform * rotation),
-                &na::Vector4::new(0.75, 0.75, 0.75, alpha),
-                &mut out.solid,
-            );
+            // Pulsator to hide our shame of wind direction change
+            if dir_a.0 != dir_b.0 {
+                let size = 2.5
+                    * PIPE_THICKNESS
+                    * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
+                        if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0
+                        {
+                            1.0 + 0.1
+                                * (tick_time.tick_progress() * 2.0 * std::f32::consts::PI)
+                                    .sin()
+                                    .powf(2.0)
+                        } else {
+                            1.0
+                        }
+                    } else {
+                        1.0
+                    };
+
+                let scaling =
+                    na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(size, size, size));
+                out.solid.add(
+                    Object::Cube,
+                    &DefaultInstanceParams {
+                        transform: translation * transform * scaling,
+                        color,
+                        ..Default::default()
+                    },
+                );
+            }
         }
         Block::PipeSplitXY { .. } => {
             out.solid.add(

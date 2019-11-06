@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use glium::glutin::VirtualKeyCode;
 
-use crate::machine::grid;
+use crate::machine::grid::{self, Dir3};
 use crate::machine::{BlipKind, Block};
 
 // TODO: Shift does not work for some reason, we don't get any key press events
@@ -114,25 +114,30 @@ impl Default for Config {
             layer_down_key: ModifiedKey::shift(VirtualKeyCode::Tab),
             select_key: ModifiedKey::new(VirtualKeyCode::Key1),
             block_keys: vec![
-                (ModifiedKey::new(VirtualKeyCode::Key2), Block::PipeXY),
-                (ModifiedKey::new(VirtualKeyCode::Key3), Block::PipeBendXY),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key2),
+                    Block::Pipe(Dir3::Y_NEG, Dir3::Y_POS),
+                ),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key3),
+                    Block::Pipe(Dir3::Y_NEG, Dir3::X_POS),
+                ),
                 (
                     ModifiedKey::new(VirtualKeyCode::Key4),
-                    Block::PipeSplitXY {
-                        open_move_hole_y: grid::Sign::Pos,
-                    },
+                    Block::Pipe(Dir3::Z_NEG, Dir3::Z_POS),
                 ),
-                (ModifiedKey::new(VirtualKeyCode::Key5), Block::PipeZ),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key5),
+                    Block::Pipe(Dir3::Z_NEG, Dir3::X_POS),
+                ),
                 (
                     ModifiedKey::new(VirtualKeyCode::Key6),
-                    Block::PipeBendZ {
-                        sign_z: grid::Sign::Pos,
-                    },
+                    Block::Pipe(Dir3::Z_POS, Dir3::X_POS),
                 ),
                 (
                     ModifiedKey::new(VirtualKeyCode::Key7),
-                    Block::PipeBendZ {
-                        sign_z: grid::Sign::Neg,
+                    Block::PipeSplitXY {
+                        open_move_hole_y: grid::Sign::Pos,
                     },
                 ),
                 (ModifiedKey::new(VirtualKeyCode::Key8), Block::PipeMergeXY),

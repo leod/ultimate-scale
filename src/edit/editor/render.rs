@@ -114,7 +114,7 @@ impl Editor {
                     if last_pos.is_none() {
                         let placed_block = PlacedBlock {
                             rotation_xy: *rotation_xy,
-                            block: Block::PipeXY,
+                            block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
                         };
                         let block_center = render::machine::block_center(&mouse_grid_pos);
                         let block_transform =

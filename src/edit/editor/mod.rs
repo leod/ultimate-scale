@@ -295,7 +295,7 @@ impl Editor {
                             mouse_grid_pos,
                             PlacedBlock {
                                 rotation_xy: *rotation_xy,
-                                block: Block::PipeXY,
+                                block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
                             },
                         );
 
@@ -427,7 +427,7 @@ impl Editor {
                     let blocks = maplit::hashmap! {
                         mouse_grid_pos => PlacedBlock {
                             rotation_xy,
-                            block: Block::PipeXY,
+                            block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
                         },
                     };
 
