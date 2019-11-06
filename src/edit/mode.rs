@@ -47,6 +47,11 @@ pub enum Mode {
 
         layer_offset: isize,
     },
+
+    PipeTool {
+        last_pos: Option<grid::Point3>,
+        rotation_xy: usize,
+    },
 }
 
 impl Mode {

@@ -262,6 +262,9 @@ impl Editor {
                     new_mode = Some(Mode::Select(selection.clone()));
                 }
             }
+            Mode::PipeTool { .. } => {
+                // TODO
+            }
         }
 
         if let Some(new_mode) = new_mode {
@@ -307,7 +310,7 @@ impl Editor {
             self.action_undo();
         } else if key == self.config.redo_key {
             self.action_redo();
-        } else if key == self.config.paste_key && self.clipboard.is_some() {
+        } else if key == self.config.paste_key {
             self.action_paste();
         } else if key == self.config.save_key {
             self.action_save();

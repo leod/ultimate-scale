@@ -100,7 +100,8 @@ impl Edit {
 
     pub fn compose(a: Edit, b: Edit) -> Edit {
         match (a, b) {
-            (Edit::NoOp, Edit::NoOp) => Edit::NoOp,
+            (Edit::NoOp, b) => b,
+            (a, Edit::NoOp) => a,
             (Edit::SetBlocks(mut a), Edit::SetBlocks(b)) => {
                 for (p, block) in b.into_iter() {
                     a.insert(p, block);
