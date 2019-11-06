@@ -57,6 +57,13 @@ impl Editor {
                     );
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
+                if ui.button(im_str!("Pipe Tool"), [button_w, button_h]) {
+                    self.mode = Mode::new_pipe_tool();
+                }
+                if ui.is_item_hovered() {
+                    let text = format!("Switch to pipe placement tool.\n\nShortcut: {}", "TODO");
+                    ui.tooltip(|| ui.text(&ImString::new(text)));
+                }
 
                 ui.separator();
 

@@ -108,6 +108,7 @@ impl Editor {
     pub fn action_cancel(&mut self) {
         self.mode = match &self.mode {
             Mode::DragAndDrop { selection, .. } => Mode::Select(selection.clone()),
+            Mode::PipeTool { last_pos, .. } if last_pos.is_some() => Mode::new_pipe_tool(),
             _ => Mode::Select(Vec::new()),
         };
     }

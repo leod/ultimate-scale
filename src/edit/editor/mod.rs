@@ -262,8 +262,50 @@ impl Editor {
                     new_mode = Some(Mode::Select(selection.clone()));
                 }
             }
-            Mode::PipeTool { .. } => {
+            Mode::PipeTool {
+                last_pos,
+                rotation_xy,
+                blocks,
+            } => {
                 // TODO
+
+                if input_state.is_button_pressed(MouseButton::Right) {
+                    // Abort placement
+                    new_mode = Some(Mode::new_pipe_tool_with_rotation(*rotation_xy));
+                } else if !input_state.is_button_pressed(MouseButton::Left) {
+                    if last_pos.is_some() {
+                        // Finish placement
+                        edit = Some(Edit::SetBlocks(
+                            blocks
+                                .iter()
+                                .map(|(pos, block)| (*pos, Some(block.clone())))
+                                .collect(),
+                        ));
+                    }
+
+                    new_mode = Some(Mode::new_pipe_tool_with_rotation(*rotation_xy));
+                } else if last_pos.is_some() {
+                    // Continue in placement mode
+                    let mouse_grid_pos =
+                        self.mouse_grid_pos.filter(|p| self.machine.is_valid_pos(p));
+
+                    if let Some(mouse_grid_pos) = mouse_grid_pos {
+                        let mut blocks = blocks.clone();
+                        blocks.insert(
+                            mouse_grid_pos,
+                            PlacedBlock {
+                                rotation_xy: *rotation_xy,
+                                block: Block::PipeXY,
+                            },
+                        );
+
+                        new_mode = Some(Mode::PipeTool {
+                            last_pos: Some(mouse_grid_pos),
+                            rotation_xy: *rotation_xy,
+                            blocks,
+                        });
+                    }
+                }
             }
         }
 
@@ -373,6 +415,30 @@ impl Editor {
                     && state == glutin::ElementState::Pressed =>
             {
                 self.on_left_mouse_click_select(input_state, modifiers, selection)
+            }
+            Mode::PipeTool { rotation_xy, .. }
+                if button == glutin::MouseButton::Left
+                    && state == glutin::ElementState::Pressed =>
+            {
+                // Start placement?
+                let mouse_grid_pos = self.mouse_grid_pos.filter(|p| self.machine.is_valid_pos(p));
+
+                if let Some(mouse_grid_pos) = mouse_grid_pos {
+                    let blocks = maplit::hashmap! {
+                        mouse_grid_pos => PlacedBlock {
+                            rotation_xy,
+                            block: Block::PipeXY,
+                        },
+                    };
+
+                    Mode::PipeTool {
+                        last_pos: Some(mouse_grid_pos),
+                        rotation_xy,
+                        blocks,
+                    }
+                } else {
+                    Mode::new_pipe_tool_with_rotation(rotation_xy)
+                }
             }
             x => x,
         }
