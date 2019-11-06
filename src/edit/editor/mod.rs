@@ -168,204 +168,218 @@ impl Editor {
     }
 
     fn update_input(&mut self, input_state: &InputState, camera: &Camera) {
-        let mut new_mode = None;
         let mut edit = None;
 
-        match &self.mode {
-            Mode::Select(_selection) => {
-                // Nothing here for now.
+        self.mode = match self.mode.clone() {
+            Mode::RectSelect { existing_selection, new_selection, .. }
+                if !input_state.is_button_pressed(MouseButton::Left) => 
+            {
+                // Leave rect selection if left mouse button is no longer
+                // pressed.
+
+                // Note: We do not use the mouse button released event for
+                // leaving rect select mode, since this event could be
+                // dropped, e.g. when the window loses focus.
+                let mut selection = existing_selection;
+                for p in new_selection.iter() {
+                    if !selection.contains(p) {
+                        selection.push(*p);
+                    }
+                }
+
+                Mode::Select(selection)
             }
             Mode::RectSelect {
                 existing_selection,
-                new_selection,
+                new_selection: _,
                 start_pos,
                 end_pos: _,
-            } => {
-                if !input_state.is_button_pressed(MouseButton::Left) {
-                    // Note: We do not use the mouse button released event for
-                    // leaving rect select mode, since this event could be
-                    // dropped, e.g. when the window loses focus.
-                    let mut selection = existing_selection.clone();
-                    for p in new_selection.iter() {
-                        if !selection.contains(p) {
-                            selection.push(*p);
-                        }
-                    }
-                    new_mode = Some(Mode::Select(selection));
-                } else {
-                    // TODO: Could move here, but wouldn't be fun I guess
-                    let end_pos = input_state.mouse_window_pos();
-                    let new_selection =
-                        pick::pick_window_rect(&self.machine, camera, start_pos, &end_pos);
+            } if input_state.is_button_pressed(MouseButton::Left) => {
+                // Update selection according to rectangle
+                let end_pos = input_state.mouse_window_pos();
+                let new_selection =
+                    pick::pick_window_rect(&self.machine, camera, &start_pos, &end_pos);
 
-                    new_mode = Some(Mode::RectSelect {
-                        existing_selection: existing_selection.clone(),
-                        new_selection: new_selection.collect(),
-                        start_pos: *start_pos,
-                        end_pos: input_state.mouse_window_pos(),
-                    });
+                Mode::RectSelect {
+                    existing_selection: existing_selection,
+                    new_selection: new_selection.collect(),
+                    start_pos,
+                    end_pos: input_state.mouse_window_pos(),
                 }
             }
-            Mode::PlacePiece { piece, offset } => {
-                if input_state.is_button_pressed(MouseButton::Left) {
-                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = piece.place_edit(&(mouse_grid_pos.coords + offset));
-                        self.run_and_track_edit(edit);
-                    }
+            Mode::PlacePiece { piece, offset }
+                if input_state.is_button_pressed(MouseButton::Left) =>
+            {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    let edit = piece.place_edit(&(mouse_grid_pos.coords + offset));
+                    self.run_and_track_edit(edit);
                 }
 
-                if input_state.is_button_pressed(MouseButton::Right) {
-                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = Edit::SetBlocks(maplit::hashmap! {
-                            mouse_grid_pos => None,
-                        });
-                        self.run_and_track_edit(edit);
-                    }
+                Mode::PlacePiece { piece, offset }
+            }
+            Mode::PlacePiece { piece, offset }
+                if input_state.is_button_pressed(MouseButton::Right) =>
+            {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    let edit = Edit::SetBlocks(maplit::hashmap! {
+                        mouse_grid_pos => None,
+                    });
+                    self.run_and_track_edit(edit);
                 }
+
+                Mode::PlacePiece { piece, offset }
+            }
+            Mode::DragAndDrop { selection, .. }
+                if input_state.is_button_pressed(MouseButton::Right) =>
+            {
+                // Return to selection mode on right mouse click.
+                Mode::Select(selection)
             }
             Mode::DragAndDrop {
                 selection,
                 center_pos,
                 rotation_xy,
                 layer_offset,
-            } => {
-                if !input_state.is_button_pressed(MouseButton::Left) {
-                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let (piece, center_pos_transformed) = self
-                            .drag_and_drop_piece_from_selection(
-                                selection,
-                                center_pos,
-                                *rotation_xy,
-                                *layer_offset,
-                            );
-                        let offset = mouse_grid_pos - center_pos_transformed;
+            } if !input_state.is_button_pressed(MouseButton::Left) => {
+                // Drop the dragged stuff.
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    let (piece, center_pos_transformed) = self
+                        .drag_and_drop_piece_from_selection(
+                            &selection,
+                            &center_pos,
+                            rotation_xy,
+                            layer_offset,
+                        );
+                    let offset = mouse_grid_pos - center_pos_transformed;
 
-                        // First remove the selected blocks.
-                        let remove_edit =
-                            Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
+                    // First remove the selected blocks.
+                    let remove_edit =
+                        Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
 
-                        // Then place the piece at the new position.
-                        let place_edit = piece.place_edit(&offset);
+                    // Then place the piece at the new position.
+                    let place_edit = piece.place_edit(&offset);
 
-                        let new_selection = piece
-                            .iter_blocks(&offset)
-                            .map(|(p, _)| p)
-                            .filter(|p| self.machine.is_valid_pos(p))
-                            .collect();
+                    let new_selection = piece
+                        .iter_blocks(&offset)
+                        .map(|(p, _)| p)
+                        .filter(|p| self.machine.is_valid_pos(p))
+                        .collect();
 
-                        edit = Some(Edit::compose(remove_edit, place_edit));
-                        new_mode = Some(Mode::Select(new_selection));
-                    }
-                }
+                    edit = Some(Edit::compose(remove_edit, place_edit));
 
-                if input_state.is_button_pressed(MouseButton::Right) {
-                    new_mode = Some(Mode::Select(selection.clone()));
+                    Mode::Select(new_selection)
+                } else {
+                    // Mouse not a grid position, Just return to selection mode
+                    Mode::Select(selection)
                 }
             }
-            Mode::PipeTool {
-                last_pos,
-                rotation_xy,
-                blocks,
-            } => {
-                if input_state.is_button_pressed(MouseButton::Right) {
-                    // Abort placement
-                    new_mode = Some(Mode::new_pipe_tool_with_rotation(*rotation_xy));
-                } else if !input_state.is_button_pressed(MouseButton::Left) {
-                    if last_pos.is_some() {
-                        // Finish placement
-                        edit = Some(Edit::SetBlocks(
-                            blocks
-                                .iter()
-                                .map(|(pos, block)| (*pos, Some(block.clone())))
-                                .collect(),
-                        ));
-                    }
+            Mode::PipeTool { rotation_xy, .. }
+                if input_state.is_button_pressed(MouseButton::Right) =>
+            {
+                // Abort placement.
+                Mode::new_pipe_tool_with_rotation(rotation_xy)
+            }
+            Mode::PipeTool { rotation_xy, blocks, .. }
+                if !input_state.is_button_pressed(MouseButton::Left) =>
+            {
+                // Finish placement.
+                edit = Some(Edit::SetBlocks(
+                    blocks
+                        .iter()
+                        .map(|(pos, block)| (*pos, Some(block.clone())))
+                        .collect(),
+                ));
 
-                    new_mode = Some(Mode::new_pipe_tool_with_rotation(*rotation_xy));
-                } else if let Some(last_pos) = last_pos {
-                    // Continue in placement mode
-                    let mouse_grid_pos =
-                        self.mouse_grid_pos.filter(|p| self.machine.is_valid_pos(p));
+                Mode::new_pipe_tool_with_rotation(rotation_xy)
+            }
+            Mode::PipeTool { last_pos: Some(last_pos), rotation_xy, mut blocks, .. }
+                if input_state.is_button_pressed(MouseButton::Left) =>
+            {
+                // Continue in placement mode
+                let mouse_grid_pos =
+                    self.mouse_grid_pos.filter(|p| self.machine.is_valid_pos(p) && last_pos != *p);
 
-                    if let Some(mouse_grid_pos) = mouse_grid_pos {
-                        if *last_pos != mouse_grid_pos {
-                            let mut blocks = blocks.clone();
+                if let Some(mouse_grid_pos) = mouse_grid_pos {
+                    let delta = mouse_grid_pos - last_pos;
+                    let delta_dir = grid::Dir3::ALL
+                        .iter()
+                        .find(|dir| dir.to_vector() == delta)
+                        .cloned();
+                    if let Some(delta_dir) = delta_dir {
+                        // Change the previously placed pipe so that it
+                        // points to the new tentative pipe
+                        let updated_last_block =
+                            blocks.get(&last_pos).map(|placed_block| {
+                                let block = match placed_block.block {
+                                    Block::Pipe(dir_a, dir_b) => {
+                                        let dir_a = placed_block.rotated_dir_xy(dir_a);
+                                        let dir_b = placed_block.rotated_dir_xy(dir_b);
 
-                            let delta = mouse_grid_pos - last_pos;
-                            let delta_dir = grid::Dir3::ALL
-                                .iter()
-                                .find(|dir| dir.to_vector() == delta)
-                                .cloned();
-                            if let Some(delta_dir) = delta_dir {
-                                // Change the previously placed pipe so that it
-                                // points to the new tentative pipe
-                                let updated_last_block =
-                                    blocks.get(&last_pos).map(|placed_block| {
-                                        let block = match placed_block.block {
-                                            Block::Pipe(dir_a, dir_b) => {
-                                                let dir_a = placed_block.rotated_dir_xy(dir_a);
-                                                let dir_b = placed_block.rotated_dir_xy(dir_b);
+                                        let is_a_connected = blocks
+                                            .contains_key(&(last_pos + dir_a.to_vector()));
+                                        let is_b_connected = blocks
+                                            .contains_key(&(last_pos + dir_b.to_vector()));
 
-                                                let is_a_connected = blocks
-                                                    .contains_key(&(last_pos + dir_a.to_vector()));
-                                                let is_b_connected = blocks
-                                                    .contains_key(&(last_pos + dir_b.to_vector()));
-
-                                                if !is_a_connected && dir_b != delta_dir {
-                                                    Block::Pipe(delta_dir, dir_b)
-                                                } else if !is_b_connected && dir_a != delta_dir {
-                                                    Block::Pipe(dir_a, delta_dir)
-                                                } else {
-                                                    // No way to connect previously placed pipe
-                                                    Block::Pipe(dir_a, dir_b)
-                                                }
-                                            }
-                                            x => x,
-                                        };
-
-                                        // The pipe directions have been rotated above, so we can reset the rotation to zero.
-                                        PlacedBlock {
-                                            rotation_xy: 0,
-                                            block,
+                                        if !is_a_connected && dir_b != delta_dir {
+                                            Block::Pipe(delta_dir, dir_b)
+                                        } else if !is_b_connected && dir_a != delta_dir {
+                                            Block::Pipe(dir_a, delta_dir)
+                                        } else {
+                                            // No way to connect previously placed pipe
+                                            Block::Pipe(dir_a, dir_b)
                                         }
-                                    });
+                                    }
+                                    x => x,
+                                };
 
-                                if let Some(updated_last_block) = updated_last_block {
-                                    blocks.insert(*last_pos, updated_last_block);
+                                // The pipe directions have been rotated above, so we can reset the rotation to zero.
+                                PlacedBlock {
+                                    rotation_xy: 0,
+                                    block,
                                 }
-
-                                blocks.insert(
-                                    mouse_grid_pos,
-                                    PlacedBlock {
-                                        rotation_xy: 0,
-                                        block: Block::Pipe(delta_dir, delta_dir.invert()),
-                                    },
-                                );
-                            } else {
-                                // New mouse grid position is not a neighbor of last_pos
-                                blocks.insert(
-                                    mouse_grid_pos,
-                                    PlacedBlock {
-                                        rotation_xy: *rotation_xy,
-                                        block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
-                                    },
-                                );
-                            }
-
-                            new_mode = Some(Mode::PipeTool {
-                                last_pos: Some(mouse_grid_pos),
-                                rotation_xy: *rotation_xy,
-                                blocks,
                             });
+
+                        if let Some(updated_last_block) = updated_last_block {
+                            blocks.insert(last_pos, updated_last_block);
                         }
+
+                        blocks.insert(
+                            mouse_grid_pos,
+                            PlacedBlock {
+                                rotation_xy: 0,
+                                block: Block::Pipe(delta_dir, delta_dir.invert()),
+                            },
+                        );
+                    } else {
+                        // New mouse grid position is not a neighbor of last_pos
+                        blocks.insert(
+                            mouse_grid_pos,
+                            PlacedBlock {
+                                rotation_xy,
+                                block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
+                            },
+                        );
+                    }
+
+                    Mode::PipeTool {
+                        last_pos: Some(mouse_grid_pos),
+                        rotation_xy,
+                        blocks,
+                    }
+                } else {
+                    // No change
+                    Mode::PipeTool {
+                        last_pos: Some(last_pos),
+                        rotation_xy,
+                        blocks,
                     }
                 }
             }
-        }
-
-        if let Some(new_mode) = new_mode {
-            self.mode = new_mode;
-        }
+            x => {
+                // No mode update.
+                x
+            }
+        };
 
         if let Some(edit) = edit {
             self.run_and_track_edit(edit);
