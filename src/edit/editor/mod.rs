@@ -697,7 +697,10 @@ impl Editor {
                     .map(|neighbor| neighbor.has_wind_hole(dir_b.invert()))
                     .unwrap_or(false);
 
-                let block = if !is_a_connected && dir_b != new_dir {
+                let block = if dir_a == new_dir || dir_b == new_dir {
+                    // Don't need to change the existing pipe
+                    Block::Pipe(dir_a, dir_b)
+                } else if !is_a_connected && dir_b != new_dir {
                     Block::Pipe(new_dir, dir_b)
                 } else if !is_b_connected && dir_a != new_dir {
                     Block::Pipe(dir_a, new_dir)
