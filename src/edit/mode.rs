@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use nalgebra as na;
 
 use crate::edit::Piece;
-use crate::machine::{grid, Machine};
+use crate::machine::{grid, Machine, PlacedBlock};
 
 /// Modes that the editor can be in.
 #[derive(Debug, Clone, PartialEq)]
@@ -47,9 +49,27 @@ pub enum Mode {
 
         layer_offset: isize,
     },
+
+    PipeTool {
+        last_pos: Option<grid::Point3>,
+        rotation_xy: usize,
+        blocks: HashMap<grid::Point3, PlacedBlock>,
+    },
 }
 
 impl Mode {
+    pub fn new_pipe_tool() -> Self {
+        Self::new_pipe_tool_with_rotation(1)
+    }
+
+    pub fn new_pipe_tool_with_rotation(rotation_xy: usize) -> Self {
+        Mode::PipeTool {
+            last_pos: None,
+            rotation_xy,
+            blocks: HashMap::new(),
+        }
+    }
+
     /// Make sure the mode state is consistent with the edited machine.
     ///
     /// The main case is for this to be called after an edit has been applied to

@@ -3,6 +3,7 @@ use nalgebra as na;
 use crate::edit::{Editor, Mode, Piece};
 use crate::exec::TickTime;
 use crate::machine::grid;
+use crate::machine::{Block, PlacedBlock};
 use crate::render;
 use crate::render::pipeline::RenderLists;
 
@@ -94,6 +95,57 @@ impl Editor {
                     self.render_selection(selection, false, out);
                 }
             }
+            Mode::PipeTool {
+                last_pos,
+                rotation_xy,
+                blocks,
+                ..
+            } => {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    if self.machine.is_valid_pos(&mouse_grid_pos) {
+                        self.render_block_wireframe(
+                            &mouse_grid_pos,
+                            0.015,
+                            &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                            out,
+                        );
+                    }
+
+                    if last_pos.is_none() {
+                        let placed_block = PlacedBlock {
+                            rotation_xy: *rotation_xy,
+                            block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
+                        };
+                        let block_center = render::machine::block_center(&mouse_grid_pos);
+                        let block_transform =
+                            render::machine::placed_block_transform(&placed_block);
+                        render::machine::render_block(
+                            &placed_block,
+                            &TickTime::zero(),
+                            &None,
+                            &block_center,
+                            &block_transform,
+                            0.8,
+                            out,
+                        );
+                    }
+                }
+
+                if let Some(last_pos) = last_pos {
+                    self.render_block_wireframe(
+                        &last_pos,
+                        0.02,
+                        &na::Vector4::new(0.2, 0.7, 0.2, 1.0),
+                        out,
+                    );
+
+                    self.render_tentative_blocks(
+                        blocks.iter().map(|(pos, block)| (*pos, block.clone())),
+                        true,
+                        out,
+                    );
+                }
+            }
         }
 
         Ok(())
@@ -146,15 +198,15 @@ impl Editor {
         );
     }
 
-    fn render_piece_to_place(
+    fn render_tentative_blocks(
         &self,
-        piece: &Piece,
-        piece_pos: &grid::Point3,
+        blocks: impl Iterator<Item = (grid::Point3, PlacedBlock)>,
+        wireframe_all: bool,
         out: &mut RenderLists,
-    ) {
+    ) -> bool {
         let mut any_pos_valid = false;
 
-        for (pos, placed_block) in piece.iter_blocks(&piece_pos.coords) {
+        for (pos, placed_block) in blocks {
             let block_center = render::machine::block_center(&pos);
             let block_transform = render::machine::placed_block_transform(&placed_block);
             render::machine::render_block(
@@ -176,8 +228,27 @@ impl Editor {
                     &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
                     out,
                 );
+            } else if wireframe_all {
+                self.render_block_wireframe(
+                    &pos,
+                    0.015,
+                    &na::Vector4::new(0.5, 0.5, 0.5, 1.0),
+                    out,
+                );
             }
         }
+
+        any_pos_valid
+    }
+
+    fn render_piece_to_place(
+        &self,
+        piece: &Piece,
+        piece_pos: &grid::Point3,
+        out: &mut RenderLists,
+    ) {
+        let any_pos_valid =
+            self.render_tentative_blocks(piece.iter_blocks(&piece_pos.coords), false, out);
 
         // Show wireframe around whole piece only if there is at
         // least one block we can place at a valid position.

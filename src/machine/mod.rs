@@ -42,12 +42,7 @@ pub type TickNum = usize;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
-    PipeXY,
-    PipeBendXY,
-    PipeZ,
-    PipeBendZ {
-        sign_z: Sign,
-    },
+    Pipe(Dir3, Dir3),
     PipeSplitXY {
         open_move_hole_y: Sign,
     },
@@ -74,15 +69,18 @@ pub enum Block {
 impl Block {
     pub fn name(&self) -> String {
         match self {
-            Block::PipeXY => "Pipe".to_string(),
-            Block::PipeBendXY => "Curved pipe".to_string(),
-            Block::PipeZ => "Up/down pipe".to_string(),
-            Block::PipeBendZ {
-                sign_z: Sign::Pos, ..
-            } => "Up curved pipe".to_string(),
-            Block::PipeBendZ {
-                sign_z: Sign::Neg, ..
-            } => "Down curved pipe".to_string(),
+            Block::Pipe(a, b) if a.0 != Axis3::Z && a.0 == b.0 => "Pipe straight".to_string(),
+            Block::Pipe(a, b) if a.0 != Axis3::Z && b.0 != Axis3::Z && a.0 != b.0 => {
+                "Pipe curve".to_string()
+            }
+            Block::Pipe(a, b) if a.0 == Axis3::Z && a.0 == b.0 => "Pipe up/down".to_string(),
+            Block::Pipe(a, b) if (*a == Dir3::Z_NEG || *b == Dir3::Z_NEG) && a.0 != b.0 => {
+                "Pipe curve down".to_string()
+            }
+            Block::Pipe(a, b) if (*a == Dir3::Z_POS || *b == Dir3::Z_POS) && a.0 != b.0 => {
+                "Pipe curve up".to_string()
+            }
+            Block::Pipe(_, _) => "Pipe".to_string(),
             Block::PipeSplitXY { .. } => "Pipe split".to_string(),
             Block::PipeMergeXY => "Pipe crossing".to_string(),
             Block::FunnelXY => "Funnel".to_string(),
@@ -103,15 +101,7 @@ impl Block {
 
     pub fn description(&self) -> &'static str {
         match self {
-            Block::PipeXY => "Conducts both wind and blips.",
-            Block::PipeBendXY => "Makes a curve.",
-            Block::PipeZ => "Moves up and down.",
-            Block::PipeBendZ {
-                sign_z: Sign::Pos, ..
-            } => "Makes a curve up.",
-            Block::PipeBendZ {
-                sign_z: Sign::Neg, ..
-            } => "Makes a curve down.",
+            Block::Pipe(_, _) => "Conducts both wind and blips.",
             Block::PipeSplitXY { .. } => "Useless.",
             Block::PipeMergeXY => "Four-way pipe. But why?",
             Block::FunnelXY => "Not so useful.",
@@ -167,10 +157,7 @@ impl Block {
 
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         match self {
-            Block::PipeXY => dir == Dir3::Y_NEG || dir == Dir3::Y_POS,
-            Block::PipeBendXY => dir == Dir3::X_POS || dir == Dir3::Y_NEG,
-            Block::PipeZ => dir == Dir3::Z_NEG || dir == Dir3::Z_POS,
-            Block::PipeBendZ { sign_z } => dir == Dir3::Y_NEG || dir == Dir3(Axis3::Z, *sign_z),
+            Block::Pipe(dir_a, dir_b) => dir == *dir_a || dir == *dir_b,
             Block::PipeSplitXY { .. } => {
                 dir == Dir3::Y_NEG || dir == Dir3::Y_POS || dir == Dir3::X_POS
             }

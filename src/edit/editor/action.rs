@@ -108,6 +108,7 @@ impl Editor {
     pub fn action_cancel(&mut self) {
         self.mode = match &self.mode {
             Mode::DragAndDrop { selection, .. } => Mode::Select(selection.clone()),
+            Mode::PipeTool { last_pos, .. } if last_pos.is_some() => Mode::new_pipe_tool(),
             _ => Mode::Select(Vec::new()),
         };
     }
@@ -124,6 +125,12 @@ impl Editor {
                 edit = Some(Edit::RotateCWXY(selection.clone()));
             }
             Mode::DragAndDrop { rotation_xy, .. } => {
+                *rotation_xy += 1;
+                if *rotation_xy == 4 {
+                    *rotation_xy = 0;
+                }
+            }
+            Mode::PipeTool { rotation_xy, .. } => {
                 *rotation_xy += 1;
                 if *rotation_xy == 4 {
                     *rotation_xy = 0;
@@ -151,6 +158,13 @@ impl Editor {
                 edit = Some(Edit::RotateCCWXY(selection.clone()));
             }
             Mode::DragAndDrop { rotation_xy, .. } => {
+                if *rotation_xy == 0 {
+                    *rotation_xy = 3;
+                } else {
+                    *rotation_xy -= 1;
+                }
+            }
+            Mode::PipeTool { rotation_xy, .. } => {
                 if *rotation_xy == 0 {
                     *rotation_xy = 3;
                 } else {
