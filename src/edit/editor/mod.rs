@@ -267,8 +267,6 @@ impl Editor {
                 rotation_xy,
                 blocks,
             } => {
-                // TODO
-
                 if input_state.is_button_pressed(MouseButton::Right) {
                     // Abort placement
                     new_mode = Some(Mode::new_pipe_tool_with_rotation(*rotation_xy));
@@ -284,26 +282,82 @@ impl Editor {
                     }
 
                     new_mode = Some(Mode::new_pipe_tool_with_rotation(*rotation_xy));
-                } else if last_pos.is_some() {
+                } else if let Some(last_pos) = last_pos {
                     // Continue in placement mode
                     let mouse_grid_pos =
                         self.mouse_grid_pos.filter(|p| self.machine.is_valid_pos(p));
 
                     if let Some(mouse_grid_pos) = mouse_grid_pos {
-                        let mut blocks = blocks.clone();
-                        blocks.insert(
-                            mouse_grid_pos,
-                            PlacedBlock {
-                                rotation_xy: *rotation_xy,
-                                block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
-                            },
-                        );
+                        if *last_pos != mouse_grid_pos {
+                            let mut blocks = blocks.clone();
 
-                        new_mode = Some(Mode::PipeTool {
-                            last_pos: Some(mouse_grid_pos),
-                            rotation_xy: *rotation_xy,
-                            blocks,
-                        });
+                            let delta = mouse_grid_pos - last_pos;
+                            let delta_dir = grid::Dir3::ALL
+                                .iter()
+                                .find(|dir| dir.to_vector() == delta)
+                                .cloned();
+                            if let Some(delta_dir) = delta_dir {
+                                // Change the previously placed pipe so that it
+                                // points to the new tentative pipe
+                                let updated_last_block =
+                                    blocks.get(&last_pos).map(|placed_block| {
+                                        let block = match placed_block.block {
+                                            Block::Pipe(dir_a, dir_b) => {
+                                                let dir_a = placed_block.rotated_dir_xy(dir_a);
+                                                let dir_b = placed_block.rotated_dir_xy(dir_b);
+
+                                                let is_a_connected = blocks
+                                                    .contains_key(&(last_pos + dir_a.to_vector()));
+                                                let is_b_connected = blocks
+                                                    .contains_key(&(last_pos + dir_b.to_vector()));
+
+                                                if !is_a_connected && dir_b != delta_dir {
+                                                    Block::Pipe(delta_dir, dir_b)
+                                                } else if !is_b_connected && dir_a != delta_dir {
+                                                    Block::Pipe(dir_a, delta_dir)
+                                                } else {
+                                                    // No way to connect previously placed pipe
+                                                    Block::Pipe(dir_a, dir_b)
+                                                }
+                                            }
+                                            x => x,
+                                        };
+
+                                        // The pipe directions have been rotated above, so we can reset the rotation to zero.
+                                        PlacedBlock {
+                                            rotation_xy: 0,
+                                            block,
+                                        }
+                                    });
+
+                                if let Some(updated_last_block) = updated_last_block {
+                                    blocks.insert(*last_pos, updated_last_block);
+                                }
+
+                                blocks.insert(
+                                    mouse_grid_pos,
+                                    PlacedBlock {
+                                        rotation_xy: 0,
+                                        block: Block::Pipe(delta_dir, delta_dir.invert()),
+                                    },
+                                );
+                            } else {
+                                // New mouse grid position is not a neighbor of last_pos
+                                blocks.insert(
+                                    mouse_grid_pos,
+                                    PlacedBlock {
+                                        rotation_xy: *rotation_xy,
+                                        block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
+                                    },
+                                );
+                            }
+
+                            new_mode = Some(Mode::PipeTool {
+                                last_pos: Some(mouse_grid_pos),
+                                rotation_xy: *rotation_xy,
+                                blocks,
+                            });
+                        }
                     }
                 }
             }
