@@ -2,7 +2,7 @@ mod action;
 mod render;
 mod ui;
 
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::path::Path;
 use std::time::Duration;
@@ -171,9 +171,11 @@ impl Editor {
         let mut edit = None;
 
         self.mode = match self.mode.clone() {
-            Mode::RectSelect { existing_selection, new_selection, .. }
-                if !input_state.is_button_pressed(MouseButton::Left) => 
-            {
+            Mode::RectSelect {
+                existing_selection,
+                new_selection,
+                ..
+            } if !input_state.is_button_pressed(MouseButton::Left) => {
                 // Leave rect selection if left mouse button is no longer
                 // pressed.
 
@@ -243,13 +245,12 @@ impl Editor {
             } if !input_state.is_button_pressed(MouseButton::Left) => {
                 // Drop the dragged stuff.
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let (piece, center_pos_transformed) = self
-                        .drag_and_drop_piece_from_selection(
-                            &selection,
-                            &center_pos,
-                            rotation_xy,
-                            layer_offset,
-                        );
+                    let (piece, center_pos_transformed) = self.drag_and_drop_piece_from_selection(
+                        &selection,
+                        &center_pos,
+                        rotation_xy,
+                        layer_offset,
+                    );
                     let offset = mouse_grid_pos - center_pos_transformed;
 
                     // First remove the selected blocks.
@@ -273,15 +274,31 @@ impl Editor {
                     Mode::Select(selection)
                 }
             }
+            Mode::PipeTool {
+                last_pos: None,
+                rotation_xy,
+                ..
+            } if input_state.is_button_pressed(MouseButton::Right) => {
+                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                    let edit = Edit::SetBlocks(maplit::hashmap! {
+                        mouse_grid_pos => None,
+                    });
+                    self.run_and_track_edit(edit);
+                }
+
+                Mode::new_pipe_tool_with_rotation(rotation_xy)
+            }
             Mode::PipeTool { rotation_xy, .. }
                 if input_state.is_button_pressed(MouseButton::Right) =>
             {
                 // Abort placement.
                 Mode::new_pipe_tool_with_rotation(rotation_xy)
             }
-            Mode::PipeTool { rotation_xy, blocks, .. }
-                if !input_state.is_button_pressed(MouseButton::Left) =>
-            {
+            Mode::PipeTool {
+                rotation_xy,
+                blocks,
+                ..
+            } if !input_state.is_button_pressed(MouseButton::Left) => {
                 // Finish placement.
                 edit = Some(Edit::SetBlocks(
                     blocks
@@ -292,12 +309,16 @@ impl Editor {
 
                 Mode::new_pipe_tool_with_rotation(rotation_xy)
             }
-            Mode::PipeTool { last_pos: Some(last_pos), rotation_xy, mut blocks, .. }
-                if input_state.is_button_pressed(MouseButton::Left) =>
-            {
+            Mode::PipeTool {
+                last_pos: Some(last_pos),
+                rotation_xy,
+                mut blocks,
+                ..
+            } if input_state.is_button_pressed(MouseButton::Left) => {
                 // Continue in placement mode
-                let mouse_grid_pos =
-                    self.mouse_grid_pos.filter(|p| self.machine.is_valid_pos(p) && last_pos != *p);
+                let mouse_grid_pos = self
+                    .mouse_grid_pos
+                    .filter(|p| self.machine.is_valid_pos(p) && last_pos != *p);
 
                 if let Some(mouse_grid_pos) = mouse_grid_pos {
                     let delta = mouse_grid_pos - last_pos;
@@ -308,48 +329,39 @@ impl Editor {
                     if let Some(delta_dir) = delta_dir {
                         // Change the previously placed pipe so that it
                         // points to the new tentative pipe
-                        let updated_last_block =
-                            blocks.get(&last_pos).map(|placed_block| {
-                                let block = match placed_block.block {
-                                    Block::Pipe(dir_a, dir_b) => {
-                                        let dir_a = placed_block.rotated_dir_xy(dir_a);
-                                        let dir_b = placed_block.rotated_dir_xy(dir_b);
-
-                                        let is_a_connected = blocks
-                                            .contains_key(&(last_pos + dir_a.to_vector()));
-                                        let is_b_connected = blocks
-                                            .contains_key(&(last_pos + dir_b.to_vector()));
-
-                                        if !is_a_connected && dir_b != delta_dir {
-                                            Block::Pipe(delta_dir, dir_b)
-                                        } else if !is_b_connected && dir_a != delta_dir {
-                                            Block::Pipe(dir_a, delta_dir)
-                                        } else {
-                                            // No way to connect previously placed pipe
-                                            Block::Pipe(dir_a, dir_b)
-                                        }
-                                    }
-                                    x => x,
-                                };
-
-                                // The pipe directions have been rotated above, so we can reset the rotation to zero.
-                                PlacedBlock {
-                                    rotation_xy: 0,
-                                    block,
-                                }
-                            });
+                        let updated_last_block = blocks.get(&last_pos).map(|placed_block| {
+                            Self::pipe_tool_connect_pipe(
+                                &blocks,
+                                placed_block,
+                                &last_pos,
+                                delta_dir,
+                            )
+                        });
 
                         if let Some(updated_last_block) = updated_last_block {
                             blocks.insert(last_pos, updated_last_block);
                         }
 
-                        blocks.insert(
-                            mouse_grid_pos,
-                            PlacedBlock {
-                                rotation_xy: 0,
-                                block: Block::Pipe(delta_dir, delta_dir.invert()),
-                            },
-                        );
+                        let updated_new_block = blocks.get(&mouse_grid_pos).map(|placed_block| {
+                            Self::pipe_tool_connect_pipe(
+                                &blocks,
+                                placed_block,
+                                &mouse_grid_pos,
+                                delta_dir.invert(),
+                            )
+                        });
+
+                        if let Some(updated_new_block) = updated_new_block {
+                            blocks.insert(mouse_grid_pos, updated_new_block);
+                        } else {
+                            blocks.insert(
+                                mouse_grid_pos,
+                                PlacedBlock {
+                                    rotation_xy: 0,
+                                    block: Block::Pipe(delta_dir, delta_dir.invert()),
+                                },
+                            );
+                        }
                     } else {
                         // New mouse grid position is not a neighbor of last_pos
                         blocks.insert(
@@ -659,5 +671,39 @@ impl Editor {
         center_pos_transformed.z -= layer_offset;
 
         (piece, center_pos_transformed)
+    }
+
+    fn pipe_tool_connect_pipe(
+        blocks: &HashMap<grid::Point3, PlacedBlock>,
+        placed_block: &PlacedBlock,
+        block_pos: &grid::Point3,
+        new_dir: grid::Dir3,
+    ) -> PlacedBlock {
+        match placed_block.block {
+            Block::Pipe(dir_a, dir_b) => {
+                let dir_a = placed_block.rotated_dir_xy(dir_a);
+                let dir_b = placed_block.rotated_dir_xy(dir_b);
+
+                let is_a_connected = blocks.contains_key(&(block_pos + dir_a.to_vector()));
+                let is_b_connected = blocks.contains_key(&(block_pos + dir_b.to_vector()));
+
+                let block = if !is_a_connected && dir_b != new_dir {
+                    Block::Pipe(new_dir, dir_b)
+                } else if !is_b_connected && dir_a != new_dir {
+                    Block::Pipe(dir_a, new_dir)
+                } else {
+                    // No way to connect previously placed pipe
+                    Block::Pipe(dir_a, dir_b)
+                };
+
+                // The pipe directions have been rotated above, so we can reset
+                // the rotation to zero.
+                PlacedBlock {
+                    rotation_xy: 0,
+                    block,
+                }
+            }
+            _ => placed_block.clone(),
+        }
     }
 }
