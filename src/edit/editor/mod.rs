@@ -684,13 +684,24 @@ impl Editor {
                 let dir_a = placed_block.rotated_dir_xy(dir_a);
                 let dir_b = placed_block.rotated_dir_xy(dir_b);
 
-                let is_a_connected = blocks.contains_key(&(block_pos + dir_a.to_vector()));
-                let is_b_connected = blocks.contains_key(&(block_pos + dir_b.to_vector()));
+                let is_a_connected = blocks
+                    .get(&(block_pos + dir_a.to_vector()))
+                    .map(|neighbor| neighbor.has_wind_hole(dir_a.invert()))
+                    .unwrap_or(false);
+                let is_b_connected = blocks
+                    .get(&(block_pos + dir_b.to_vector()))
+                    .map(|neighbor| neighbor.has_wind_hole(dir_b.invert()))
+                    .unwrap_or(false);
 
                 let block = if !is_a_connected && dir_b != new_dir {
                     Block::Pipe(new_dir, dir_b)
                 } else if !is_b_connected && dir_a != new_dir {
                     Block::Pipe(dir_a, new_dir)
+                } else if dir_a.0 != grid::Axis3::Z
+                    && dir_b.0 != grid::Axis3::Z
+                    && new_dir.0 != grid::Axis3::Z
+                {
+                    Block::PipeMergeXY
                 } else {
                     // No way to connect previously placed pipe
                     Block::Pipe(dir_a, dir_b)
