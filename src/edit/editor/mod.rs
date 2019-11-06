@@ -312,80 +312,11 @@ impl Editor {
             Mode::PipeTool {
                 last_pos: Some(last_pos),
                 rotation_xy,
-                mut blocks,
+                blocks,
                 ..
             } if input_state.is_button_pressed(MouseButton::Left) => {
-                // Continue in placement mode
-                let mouse_grid_pos = self
-                    .mouse_grid_pos
-                    .filter(|p| self.machine.is_valid_pos(p) && last_pos != *p);
-
-                if let Some(mouse_grid_pos) = mouse_grid_pos {
-                    let delta = mouse_grid_pos - last_pos;
-                    let delta_dir = grid::Dir3::ALL
-                        .iter()
-                        .find(|dir| dir.to_vector() == delta)
-                        .cloned();
-                    if let Some(delta_dir) = delta_dir {
-                        // Change the previously placed pipe so that it
-                        // points to the new tentative pipe
-                        let updated_last_block = blocks.get(&last_pos).map(|placed_block| {
-                            Self::pipe_tool_connect_pipe(
-                                &blocks,
-                                placed_block,
-                                &last_pos,
-                                delta_dir,
-                            )
-                        });
-
-                        if let Some(updated_last_block) = updated_last_block {
-                            blocks.insert(last_pos, updated_last_block);
-                        }
-
-                        let updated_new_block = blocks.get(&mouse_grid_pos).map(|placed_block| {
-                            Self::pipe_tool_connect_pipe(
-                                &blocks,
-                                placed_block,
-                                &mouse_grid_pos,
-                                delta_dir.invert(),
-                            )
-                        });
-
-                        if let Some(updated_new_block) = updated_new_block {
-                            blocks.insert(mouse_grid_pos, updated_new_block);
-                        } else {
-                            blocks.insert(
-                                mouse_grid_pos,
-                                PlacedBlock {
-                                    rotation_xy: 0,
-                                    block: Block::Pipe(delta_dir, delta_dir.invert()),
-                                },
-                            );
-                        }
-                    } else {
-                        // New mouse grid position is not a neighbor of last_pos
-                        blocks.insert(
-                            mouse_grid_pos,
-                            PlacedBlock {
-                                rotation_xy,
-                                block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
-                            },
-                        );
-                    }
-
-                    Mode::PipeTool {
-                        last_pos: Some(mouse_grid_pos),
-                        rotation_xy,
-                        blocks,
-                    }
-                } else {
-                    // No change
-                    Mode::PipeTool {
-                        last_pos: Some(last_pos),
-                        rotation_xy,
-                        blocks,
-                    }
-                }
+                // Continue in pipe tool placement mode
+                self.update_input_continue_pipe_tool(last_pos, rotation_xy, blocks)
             }
             x => {
                 // No mode update.
@@ -395,6 +326,79 @@ impl Editor {
 
         if let Some(edit) = edit {
             self.run_and_track_edit(edit);
+        }
+    }
+
+    fn update_input_continue_pipe_tool(
+        &self,
+        last_pos: grid::Point3,
+        rotation_xy: usize,
+        mut blocks: HashMap<grid::Point3, PlacedBlock>,
+    ) -> Mode {
+        let mouse_grid_pos = self
+            .mouse_grid_pos
+            .filter(|p| self.machine.is_valid_pos(p) && last_pos != *p);
+
+        if let Some(mouse_grid_pos) = mouse_grid_pos {
+            let delta = mouse_grid_pos - last_pos;
+            let delta_dir = grid::Dir3::ALL
+                .iter()
+                .find(|dir| dir.to_vector() == delta)
+                .cloned();
+            if let Some(delta_dir) = delta_dir {
+                // Change the previously placed pipe so that it points to the
+                // new tentative pipe
+                let updated_last_block = blocks.get(&last_pos).map(|placed_block| {
+                    Self::pipe_tool_connect_pipe(&blocks, placed_block, &last_pos, delta_dir)
+                });
+
+                if let Some(updated_last_block) = updated_last_block {
+                    blocks.insert(last_pos, updated_last_block);
+                }
+
+                let updated_new_block = blocks.get(&mouse_grid_pos).map(|placed_block| {
+                    Self::pipe_tool_connect_pipe(
+                        &blocks,
+                        placed_block,
+                        &mouse_grid_pos,
+                        delta_dir.invert(),
+                    )
+                });
+
+                if let Some(updated_new_block) = updated_new_block {
+                    blocks.insert(mouse_grid_pos, updated_new_block);
+                } else {
+                    blocks.insert(
+                        mouse_grid_pos,
+                        PlacedBlock {
+                            rotation_xy: 0,
+                            block: Block::Pipe(delta_dir, delta_dir.invert()),
+                        },
+                    );
+                }
+            } else {
+                // New mouse grid position is not a neighbor of last_pos
+                blocks.insert(
+                    mouse_grid_pos,
+                    PlacedBlock {
+                        rotation_xy,
+                        block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
+                    },
+                );
+            }
+
+            Mode::PipeTool {
+                last_pos: Some(mouse_grid_pos),
+                rotation_xy,
+                blocks,
+            }
+        } else {
+            // No change
+            Mode::PipeTool {
+                last_pos: Some(last_pos),
+                rotation_xy,
+                blocks,
+            }
         }
     }
 
