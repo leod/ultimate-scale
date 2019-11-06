@@ -51,6 +51,7 @@ pub enum Mode {
     PipeTool {
         last_pos: Option<grid::Point3>,
         rotation_xy: usize,
+        piece: Piece,
     },
 }
 

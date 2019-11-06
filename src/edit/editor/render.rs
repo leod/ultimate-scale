@@ -3,6 +3,7 @@ use nalgebra as na;
 use crate::edit::{Editor, Mode, Piece};
 use crate::exec::TickTime;
 use crate::machine::grid;
+use crate::machine::PlacedBlock;
 use crate::render;
 use crate::render::pipeline::RenderLists;
 
@@ -149,15 +150,14 @@ impl Editor {
         );
     }
 
-    fn render_piece_to_place(
+    fn render_tentative_blocks(
         &self,
-        piece: &Piece,
-        piece_pos: &grid::Point3,
+        blocks: impl Iterator<Item = (grid::Point3, PlacedBlock)>,
         out: &mut RenderLists,
-    ) {
+    ) -> bool {
         let mut any_pos_valid = false;
 
-        for (pos, placed_block) in piece.iter_blocks(&piece_pos.coords) {
+        for (pos, placed_block) in blocks {
             let block_center = render::machine::block_center(&pos);
             let block_transform = render::machine::placed_block_transform(&placed_block);
             render::machine::render_block(
@@ -181,6 +181,17 @@ impl Editor {
                 );
             }
         }
+
+        any_pos_valid
+    }
+
+    fn render_piece_to_place(
+        &self,
+        piece: &Piece,
+        piece_pos: &grid::Point3,
+        out: &mut RenderLists,
+    ) {
+        let any_pos_valid = self.render_tentative_blocks(piece.iter_blocks(&piece_pos.coords), out);
 
         // Show wireframe around whole piece only if there is at
         // least one block we can place at a valid position.
