@@ -22,7 +22,19 @@ impl Editor {
             &mut out.solid,
         );
 
-        render::machine::render_machine(&self.machine, &TickTime::zero(), None, out);
+        let filter = |pos| {
+            // Don't render blocks that are going to be overwritten by the pipe
+            // tool. Otherwise it may look a bit confusing if the same grid
+            // position contains two different pipes.
+            if let Mode::PipeTool { blocks, .. } = &self.mode {
+                !blocks.contains_key(pos)
+            } else {
+                true
+            }
+        };
+
+        render::machine::render_machine(&self.machine, &TickTime::zero(), None, filter, out);
+
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + 0.01,
@@ -223,18 +235,20 @@ impl Editor {
 
             any_pos_valid = any_pos_valid || self.machine.is_valid_pos(&pos);
 
-            if !self.machine.is_valid_pos(&pos) || self.machine.get_block_at_pos(&pos).is_some() {
-                self.render_block_wireframe(
-                    &pos,
-                    0.020,
-                    &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
-                    out,
-                );
-            } else if wireframe_all {
+            if wireframe_all {
                 self.render_block_wireframe(
                     &pos,
                     0.015,
                     &na::Vector4::new(0.5, 0.5, 0.5, 1.0),
+                    out,
+                );
+            } else if !self.machine.is_valid_pos(&pos)
+                || self.machine.get_block_at_pos(&pos).is_some()
+            {
+                self.render_block_wireframe(
+                    &pos,
+                    0.020,
+                    &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
                     out,
                 );
             }
