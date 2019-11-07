@@ -6,7 +6,7 @@ use glium::glutin::{self, WindowEvent};
 
 use crate::edit::pick;
 use crate::exec::anim::{WindAnimState, WindLife};
-use crate::exec::{Exec, TickTime};
+use crate::exec::{BlipStatus, Exec, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
@@ -250,34 +250,38 @@ impl ExecView {
         for (_index, blip) in self.exec.blips().iter() {
             let center = render::machine::block_center(&blip.pos);
 
-            let pos = if let Some(old_pos) = blip.old_pos {
+            let size = 0.25
+                * match blip.status {
+                    BlipStatus::Spawning => {
+                        // Animate spawning the blip
+                        Self::blip_spawn_size_animation(time.tick_progress())
+                    }
+                    BlipStatus::Existing => 1.0,
+                    BlipStatus::Dying => {
+                        // Animate killing the blip
+                        Self::blip_spawn_size_animation(1.0 - time.tick_progress())
+                    }
+                };
+
+            // Interpolate blip position if it is moving
+            let pos = if let Some(old_move_dir) = blip.old_move_dir {
+                let old_pos = blip.pos - old_move_dir.to_vector();
                 let old_center = render::machine::block_center(&old_pos);
                 old_center + time.tick_progress() * (center - old_center)
             } else {
                 center
             };
 
-            let size = if blip.old_pos.is_none() {
-                // Animate spawning the blip
-                Self::blip_spawn_size_animation(time.tick_progress())
-            } else if blip.dead {
-                // Animate killing the blip
-                Self::blip_spawn_size_animation(1.0 - time.tick_progress())
-            } else {
-                1.0
-            } * 0.25;
-
             let mut transform =
                 na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
 
-            // Interpolate blip position if position changed
-            if let Some(old_pos) = blip.old_pos {
-                if old_pos != blip.pos {
-                    let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                    let angle = time.tick_progress() * std::f32::consts::PI / 2.0;
-                    let rot = na::Rotation3::new(delta.normalize() * angle);
-                    transform = transform * rot.to_homogeneous();
-                }
+            // Rotate blip if it is moving
+            if let Some(old_move_dir) = blip.old_move_dir {
+                let old_pos = blip.pos - old_move_dir.to_vector();
+                let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
+                let angle = time.tick_progress() * std::f32::consts::PI / 2.0;
+                let rot = na::Rotation3::new(delta.normalize() * angle);
+                transform = transform * rot.to_homogeneous();
             }
 
             let color = render::machine::blip_color(blip.kind);
