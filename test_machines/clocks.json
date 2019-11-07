@@ -1,0 +1,3239 @@
+{
+  "size": [
+    30,
+    30,
+    4
+  ],
+  "block_data": [
+    [
+      [
+        24,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        26,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        26,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        5,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        24,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        12,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        3,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipWindSource": {
+            "activated": false
+          }
+        }
+      }
+    ],
+    [
+      [
+        24,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        18,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        27,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        27,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        3,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        3,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipWindSource": {
+            "activated": false
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        24,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        17,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        5,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": 1,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        3,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipWindSource": {
+            "activated": false
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": 1,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        5,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipDuplicator": {
+            "kind": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        23,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": 1,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        0,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": 1,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        3,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        4,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        2,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        2,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        3,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipWindSource": {
+            "activated": false
+          }
+        }
+      }
+    ],
+    [
+      [
+        1,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "BlipDuplicator": {
+            "kind": null,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        2,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 2,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        3,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        3,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Neg"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        5,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "X",
+              "Pos"
+            ],
+            [
+              "X",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        11,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        10,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        13,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        14,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        15,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        5,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        8,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        12,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        6,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        9,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        7,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        5,
+        1,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "BlipSpawn": {
+            "kind": "A",
+            "num_spawns": 1,
+            "activated": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        6,
+        0,
+        0
+      ],
+      {
+        "rotation_xy": 1,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Neg"
+            ],
+            [
+              "Y",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        17,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        20,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        16,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        18,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        19,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        24,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        21,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        22,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        25,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        23,
+        0
+      ],
+      {
+        "rotation_xy": 0,
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "Y",
+              "Neg"
+            ]
+          ]
+        }
+      }
+    ]
+  ]
+}
