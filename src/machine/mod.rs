@@ -124,7 +124,7 @@ impl Block {
                 "Produces two copies of a specific kind of blip that may activate it."
             }
             Block::BlipWindSource { .. } => "Spawns one thrust of wind when activated by a blip.",
-            Block::Solid => "Does nothing.",
+            Block::Solid => "Eats blips.",
         }
     }
 
@@ -169,7 +169,7 @@ impl Block {
             Block::WindSource => true,
             Block::BlipSpawn { .. } => true,
             Block::BlipDuplicator { .. } => true,
-            Block::Solid => false,
+            Block::Solid => true,
             Block::BlipWindSource { .. } => true,
         }
     }

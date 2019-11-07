@@ -602,6 +602,10 @@ impl Exec {
                 // Remove blip
                 true
             }
+            Block::Solid => {
+                // Remove blip
+                true
+            }
             _ => false,
         }
     }
