@@ -18,19 +18,27 @@ pub struct BlipMovement {
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub enum BlipStatus {
+    Spawning,
+    Existing,
+    Dying,
+}
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Blip {
     pub kind: BlipKind,
     pub pos: Point3,
 
-    /// We remember the previous grid position solely for visual purposes.
-    pub old_pos: Option<Point3>,
+    /// The direction in which the blip moved last tick, if any.
+    pub old_move_dir: Option<Dir3>,
 
     /// Has this blip moved in the previous frame? If true, effects for
     /// entering block will be applied in the next tick
     pub moved: bool,
 
-    /// If true, blip will be removed in the next tick.
-    pub dead: bool,
+    /// Status. Used mostly for visual purposes. Blips marked as Dying will
+    /// be removed at the start of the next tick.
+    pub status: BlipStatus,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
@@ -273,7 +281,7 @@ impl Exec {
                 if invert {
                     debug!("removing blip {} at {:?}", blip_index, pos);
                     //blips.remove(blip_index);
-                    blips[blip_index].dead = true;
+                    blips[blip_index].status = BlipStatus::Dying;
                     blip_state[*output_index].blip_index = None;
                 }
 
@@ -284,9 +292,9 @@ impl Exec {
                 let blip = Blip {
                     kind,
                     pos: *pos,
-                    old_pos: None,
+                    old_move_dir: None,
                     moved: true, // apply effects for entering block in next frame
-                    dead: false,
+                    status: BlipStatus::Spawning,
                 };
                 blip_state[*output_index].blip_index = Some(blips.add(blip));
 
@@ -308,7 +316,7 @@ impl Exec {
         let mut remove_indices = Vec::new();
 
         for (blip_index, blip) in blips.iter() {
-            if blip.dead {
+            if blip.status == BlipStatus::Dying {
                 remove_indices.push(blip_index)
             }
         }
@@ -320,6 +328,10 @@ impl Exec {
         remove_indices.clear();
 
         for (blip_index, blip) in blips.iter_mut() {
+            if blip.status == BlipStatus::Spawning {
+                blip.status = BlipStatus::Existing;
+            }
+
             let block_index = block_ids.get(&blip.pos);
 
             // Don't consider blips that are to be removed in the current tick
@@ -369,7 +381,7 @@ impl Exec {
                     }
                 }
 
-                blips[remove_index].dead = true;
+                blips[remove_index].status = BlipStatus::Dying;
                 //blips.remove(remove_index);
             }
         }
@@ -394,7 +406,7 @@ impl Exec {
             let block_index = block_indices[blip.pos].unwrap();
             let blip_index_in_block = self.blip_state[block_index].blip_index;
 
-            if !blip.dead {
+            if blip.status != BlipStatus::Dying {
                 debug_assert_eq!(
                     blip_index_in_block,
                     Some(blip_index),
@@ -415,24 +427,29 @@ impl Exec {
         block_data: &VecOption<(Point3, PlacedBlock)>,
         wind_state: &[WindState],
     ) -> Option<Dir3> {
-        // To determine movement, check in flow of neighboring blocks
-        Dir3::ALL
-            .iter()
-            .find(|dir| {
-                // TODO: At some point, we'll need to precompute neighbor
-                //       indices.
+        // To determine if it is possible for the blip to move in a certain
+        // direction, we check the in flow of the neighboring block in that
+        // direction.
+        let can_move_to_dir = |dir: &Dir3| {
+            // TODO: At some point, we'll need to precompute neighbor
+            //       indices.
 
-                let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
-                let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
-                    wind_state[*neighbor_index].wind_in(dir.invert())
-                        && block_data[*neighbor_index].1.has_move_hole(dir.invert())
-                } else {
-                    false
-                };
+            let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
+            let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
+                wind_state[*neighbor_index].wind_in(dir.invert())
+                    && block_data[*neighbor_index].1.has_move_hole(dir.invert())
+            } else {
+                false
+            };
 
-                neighbor_in && placed_block.has_move_hole(**dir)
-            })
-            .cloned()
+            neighbor_in && placed_block.has_move_hole(*dir)
+        };
+
+        // Note that there might be multiple directions the blip can move in.
+        // If the blip already is moving, it will always prefer to keep moving
+        // in that direction. If that is not possible, it will try directions
+        // clockwise to its current direction. (TODO)
+        Dir3::ALL.iter().cloned().find(can_move_to_dir)
     }
 
     fn update_blip(
@@ -462,7 +479,7 @@ impl Exec {
                 );
 
                 // Disable interpolation for this blip
-                blip.old_pos = None;
+                blip.old_move_dir = None;
 
                 remove_indices.push(blip_index);
                 return;
@@ -488,10 +505,11 @@ impl Exec {
 
         let new_block_index = block_ids.get(&new_pos);
 
-        if let Some(Some(new_block_index)) = new_block_index {
-            // For visual purposes, we still remember the old position
-            blip.old_pos = Some(blip.pos);
+        // Remember the movement direction for the next tick and for visual
+        // purposes.
+        blip.old_move_dir = out_dir;
 
+        if let Some(Some(new_block_index)) = new_block_index {
             blip.pos = new_pos;
 
             if let Some(new_block_blip_index) = blip_state[*new_block_index].blip_index {
