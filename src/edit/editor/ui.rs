@@ -14,6 +14,7 @@ impl Editor {
             .always_auto_resize(true)
             .position([10.0, 10.0], imgui::Condition::FirstUseEver)
             .bg_alpha(BG_ALPHA)
+            .content_size([200.0, 0.0])
             .build(&ui, || {
                 imgui::TreeNode::new(ui, im_str!("Modes"))
                     .opened(true, imgui::Condition::FirstUseEver)
@@ -34,6 +35,12 @@ impl Editor {
     }
 
     fn ui_modes(&mut self, ui: &imgui::Ui) {
+        ui.columns(2, im_str!("ui_modes"), false);
+        ui.set_column_width(0, 50.0);
+
+        ui.text_disabled(&ImString::new(format!("{}", self.config.select_key)));
+        ui.next_column();
+
         let selected = match &self.mode {
             Mode::Select(_) => true,
             Mode::RectSelect { .. } => true,
@@ -51,6 +58,10 @@ impl Editor {
             );
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
+        ui.next_column();
+
+        ui.text_disabled(&ImString::new(format!("{}", self.config.pipe_tool_key)));
+        ui.next_column();
 
         let selected = match &self.mode {
             Mode::PipeTool { .. } => true,
@@ -61,33 +72,45 @@ impl Editor {
             self.action_pipe_tool_mode();
         }
         if ui.is_item_hovered() {
-            let text = format!("Switch to pipe placement tool.\n\nShortcut: {}", "TODO");
+            let text = format!(
+                "Switch to pipe placement tool.\n\nShortcut: {}",
+                self.config.pipe_tool_key
+            );
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
+
+        ui.columns(1, im_str!("ui_modes_end"), false);
     }
 
     fn ui_blocks(&mut self, ui: &imgui::Ui) {
+        ui.columns(2, im_str!("ui_blocks"), false);
+        ui.set_column_width(0, 50.0);
+
         let cur_block = match &self.mode {
             Mode::PlacePiece { piece, .. } => piece.get_singleton(),
             _ => None,
         };
 
         for (block_key, block) in self.config.block_keys.clone().iter() {
+            ui.text_disabled(&ImString::new(format!("{}", block_key)));
+            ui.next_column();
+
             let name = &ImString::new(block.name());
             let selected = cur_block
                 .as_ref()
                 .map_or(false, |(_, placed_block)| placed_block.block == *block);
             let selectable = imgui::Selectable::new(name).selected(selected);
-
             if selectable.build(ui) {
                 self.switch_to_place_block_mode(*block);
             }
-
             if ui.is_item_hovered() {
                 let text = format!("{}\n\nShortcut: {}", block.description(), block_key);
                 ui.tooltip(|| ui.text(&ImString::new(text)));
             }
+            ui.next_column();
         }
+
+        ui.columns(1, im_str!("ui_blocks_end"), false);
     }
 
     fn ui_actions(&mut self, ui: &imgui::Ui) {
