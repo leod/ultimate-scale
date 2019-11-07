@@ -34,7 +34,14 @@ impl Editor {
     }
 
     fn ui_modes(&mut self, ui: &imgui::Ui) {
-        if ui.button(im_str!("Select"), [BUTTON_W, BUTTON_H]) {
+        let selected = match &self.mode {
+            Mode::Select(_) => true,
+            Mode::RectSelect { .. } => true,
+            Mode::DragAndDrop { .. } => true,
+            _ => false,
+        };
+        let selectable = imgui::Selectable::new(im_str!("Select")).selected(selected);
+        if selectable.build(ui) {
             self.mode = Mode::Select(Vec::new());
         }
         if ui.is_item_hovered() {
@@ -44,7 +51,13 @@ impl Editor {
             );
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
-        if ui.button(im_str!("Pipe Tool"), [BUTTON_W, BUTTON_H]) {
+
+        let selected = match &self.mode {
+            Mode::PipeTool { .. } => true,
+            _ => false,
+        };
+        let selectable = imgui::Selectable::new(im_str!("Place pipes")).selected(selected);
+        if selectable.build(ui) {
             self.mode = Mode::new_pipe_tool();
         }
         if ui.is_item_hovered() {
