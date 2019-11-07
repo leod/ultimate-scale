@@ -2,9 +2,11 @@ pub mod anim;
 pub mod play;
 pub mod view;
 
+use std::iter;
+
 use log::debug;
 
-use crate::machine::grid::{Dir3, Grid3, Point3};
+use crate::machine::grid::{Axis3, Dir3, Grid3, Point3};
 use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 
@@ -448,8 +450,35 @@ impl Exec {
         // Note that there might be multiple directions the blip can move in.
         // If the blip already is moving, it will always prefer to keep moving
         // in that direction. If that is not possible, it will try directions
-        // clockwise to its current direction. (TODO)
-        Dir3::ALL.iter().cloned().find(can_move_to_dir)
+        // clockwise to its current direction.
+        if let Some(old_move_dir) = blip.old_move_dir {
+            let dirs = iter::once(old_move_dir);
+
+            if old_move_dir.0 == Axis3::X || old_move_dir.0 == Axis3::Y {
+                // Try staying in the XY plane
+                let dirs = dirs.chain(
+                    iter::successors(Some(old_move_dir), |dir| Some(dir.rotated_cw_xy()))
+                        .skip(1)
+                        .take(3),
+                );
+
+                let dirs = dirs.chain(iter::once(Dir3::Z_NEG));
+                let mut dirs = dirs.chain(iter::once(Dir3::Z_POS));
+
+                dirs.find(can_move_to_dir)
+            } else {
+                // Blip was moving up/down. No specific preference if returning
+                // to XY.
+                let mut dirs = dirs.chain(Dir3::ALL.iter().cloned());
+
+                dirs.find(can_move_to_dir)
+            }
+        } else {
+            // No specific directional preference
+            let mut dirs = Dir3::ALL.iter().cloned();
+
+            dirs.find(can_move_to_dir)
+        }
     }
 
     fn update_blip(
