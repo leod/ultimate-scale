@@ -65,7 +65,7 @@ impl Editor {
         Editor {
             config: config.clone(),
             machine,
-            mode: Mode::Select(Vec::new()),
+            mode: Mode::new_select(),
             clipboard: None,
             undo: VecDeque::new(),
             redo: Vec::new(),
@@ -171,6 +171,40 @@ impl Editor {
         let mut edit = None;
 
         self.mode = match self.mode.clone() {
+            Mode::Select {
+                selection,
+                dragged_mouse_pos: Some((block_pos, grid_pos)),
+            } if input_state.is_button_pressed(MouseButton::Left) => {
+                // User has clicked on a selected block. Activate drag and
+                // drop as soon as the mouse grid pos changes.
+                if self.mouse_grid_pos.map(|p| p != grid_pos).unwrap_or(false) {
+                    // Consider the case that we are selecting a block in layer 1
+                    // while the placement layer is at 0. Then the block would
+                    // immediately be dragged into layer 0, which is undesirable.
+                    // Thus, we calculate a `layer_offset` here, which is
+                    // subtracted from the piece z coords before placing.
+                    let layer_offset = block_pos.z - self.current_layer as isize;
+
+                    Mode::DragAndDrop {
+                        selection,
+                        center_pos: block_pos,
+                        rotation_xy: 0,
+                        layer_offset,
+                    }
+                } else {
+                    Mode::Select {
+                        selection,
+                        dragged_mouse_pos: Some((block_pos, grid_pos)),
+                    }
+                }
+            }
+            Mode::Select {
+                selection,
+                dragged_mouse_pos: Some(_),
+            } if !input_state.is_button_pressed(MouseButton::Left) => {
+                // Stop trying to go into drag and drop mode.
+                Mode::new_selection(selection)
+            }
             Mode::RectSelect {
                 existing_selection,
                 new_selection,
@@ -189,7 +223,7 @@ impl Editor {
                     }
                 }
 
-                Mode::Select(selection)
+                Mode::new_selection(selection)
             }
             Mode::RectSelect {
                 existing_selection,
@@ -235,7 +269,7 @@ impl Editor {
                 if input_state.is_button_pressed(MouseButton::Right) =>
             {
                 // Return to selection mode on right mouse click.
-                Mode::Select(selection)
+                Mode::new_selection(selection)
             }
             Mode::DragAndDrop {
                 selection,
@@ -268,10 +302,11 @@ impl Editor {
 
                     edit = Some(Edit::compose(remove_edit, place_edit));
 
-                    Mode::Select(new_selection)
+                    Mode::new_selection(new_selection)
                 } else {
-                    // Mouse not a grid position, Just return to selection mode
-                    Mode::Select(selection)
+                    // Mouse not at a grid position, Just return to selection
+                    // mode.
+                    Mode::new_selection(selection)
                 }
             }
             Mode::PipeTool {
@@ -504,7 +539,7 @@ impl Editor {
         modifiers: glutin::ModifiersState,
     ) {
         self.mode = match self.mode.clone() {
-            Mode::Select(selection)
+            Mode::Select { selection, .. }
                 if button == glutin::MouseButton::Left
                     && state == glutin::ElementState::Pressed =>
             {
@@ -591,7 +626,7 @@ impl Editor {
                 }
 
                 // Stay in selection mode.
-                Mode::Select(selection)
+                Mode::new_selection(selection)
             } else if modifiers.ctrl {
                 // Control: Extend/toggle block selection.
                 if selection.contains(&grid_pos) {
@@ -601,7 +636,7 @@ impl Editor {
                 }
 
                 // Stay in selection mode.
-                Mode::Select(selection)
+                Mode::new_selection(selection)
             } else {
                 // No modifier, but clicked on a block...
                 if !selection.contains(&grid_pos) {
@@ -610,18 +645,11 @@ impl Editor {
                     selection.push(grid_pos);
                 }
 
-                // Consider the case that we are selecting a block in layer 1
-                // while the placement layer is at 0. Then the block would
-                // immediately be dragged into layer 0, which is undesirable.
-                // Thus, we calculate a `layer_offset` here, which is
-                // subtracted from the piece z coords before placing.
-                let layer_offset = grid_pos.z - self.current_layer as isize;
-
-                Mode::DragAndDrop {
+                // Remember clicked mouse grid pos to allow switching to drag
+                // and drop mode as soon as the position changes.
+                Mode::Select {
                     selection,
-                    center_pos: grid_pos,
-                    rotation_xy: 0,
-                    layer_offset,
+                    dragged_mouse_pos: self.mouse_grid_pos.map(|p| (grid_pos, p)),
                 }
             }
         } else {

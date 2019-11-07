@@ -42,7 +42,7 @@ impl Editor {
         ui.next_column();
 
         let selected = match &self.mode {
-            Mode::Select(_) => true,
+            Mode::Select { .. } => true,
             Mode::RectSelect { .. } => true,
             Mode::DragAndDrop { .. } => true,
             _ => false,

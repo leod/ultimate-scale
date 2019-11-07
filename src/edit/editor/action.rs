@@ -18,7 +18,7 @@ impl Editor {
 
     pub fn action_cut(&mut self) {
         let edit = match &self.mode {
-            Mode::Select(selection) => {
+            Mode::Select { selection, .. } => {
                 self.clipboard = Some(Piece::new_from_selection(
                     &self.machine,
                     selection.iter().cloned(),
@@ -43,7 +43,7 @@ impl Editor {
 
     pub fn action_copy(&mut self) {
         match &self.mode {
-            Mode::Select(selection) => {
+            Mode::Select { selection, .. } => {
                 self.clipboard = Some(Piece::new_from_selection(
                     &self.machine,
                     selection.iter().cloned(),
@@ -67,7 +67,7 @@ impl Editor {
 
     pub fn action_delete(&mut self) {
         let edit = match &self.mode {
-            Mode::Select(selection) => {
+            Mode::Select { selection, .. } => {
                 // Note that `run_and_track_edit` will automatically clear the
                 // selection, corresponding to the mutated machine.
                 Some(Edit::SetBlocks(
@@ -102,7 +102,7 @@ impl Editor {
     }
 
     pub fn action_select_mode(&mut self) {
-        self.mode = Mode::Select(Vec::new());
+        self.mode = Mode::new_select();
     }
 
     pub fn action_pipe_tool_mode(&mut self) {
@@ -111,9 +111,9 @@ impl Editor {
 
     pub fn action_cancel(&mut self) {
         self.mode = match &self.mode {
-            Mode::DragAndDrop { selection, .. } => Mode::Select(selection.clone()),
+            Mode::DragAndDrop { selection, .. } => Mode::new_selection(selection.clone()),
             Mode::PipeTool { last_pos, .. } if last_pos.is_some() => Mode::new_pipe_tool(),
-            _ => Mode::Select(Vec::new()),
+            _ => Mode::new_select(),
         };
     }
 
@@ -125,7 +125,7 @@ impl Editor {
                 piece.rotate_cw_xy();
                 *offset = -piece.grid_center_xy();
             }
-            Mode::Select(selection) => {
+            Mode::Select { selection, .. } => {
                 edit = Some(Edit::RotateCWXY(selection.clone()));
             }
             Mode::DragAndDrop { rotation_xy, .. } => {
@@ -158,7 +158,7 @@ impl Editor {
                 piece.rotate_ccw_xy();
                 *offset = -piece.grid_center_xy();
             }
-            Mode::Select(selection) => {
+            Mode::Select { selection, .. } => {
                 edit = Some(Edit::RotateCCWXY(selection.clone()));
             }
             Mode::DragAndDrop { rotation_xy, .. } => {
