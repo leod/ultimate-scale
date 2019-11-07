@@ -42,7 +42,7 @@ impl Editor {
         );
 
         match &self.mode {
-            Mode::Select(selection) => {
+            Mode::Select { selection, .. } => {
                 self.render_selection(selection, false, out);
 
                 if let Some(mouse_block_pos) = self.mouse_block_pos {

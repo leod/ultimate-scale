@@ -13,7 +13,11 @@ pub enum Mode {
     /// For consistency, the selected positions must always contain a block.
     /// There must be no duplicate positions. The order corresponds to the
     /// selection order.
-    Select(Vec<grid::Point3>),
+    Select {
+        selection: Vec<grid::Point3>,
+
+        dragged_mouse_pos: Option<(grid::Point3, grid::Point3)>,
+    },
 
     /// Select blocks in the machine by a screen rectangle.
     RectSelect {
@@ -58,6 +62,17 @@ pub enum Mode {
 }
 
 impl Mode {
+    pub fn new_select() -> Self {
+        Self::new_selection(Vec::new())
+    }
+
+    pub fn new_selection(selection: Vec<grid::Point3>) -> Self {
+        Mode::Select {
+            selection,
+            dragged_mouse_pos: None,
+        }
+    }
+
     pub fn new_pipe_tool() -> Self {
         Self::new_pipe_tool_with_rotation(1)
     }
@@ -78,9 +93,15 @@ impl Mode {
     /// it from the selection.
     pub fn make_consistent_with_machine(self, machine: &Machine) -> Self {
         match self {
-            Mode::Select(mut selection) => {
+            Mode::Select {
+                mut selection,
+                dragged_mouse_pos,
+            } => {
                 selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
-                Mode::Select(selection)
+                Mode::Select {
+                    selection,
+                    dragged_mouse_pos,
+                }
             }
             Mode::RectSelect {
                 mut existing_selection,
@@ -108,7 +129,7 @@ impl Mode {
                 if !selection.contains(&center_pos) {
                     // If the center block is not selected anymore, let's just
                     // not bother with this.
-                    Mode::Select(selection)
+                    Mode::new_selection(selection)
                 } else {
                     Mode::DragAndDrop {
                         selection,
