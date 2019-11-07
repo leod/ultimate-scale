@@ -605,10 +605,11 @@ pub fn placed_block_transform(placed_block: &PlacedBlock) -> na::Matrix4<f32> {
     na::Matrix4::new_rotation(placed_block.angle_xy_radians() * na::Vector3::z())
 }
 
-pub fn render_machine(
-    machine: &Machine,
+pub fn render_machine<'a>(
+    machine: &'a Machine,
     tick_time: &TickTime,
     exec: Option<&Exec>,
+    filter: impl Fn(&'a grid::Point3) -> bool,
     out: &mut RenderLists,
 ) {
     let floor_size = na::Vector3::new(machine.size().x as f32, machine.size().y as f32, 1.0);
@@ -625,6 +626,10 @@ pub fn render_machine(
     );
 
     for (block_index, (block_pos, placed_block)) in machine.iter_blocks() {
+        if !filter(&block_pos) {
+            continue;
+        }
+
         let transform = placed_block_transform(&placed_block);
         let center = block_center(&block_pos);
 
