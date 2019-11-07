@@ -109,25 +109,27 @@ impl Editor {
                             &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
                             out,
                         );
-                    }
 
-                    if last_pos.is_none() {
-                        let placed_block = PlacedBlock {
-                            rotation_xy: *rotation_xy,
-                            block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
-                        };
-                        let block_center = render::machine::block_center(&mouse_grid_pos);
-                        let block_transform =
-                            render::machine::placed_block_transform(&placed_block);
-                        render::machine::render_block(
-                            &placed_block,
-                            &TickTime::zero(),
-                            &None,
-                            &block_center,
-                            &block_transform,
-                            0.8,
-                            out,
-                        );
+                        if last_pos.is_none()
+                            && self.machine.get_block_at_pos(&mouse_grid_pos).is_none()
+                        {
+                            let placed_block = PlacedBlock {
+                                rotation_xy: *rotation_xy,
+                                block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
+                            };
+                            let block_center = render::machine::block_center(&mouse_grid_pos);
+                            let block_transform =
+                                render::machine::placed_block_transform(&placed_block);
+                            render::machine::render_block(
+                                &placed_block,
+                                &TickTime::zero(),
+                                &None,
+                                &block_center,
+                                &block_transform,
+                                0.8,
+                                out,
+                            );
+                        }
                     }
                 }
 
