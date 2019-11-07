@@ -105,6 +105,10 @@ impl Editor {
         self.mode = Mode::Select(Vec::new());
     }
 
+    pub fn action_pipe_tool_mode(&mut self) {
+        self.mode = Mode::new_pipe_tool();
+    }
+
     pub fn action_cancel(&mut self) {
         self.mode = match &self.mode {
             Mode::DragAndDrop { selection, .. } => Mode::Select(selection.clone()),

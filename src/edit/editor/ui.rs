@@ -42,7 +42,7 @@ impl Editor {
         };
         let selectable = imgui::Selectable::new(im_str!("Select")).selected(selected);
         if selectable.build(ui) {
-            self.mode = Mode::Select(Vec::new());
+            self.action_select_mode();
         }
         if ui.is_item_hovered() {
             let text = format!(
@@ -58,7 +58,7 @@ impl Editor {
         };
         let selectable = imgui::Selectable::new(im_str!("Place pipes")).selected(selected);
         if selectable.build(ui) {
-            self.mode = Mode::new_pipe_tool();
+            self.action_pipe_tool_mode();
         }
         if ui.is_item_hovered() {
             let text = format!("Switch to pipe placement tool.\n\nShortcut: {}", "TODO");

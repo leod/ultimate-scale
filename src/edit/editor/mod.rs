@@ -446,6 +446,8 @@ impl Editor {
             self.action_layer_down();
         } else if key == self.config.select_key {
             self.action_select_mode();
+        } else if key == self.config.pipe_tool_key {
+            self.action_pipe_tool_mode();
         } else if key == self.config.cancel_key {
             self.action_cancel();
         } else if key == self.config.cut_key {
