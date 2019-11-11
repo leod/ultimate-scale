@@ -328,8 +328,17 @@ impl Exec {
                 *activated = None;
             }
             Block::Output {
-                ref mut activated, ..
+                ref mut outputs,
+                ref mut activated,
+                ..
             } => {
+                // Here, the check if the `activated` blip matches the expected
+                // output has already been performed in
+                // `update_block_blip_state` in the previous tick.
+                if activated.is_some() {
+                    outputs.pop();
+                }
+
                 *activated = None;
             }
             _ => (),
@@ -781,26 +790,32 @@ impl Exec {
         for (_, (_, block)) in block_data.iter_mut() {
             if let Block::Output {
                 ref mut outputs,
-                ref mut activated,
+                ref activated,
+                failed: ref mut output_failed,
                 ..
             } = block.block
             {
                 // The last element of `outputs` is the next expected output.
-                match (outputs.last().copied(), activated) {
-                    (Some(expected_kind), Some(activated_kind)) => {
-                        outputs.pop();
+                // Note that the last element will be popped at the start of
+                // the next tick in `update_block`. This is delayed here so
+                // that visualization matches up better.
+                let expected = outputs.last().copied();
 
-                        failed = failed || (expected_kind != *activated_kind);
-                        completed = completed && outputs.is_empty();
+                let (block_failed, block_completed) = match (expected, activated) {
+                    (Some(expected), Some(activated)) => {
+                        (expected != *activated, outputs.len() == 1)
                     }
-                    (Some(_), None) => {
-                        completed = false;
-                    }
-                    (None, Some(_)) => {
-                        failed = true;
-                    }
-                    (None, None) => (),
+                    (Some(_), None) => (false, false),
+                    (None, Some(_)) => (true, false),
+                    (None, None) => (false, true),
+                };
+
+                if block_failed {
+                    *output_failed = true;
                 }
+
+                failed = failed || block_failed;
+                completed = completed && block_completed;
             }
         }
 

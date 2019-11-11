@@ -200,19 +200,18 @@ impl Play {
                 // useful to see why a level was failed.
                 let progress_limit = 0.5;
 
+                let mut new_time = time.clone();
+
                 if time.tick_progress() < progress_limit {
-                    let mut new_time = time.clone();
                     new_time.next_tick_timer.set_period(tick_period);
                     new_time.next_tick_timer += dt;
-
-                    if new_time.tick_progress() > progress_limit {
-                        new_time.next_tick_timer.set_progress(progress_limit);
-                    }
-
-                    Some(Status::Finished { time: new_time })
-                } else {
-                    Some(Status::Finished { time: time.clone() })
                 }
+
+                if new_time.tick_progress() > progress_limit {
+                    new_time.next_tick_timer.set_progress(progress_limit);
+                }
+
+                Some(Status::Finished { time: new_time })
             }
             None if play_pause_pressed => {
                 info!("Starting exec");

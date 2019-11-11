@@ -89,6 +89,10 @@ pub enum Block {
         outputs: Vec<BlipKind>,
         #[serde(skip)]
         activated: Option<BlipKind>,
+
+        /// Only for visualization, store if this output failed.
+        #[serde(skip)]
+        failed: bool,
     },
 }
 
@@ -400,6 +404,7 @@ impl Machine {
                         index,
                         outputs: Vec::new(),
                         activated: None,
+                        failed: false,
                     },
                 }),
             );
