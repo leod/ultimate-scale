@@ -626,7 +626,12 @@ pub fn render_block(
                 &mut out.solid,
             );
         }
-        Block::Output { ref outputs, .. } => {
+        Block::Output {
+            ref outputs,
+            failed,
+            activated,
+            ..
+        } => {
             render_half_pipe(
                 center,
                 transform,
@@ -642,13 +647,27 @@ pub fn render_block(
                 &mut out.solid,
             );
 
-            let expected_next_color = block_color(
-                &outputs
-                    .last()
-                    .copied()
-                    .map_or(na::Vector3::new(0.8, 0.8, 0.8), blip_color),
-                alpha,
-            );
+            // Foolish stuff to transition to the next expected color mid-tick
+            let expected_kind = if activated.is_none() || tick_time.tick_progress() < 0.6 {
+                outputs.last().copied()
+            } else {
+                if outputs.len() > 1 {
+                    outputs.get(outputs.len() - 2).copied()
+                } else {
+                    None
+                }
+            };
+
+            let completed =
+                (outputs.len() == 1 && activated == expected_kind) || outputs.is_empty();
+
+            let status_color = if failed {
+                na::Vector3::new(0.9, 0.0, 0.0)
+            } else if completed {
+                na::Vector3::new(0.8, 0.8, 0.8)
+            } else {
+                na::Vector3::new(0.3, 0.3, 0.3)
+            };
 
             let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));
             let floor_scaling =
@@ -657,9 +676,14 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * floor_translation * transform * floor_scaling,
-                    color: na::Vector4::new(0.3, 0.3, 0.3, alpha),
+                    color: block_color(&status_color, alpha),
                     ..Default::default()
                 },
+            );
+
+            let expected_next_color = block_color(
+                &expected_kind.map_or(na::Vector3::new(0.8, 0.8, 0.8), blip_color),
+                alpha,
             );
 
             let thingy_translation =
