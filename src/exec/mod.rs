@@ -4,7 +4,7 @@ pub mod view;
 
 use std::iter;
 
-use log::debug;
+use log::{debug, info};
 use rand::Rng;
 
 use crate::machine::grid::{Axis3, Dir3, Grid3, Point3};
@@ -62,17 +62,19 @@ pub struct BlipState {
     pub blip_index: Option<BlipIndex>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum LevelStatus {
     Running,
     Completed,
-    Failed(String),
+    Failed,
 }
 
 pub struct Exec {
     cur_tick: TickNum,
 
     machine: Machine,
+
+    level_status: LevelStatus,
 
     blips: VecOption<Blip>,
 
@@ -112,6 +114,7 @@ impl Exec {
         Exec {
             cur_tick: 0,
             machine,
+            level_status: LevelStatus::Running,
             blips: VecOption::new(),
             wind_state,
             old_wind_state,
@@ -122,6 +125,10 @@ impl Exec {
 
     pub fn machine(&self) -> &Machine {
         &self.machine
+    }
+
+    pub fn level_status(&self) -> LevelStatus {
+        self.level_status
     }
 
     pub fn wind_state(&self) -> &[WindState] {
@@ -187,6 +194,9 @@ impl Exec {
                 &mut self.blips,
             );
         }
+
+        // Check machine output, comparing to the level specification
+        self.level_status = Self::check_output(&mut self.machine.blocks.data);
 
         self.check_consistency();
 
@@ -313,6 +323,11 @@ impl Exec {
                 *activated = None;
             }
             Block::BlipDuplicator {
+                ref mut activated, ..
+            } => {
+                *activated = None;
+            }
+            Block::Output {
                 ref mut activated, ..
             } => {
                 *activated = None;
@@ -658,12 +673,9 @@ impl Exec {
                 true
             }
             Block::Output {
-                ref mut outputs, ..
+                ref mut activated, ..
             } => {
-                // The last element of `outputs` is the next expected output.
-                if let Some(expected_kind) = outputs.last().copied() {
-                    outputs.pop();
-                }
+                *activated = Some(blip.kind);
 
                 // Remove blip
                 true
@@ -759,6 +771,47 @@ impl Exec {
                 }
             }
             _ => {}
+        }
+    }
+
+    fn check_output(block_data: &mut VecOption<(Point3, PlacedBlock)>) -> LevelStatus {
+        let mut failed = false;
+        let mut completed = true;
+
+        for (_, (_, block)) in block_data.iter_mut() {
+            if let Block::Output {
+                ref mut outputs,
+                ref mut activated,
+                ..
+            } = block.block
+            {
+                // The last element of `outputs` is the next expected output.
+                match (outputs.last().copied(), activated) {
+                    (Some(expected_kind), Some(activated_kind)) => {
+                        outputs.pop();
+
+                        failed = failed || (expected_kind != *activated_kind);
+                        completed = completed && outputs.is_empty();
+                    }
+                    (Some(_), None) => {
+                        completed = false;
+                    }
+                    (None, Some(_)) => {
+                        failed = true;
+                    }
+                    (None, None) => (),
+                }
+            }
+        }
+
+        if failed {
+            info!("Level failed");
+            LevelStatus::Failed
+        } else if completed {
+            info!("Level completed");
+            LevelStatus::Completed
+        } else {
+            LevelStatus::Running
         }
     }
 

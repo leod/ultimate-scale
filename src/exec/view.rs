@@ -6,7 +6,7 @@ use glium::glutin::{self, WindowEvent};
 
 use crate::edit::pick;
 use crate::exec::anim::{WindAnimState, WindLife};
-use crate::exec::{BlipStatus, Exec, TickTime};
+use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
@@ -57,10 +57,12 @@ impl ExecView {
         );
     }
 
-    pub fn run_tick(&mut self) {
+    pub fn run_tick(&mut self) -> bool {
         profile!("tick");
 
         self.exec.update();
+
+        self.exec.level_status() != LevelStatus::Running
     }
 
     pub fn on_event(&mut self, event: &WindowEvent) {

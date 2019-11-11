@@ -239,11 +239,19 @@ impl Game {
 
                     if let play::Status::Playing {
                         num_ticks_since_last_update,
+                        time,
                         ..
                     } = s
                     {
                         for _ in 0..*num_ticks_since_last_update {
-                            exec.run_tick();
+                            // Execution may want to pause the game if a level
+                            // has been completed or failed.
+                            let pause = exec.run_tick();
+
+                            if pause {
+                                *s = play::Status::Paused { time: time.clone() };
+                                break;
+                            }
                         }
                     }
                 });

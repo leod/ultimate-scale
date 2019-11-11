@@ -87,6 +87,8 @@ pub enum Block {
         index: usize,
         #[serde(skip)]
         outputs: Vec<BlipKind>,
+        #[serde(skip)]
+        activated: Option<BlipKind>,
     },
 }
 
@@ -397,6 +399,7 @@ impl Machine {
                     block: Block::Output {
                         index,
                         outputs: Vec::new(),
+                        activated: None,
                     },
                 }),
             );
