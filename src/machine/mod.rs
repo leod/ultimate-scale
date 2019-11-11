@@ -81,7 +81,7 @@ pub enum Block {
     },
     Output {
         index: usize,
-        expected_next_blip: Option<BlipKind>,
+        expected_next_kind: Option<BlipKind>,
     },
 }
 
@@ -195,7 +195,7 @@ impl Block {
             Block::Solid => true,
             Block::BlipWindSource { .. } => true,
             Block::Input { .. } => dir == Dir3::X_POS,
-            Block::Output { .. } => dir == Dir3::X_NEG,
+            Block::Output { .. } => dir != Dir3::Z_NEG,
         }
     }
 
@@ -215,6 +215,7 @@ impl Block {
                 // No wind out in the direction of our activating button
                 dir != Dir3::Y_NEG
             }
+            Block::Output { .. } => false,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -372,16 +373,31 @@ impl Machine {
             level: Some(level.clone()),
         };
 
-        let y_start = level.size.y / 2 - level.spec.input_dim() as isize / 2;
+        let input_y_start = level.size.y / 2 - level.spec.input_dim() as isize / 2;
 
         for index in 0..level.spec.input_dim() {
             machine.set_block_at_pos(
-                &Point3::new(0, y_start + index as isize, 0),
+                &Point3::new(0, input_y_start + index as isize, 0),
                 Some(PlacedBlock {
                     rotation_xy: 0,
                     block: Block::Input {
                         index,
                         activated: None,
+                    },
+                }),
+            );
+        }
+
+        let output_y_start = level.size.y / 2 - level.spec.output_dim() as isize / 2;
+
+        for index in 0..level.spec.output_dim() {
+            machine.set_block_at_pos(
+                &Point3::new(level.size.x - 1, output_y_start + index as isize, 0),
+                Some(PlacedBlock {
+                    rotation_xy: 0,
+                    block: Block::Output {
+                        index,
+                        expected_next_kind: None,
                     },
                 }),
             );
