@@ -589,7 +589,7 @@ pub fn render_block(
                     0.0
                 };
             let rotation = na::Matrix4::from_euler_angles(angle, 0.0, 0.0);
-            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.7, 0.7));
+            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.6, 0.6));
 
             let color = block_color(
                 &active_blip_kind.map_or(na::Vector3::new(0.3, 0.3, 0.3), |kind| blip_color(kind)),
