@@ -257,7 +257,7 @@ impl Exec {
                 activated,
                 ..
             } => {
-                let active = activated.map_or(false, |input| match input {
+                let _active = activated.map_or(false, |input| match input {
                     level::Input::Blip(_) => true,
                 });
 

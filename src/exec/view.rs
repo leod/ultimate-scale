@@ -62,6 +62,7 @@ impl ExecView {
 
         self.exec.update();
 
+        // Is execution finished? `Game` will update `play::Status` accordingly.
         self.exec.level_status() != LevelStatus::Running
     }
 

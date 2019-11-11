@@ -46,6 +46,11 @@ impl Timer {
         self.period = new_period;
     }
 
+    /// Change the progress by percent, updating the accumulated time.
+    pub fn set_progress(&mut self, new_progress: f32) {
+        self.accum = secs_to_duration(new_progress * self.period.as_fractional_secs() as f32);
+    }
+
     /// Has the timer accumulated enough time for one period?
     /// If yes, subtract the period from the timer.
     pub fn trigger(&mut self) -> bool {
@@ -89,7 +94,11 @@ impl Timer {
 
     /// Percentual progress until the next period.
     pub fn progress(&self) -> f32 {
-        (self.accum.as_fractional_secs() / self.period.as_fractional_secs()) as f32
+        if self.period == Duration::from_secs(0) {
+            1.0
+        } else {
+            (self.accum.as_fractional_secs() / self.period.as_fractional_secs()) as f32
+        }
     }
 }
 
