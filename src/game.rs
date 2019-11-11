@@ -239,7 +239,7 @@ impl Game {
 
                     if let play::Status::Playing {
                         num_ticks_since_last_update,
-                        time,
+                        ref mut time,
                         ..
                     } = s
                     {
@@ -249,6 +249,10 @@ impl Game {
                             let finished = exec.run_tick();
 
                             if finished {
+                                // For showing finished machine state, always
+                                // set tick timer to zero.
+                                //time.next_tick_timer.reset();
+
                                 *s = play::Status::Finished { time: time.clone() };
                                 break;
                             }

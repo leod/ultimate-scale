@@ -191,6 +191,29 @@ impl Play {
                 info!("Stopping exec");
                 None
             }
+            Some(Status::Finished { time }) => {
+                // Advance tick timer even when finished, so that we see the
+                // interpolation into the last state. Tick timer is only
+                // advanced within the current tick though.
+                // We only advance through the tick partially, so that the
+                // last blips are still seen at the stop. This is especially
+                // useful to see why a level was failed.
+                let progress_limit = 0.5;
+
+                if time.tick_progress() < progress_limit {
+                    let mut new_time = time.clone();
+                    new_time.next_tick_timer.set_period(tick_period);
+                    new_time.next_tick_timer += dt;
+
+                    if new_time.tick_progress() > progress_limit {
+                        new_time.next_tick_timer.set_progress(progress_limit);
+                    }
+
+                    Some(Status::Finished { time: new_time })
+                } else {
+                    Some(Status::Finished { time: time.clone() })
+                }
+            }
             None if play_pause_pressed => {
                 info!("Starting exec");
                 Some(Status::Playing {
