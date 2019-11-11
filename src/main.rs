@@ -118,7 +118,7 @@ fn main() {
         saved_machine.into_machine()
     } else {
         let grid_size = grid::Vector3::new(30, 30, 4);
-        Machine::new(grid_size)
+        Machine::new_sandbox(grid_size)
     };
 
     let mut input_state = InputState::new();

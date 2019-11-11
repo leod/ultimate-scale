@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::util::vec_option::VecOption;
 
 use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
+use level::Level;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum BlipKind {
@@ -304,10 +305,15 @@ pub struct Blocks {
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Machine {
     pub blocks: Blocks,
+    pub level: Option<Level>,
 }
 
 impl Machine {
-    pub fn from_block_data(size: &Vector3, slice: &[(Point3, PlacedBlock)]) -> Self {
+    pub fn new_from_block_data(
+        size: &Vector3,
+        slice: &[(Point3, PlacedBlock)],
+        level: &Option<Level>,
+    ) -> Self {
         let mut indices = Grid3::new(*size);
         let mut data = VecOption::new();
 
@@ -317,24 +323,29 @@ impl Machine {
 
         let blocks = Blocks { indices, data };
 
-        Machine { blocks }
-    }
-
-    pub fn empty() -> Self {
-        Self {
-            blocks: Blocks {
-                indices: Grid3::new(Vector3::new(0, 0, 0)),
-                data: VecOption::new(),
-            },
+        Machine {
+            blocks,
+            level: level.clone(),
         }
     }
 
-    pub fn new(size: Vector3) -> Self {
+    pub fn new_sandbox(size: Vector3) -> Self {
         Self {
             blocks: Blocks {
                 indices: Grid3::new(size),
                 data: VecOption::new(),
             },
+            level: None,
+        }
+    }
+
+    pub fn new_from_level(size: Vector3, level: Level) -> Self {
+        Self {
+            blocks: Blocks {
+                indices: Grid3::new(size),
+                data: VecOption::new(),
+            },
+            level: Some(level),
         }
     }
 
@@ -440,6 +451,7 @@ impl Machine {
 pub struct SavedMachine {
     pub size: Vector3,
     pub block_data: Vec<(Point3, PlacedBlock)>,
+    pub level: Option<Level>,
 }
 
 impl SavedMachine {
@@ -454,11 +466,12 @@ impl SavedMachine {
         Self {
             size: machine.size(),
             block_data,
+            level: machine.level.clone(),
         }
     }
 
     pub fn into_machine(self) -> Machine {
         // TODO: Make use of moving
-        Machine::from_block_data(&self.size, &self.block_data)
+        Machine::new_from_block_data(&self.size, &self.block_data, &self.level)
     }
 }
