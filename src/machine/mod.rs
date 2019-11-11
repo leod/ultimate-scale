@@ -51,7 +51,7 @@ pub type TickNum = usize;
 /// example, in the definition of `Block::BlipWindSource`, the input direction
 /// is hardcoded as `Dir3::Y_NEG`. On a higher level, `PlacedBlock` allows
 /// rotating a `Block` in the X-Y plane.
-#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     Pipe(Dir3, Dir3),
     PipeSplitXY {
@@ -77,6 +77,7 @@ pub enum Block {
     Solid,
     Input {
         index: usize,
+        inputs: Vec<Option<level::Input>>,
         activated: Option<level::Input>,
     },
     Output {
@@ -159,23 +160,16 @@ impl Block {
         }
     }
 
-    pub fn with_kind(&self, kind: BlipKind) -> Block {
-        match *self {
-            Block::BlipSpawn {
-                kind: _,
-                num_spawns,
-                activated,
-            } => Block::BlipSpawn {
-                kind,
-                num_spawns,
-                activated,
-            },
-            Block::BlipDuplicator { kind: _, activated } => Block::BlipDuplicator {
-                kind: Some(kind),
-                activated,
-            },
-            x => x,
+    pub fn with_kind(&self, new_kind: BlipKind) -> Block {
+        let mut block = self.clone();
+
+        match block {
+            Block::BlipSpawn { ref mut kind, .. } => *kind = new_kind,
+            Block::BlipDuplicator { ref mut kind, .. } => *kind = Some(new_kind),
+            _ => (),
         }
+
+        block
     }
 
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
@@ -382,6 +376,7 @@ impl Machine {
                     rotation_xy: 0,
                     block: Block::Input {
                         index,
+                        inputs: Vec::new(),
                         activated: None,
                     },
                 }),

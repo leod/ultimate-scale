@@ -73,7 +73,6 @@ pub struct Exec {
     cur_tick: TickNum,
 
     machine: Machine,
-    inputs_outputs: Option<level::InputsOutputs>,
 
     blips: VecOption<Blip>,
 
@@ -101,6 +100,10 @@ impl Exec {
             .as_ref()
             .map(|level| level.spec.generate_inputs_outputs(rng));
 
+        if let Some(inputs_outputs) = inputs_outputs {
+            Self::initialize_inputs_outputs(inputs_outputs, &mut machine);
+        }
+
         let wind_state = Self::initial_block_state(&machine);
         let old_wind_state = wind_state.clone();
         let blip_state = Self::initial_block_state(&machine);
@@ -109,7 +112,6 @@ impl Exec {
         Exec {
             cur_tick: 0,
             machine,
-            inputs_outputs,
             blips: VecOption::new(),
             wind_state,
             old_wind_state,
@@ -143,11 +145,6 @@ impl Exec {
         for index in 0..self.blip_state.len() {
             // The new blip state is written completely from scratch using the blips
             self.blip_state[index].blip_index = None;
-        }
-
-        // Feed the machine with input (if not in sandbox mode)
-        if let Some(inputs_outputs) = self.inputs_outputs.as_mut() {
-            Self::update_input(inputs_outputs, &mut self.machine.blocks.data);
         }
 
         // Spawn and move wind
@@ -194,38 +191,6 @@ impl Exec {
         self.check_consistency();
 
         self.cur_tick += 1;
-    }
-
-    fn update_input(
-        inputs_outputs: &mut level::InputsOutputs,
-        block_data: &mut VecOption<(Point3, PlacedBlock)>,
-    ) {
-        if let Some(input) = inputs_outputs.pop_input() {
-            for (i, input) in input.into_iter().enumerate() {
-                for (_, (_, block)) in block_data.iter_mut() {
-                    match &mut block.block {
-                        Block::Input { index, activated } if *index == i => {
-                            *activated = input.clone();
-
-                            // Block::Input index is assumed to be unique
-                            break;
-                        }
-                        _ => (),
-                    }
-                }
-            }
-        } else {
-            // Deactivate all inputs if we run out
-            for (_, (_, block)) in block_data.iter_mut() {
-                if let Block::Input {
-                    index: _,
-                    activated,
-                } = &mut block.block
-                {
-                    *activated = None;
-                }
-            }
-        }
     }
 
     fn update_block_wind_state(
@@ -280,10 +245,20 @@ impl Exec {
             Block::Input {
                 index: _,
                 activated,
+                ..
             } => {
                 let active = activated.map_or(false, |input| match input {
                     level::Input::Blip(_) => true,
                 });
+
+                // For now, we'll set Input blocks to always spawn wind.
+                // For the future, it might be interesting to spawn wind only
+                // when active -- this will also allow interpreting the Option
+                // in InputsOutputs. Note however, that currently this would
+                // lead to a gap inbetween each spawned blip, since it takes
+                // some time for the wind to reach from the Input center to the
+                // spawned blip.
+                let active = true;
 
                 let neighbor_pos = *block_pos + dir_x_pos.to_vector();
                 let neighbor_index = block_ids.get(&neighbor_pos);
@@ -751,20 +726,33 @@ impl Exec {
             }
             Block::Input {
                 index: _,
-                activated,
-            } => match activated {
-                None => {}
-                Some(level::Input::Blip(kind)) => {
-                    Self::try_spawn_blip(
-                        true,
-                        kind,
-                        &(*block_pos + dir_x_pos.to_vector()),
-                        block_ids,
-                        blip_state,
-                        blips,
-                    );
+                ref mut inputs,
+                ref mut activated,
+            } => {
+                // The last element of `inputs` is the next input.
+                if let Some(input) = inputs.last().copied() {
+                    let did_activate = match input {
+                        Some(level::Input::Blip(kind)) => Self::try_spawn_blip(
+                            false,
+                            kind,
+                            &(*block_pos + dir_x_pos.to_vector()),
+                            block_ids,
+                            blip_state,
+                            blips,
+                        ),
+                        None => true,
+                    };
+
+                    if did_activate {
+                        *activated = input;
+                        inputs.pop();
+                    } else {
+                        *activated = None;
+                    }
+                } else {
+                    *activated = None;
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -776,5 +764,23 @@ impl Exec {
         assert!(machine.is_contiguous());
 
         vec![Default::default(); machine.num_blocks()]
+    }
+
+    fn initialize_inputs_outputs(inputs_outputs: level::InputsOutputs, machine: &mut Machine) {
+        for (i, input_spec) in inputs_outputs.inputs.into_iter().enumerate() {
+            for (_, (_, block)) in machine.blocks.data.iter_mut() {
+                match &mut block.block {
+                    Block::Input { index, inputs, .. } if *index == i => {
+                        // We reverse the inputs so that we can use Vec::pop
+                        // during execution to get the next input.
+                        *inputs = input_spec.into_iter().rev().collect();
+
+                        // Block::Input index is assumed to be unique
+                        break;
+                    }
+                    _ => (),
+                }
+            }
+        }
     }
 }

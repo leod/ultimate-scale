@@ -25,7 +25,7 @@ use machine::level::{Level, Spec};
 use machine::{grid, Machine, SavedMachine};
 
 fn main() {
-    simple_logger::init_with_level(log::Level::Info).unwrap();
+    simple_logger::init_with_level(log::Level::Debug).unwrap();
 
     let args = App::new("Ultimate Scale")
         .version("0.0.1")
