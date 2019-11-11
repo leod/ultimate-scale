@@ -65,6 +65,12 @@ pub enum Block {
         activated: bool,
     },
     Solid,
+    Input {
+        index: usize,
+    },
+    Output {
+        index: usize,
+    },
 }
 
 impl Block {
@@ -97,6 +103,8 @@ impl Block {
             Block::BlipDuplicator { kind: None, .. } => "Blip copier".to_string(),
             Block::BlipWindSource { .. } => "Blipped wind spawn".to_string(),
             Block::Solid => "Solid".to_string(),
+            Block::Input { .. } => "Input".to_string(),
+            Block::Output { .. } => "Output".to_string(),
         }
     }
 
@@ -126,6 +134,8 @@ impl Block {
             }
             Block::BlipWindSource { .. } => "Spawns one thrust of wind when activated by a blip.",
             Block::Solid => "Eats blips.",
+            Block::Input { .. } => "Input of the machine.",
+            Block::Output { .. } => "Output of the machine.",
         }
     }
 
@@ -172,6 +182,8 @@ impl Block {
             Block::BlipDuplicator { .. } => true,
             Block::Solid => true,
             Block::BlipWindSource { .. } => true,
+            Block::Input { .. } => dir == Dir3::Y_POS,
+            Block::Output { .. } => dir == Dir3::Y_NEG,
         }
     }
 
@@ -339,14 +351,28 @@ impl Machine {
         }
     }
 
-    pub fn new_from_level(size: Vector3, level: Level) -> Self {
-        Self {
+    pub fn new_from_level(level: Level) -> Self {
+        let mut machine = Self {
             blocks: Blocks {
-                indices: Grid3::new(size),
+                indices: Grid3::new(level.size),
                 data: VecOption::new(),
             },
-            level: Some(level),
+            level: Some(level.clone()),
+        };
+
+        let y_start = level.size.y / 2 - level.spec.input_dim() as isize / 2;
+
+        for index in 0..level.spec.input_dim() {
+            machine.set_block_at_pos(
+                &Point3::new(0, y_start + index as isize, 0),
+                Some(PlacedBlock {
+                    rotation_xy: 1,
+                    block: Block::Input { index },
+                }),
+            );
         }
+
+        machine
     }
 
     pub fn size(&self) -> Vector3 {

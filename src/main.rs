@@ -21,6 +21,7 @@ use log::info;
 
 use game::Game;
 use input_state::InputState;
+use machine::level::{Level, Spec};
 use machine::{grid, Machine, SavedMachine};
 
 fn main() {
@@ -110,12 +111,19 @@ fn main() {
     let mut imgui_renderer = imgui_glium_renderer::Renderer::init(&mut imgui, &display)
         .expect("Failed to initialize imgui_glium_renderer");
 
+    let level = Some(Level {
+        size: grid::Vector3::new(30, 30, 4),
+        spec: Spec::Id { dim: 3 },
+    });
+
     let initial_machine = if let Some(file) = args.value_of("file") {
         info!("Loading machine from file `{}'", file);
         let file = File::open(file).unwrap();
         let reader = BufReader::new(file);
         let saved_machine: SavedMachine = serde_json::from_reader(reader).unwrap();
         saved_machine.into_machine()
+    } else if let Some(level) = level {
+        Machine::new_from_level(level)
     } else {
         let grid_size = grid::Vector3::new(30, 30, 4);
         Machine::new_sandbox(grid_size)
