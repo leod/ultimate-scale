@@ -392,7 +392,7 @@ pub fn render_block(
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.7, 0.8, 0.7));
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.6, 0.8, 0.6));
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
@@ -403,7 +403,7 @@ pub fn render_block(
             );
 
             let input_dir = Dir2::Y_NEG;
-            let input_size = 0.6;
+            let input_size = 0.4;
 
             let input_transform = translation
                 * transform
@@ -575,15 +575,32 @@ pub fn render_block(
         }
         Block::Input { .. } => {
             let angle = std::f32::consts::PI / 4.0;
-            let rotation = na::Matrix4::from_euler_angles(angle, angle, angle);
+            let rotation = na::Matrix4::from_euler_angles(0.0, angle, 0.0);
+            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.7, 1.0, 0.7));
 
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: translation * transform * rotation,
+                    transform: translation * transform * rotation * scaling,
                     color: na::Vector4::new(0.3, 0.3, 0.3, alpha),
                     ..Default::default()
                 },
+            );
+
+            let is_active = wind_anim_state
+                .as_ref()
+                .map_or(false, |anim| anim.wind_in(Dir3::Y_POS).is_alive());
+            let bridge_length =
+                bridge_length_animation(0.35, 0.75, is_active, tick_time.tick_progress());
+
+            render_bridge(
+                Dir2::Y_POS,
+                bridge_length,
+                0.3,
+                center,
+                transform,
+                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                &mut out.solid,
             );
         }
         Block::Output { .. } => {
