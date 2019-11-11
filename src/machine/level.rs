@@ -1,6 +1,10 @@
-use crate::machine::BlipKind;
+use serde::{Deserialize, Serialize};
 
+use crate::machine::{grid, BlipKind};
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Level {
+    pub size: grid::Vector3,
     pub spec: Spec,
 }
 
@@ -11,6 +15,7 @@ pub struct InputOutput {
     pub output: Vec<Vec<BlipKind>>,
 }
 
+#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Spec {
     Id { dim: usize },
 }
