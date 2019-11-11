@@ -239,11 +239,23 @@ impl Game {
 
                     if let play::Status::Playing {
                         num_ticks_since_last_update,
+                        ref mut time,
                         ..
                     } = s
                     {
                         for _ in 0..*num_ticks_since_last_update {
-                            exec.run_tick();
+                            // Execution may want to pause the game if a level
+                            // has been completed or failed.
+                            let finished = exec.run_tick();
+
+                            if finished {
+                                // For showing finished machine state, always
+                                // set tick timer to zero.
+                                //time.next_tick_timer.reset();
+
+                                *s = play::Status::Finished { time: time.clone() };
+                                break;
+                            }
                         }
                     }
                 });

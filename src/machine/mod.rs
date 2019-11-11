@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::util::vec_option::VecOption;
 
 use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
+use level::Level;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum BlipKind {
@@ -40,7 +41,17 @@ impl BlipKind {
 
 pub type TickNum = usize;
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
+/// Definition of a block in the machine.
+///
+/// This definition is somewhat "dirty" in that it also contains state that is
+/// only needed at execution time -- e.g. the `activated` fields in some of the
+/// blocks. Consider this an artifact of us not using an ECS.
+///
+/// Note also that most of the `Block` variants are not rotated in space. For
+/// example, in the definition of `Block::BlipWindSource`, the input direction
+/// is hardcoded as `Dir3::Y_NEG`. On a higher level, `PlacedBlock` allows
+/// rotating a `Block` in the X-Y plane.
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     Pipe(Dir3, Dir3),
     PipeSplitXY {
@@ -52,18 +63,37 @@ pub enum Block {
     BlipSpawn {
         kind: BlipKind,
         num_spawns: Option<usize>,
-        #[serde(default)]
+        #[serde(skip)]
         activated: Option<TickNum>,
     },
     BlipDuplicator {
-        #[serde(default)]
         kind: Option<BlipKind>,
+        #[serde(skip)]
         activated: Option<BlipKind>,
     },
     BlipWindSource {
+        #[serde(skip)]
         activated: bool,
     },
     Solid,
+    Input {
+        index: usize,
+        #[serde(skip)]
+        inputs: Vec<Option<level::Input>>,
+        #[serde(skip)]
+        activated: Option<level::Input>,
+    },
+    Output {
+        index: usize,
+        #[serde(skip)]
+        outputs: Vec<BlipKind>,
+        #[serde(skip)]
+        activated: Option<BlipKind>,
+
+        /// Only for visualization, store if this output failed.
+        #[serde(skip)]
+        failed: bool,
+    },
 }
 
 impl Block {
@@ -96,6 +126,8 @@ impl Block {
             Block::BlipDuplicator { kind: None, .. } => "Blip copier".to_string(),
             Block::BlipWindSource { .. } => "Blipped wind spawn".to_string(),
             Block::Solid => "Solid".to_string(),
+            Block::Input { .. } => "Input".to_string(),
+            Block::Output { .. } => "Output".to_string(),
         }
     }
 
@@ -125,6 +157,8 @@ impl Block {
             }
             Block::BlipWindSource { .. } => "Spawns one thrust of wind when activated by a blip.",
             Block::Solid => "Eats blips.",
+            Block::Input { .. } => "Input of the machine.",
+            Block::Output { .. } => "Output of the machine.",
         }
     }
 
@@ -136,23 +170,16 @@ impl Block {
         }
     }
 
-    pub fn with_kind(&self, kind: BlipKind) -> Block {
-        match *self {
-            Block::BlipSpawn {
-                kind: _,
-                num_spawns,
-                activated,
-            } => Block::BlipSpawn {
-                kind,
-                num_spawns,
-                activated,
-            },
-            Block::BlipDuplicator { kind: _, activated } => Block::BlipDuplicator {
-                kind: Some(kind),
-                activated,
-            },
-            x => x,
+    pub fn with_kind(&self, new_kind: BlipKind) -> Block {
+        let mut block = self.clone();
+
+        match block {
+            Block::BlipSpawn { ref mut kind, .. } => *kind = new_kind,
+            Block::BlipDuplicator { ref mut kind, .. } => *kind = Some(new_kind),
+            _ => (),
         }
+
+        block
     }
 
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
@@ -171,6 +198,8 @@ impl Block {
             Block::BlipDuplicator { .. } => true,
             Block::Solid => true,
             Block::BlipWindSource { .. } => true,
+            Block::Input { .. } => dir == Dir3::X_POS,
+            Block::Output { .. } => dir == Dir3::X_NEG,
         }
     }
 
@@ -190,6 +219,7 @@ impl Block {
                 // No wind out in the direction of our activating button
                 dir != Dir3::Y_NEG
             }
+            Block::Output { .. } => false,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -304,10 +334,15 @@ pub struct Blocks {
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Machine {
     pub blocks: Blocks,
+    pub level: Option<Level>,
 }
 
 impl Machine {
-    pub fn from_block_data(size: &Vector3, slice: &[(Point3, PlacedBlock)]) -> Self {
+    pub fn new_from_block_data(
+        size: &Vector3,
+        slice: &[(Point3, PlacedBlock)],
+        level: &Option<Level>,
+    ) -> Self {
         let mut indices = Grid3::new(*size);
         let mut data = VecOption::new();
 
@@ -317,25 +352,65 @@ impl Machine {
 
         let blocks = Blocks { indices, data };
 
-        Machine { blocks }
-    }
-
-    pub fn empty() -> Self {
-        Self {
-            blocks: Blocks {
-                indices: Grid3::new(Vector3::new(0, 0, 0)),
-                data: VecOption::new(),
-            },
+        Machine {
+            blocks,
+            level: level.clone(),
         }
     }
 
-    pub fn new(size: Vector3) -> Self {
+    pub fn new_sandbox(size: Vector3) -> Self {
         Self {
             blocks: Blocks {
                 indices: Grid3::new(size),
                 data: VecOption::new(),
             },
+            level: None,
         }
+    }
+
+    pub fn new_from_level(level: Level) -> Self {
+        let mut machine = Self {
+            blocks: Blocks {
+                indices: Grid3::new(level.size),
+                data: VecOption::new(),
+            },
+            level: Some(level.clone()),
+        };
+
+        let input_y_start = level.size.y / 2 - level.spec.input_dim() as isize / 2;
+
+        for index in 0..level.spec.input_dim() {
+            machine.set_block_at_pos(
+                &Point3::new(0, input_y_start + index as isize, 0),
+                Some(PlacedBlock {
+                    rotation_xy: 0,
+                    block: Block::Input {
+                        index,
+                        inputs: Vec::new(),
+                        activated: None,
+                    },
+                }),
+            );
+        }
+
+        let output_y_start = level.size.y / 2 - level.spec.output_dim() as isize / 2;
+
+        for index in 0..level.spec.output_dim() {
+            machine.set_block_at_pos(
+                &Point3::new(level.size.x - 1, output_y_start + index as isize, 0),
+                Some(PlacedBlock {
+                    rotation_xy: 0,
+                    block: Block::Output {
+                        index,
+                        outputs: Vec::new(),
+                        activated: None,
+                        failed: false,
+                    },
+                }),
+            );
+        }
+
+        machine
     }
 
     pub fn size(&self) -> Vector3 {
@@ -440,6 +515,7 @@ impl Machine {
 pub struct SavedMachine {
     pub size: Vector3,
     pub block_data: Vec<(Point3, PlacedBlock)>,
+    pub level: Option<Level>,
 }
 
 impl SavedMachine {
@@ -454,11 +530,12 @@ impl SavedMachine {
         Self {
             size: machine.size(),
             block_data,
+            level: machine.level.clone(),
         }
     }
 
     pub fn into_machine(self) -> Machine {
         // TODO: Make use of moving
-        Machine::from_block_data(&self.size, &self.block_data)
+        Machine::new_from_block_data(&self.size, &self.block_data, &self.level)
     }
 }

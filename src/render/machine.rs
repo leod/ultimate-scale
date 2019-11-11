@@ -1,7 +1,7 @@
 use nalgebra as na;
 
 use crate::machine::grid::{self, Dir2, Dir3};
-use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
+use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
 use crate::render::Object;
@@ -25,6 +25,10 @@ pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
         BlipKind::B => na::Vector3::new(1.0, 0.557, 0.0),
         BlipKind::C => na::Vector3::new(0.098, 0.129, 0.694),
     }
+}
+
+pub fn pipe_color() -> na::Vector3<f32> {
+    na::Vector3::new(0.75, 0.75, 0.75)
 }
 
 #[derive(Clone, Debug)]
@@ -315,7 +319,7 @@ pub fn render_block(
 
     match placed_block.block {
         Block::Pipe(dir_a, dir_b) => {
-            let color = na::Vector4::new(0.75, 0.75, 0.75, alpha);
+            let color = block_color(&pipe_color(), alpha);
 
             render_half_pipe(center, transform, dir_a, &color, &mut out.solid);
             render_half_pipe(center, transform, dir_b, &color, &mut out.solid);
@@ -355,7 +359,7 @@ pub fn render_block(
                 Object::PipeSplit,
                 &DefaultInstanceParams {
                     transform: translation * transform,
-                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
+                    color: block_color(&pipe_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -371,7 +375,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
-                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
+                    color: block_color(&pipe_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -382,7 +386,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
-                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
+                    color: block_color(&pipe_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -392,7 +396,7 @@ pub fn render_block(
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.7, 0.8, 0.7));
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.6, 0.8, 0.6));
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
@@ -403,7 +407,7 @@ pub fn render_block(
             );
 
             let input_dir = Dir2::Y_NEG;
-            let input_size = 0.6;
+            let input_size = 0.4;
 
             let input_transform = translation
                 * transform
@@ -569,6 +573,132 @@ pub fn render_block(
                 &DefaultInstanceParams {
                     transform: translation * transform,
                     color: na::Vector4::new(0.3, 0.2, 0.9, alpha),
+                    ..Default::default()
+                },
+            );
+        }
+        Block::Input { activated, .. } => {
+            let is_wind_active = wind_anim_state
+                .as_ref()
+                .map_or(false, |anim| anim.wind_out(Dir3::X_POS).is_alive());
+            let active_blip_kind = match activated {
+                None => None,
+                Some(level::Input::Blip(kind)) => Some(kind),
+            };
+
+            let angle = std::f32::consts::PI / 4.0
+                + if is_wind_active {
+                    tick_time.tick_progress() * std::f32::consts::PI
+                } else {
+                    0.0
+                };
+            let rotation = na::Matrix4::from_euler_angles(angle, 0.0, 0.0);
+            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.6, 0.6));
+
+            let color = block_color(
+                &active_blip_kind.map_or(na::Vector3::new(0.3, 0.3, 0.3), blip_color),
+                alpha,
+            );
+
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * transform * rotation * scaling,
+                    color,
+                    ..Default::default()
+                },
+            );
+
+            let bridge_length = bridge_length_animation(
+                0.35,
+                0.75,
+                active_blip_kind.is_some(),
+                tick_time.tick_progress(),
+            );
+
+            render_bridge(
+                Dir2::X_POS,
+                bridge_length,
+                0.3,
+                center,
+                transform,
+                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                &mut out.solid,
+            );
+        }
+        Block::Output {
+            ref outputs,
+            failed,
+            activated,
+            ..
+        } => {
+            render_half_pipe(
+                center,
+                transform,
+                Dir3::X_NEG,
+                &block_color(&pipe_color(), alpha),
+                &mut out.solid,
+            );
+            render_half_pipe(
+                &(center + na::Vector3::new(0.0, 0.0, PIPE_THICKNESS / 2.0)),
+                transform,
+                Dir3::Z_NEG,
+                &block_color(&pipe_color(), alpha),
+                &mut out.solid,
+            );
+
+            // Foolish stuff to transition to the next expected color mid-tick
+            let transition_time = 0.6;
+            let expected_kind =
+                if activated.is_none() || tick_time.tick_progress() < transition_time {
+                    outputs.last().copied()
+                } else {
+                    if outputs.len() > 1 {
+                        outputs.get(outputs.len() - 2).copied()
+                    } else {
+                        None
+                    }
+                };
+
+            let completed = (tick_time.tick_progress() >= 0.45
+                && outputs.len() == 1
+                && activated == outputs.last().copied())
+                || (outputs.is_empty() && wind_anim_state.is_some());
+
+            let status_color = if failed {
+                na::Vector3::new(0.9, 0.0, 0.0)
+            } else if completed {
+                na::Vector3::new(0.8, 0.8, 0.8)
+            } else {
+                na::Vector3::new(0.3, 0.3, 0.3)
+            };
+
+            let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));
+            let floor_scaling =
+                na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.8, 0.15));
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * floor_translation * transform * floor_scaling,
+                    color: block_color(&status_color, alpha),
+                    ..Default::default()
+                },
+            );
+
+            let expected_next_color = block_color(
+                &expected_kind.map_or(na::Vector3::new(0.8, 0.8, 0.8), blip_color),
+                alpha,
+            );
+
+            let thingy_translation =
+                na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.3));
+            let thingy_scaling =
+                na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.2, 0.2, 0.4));
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * thingy_translation * transform * thingy_scaling,
+                    color: expected_next_color,
                     ..Default::default()
                 },
             );
