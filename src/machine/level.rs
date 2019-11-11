@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -20,14 +18,8 @@ pub enum Input {
 
 #[derive(Debug, Clone)]
 pub struct InputsOutputs {
-    pub inputs: VecDeque<Vec<Option<Input>>>,
-    pub outputs: VecDeque<Vec<BlipKind>>,
-}
-
-impl InputsOutputs {
-    pub fn pop_input(&mut self) -> Option<Vec<Option<Input>>> {
-        self.inputs.pop_front()
-    }
+    pub inputs: Vec<Vec<Option<Input>>>,
+    pub outputs: Vec<Vec<BlipKind>>,
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
@@ -61,8 +53,8 @@ impl Spec {
             Spec::Id { dim } => {
                 let len: usize = rng.gen_range(5, 20);
 
-                let outputs: VecDeque<Vec<_>> = (0..len)
-                    .map(|_| (0..*dim).map(|_| gen_random_blip_kind(rng)).collect())
+                let outputs: Vec<Vec<_>> = (0..*dim)
+                    .map(|_| (0..len).map(|_| gen_random_blip_kind(rng)).collect())
                     .collect();
 
                 let inputs = outputs
