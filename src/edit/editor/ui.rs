@@ -101,7 +101,7 @@ impl Editor {
                 .map_or(false, |(_, placed_block)| placed_block.block == *block);
             let selectable = imgui::Selectable::new(name).selected(selected);
             if selectable.build(ui) {
-                self.switch_to_place_block_mode(*block);
+                self.switch_to_place_block_mode(block.clone());
             }
             if ui.is_item_hovered() {
                 let text = format!("{}\n\nShortcut: {}", block.description(), block_key);

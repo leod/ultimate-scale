@@ -77,6 +77,12 @@ pub enum Status {
         /// TickTime since starting the simulation.
         time: TickTime,
     },
+
+    /// Playback is finished.
+    Finished {
+        /// TickTime since starting the simulation.
+        time: TickTime,
+    },
 }
 
 impl Status {
@@ -84,6 +90,7 @@ impl Status {
         match self {
             Status::Playing { time, .. } => time,
             Status::Paused { time, .. } => time,
+            Status::Finished { time, .. } => time,
         }
     }
 
@@ -101,6 +108,13 @@ impl Status {
     pub fn is_paused(&self) -> bool {
         match self {
             Status::Paused { .. } => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_finished(&self) -> bool {
+        match self {
+            Status::Finished { .. } => true,
             _ => false,
         }
     }
@@ -173,6 +187,32 @@ impl Play {
                 info!("Stopping exec");
                 None
             }
+            Some(Status::Finished { .. }) if stop_pressed => {
+                info!("Stopping exec");
+                None
+            }
+            Some(Status::Finished { time }) => {
+                // Advance tick timer even when finished, so that we see the
+                // interpolation into the last state. Tick timer is only
+                // advanced within the current tick though.
+                // We only advance through the tick partially, so that the
+                // last blips are still seen at the stop. This is especially
+                // useful to see why a level was failed.
+                let progress_limit = 0.5;
+
+                let mut new_time = time.clone();
+
+                if time.tick_progress() < progress_limit {
+                    new_time.next_tick_timer.set_period(tick_period);
+                    new_time.next_tick_timer += dt;
+                }
+
+                if new_time.tick_progress() > progress_limit {
+                    new_time.next_tick_timer.set_progress(progress_limit);
+                }
+
+                Some(Status::Finished { time: new_time })
+            }
             None if play_pause_pressed => {
                 info!("Starting exec");
                 Some(Status::Playing {
@@ -223,6 +263,7 @@ impl Play {
 
         let is_stopped = status.is_none();
         let is_paused = status.map_or(false, |status| status.is_paused());
+        let is_finished = status.map_or(false, |status| status.is_finished());
 
         let title = format!(
             "Play @ {}Hz###Play",
@@ -261,7 +302,9 @@ impl Play {
                 } else {
                     im_str!("⏸")
                 };
-                let selectable = imgui::Selectable::new(symbol).size([21.0, 0.0]);
+                let selectable = imgui::Selectable::new(symbol)
+                    .disabled(is_finished)
+                    .size([21.0, 0.0]);
                 if selectable.build(ui) {
                     self.play_pause_pressed = true;
                 }

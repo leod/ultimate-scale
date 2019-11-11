@@ -4,10 +4,11 @@ pub mod view;
 
 use std::iter;
 
-use log::debug;
+use log::{debug, info};
+use rand::Rng;
 
 use crate::machine::grid::{Axis3, Dir3, Grid3, Point3};
-use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
+use crate::machine::{level, BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 
 pub use play::TickTime;
@@ -61,10 +62,20 @@ pub struct BlipState {
     pub blip_index: Option<BlipIndex>,
 }
 
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+pub enum LevelStatus {
+    Running,
+    Completed,
+    Failed,
+}
+
 pub struct Exec {
     cur_tick: TickNum,
 
     machine: Machine,
+
+    level_status: LevelStatus,
+
     blips: VecOption<Blip>,
 
     /// Wind state for each block, indexed by BlockIndex
@@ -82,9 +93,18 @@ pub struct Exec {
 }
 
 impl Exec {
-    pub fn new(mut machine: Machine) -> Exec {
+    pub fn new<R: Rng + ?Sized>(mut machine: Machine, rng: &mut R) -> Exec {
         // Make the machine's blocks contiguous in memory.
         machine.gc();
+
+        let inputs_outputs = machine
+            .level
+            .as_ref()
+            .map(|level| level.spec.generate_inputs_outputs(rng));
+
+        if let Some(inputs_outputs) = inputs_outputs {
+            Self::initialize_inputs_outputs(inputs_outputs, &mut machine);
+        }
 
         let wind_state = Self::initial_block_state(&machine);
         let old_wind_state = wind_state.clone();
@@ -94,6 +114,7 @@ impl Exec {
         Exec {
             cur_tick: 0,
             machine,
+            level_status: LevelStatus::Running,
             blips: VecOption::new(),
             wind_state,
             old_wind_state,
@@ -104,6 +125,10 @@ impl Exec {
 
     pub fn machine(&self) -> &Machine {
         &self.machine
+    }
+
+    pub fn level_status(&self) -> LevelStatus {
+        self.level_status
     }
 
     pub fn wind_state(&self) -> &[WindState] {
@@ -129,6 +154,7 @@ impl Exec {
             self.blip_state[index].blip_index = None;
         }
 
+        // Spawn and move wind
         for (block_index, (block_pos, _placed_block)) in self.machine.blocks.data.iter() {
             Self::update_block_wind_state(
                 block_index,
@@ -140,10 +166,12 @@ impl Exec {
             );
         }
 
+        // Reset block state if activated last tick
         for (_block_index, (_block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block(placed_block);
         }
 
+        // Move blips
         Self::update_blips(
             &self.machine.blocks.indices,
             &self.wind_state,
@@ -155,6 +183,7 @@ impl Exec {
 
         self.check_consistency();
 
+        // Spawn blips from activated blocks
         for (_block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block_blip_state(
                 self.cur_tick,
@@ -165,6 +194,9 @@ impl Exec {
                 &mut self.blips,
             );
         }
+
+        // Check machine output, comparing to the level specification
+        self.level_status = Self::check_output(&mut self.machine.blocks.data);
 
         self.check_consistency();
 
@@ -180,13 +212,13 @@ impl Exec {
         wind_state: &mut Vec<WindState>,
     ) {
         let placed_block = &block_data[block_index].1;
-
         debug!(
             "wind: {:?} with {:?}",
             placed_block.block, old_wind_state[block_index]
         );
 
         let dir_y_neg = placed_block.rotated_dir_xy(Dir3::Y_NEG);
+        let dir_x_pos = placed_block.rotated_dir_xy(Dir3::X_POS);
 
         match placed_block.block {
             Block::WindSource => {
@@ -219,6 +251,35 @@ impl Exec {
 
                 // Note: activated will be set to false in the same tick in
                 // `update_block`.
+            }
+            Block::Input {
+                index: _,
+                activated,
+                ..
+            } => {
+                let _active = activated.map_or(false, |input| match input {
+                    level::Input::Blip(_) => true,
+                });
+
+                // For now, we'll set Input blocks to always spawn wind.
+                // For the future, it might be interesting to spawn wind only
+                // when active -- this will also allow interpreting the Option
+                // in InputsOutputs. Note however, that currently this would
+                // lead to a gap inbetween each spawned blip, since it takes
+                // some time for the wind to reach from the Input center to the
+                // spawned blip.
+                let active = true;
+
+                let neighbor_pos = *block_pos + dir_x_pos.to_vector();
+                let neighbor_index = block_ids.get(&neighbor_pos);
+                if let Some(Some(neighbor_index)) = neighbor_index {
+                    if block_data[*neighbor_index]
+                        .1
+                        .has_wind_hole_in(dir_x_pos.invert())
+                    {
+                        wind_state[*neighbor_index].wind_in[dir_x_pos.invert().to_index()] = active;
+                    }
+                }
             }
             _ => {
                 let any_in = placed_block
@@ -264,6 +325,20 @@ impl Exec {
             Block::BlipDuplicator {
                 ref mut activated, ..
             } => {
+                *activated = None;
+            }
+            Block::Output {
+                ref mut outputs,
+                ref mut activated,
+                ..
+            } => {
+                // Here, the check if the `activated` blip matches the expected
+                // output has already been performed in
+                // `update_block_blip_state` in the previous tick.
+                if activated.is_some() {
+                    outputs.pop();
+                }
+
                 *activated = None;
             }
             _ => (),
@@ -606,6 +681,14 @@ impl Exec {
                 // Remove blip
                 true
             }
+            Block::Output {
+                ref mut activated, ..
+            } => {
+                *activated = Some(blip.kind);
+
+                // Remove blip
+                true
+            }
             _ => false,
         }
     }
@@ -667,7 +750,83 @@ impl Exec {
                     );
                 }
             }
+            Block::Input {
+                index: _,
+                ref mut inputs,
+                ref mut activated,
+            } => {
+                // The last element of `inputs` is the next input.
+                if let Some(input) = inputs.last().copied() {
+                    let did_activate = match input {
+                        Some(level::Input::Blip(kind)) => Self::try_spawn_blip(
+                            false,
+                            kind,
+                            &(*block_pos + dir_x_pos.to_vector()),
+                            block_ids,
+                            blip_state,
+                            blips,
+                        ),
+                        None => true,
+                    };
+
+                    if did_activate {
+                        *activated = input;
+                        inputs.pop();
+                    } else {
+                        *activated = None;
+                    }
+                } else {
+                    *activated = None;
+                }
+            }
             _ => {}
+        }
+    }
+
+    fn check_output(block_data: &mut VecOption<(Point3, PlacedBlock)>) -> LevelStatus {
+        let mut failed = false;
+        let mut completed = true;
+
+        for (_, (_, block)) in block_data.iter_mut() {
+            if let Block::Output {
+                ref mut outputs,
+                ref activated,
+                failed: ref mut output_failed,
+                ..
+            } = block.block
+            {
+                // The last element of `outputs` is the next expected output.
+                // Note that the last element will be popped at the start of
+                // the next tick in `update_block`. This is delayed here so
+                // that visualization matches up better.
+                let expected = outputs.last().copied();
+
+                let (block_failed, block_completed) = match (expected, activated) {
+                    (Some(expected), Some(activated)) => {
+                        (expected != *activated, outputs.len() == 1)
+                    }
+                    (Some(_), None) => (false, false),
+                    (None, Some(_)) => (true, false),
+                    (None, None) => (false, true),
+                };
+
+                if block_failed {
+                    *output_failed = true;
+                }
+
+                failed = failed || block_failed;
+                completed = completed && block_completed;
+            }
+        }
+
+        if failed {
+            info!("Level failed");
+            LevelStatus::Failed
+        } else if completed {
+            info!("Level completed");
+            LevelStatus::Completed
+        } else {
+            LevelStatus::Running
         }
     }
 
@@ -678,5 +837,39 @@ impl Exec {
         assert!(machine.is_contiguous());
 
         vec![Default::default(); machine.num_blocks()]
+    }
+
+    fn initialize_inputs_outputs(inputs_outputs: level::InputsOutputs, machine: &mut Machine) {
+        for (i, input_spec) in inputs_outputs.inputs.into_iter().enumerate() {
+            for (_, (_, block)) in machine.blocks.data.iter_mut() {
+                match &mut block.block {
+                    Block::Input { index, inputs, .. } if *index == i => {
+                        // We reverse the inputs so that we can use Vec::pop
+                        // during execution to get the next input.
+                        *inputs = input_spec.into_iter().rev().collect();
+
+                        // Block::Input index is assumed to be unique
+                        break;
+                    }
+                    _ => (),
+                }
+            }
+        }
+
+        for (i, output_spec) in inputs_outputs.outputs.into_iter().enumerate() {
+            for (_, (_, block)) in machine.blocks.data.iter_mut() {
+                match &mut block.block {
+                    Block::Output { index, outputs, .. } if *index == i => {
+                        // We reverse the outputs so that we can use Vec::pop
+                        // during execution to get the next expected output.
+                        *outputs = output_spec.into_iter().rev().collect();
+
+                        // Block::Output index is assumed to be unique
+                        break;
+                    }
+                    _ => (),
+                }
+            }
+        }
     }
 }
