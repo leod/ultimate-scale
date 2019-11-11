@@ -63,26 +63,30 @@ pub enum Block {
     BlipSpawn {
         kind: BlipKind,
         num_spawns: Option<usize>,
-        #[serde(default)]
+        #[serde(skip)]
         activated: Option<TickNum>,
     },
     BlipDuplicator {
-        #[serde(default)]
         kind: Option<BlipKind>,
+        #[serde(skip)]
         activated: Option<BlipKind>,
     },
     BlipWindSource {
+        #[serde(skip)]
         activated: bool,
     },
     Solid,
     Input {
         index: usize,
+        #[serde(skip)]
         inputs: Vec<Option<level::Input>>,
+        #[serde(skip)]
         activated: Option<level::Input>,
     },
     Output {
         index: usize,
-        expected_next_kind: Option<BlipKind>,
+        #[serde(skip)]
+        outputs: Vec<BlipKind>,
     },
 }
 
@@ -189,7 +193,7 @@ impl Block {
             Block::Solid => true,
             Block::BlipWindSource { .. } => true,
             Block::Input { .. } => dir == Dir3::X_POS,
-            Block::Output { .. } => dir != Dir3::Z_NEG,
+            Block::Output { .. } => dir == Dir3::X_NEG,
         }
     }
 
@@ -392,7 +396,7 @@ impl Machine {
                     rotation_xy: 0,
                     block: Block::Output {
                         index,
-                        expected_next_kind: None,
+                        outputs: Vec::new(),
                     },
                 }),
             );

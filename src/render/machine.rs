@@ -27,6 +27,10 @@ pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
     }
 }
 
+pub fn pipe_color() -> na::Vector3<f32> {
+    na::Vector3::new(0.75, 0.75, 0.75)
+}
+
 #[derive(Clone, Debug)]
 pub struct Line {
     pub start: na::Point3<f32>,
@@ -315,7 +319,7 @@ pub fn render_block(
 
     match placed_block.block {
         Block::Pipe(dir_a, dir_b) => {
-            let color = na::Vector4::new(0.75, 0.75, 0.75, alpha);
+            let color = block_color(&pipe_color(), alpha);
 
             render_half_pipe(center, transform, dir_a, &color, &mut out.solid);
             render_half_pipe(center, transform, dir_b, &color, &mut out.solid);
@@ -355,7 +359,7 @@ pub fn render_block(
                 Object::PipeSplit,
                 &DefaultInstanceParams {
                     transform: translation * transform,
-                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
+                    color: block_color(&pipe_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -371,7 +375,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
-                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
+                    color: block_color(&pipe_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -382,7 +386,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
-                    color: na::Vector4::new(0.75, 0.75, 0.75, alpha),
+                    color: block_color(&pipe_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -622,17 +626,33 @@ pub fn render_block(
                 &mut out.solid,
             );
         }
-        Block::Output {
-            expected_next_kind, ..
-        } => {
+        Block::Output { ref outputs, .. } => {
+            render_half_pipe(
+                center,
+                transform,
+                Dir3::X_NEG,
+                &block_color(&pipe_color(), alpha),
+                &mut out.solid,
+            );
+            render_half_pipe(
+                &(center + na::Vector3::new(0.0, 0.0, PIPE_THICKNESS / 2.0)),
+                transform,
+                Dir3::Z_NEG,
+                &block_color(&pipe_color(), alpha),
+                &mut out.solid,
+            );
+
             let expected_next_color = block_color(
-                &expected_next_kind.map_or(na::Vector3::new(0.8, 0.8, 0.8), blip_color),
+                &outputs
+                    .last()
+                    .copied()
+                    .map_or(na::Vector3::new(0.8, 0.8, 0.8), blip_color),
                 alpha,
             );
 
-            let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.4));
+            let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));
             let floor_scaling =
-                na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 1.0, 0.2));
+                na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.8, 0.15));
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
