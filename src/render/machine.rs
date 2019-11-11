@@ -573,6 +573,22 @@ pub fn render_block(
                 },
             );
         }
+        Block::Input { .. } => {
+            let angle = std::f32::consts::PI / 4.0;
+            let rotation = na::Matrix4::from_euler_angles(angle, angle, angle);
+
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * transform * rotation,
+                    color: na::Vector4::new(0.3, 0.3, 0.3, alpha),
+                    ..Default::default()
+                },
+            );
+        }
+        Block::Output { .. } => {
+            // TODO
+        }
     }
 }
 
