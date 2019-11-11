@@ -41,6 +41,16 @@ impl BlipKind {
 
 pub type TickNum = usize;
 
+/// Definition of a block in the machine.
+///
+/// This definition is somewhat "dirty" in that it also contains state that is
+/// only needed at execution time -- e.g. the `activated` fields in some of the
+/// blocks. Consider this an artifact of us not using an ECS.
+///
+/// Note also that most of the `Block` variants are not rotated in space. For
+/// example, in the definition of `Block::BlipWindSource`, the input direction
+/// is hardcoded as `Dir3::Y_NEG`. On a higher level, `PlacedBlock` allows
+/// rotating a `Block` in the X-Y plane.
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     Pipe(Dir3, Dir3),
@@ -71,6 +81,7 @@ pub enum Block {
     },
     Output {
         index: usize,
+        expected_next_blip: Option<BlipKind>,
     },
 }
 

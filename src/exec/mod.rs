@@ -62,6 +62,12 @@ pub struct BlipState {
     pub blip_index: Option<BlipIndex>,
 }
 
+#[derive(Debug, Clone)]
+pub enum LevelStatus {
+    Running,
+    Completed,
+}
+
 pub struct Exec {
     cur_tick: TickNum,
 
