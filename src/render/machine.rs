@@ -1,7 +1,7 @@
 use nalgebra as na;
 
 use crate::machine::grid::{self, Dir2, Dir3};
-use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
+use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
 use crate::render::Object;
@@ -573,28 +573,47 @@ pub fn render_block(
                 },
             );
         }
-        Block::Input { .. } => {
-            let angle = std::f32::consts::PI / 4.0;
-            let rotation = na::Matrix4::from_euler_angles(0.0, angle, 0.0);
-            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.7, 1.0, 0.7));
+        Block::Input { activated, .. } => {
+            let is_wind_active = wind_anim_state
+                .as_ref()
+                .map_or(false, |anim| anim.wind_out(Dir3::X_POS).is_alive());
+            let active_blip_kind = match activated {
+                None => None,
+                Some(level::Input::Blip(kind)) => Some(kind),
+            };
+
+            let angle = std::f32::consts::PI / 4.0
+                + if is_wind_active {
+                    tick_time.tick_progress() * std::f32::consts::PI
+                } else {
+                    0.0
+                };
+            let rotation = na::Matrix4::from_euler_angles(angle, 0.0, 0.0);
+            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.7, 0.7));
+
+            let color = block_color(
+                &active_blip_kind.map_or(na::Vector3::new(0.3, 0.3, 0.3), |kind| blip_color(kind)),
+                alpha,
+            );
 
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * rotation * scaling,
-                    color: na::Vector4::new(0.3, 0.3, 0.3, alpha),
+                    color,
                     ..Default::default()
                 },
             );
 
-            let is_active = wind_anim_state
-                .as_ref()
-                .map_or(false, |anim| anim.wind_in(Dir3::Y_POS).is_alive());
-            let bridge_length =
-                bridge_length_animation(0.35, 0.75, is_active, tick_time.tick_progress());
+            let bridge_length = bridge_length_animation(
+                0.35,
+                0.75,
+                active_blip_kind.is_some(),
+                tick_time.tick_progress(),
+            );
 
             render_bridge(
-                Dir2::Y_POS,
+                Dir2::X_POS,
                 bridge_length,
                 0.3,
                 center,

@@ -67,6 +67,7 @@ pub enum Block {
     Solid,
     Input {
         index: usize,
+        activated: Option<level::Input>,
     },
     Output {
         index: usize,
@@ -182,8 +183,8 @@ impl Block {
             Block::BlipDuplicator { .. } => true,
             Block::Solid => true,
             Block::BlipWindSource { .. } => true,
-            Block::Input { .. } => dir == Dir3::Y_POS,
-            Block::Output { .. } => dir == Dir3::Y_NEG,
+            Block::Input { .. } => dir == Dir3::X_POS,
+            Block::Output { .. } => dir == Dir3::X_NEG,
         }
     }
 
@@ -366,8 +367,11 @@ impl Machine {
             machine.set_block_at_pos(
                 &Point3::new(0, y_start + index as isize, 0),
                 Some(PlacedBlock {
-                    rotation_xy: 1,
-                    block: Block::Input { index },
+                    rotation_xy: 0,
+                    block: Block::Input {
+                        index,
+                        activated: None,
+                    },
                 }),
             );
         }

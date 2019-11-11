@@ -5,9 +5,10 @@ pub mod view;
 use std::iter;
 
 use log::debug;
+use rand::Rng;
 
 use crate::machine::grid::{Axis3, Dir3, Grid3, Point3};
-use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
+use crate::machine::{level, BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 
 pub use play::TickTime;
@@ -65,6 +66,8 @@ pub struct Exec {
     cur_tick: TickNum,
 
     machine: Machine,
+    inputs_outputs: Option<level::InputsOutputs>,
+
     blips: VecOption<Blip>,
 
     /// Wind state for each block, indexed by BlockIndex
@@ -82,9 +85,14 @@ pub struct Exec {
 }
 
 impl Exec {
-    pub fn new(mut machine: Machine) -> Exec {
+    pub fn new<R: Rng + ?Sized>(mut machine: Machine, rng: &mut R) -> Exec {
         // Make the machine's blocks contiguous in memory.
         machine.gc();
+
+        let inputs_outputs = machine
+            .level
+            .as_ref()
+            .map(|level| level.spec.generate_inputs_outputs(rng));
 
         let wind_state = Self::initial_block_state(&machine);
         let old_wind_state = wind_state.clone();
@@ -94,6 +102,7 @@ impl Exec {
         Exec {
             cur_tick: 0,
             machine,
+            inputs_outputs,
             blips: VecOption::new(),
             wind_state,
             old_wind_state,
@@ -129,6 +138,12 @@ impl Exec {
             self.blip_state[index].blip_index = None;
         }
 
+        // Feed the machine with input (if not in sandbox mode)
+        if let Some(inputs_outputs) = self.inputs_outputs.as_mut() {
+            Self::update_input(inputs_outputs, &mut self.machine.blocks.data);
+        }
+
+        // Spawn and move wind
         for (block_index, (block_pos, _placed_block)) in self.machine.blocks.data.iter() {
             Self::update_block_wind_state(
                 block_index,
@@ -140,10 +155,12 @@ impl Exec {
             );
         }
 
+        // Reset block state if activated last tick
         for (_block_index, (_block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block(placed_block);
         }
 
+        // Move blips
         Self::update_blips(
             &self.machine.blocks.indices,
             &self.wind_state,
@@ -155,6 +172,7 @@ impl Exec {
 
         self.check_consistency();
 
+        // Spawn blips from activated blocks
         for (_block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             Self::update_block_blip_state(
                 self.cur_tick,
@@ -171,6 +189,38 @@ impl Exec {
         self.cur_tick += 1;
     }
 
+    fn update_input(
+        inputs_outputs: &mut level::InputsOutputs,
+        block_data: &mut VecOption<(Point3, PlacedBlock)>,
+    ) {
+        if let Some(input) = inputs_outputs.pop_input() {
+            for (i, input) in input.into_iter().enumerate() {
+                for (_, (_, block)) in block_data.iter_mut() {
+                    match &mut block.block {
+                        Block::Input { index, activated } if *index == i => {
+                            *activated = input.clone();
+
+                            // Block::Input index is assumed to be unique
+                            break;
+                        }
+                        _ => (),
+                    }
+                }
+            }
+        } else {
+            // Deactivate all inputs if we run out
+            for (_, (_, block)) in block_data.iter_mut() {
+                if let Block::Input {
+                    index: _,
+                    activated,
+                } = &mut block.block
+                {
+                    *activated = None;
+                }
+            }
+        }
+    }
+
     fn update_block_wind_state(
         block_index: usize,
         block_pos: &Point3,
@@ -180,13 +230,13 @@ impl Exec {
         wind_state: &mut Vec<WindState>,
     ) {
         let placed_block = &block_data[block_index].1;
-
         debug!(
             "wind: {:?} with {:?}",
             placed_block.block, old_wind_state[block_index]
         );
 
         let dir_y_neg = placed_block.rotated_dir_xy(Dir3::Y_NEG);
+        let dir_x_pos = placed_block.rotated_dir_xy(Dir3::X_POS);
 
         match placed_block.block {
             Block::WindSource => {
@@ -219,6 +269,25 @@ impl Exec {
 
                 // Note: activated will be set to false in the same tick in
                 // `update_block`.
+            }
+            Block::Input {
+                index: _,
+                activated,
+            } => {
+                let active = activated.map_or(false, |input| match input {
+                    level::Input::Blip(_) => true,
+                });
+
+                let neighbor_pos = *block_pos + dir_x_pos.to_vector();
+                let neighbor_index = block_ids.get(&neighbor_pos);
+                if let Some(Some(neighbor_index)) = neighbor_index {
+                    if block_data[*neighbor_index]
+                        .1
+                        .has_wind_hole_in(dir_x_pos.invert())
+                    {
+                        wind_state[*neighbor_index].wind_in[dir_x_pos.invert().to_index()] = active;
+                    }
+                }
             }
             _ => {
                 let any_in = placed_block
@@ -667,6 +736,22 @@ impl Exec {
                     );
                 }
             }
+            Block::Input {
+                index: _,
+                activated,
+            } => match activated {
+                None => {}
+                Some(level::Input::Blip(kind)) => {
+                    Self::try_spawn_blip(
+                        true,
+                        kind,
+                        &(*block_pos + dir_x_pos.to_vector()),
+                        block_ids,
+                        blip_state,
+                        blips,
+                    );
+                }
+            },
             _ => {}
         }
     }

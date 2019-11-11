@@ -34,7 +34,7 @@ impl ExecView {
     pub fn new(config: &Config, machine: Machine) -> ExecView {
         ExecView {
             config: config.clone(),
-            exec: Exec::new(machine),
+            exec: Exec::new(machine, &mut rand::thread_rng()),
             mouse_window_pos: na::Point2::origin(),
             mouse_block_pos: None,
         }
