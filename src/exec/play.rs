@@ -77,6 +77,12 @@ pub enum Status {
         /// TickTime since starting the simulation.
         time: TickTime,
     },
+
+    /// Playback is finished.
+    Finished {
+        /// TickTime since starting the simulation.
+        time: TickTime,
+    },
 }
 
 impl Status {
@@ -84,6 +90,7 @@ impl Status {
         match self {
             Status::Playing { time, .. } => time,
             Status::Paused { time, .. } => time,
+            Status::Finished { time, .. } => time,
         }
     }
 
@@ -101,6 +108,13 @@ impl Status {
     pub fn is_paused(&self) -> bool {
         match self {
             Status::Paused { .. } => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_finished(&self) -> bool {
+        match self {
+            Status::Finished { .. } => true,
             _ => false,
         }
     }
@@ -173,6 +187,10 @@ impl Play {
                 info!("Stopping exec");
                 None
             }
+            Some(Status::Finished { .. }) if stop_pressed => {
+                info!("Stopping exec");
+                None
+            }
             None if play_pause_pressed => {
                 info!("Starting exec");
                 Some(Status::Playing {
@@ -223,6 +241,7 @@ impl Play {
 
         let is_stopped = status.is_none();
         let is_paused = status.map_or(false, |status| status.is_paused());
+        let is_finished = status.map_or(false, |status| status.is_finished());
 
         let title = format!(
             "Play @ {}Hz###Play",
@@ -261,7 +280,9 @@ impl Play {
                 } else {
                     im_str!("⏸")
                 };
-                let selectable = imgui::Selectable::new(symbol).size([21.0, 0.0]);
+                let selectable = imgui::Selectable::new(symbol)
+                    .disabled(is_finished)
+                    .size([21.0, 0.0]);
                 if selectable.build(ui) {
                     self.play_pause_pressed = true;
                 }
