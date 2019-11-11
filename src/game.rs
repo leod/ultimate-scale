@@ -246,10 +246,10 @@ impl Game {
                         for _ in 0..*num_ticks_since_last_update {
                             // Execution may want to pause the game if a level
                             // has been completed or failed.
-                            let pause = exec.run_tick();
+                            let finished = exec.run_tick();
 
-                            if pause {
-                                *s = play::Status::Paused { time: time.clone() };
+                            if finished {
+                                *s = play::Status::Finished { time: time.clone() };
                                 break;
                             }
                         }
