@@ -66,6 +66,7 @@ pub struct BlipState {
 pub enum LevelStatus {
     Running,
     Completed,
+    Failed(String),
 }
 
 pub struct Exec {
@@ -678,6 +679,12 @@ impl Exec {
                 true
             }
             Block::Solid => {
+                // Remove blip
+                true
+            }
+            Block::Output {
+                expected_next_kind, ..
+            } => {
                 // Remove blip
                 true
             }

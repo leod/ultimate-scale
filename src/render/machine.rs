@@ -592,7 +592,7 @@ pub fn render_block(
             let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.6, 0.6));
 
             let color = block_color(
-                &active_blip_kind.map_or(na::Vector3::new(0.3, 0.3, 0.3), |kind| blip_color(kind)),
+                &active_blip_kind.map_or(na::Vector3::new(0.3, 0.3, 0.3), blip_color),
                 alpha,
             );
 
@@ -622,8 +622,38 @@ pub fn render_block(
                 &mut out.solid,
             );
         }
-        Block::Output { .. } => {
-            // TODO
+        Block::Output {
+            expected_next_kind, ..
+        } => {
+            let expected_next_color = block_color(
+                &expected_next_kind.map_or(na::Vector3::new(0.8, 0.8, 0.8), blip_color),
+                alpha,
+            );
+
+            let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.4));
+            let floor_scaling =
+                na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 1.0, 0.2));
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * floor_translation * transform * floor_scaling,
+                    color: na::Vector4::new(0.3, 0.3, 0.3, alpha),
+                    ..Default::default()
+                },
+            );
+
+            let thingy_translation =
+                na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.3));
+            let thingy_scaling =
+                na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.2, 0.2, 0.4));
+            out.solid.add(
+                Object::Cube,
+                &DefaultInstanceParams {
+                    transform: translation * thingy_translation * transform * thingy_scaling,
+                    color: expected_next_color,
+                    ..Default::default()
+                },
+            );
         }
     }
 }
