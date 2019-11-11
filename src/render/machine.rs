@@ -648,18 +648,22 @@ pub fn render_block(
             );
 
             // Foolish stuff to transition to the next expected color mid-tick
-            let expected_kind = if activated.is_none() || tick_time.tick_progress() < 0.6 {
-                outputs.last().copied()
-            } else {
-                if outputs.len() > 1 {
-                    outputs.get(outputs.len() - 2).copied()
+            let transition_time = 0.6;
+            let expected_kind =
+                if activated.is_none() || tick_time.tick_progress() < transition_time {
+                    outputs.last().copied()
                 } else {
-                    None
-                }
-            };
+                    if outputs.len() > 1 {
+                        outputs.get(outputs.len() - 2).copied()
+                    } else {
+                        None
+                    }
+                };
 
-            let completed =
-                (outputs.len() == 1 && activated == expected_kind) || outputs.is_empty();
+            let completed = (tick_time.tick_progress() >= 0.45
+                && outputs.len() == 1
+                && activated == outputs.last().copied())
+                || (outputs.is_empty() && wind_anim_state.is_some());
 
             let status_color = if failed {
                 na::Vector3::new(0.9, 0.0, 0.0)
