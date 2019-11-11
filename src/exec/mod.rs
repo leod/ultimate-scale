@@ -658,8 +658,13 @@ impl Exec {
                 true
             }
             Block::Output {
-                expected_next_kind, ..
+                ref mut outputs, ..
             } => {
+                // The last element of `outputs` is the next expected output.
+                if let Some(expected_kind) = outputs.last().copied() {
+                    outputs.pop();
+                }
+
                 // Remove blip
                 true
             }
@@ -776,6 +781,22 @@ impl Exec {
                         *inputs = input_spec.into_iter().rev().collect();
 
                         // Block::Input index is assumed to be unique
+                        break;
+                    }
+                    _ => (),
+                }
+            }
+        }
+
+        for (i, output_spec) in inputs_outputs.outputs.into_iter().enumerate() {
+            for (_, (_, block)) in machine.blocks.data.iter_mut() {
+                match &mut block.block {
+                    Block::Output { index, outputs, .. } if *index == i => {
+                        // We reverse the outputs so that we can use Vec::pop
+                        // during execution to get the next expected output.
+                        *outputs = output_spec.into_iter().rev().collect();
+
+                        // Block::Output index is assumed to be unique
                         break;
                     }
                     _ => (),
