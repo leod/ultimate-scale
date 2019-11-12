@@ -26,9 +26,10 @@ pub struct InputsOutputs {
 pub enum Spec {
     Id { dim: usize },
     Clock { pattern: Vec<BlipKind> },
+    BitwiseMax,
 }
 
-pub fn gen_random_blip_kind<R: Rng + ?Sized>(rng: &mut R) -> BlipKind {
+pub fn gen_blip_kind<R: Rng + ?Sized>(rng: &mut R) -> BlipKind {
     if rng.gen() {
         BlipKind::A
     } else {
@@ -36,11 +37,29 @@ pub fn gen_random_blip_kind<R: Rng + ?Sized>(rng: &mut R) -> BlipKind {
     }
 }
 
+pub fn gen_blip_kind_seqs<R: Rng + ?Sized>(
+    dim: usize,
+    len: usize,
+    rng: &mut R,
+) -> Vec<Vec<BlipKind>> {
+    (0..dim)
+        .map(|_| (0..len).map(|_| gen_blip_kind(rng)).collect())
+        .collect()
+}
+
+pub fn blip_input_seqs(input_kinds: &[Vec<BlipKind>]) -> Vec<Vec<Option<Input>>> {
+    input_kinds
+        .iter()
+        .map(|row| row.iter().map(|kind| Some(Input::Blip(*kind))).collect())
+        .collect()
+}
+
 impl Spec {
     pub fn input_dim(&self) -> usize {
         match *self {
             Spec::Id { dim } => dim,
             Spec::Clock { .. } => 0,
+            Spec::BitwiseMax => 2,
         }
     }
 
@@ -48,6 +67,7 @@ impl Spec {
         match *self {
             Spec::Id { dim } => dim,
             Spec::Clock { .. } => 1,
+            Spec::BitwiseMax => 1,
         }
     }
 
@@ -55,6 +75,7 @@ impl Spec {
         match self {
             Spec::Id { .. } => "Produce the same outputs as the inputs".to_string(),
             Spec::Clock { .. } => "Produce a repeating clock pattern".to_string(),
+            Spec::BitwiseMax => format!("{} beats {}", BlipKind::B, BlipKind::A),
         }
     }
 
@@ -62,20 +83,9 @@ impl Spec {
         match self {
             Spec::Id { dim } => {
                 let len: usize = rng.gen_range(5, 20);
-
-                let outputs: Vec<Vec<_>> = (0..*dim)
-                    .map(|_| (0..len).map(|_| gen_random_blip_kind(rng)).collect())
-                    .collect();
-
-                let inputs = outputs
-                    .iter()
-                    .map(|outputs| {
-                        outputs
-                            .iter()
-                            .map(|kind| Some(Input::Blip(*kind)))
-                            .collect()
-                    })
-                    .collect();
+                let input_kinds = gen_blip_kind_seqs(*dim, len, rng);
+                let inputs = blip_input_seqs(&input_kinds);
+                let outputs = input_kinds;
 
                 InputsOutputs { inputs, outputs }
             }
@@ -86,6 +96,24 @@ impl Spec {
                     .cycle()
                     .take(pattern.len() * 10)
                     .copied()
+                    .collect()];
+
+                InputsOutputs { inputs, outputs }
+            }
+            Spec::BitwiseMax => {
+                let len: usize = rng.gen_range(5, 20);
+                let input_kinds = gen_blip_kind_seqs(2, len, rng);
+                let inputs = blip_input_seqs(&input_kinds);
+                let outputs = vec![input_kinds[0]
+                    .iter()
+                    .zip(input_kinds[1].iter())
+                    .map(|(a, b)| {
+                        if *a == BlipKind::B || *b == BlipKind::B {
+                            BlipKind::B
+                        } else {
+                            *a
+                        }
+                    })
                     .collect()];
 
                 InputsOutputs { inputs, outputs }
