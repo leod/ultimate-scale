@@ -54,7 +54,7 @@ impl Spec {
         }
     }
 
-    pub fn generate_inputs_outputs<R: Rng + ?Sized>(&self, rng: &mut R) -> InputsOutputs {
+    pub fn gen_inputs_outputs<R: Rng + ?Sized>(&self, rng: &mut R) -> InputsOutputs {
         match self {
             Spec::Id { dim } => {
                 let len: usize = rng.gen_range(5, 20);
