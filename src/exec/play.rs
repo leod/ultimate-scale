@@ -258,8 +258,6 @@ impl Play {
 
     pub fn ui(&mut self, window_size: na::Vector2<f32>, status: Option<&Status>, ui: &imgui::Ui) {
         let bg_alpha = 0.8;
-        let button_w = 60.0;
-        let button_h = 25.0;
 
         let is_stopped = status.is_none();
         let is_paused = status.map_or(false, |status| status.is_paused());

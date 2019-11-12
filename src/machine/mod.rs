@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::util::vec_option::VecOption;
 
-use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
+use grid::{Axis3, Dir3, Grid3, Point3, Vector3};
 use level::Level;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]

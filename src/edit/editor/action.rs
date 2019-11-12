@@ -187,7 +187,7 @@ impl Editor {
 
     pub fn action_mirror_y(&mut self) {
         match &mut self.mode {
-            Mode::PlacePiece { piece, offset } => {
+            Mode::PlacePiece { piece, .. } => {
                 piece.mirror_y();
             }
             _ => {
