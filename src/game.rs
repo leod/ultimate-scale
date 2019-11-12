@@ -3,13 +3,14 @@ use std::time::Duration;
 use floating_duration::TimeAsFloat;
 use log::info;
 use nalgebra as na;
+use imgui::{im_str, ImString};
 
 use glium::glutin;
 
 use crate::config::{self, Config};
 use crate::edit::Editor;
 use crate::exec::play::{self, Play};
-use crate::exec::ExecView;
+use crate::exec::{ExecView, LevelStatus};
 use crate::input_state::InputState;
 use crate::machine::Machine;
 
@@ -244,15 +245,9 @@ impl Game {
                     } = s
                     {
                         for _ in 0..*num_ticks_since_last_update {
-                            // Execution may want to pause the game if a level
-                            // has been completed or failed.
-                            let finished = exec.run_tick();
+                            exec.run_tick();
 
-                            if finished {
-                                // For showing finished machine state, always
-                                // set tick timer to zero.
-                                //time.next_tick_timer.reset();
-
+                            if exec.level_status() != LevelStatus::Running {
                                 *s = play::Status::Finished { time: time.clone() };
                                 break;
                             }
@@ -286,6 +281,37 @@ impl Game {
 
         let play_state = self.exec.as_ref().map(|(play_state, _)| play_state);
         self.play.ui(window_size, play_state, ui);
+
+        if let Some(level) = self.editor.machine().level.as_ref() {
+            imgui::Window::new(im_str!("Level"))
+                .horizontal_scrollbar(true)
+                .position([window_size.x / 2.0, 10.0], imgui::Condition::FirstUseEver)
+                .position_pivot([0.5, 0.0])
+                //.content_size([300.0, 0.0])
+                .always_auto_resize(true)
+                .bg_alpha(0.8)
+                .build(&ui, || {
+                    let goal = "Goal: ".to_string() + &level.spec.description();
+                    ui.bullet_text(&ImString::new(&goal));
+
+                    let status = "Status: ".to_string() + &if let Some((_, exec)) = self.exec.as_ref() {
+                        match exec.level_status() {
+                            LevelStatus::Running => "Running".to_string(),
+                            LevelStatus::Completed => "Completed!".to_string(),
+                            LevelStatus::Failed => "Failed".to_string(),
+                        }
+                    } else {
+                        "Editing".to_string()
+                    };
+
+                    ui.bullet_text(&ImString::new(&status));
+
+                    imgui::TreeNode::new(ui, im_str!("Example"))
+                        .opened(false, imgui::Condition::FirstUseEver)
+                        .build(|| {
+                        });
+                });
+        }
     }
 
     pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {
