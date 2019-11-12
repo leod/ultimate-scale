@@ -100,7 +100,7 @@ impl Exec {
         let inputs_outputs = machine
             .level
             .as_ref()
-            .map(|level| level.spec.generate_inputs_outputs(rng));
+            .map(|level| level.spec.gen_inputs_outputs(rng));
 
         if let Some(inputs_outputs) = inputs_outputs {
             Self::initialize_inputs_outputs(inputs_outputs, &mut machine);
