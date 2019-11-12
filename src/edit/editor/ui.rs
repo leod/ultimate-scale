@@ -206,5 +206,16 @@ impl Editor {
             );
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
+
+        if ui.button(im_str!("Mirror Y"), [SMALL_BUTTON_W, BUTTON_H]) {
+            self.action_mirror_y();
+        }
+        if ui.is_item_hovered() {
+            let text = format!(
+                "Mirror blocks to be placed at Y axis.\n\nShortcut: {}",
+                self.config.mirror_y_key
+            );
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
     }
 }
