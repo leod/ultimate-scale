@@ -211,7 +211,7 @@ impl Block {
             }
             Block::WindSource => true,
             Block::BlipSpawn { .. } => false,
-            Block::BlipDuplicator { .. } => false,
+            Block::BlipDuplicator { out_dirs, .. } => dir != out_dirs.0 && dir != out_dirs.1,
             Block::Solid => true,
             Block::BlipWindSource { .. } => true,
             Block::Input { out_dir, .. } => dir == *out_dir,
