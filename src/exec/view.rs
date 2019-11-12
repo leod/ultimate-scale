@@ -161,7 +161,7 @@ impl ExecView {
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
 
         // The cylinder object points in the direction of the x axis
-        let (pitch, yaw) = in_dir.to_pitch_yaw_x();
+        let (pitch, yaw) = in_dir.invert().to_pitch_yaw_x();
 
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
@@ -187,25 +187,37 @@ impl ExecView {
     fn render_blocks(&self, time: &TickTime, out: &mut RenderLists) {
         let blocks = &self.exec.machine().blocks;
 
-        for (block_index, (block_pos, _placed_block)) in blocks.data.iter() {
+        for (block_index, (block_pos, placed_block)) in blocks.data.iter() {
             let anim_state = WindAnimState::from_exec_block(&self.exec, block_index);
 
             for &dir in &Dir3::ALL {
-                match anim_state.wind_in(dir) {
+                // Draw half of the wind if it points towards a deadend
+                let max = if anim_state.is_out_deadend(dir) {
+                    if !placed_block.block.is_pipe() {
+                        // Don't draw wind towards deadends for non-pipes
+                        continue;
+                    } else {
+                        0.5
+                    }
+                } else {
+                    1.0
+                };
+
+                match anim_state.wind_out(dir) {
                     WindLife::None => {}
                     WindLife::Appearing => {
                         // Interpolate, i.e. draw partial line
                         let out_t = time.tick_progress();
-                        self.render_wind(block_pos, dir, 0.0, out_t, out);
+                        self.render_wind(block_pos, dir, 0.0, out_t.min(max), out);
                     }
                     WindLife::Existing => {
                         // Draw full line
-                        self.render_wind(block_pos, dir, 0.0, 1.0, out);
+                        self.render_wind(block_pos, dir, 0.0, 1.0f32.min(max), out);
                     }
                     WindLife::Disappearing => {
                         // Interpolate, i.e. draw partial line
                         let in_t = time.tick_progress();
-                        self.render_wind(block_pos, dir, in_t, 1.0, out);
+                        self.render_wind(block_pos, dir, in_t.min(max), 1.0f32.min(max), out);
                     }
                 }
             }
