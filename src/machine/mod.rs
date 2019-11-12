@@ -46,45 +46,49 @@ pub type TickNum = usize;
 /// This definition is somewhat "dirty" in that it also contains state that is
 /// only needed at execution time -- e.g. the `activated` fields in some of the
 /// blocks. Consider this an artifact of us not using an ECS.
-///
-/// Note also that most of the `Block` variants are not rotated in space. For
-/// example, in the definition of `Block::BlipWindSource`, the input direction
-/// is hardcoded as `Dir3::Y_NEG`. On a higher level, `PlacedBlock` allows
-/// rotating a `Block` in the X-Y plane.
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     Pipe(Dir3, Dir3),
-    PipeSplitXY {
-        open_move_hole_y: Sign,
-    },
     PipeMergeXY,
-    FunnelXY,
+    FunnelXY {
+        flow_dir: Dir3,
+    },
     WindSource,
     BlipSpawn {
+        out_dir: Dir3,
         kind: BlipKind,
         num_spawns: Option<usize>,
+
         #[serde(skip)]
         activated: Option<TickNum>,
     },
     BlipDuplicator {
+        out_dirs: (Dir3, Dir3),
         kind: Option<BlipKind>,
+
         #[serde(skip)]
         activated: Option<BlipKind>,
     },
     BlipWindSource {
+        button_dir: Dir3,
+
         #[serde(skip)]
         activated: bool,
     },
     Solid,
     Input {
+        out_dir: Dir3,
         index: usize,
+
         #[serde(skip)]
         inputs: Vec<Option<level::Input>>,
         #[serde(skip)]
         activated: Option<level::Input>,
     },
     Output {
+        in_dir: Dir3,
         index: usize,
+
         #[serde(skip)]
         outputs: Vec<BlipKind>,
         #[serde(skip)]
@@ -111,9 +115,8 @@ impl Block {
                 "Pipe curve up".to_string()
             }
             Block::Pipe(_, _) => "Pipe".to_string(),
-            Block::PipeSplitXY { .. } => "Pipe split".to_string(),
             Block::PipeMergeXY => "Pipe crossing".to_string(),
-            Block::FunnelXY => "Funnel".to_string(),
+            Block::FunnelXY { .. } => "Funnel".to_string(),
             Block::WindSource => "Wind source".to_string(),
             Block::BlipSpawn {
                 num_spawns: None, ..
@@ -134,9 +137,8 @@ impl Block {
     pub fn description(&self) -> &'static str {
         match self {
             Block::Pipe(_, _) => "Conducts both wind and blips.",
-            Block::PipeSplitXY { .. } => "Useless.",
             Block::PipeMergeXY => "Four-way pipe. But why?",
-            Block::FunnelXY => "Not so useful.",
+            Block::FunnelXY { .. } => "Not so useful.",
             Block::WindSource => "Produces a stream of wind in all directions.",
             Block::BlipSpawn {
                 num_spawns: None, ..
@@ -170,42 +172,56 @@ impl Block {
         }
     }
 
-    pub fn with_kind(&self, new_kind: BlipKind) -> Block {
-        let mut block = self.clone();
-
-        match block {
+    pub fn set_kind(&mut self, new_kind: BlipKind) {
+        match self {
             Block::BlipSpawn { ref mut kind, .. } => *kind = new_kind,
             Block::BlipDuplicator { ref mut kind, .. } => *kind = Some(new_kind),
             _ => (),
         }
+    }
 
-        block
+    pub fn mutate_dirs(&mut self, f: impl Fn(Dir3) -> Dir3) {
+        match self {
+            Block::Pipe(dir_a, dir_b) => {
+                *dir_a = f(*dir_a);
+                *dir_b = f(*dir_b);
+            }
+            Block::PipeMergeXY => (),
+            Block::FunnelXY { flow_dir, .. } => *flow_dir = f(*flow_dir),
+            Block::WindSource { .. } => (),
+            Block::BlipSpawn { out_dir, .. } => *out_dir = f(*out_dir),
+            Block::BlipDuplicator { out_dirs, .. } => {
+                out_dirs.0 = f(out_dirs.0);
+                out_dirs.1 = f(out_dirs.1);
+            }
+            Block::BlipWindSource { button_dir, .. } => *button_dir = f(*button_dir),
+            Block::Solid => (),
+            Block::Input { out_dir, .. } => *out_dir = f(*out_dir),
+            Block::Output { in_dir, .. } => *in_dir = f(*in_dir),
+        }
     }
 
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         match self {
             Block::Pipe(dir_a, dir_b) => dir == *dir_a || dir == *dir_b,
-            Block::PipeSplitXY { .. } => {
-                dir == Dir3::Y_NEG || dir == Dir3::Y_POS || dir == Dir3::X_POS
-            }
             Block::PipeMergeXY => dir != Dir3::Z_NEG && dir != Dir3::Z_POS,
-            Block::FunnelXY => {
+            Block::FunnelXY { flow_dir, .. } => {
                 // Has restricted cases for in/out below
-                dir == Dir3::Y_NEG || dir == Dir3::Y_POS
+                dir == *flow_dir || dir == flow_dir.invert()
             }
             Block::WindSource => true,
-            Block::BlipSpawn { .. } => true,
-            Block::BlipDuplicator { .. } => true,
+            Block::BlipSpawn { .. } => false,
+            Block::BlipDuplicator { .. } => false,
             Block::Solid => true,
             Block::BlipWindSource { .. } => true,
-            Block::Input { .. } => dir == Dir3::X_POS,
-            Block::Output { .. } => dir == Dir3::X_NEG,
+            Block::Input { out_dir, .. } => dir == *out_dir,
+            Block::Output { in_dir, .. } => dir == *in_dir,
         }
     }
 
     pub fn has_wind_hole_in(&self, dir: Dir3) -> bool {
         match self {
-            Block::FunnelXY => dir == Dir3::Y_NEG,
+            Block::FunnelXY { flow_dir, .. } => dir == *flow_dir,
             Block::WindSource => false,
             _ => self.has_wind_hole(dir),
         }
@@ -213,11 +229,11 @@ impl Block {
 
     pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
         match self {
-            Block::FunnelXY => dir == Dir3::Y_POS,
+            Block::FunnelXY { flow_dir } => dir == flow_dir.invert(),
             Block::BlipDuplicator { .. } => false,
-            Block::BlipWindSource { .. } => {
+            Block::BlipWindSource { button_dir, .. } => {
                 // No wind out in the direction of our activating button
-                dir != Dir3::Y_NEG
+                dir != *button_dir
             }
             Block::Output { .. } => false,
             _ => self.has_wind_hole(dir),
@@ -226,11 +242,8 @@ impl Block {
 
     pub fn has_move_hole(&self, dir: Dir3) -> bool {
         match self {
-            Block::PipeSplitXY { open_move_hole_y } => {
-                dir == Dir3(Axis3::Y, *open_move_hole_y) || dir == Dir3::X_POS
-            }
-            Block::BlipDuplicator { .. } => dir != Dir3::X_NEG || dir != Dir3::X_POS,
-            Block::BlipWindSource { .. } => dir == Dir3::Y_NEG,
+            Block::BlipDuplicator { out_dirs, .. } => dir != out_dirs.0 && dir != out_dirs.1,
+            Block::BlipWindSource { button_dir, .. } => dir == *button_dir,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -238,60 +251,24 @@ impl Block {
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct PlacedBlock {
-    pub rotation_xy: usize,
     pub block: Block,
 }
 
 impl PlacedBlock {
-    pub fn rotate_cw_xy(&mut self) {
-        self.rotation_xy += 1;
-        if self.rotation_xy == 4 {
-            self.rotation_xy = 0;
-        }
-    }
-
-    pub fn rotate_ccw_xy(&mut self) {
-        if self.rotation_xy == 0 {
-            self.rotation_xy = 3;
-        } else {
-            self.rotation_xy -= 1;
-        }
-    }
-
-    pub fn rotated_dir_xy(&self, mut dir: Dir3) -> Dir3 {
-        for _ in 0..self.rotation_xy {
-            dir = dir.rotated_cw_xy();
-        }
-
-        dir
-    }
-
-    pub fn rotated_dir_ccw_xy(&self, mut dir: Dir3) -> Dir3 {
-        for _ in 0..self.rotation_xy {
-            dir = dir.rotated_ccw_xy();
-        }
-
-        dir
-    }
-
-    pub fn angle_xy_radians(&self) -> f32 {
-        -std::f32::consts::PI / 2.0 * self.rotation_xy as f32
-    }
-
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole(self.rotated_dir_ccw_xy(dir))
+        self.block.has_wind_hole(dir)
     }
 
     pub fn has_move_hole(&self, dir: Dir3) -> bool {
-        self.block.has_move_hole(self.rotated_dir_ccw_xy(dir))
+        self.block.has_move_hole(dir)
     }
 
     pub fn has_wind_hole_in(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole_in(self.rotated_dir_ccw_xy(dir))
+        self.block.has_wind_hole_in(dir)
     }
 
     pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole_out(self.rotated_dir_ccw_xy(dir))
+        self.block.has_wind_hole_out(dir)
     }
 
     pub fn wind_holes(&self) -> Vec<Dir3> {
@@ -383,8 +360,8 @@ impl Machine {
             machine.set_block_at_pos(
                 &Point3::new(0, input_y_start + index as isize, 0),
                 Some(PlacedBlock {
-                    rotation_xy: 0,
                     block: Block::Input {
+                        out_dir: Dir3::X_POS,
                         index,
                         inputs: Vec::new(),
                         activated: None,
@@ -399,8 +376,8 @@ impl Machine {
             machine.set_block_at_pos(
                 &Point3::new(level.size.x - 1, output_y_start + index as isize, 0),
                 Some(PlacedBlock {
-                    rotation_xy: 0,
                     block: Block::Output {
+                        in_dir: Dir3::X_NEG,
                         index,
                         outputs: Vec::new(),
                         activated: None,

@@ -125,10 +125,11 @@ impl Editor {
                         if last_pos.is_none()
                             && self.machine.get_block_at_pos(&mouse_grid_pos).is_none()
                         {
-                            let placed_block = PlacedBlock {
-                                rotation_xy: *rotation_xy,
-                                block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
-                            };
+                            let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
+                            for _ in 0..*rotation_xy {
+                                block.mutate_dirs(|dir| dir.rotated_cw_xy());
+                            }
+                            let placed_block = PlacedBlock { block };
                             let block_center = render::machine::block_center(&mouse_grid_pos);
                             let block_transform =
                                 render::machine::placed_block_transform(&placed_block);

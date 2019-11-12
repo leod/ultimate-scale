@@ -167,7 +167,7 @@ pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
 }
 
 pub fn render_bridge(
-    dir: Dir2,
+    dir: Dir3,
     length: f32,
     size: f32,
     center: &na::Point3<f32>,
@@ -176,11 +176,12 @@ pub fn render_bridge(
     out: &mut RenderList<DefaultInstanceParams>,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
-    let dir_offset: na::Vector3<f32> = na::convert(dir.embed().to_vector());
+    let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
+    let (pitch, yaw) = dir.to_pitch_yaw_x();
     let output_transform = translation
         * transform
         * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
-        * na::Matrix4::new_rotation(dir.to_radians() * na::Vector3::z())
+        * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
         * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, size, size));
     out.add(
         Object::Cube,
@@ -234,16 +235,11 @@ pub fn render_wind_mills(
         }
 
         let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
-            // We need to apply the rotation because here we render
-            // the blocks as if they were not rotated yet.
-            // (Any rotation is contained in `transform`).
-            let original_dir = placed_block.rotated_dir_xy(dir);
-
             let t = tick_time.tick_progress();
 
             std::f32::consts::PI
                 * 2.0
-                * match anim.wind_out(original_dir) {
+                * match anim.wind_out(dir) {
                     WindLife::None => 0.0,
                     WindLife::Appearing => {
                         // The wind will start moving inside of the block, so
@@ -354,16 +350,6 @@ pub fn render_block(
                 );
             }
         }
-        Block::PipeSplitXY { .. } => {
-            out.solid.add(
-                Object::PipeSplit,
-                &DefaultInstanceParams {
-                    transform: translation * transform,
-                    color: block_color(&pipe_color(), alpha),
-                    ..Default::default()
-                },
-            );
-        }
         Block::PipeMergeXY => {
             let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
                 PIPE_THICKNESS,
@@ -391,7 +377,8 @@ pub fn render_block(
                 },
             );
         }
-        Block::FunnelXY => {
+        Block::FunnelXY { flow_dir } => {
+            /*let (pitch, yaw) = flow_dir.to_pitch_yaw_x();
             let cube_color = na::Vector4::new(1.0, 0.5, 0.5, alpha);
             let cube_transform = translation
                 * transform
@@ -423,7 +410,7 @@ pub fn render_block(
                     color: na::Vector4::new(1.0, 1.0, 1.0, alpha),
                     ..Default::default()
                 },
-            );
+            );*/
         }
         Block::WindSource => {
             let scaling = na::Matrix4::new_scaling(0.75);
@@ -447,6 +434,7 @@ pub fn render_block(
             );
         }
         Block::BlipSpawn {
+            out_dir,
             kind,
             num_spawns,
             activated,
@@ -456,8 +444,10 @@ pub fn render_block(
             } else {
                 block_color(&blip_color(kind), alpha)
             };
+            let (pitch, yaw) = out_dir.to_pitch_yaw_x();
             let cube_transform = translation
                 * transform
+                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
             out.solid.add(
@@ -474,7 +464,7 @@ pub fn render_block(
                 bridge_length_animation(0.15, 0.75, activated.is_some(), tick_time.tick_progress());
 
             render_bridge(
-                Dir2::X_POS,
+                out_dir,
                 bridge_length,
                 bridge_size,
                 center,
@@ -484,11 +474,15 @@ pub fn render_block(
             );
         }
         Block::BlipDuplicator {
-            kind, activated, ..
+            out_dirs,
+            kind,
+            activated,
+            ..
         } => {
+            let (pitch, yaw) = out_dirs.0.to_pitch_yaw_x();
             let cube_transform = translation
                 * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
+                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
 
             let kind_color = match activated.or(kind) {
@@ -508,7 +502,7 @@ pub fn render_block(
                 bridge_length_animation(0.35, 0.75, activated.is_some(), tick_time.tick_progress());
 
             render_bridge(
-                Dir2::X_NEG,
+                out_dirs.0,
                 bridge_length,
                 0.3,
                 center,
@@ -517,7 +511,7 @@ pub fn render_block(
                 &mut out.solid,
             );
             render_bridge(
-                Dir2::X_POS,
+                out_dirs.1,
                 bridge_length,
                 0.3,
                 center,
@@ -526,7 +520,10 @@ pub fn render_block(
                 &mut out.solid,
             );
         }
-        Block::BlipWindSource { activated } => {
+        Block::BlipWindSource {
+            button_dir,
+            activated,
+        } => {
             let cube_color = if activated {
                 block_color(&wind_source_color(), alpha)
             } else {
@@ -548,7 +545,7 @@ pub fn render_block(
 
             let button_length = if activated { 0.4 } else { 0.45 };
             render_bridge(
-                Dir2::Y_NEG,
+                button_dir,
                 button_length,
                 0.5,
                 center,
@@ -577,7 +574,9 @@ pub fn render_block(
                 },
             );
         }
-        Block::Input { activated, .. } => {
+        Block::Input {
+            out_dir, activated, ..
+        } => {
             let is_wind_active = wind_anim_state
                 .as_ref()
                 .map_or(false, |anim| anim.wind_out(Dir3::X_POS).is_alive());
@@ -617,7 +616,7 @@ pub fn render_block(
             );
 
             render_bridge(
-                Dir2::X_POS,
+                out_dir,
                 bridge_length,
                 0.3,
                 center,
@@ -627,6 +626,7 @@ pub fn render_block(
             );
         }
         Block::Output {
+            in_dir,
             ref outputs,
             failed,
             activated,
@@ -635,7 +635,7 @@ pub fn render_block(
             render_half_pipe(
                 center,
                 transform,
-                Dir3::X_NEG,
+                in_dir,
                 &block_color(&pipe_color(), alpha),
                 &mut out.solid,
             );
@@ -732,7 +732,8 @@ pub fn block_center(pos: &grid::Point3) -> na::Point3<f32> {
 }
 
 pub fn placed_block_transform(placed_block: &PlacedBlock) -> na::Matrix4<f32> {
-    na::Matrix4::new_rotation(placed_block.angle_xy_radians() * na::Vector3::z())
+    //na::Matrix4::new_rotation(placed_block.angle_xy_radians() * na::Vector3::z())
+    na::Matrix4::identity()
 }
 
 pub fn render_machine<'a>(

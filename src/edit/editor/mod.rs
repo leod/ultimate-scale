@@ -113,10 +113,7 @@ impl Editor {
     }
 
     pub fn switch_to_place_block_mode(&mut self, block: Block) {
-        let placed_block = PlacedBlock {
-            rotation_xy: 0,
-            block,
-        };
+        let placed_block = PlacedBlock { block };
 
         let piece = match &self.mode {
             Mode::PlacePiece { piece, .. } => {
@@ -414,20 +411,18 @@ impl Editor {
                     blocks.insert(
                         mouse_grid_pos,
                         PlacedBlock {
-                            rotation_xy: 0,
                             block: Block::Pipe(delta_dir, delta_dir.invert()),
                         },
                     );
                 }
             } else {
                 // New mouse grid position is not a neighbor of last_pos
-                blocks.insert(
-                    mouse_grid_pos,
-                    PlacedBlock {
-                        rotation_xy,
-                        block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
-                    },
-                );
+                let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
+                for _ in 0..rotation_xy {
+                    block.mutate_dirs(|dir| dir.rotated_cw_xy());
+                }
+
+                blocks.insert(mouse_grid_pos, PlacedBlock { block });
             }
 
             Mode::PipeTool {
@@ -560,11 +555,13 @@ impl Editor {
                             mouse_grid_pos => block.1.clone(),
                         }
                     } else {
+                        let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
+                        for _ in 0..rotation_xy {
+                            block.mutate_dirs(|dir| dir.rotated_cw_xy());
+                        }
+
                         maplit::hashmap! {
-                            mouse_grid_pos => PlacedBlock {
-                                rotation_xy,
-                                block: Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS),
-                            },
+                            mouse_grid_pos => PlacedBlock { block },
                         }
                     };
 
@@ -732,9 +729,6 @@ impl Editor {
     ) -> PlacedBlock {
         match placed_block.block {
             Block::Pipe(dir_a, dir_b) => {
-                let dir_a = placed_block.rotated_dir_xy(dir_a);
-                let dir_b = placed_block.rotated_dir_xy(dir_b);
-
                 let is_connected = |pos: grid::Point3, dir: grid::Dir3| {
                     let tentative = blocks
                         .get(&(pos + dir.to_vector()))
@@ -769,12 +763,7 @@ impl Editor {
                     Block::Pipe(dir_a, dir_b)
                 };
 
-                // The pipe directions have been rotated above, so we can reset
-                // the rotation to zero.
-                PlacedBlock {
-                    rotation_xy: 0,
-                    block,
-                }
+                PlacedBlock { block }
             }
             _ => placed_block.clone(),
         }

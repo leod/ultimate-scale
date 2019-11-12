@@ -220,9 +220,6 @@ impl Exec {
             placed_block.block, old_wind_state[block_index]
         );
 
-        let dir_y_neg = placed_block.rotated_dir_xy(Dir3::Y_NEG);
-        let dir_x_pos = placed_block.rotated_dir_xy(Dir3::X_POS);
-
         match placed_block.block {
             Block::WindSource => {
                 for dir in &Dir3::ALL {
@@ -235,9 +232,12 @@ impl Exec {
                     }
                 }
             }
-            Block::BlipWindSource { activated } => {
+            Block::BlipWindSource {
+                button_dir,
+                activated,
+            } => {
                 for dir in &Dir3::ALL {
-                    if *dir == dir_y_neg {
+                    if *dir == button_dir {
                         // Don't put wind in the direction of our blip button
                         continue;
                     }
@@ -256,6 +256,7 @@ impl Exec {
                 // `update_block`.
             }
             Block::Input {
+                out_dir,
                 index: _,
                 activated,
                 ..
@@ -273,14 +274,14 @@ impl Exec {
                 // spawned blip.
                 let active = true;
 
-                let neighbor_pos = *block_pos + dir_x_pos.to_vector();
+                let neighbor_pos = *block_pos + out_dir.to_vector();
                 let neighbor_index = block_ids.get(&neighbor_pos);
                 if let Some(Some(neighbor_index)) = neighbor_index {
                     if block_data[*neighbor_index]
                         .1
-                        .has_wind_hole_in(dir_x_pos.invert())
+                        .has_wind_hole_in(out_dir.invert())
                     {
-                        wind_state[*neighbor_index].wind_in[dir_x_pos.invert().to_index()] = active;
+                        wind_state[*neighbor_index].wind_in[out_dir.invert().to_index()] = active;
                     }
                 }
             }
@@ -290,11 +291,7 @@ impl Exec {
                     .iter()
                     .any(|dir| old_wind_state[block_index].wind_in(*dir));
 
-                debug!(
-                    "wind holes {:?}, rot {}",
-                    placed_block.wind_holes(),
-                    placed_block.rotation_xy
-                );
+                debug!("wind holes {:?}", placed_block.wind_holes(),);
                 for dir in &placed_block.wind_holes_out() {
                     let neighbor_pos = *block_pos + dir.to_vector();
 
@@ -317,7 +314,9 @@ impl Exec {
 
     fn update_block(block: &mut PlacedBlock) {
         match block.block {
-            Block::BlipWindSource { ref mut activated } => {
+            Block::BlipWindSource {
+                ref mut activated, ..
+            } => {
                 *activated = false;
             }
             Block::BlipSpawn {
@@ -646,11 +645,6 @@ impl Exec {
 
     fn on_blip_leave_block(_blip: &Blip, _dir: Dir3, placed_block: &mut PlacedBlock) {
         match placed_block.block {
-            Block::PipeSplitXY { open_move_hole_y } => {
-                placed_block.block = Block::PipeSplitXY {
-                    open_move_hole_y: open_move_hole_y.invert(),
-                };
-            }
             _ => (),
         }
     }
@@ -674,7 +668,9 @@ impl Exec {
                 // Remove blip
                 true
             }
-            Block::BlipWindSource { ref mut activated } => {
+            Block::BlipWindSource {
+                ref mut activated, ..
+            } => {
                 *activated = true;
 
                 // Remove blip
@@ -704,11 +700,9 @@ impl Exec {
         blip_state: &mut Vec<BlipState>,
         blips: &mut VecOption<Blip>,
     ) {
-        let dir_x_pos = placed_block.rotated_dir_xy(Dir3::X_POS);
-        let dir_x_neg = placed_block.rotated_dir_xy(Dir3::X_NEG);
-
         match placed_block.block {
             Block::BlipSpawn {
+                out_dir,
                 kind,
                 ref mut num_spawns,
                 ref mut activated,
@@ -716,7 +710,7 @@ impl Exec {
                 *activated = None;
 
                 if num_spawns.map_or(true, |n| n > 0) {
-                    let output_pos = *block_pos + dir_x_pos.to_vector();
+                    let output_pos = *block_pos + out_dir.to_vector();
                     let did_spawn = Self::try_spawn_blip(
                         false,
                         kind,
@@ -732,13 +726,16 @@ impl Exec {
                     }
                 }
             }
-            Block::BlipDuplicator { activated, .. } => {
-                // TODO: Only allow activating with specific kind?
+            Block::BlipDuplicator {
+                out_dirs,
+                activated,
+                ..
+            } => {
                 if let Some(kind) = activated {
                     Self::try_spawn_blip(
                         true,
                         kind,
-                        &(*block_pos + dir_x_pos.to_vector()),
+                        &(*block_pos + out_dirs.0.to_vector()),
                         block_ids,
                         blip_state,
                         blips,
@@ -746,7 +743,7 @@ impl Exec {
                     Self::try_spawn_blip(
                         true,
                         kind,
-                        &(*block_pos + dir_x_neg.to_vector()),
+                        &(*block_pos + out_dirs.1.to_vector()),
                         block_ids,
                         blip_state,
                         blips,
@@ -754,6 +751,7 @@ impl Exec {
                 }
             }
             Block::Input {
+                out_dir,
                 index: _,
                 ref mut inputs,
                 ref mut activated,
@@ -764,7 +762,7 @@ impl Exec {
                         Some(level::Input::Blip(kind)) => Self::try_spawn_blip(
                             false,
                             kind,
-                            &(*block_pos + dir_x_pos.to_vector()),
+                            &(*block_pos + out_dir.to_vector()),
                             block_ids,
                             blip_state,
                             blips,
