@@ -100,9 +100,6 @@ impl ShadowMapping {
             pipeline::simple::diffuse_core_transform(core)
         };
 
-        println!("{}", core.link().vertex.compile());
-        println!("{}", core.link().fragment.compile());
-
         let render_program = core.build_program(facade)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
