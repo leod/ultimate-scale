@@ -38,6 +38,14 @@ fn main() {
                 .help("Load the given machine")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("level")
+                .short("l")
+                .long("level")
+                .value_name("LEVEL")
+                .help("Play a specific level")
+                .takes_value(true),
+        )
         .get_matches();
 
     let config: config::Config = Default::default();
@@ -111,10 +119,19 @@ fn main() {
     let mut imgui_renderer = imgui_glium_renderer::Renderer::init(&mut imgui, &display)
         .expect("Failed to initialize imgui_glium_renderer");
 
-    let level = Some(Level {
-        size: grid::Vector3::new(30, 30, 4),
-        spec: Spec::Id { dim: 3 },
-    });
+    // TODO: Better level choosing
+    let level = if let Some(level) = args.value_of("level") {
+        if level == "id_3" {
+            Some(Level {
+                size: grid::Vector3::new(30, 30, 4),
+                spec: Spec::Id { dim: 3 },
+            })
+        } else {
+            None
+        }
+    } else {
+        None
+    };
 
     let initial_machine = if let Some(file) = args.value_of("file") {
         info!("Loading machine from file `{}'", file);
