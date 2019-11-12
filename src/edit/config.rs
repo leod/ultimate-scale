@@ -121,6 +121,7 @@ impl Default for Config {
                 (
                     ModifiedKey::new(VirtualKeyCode::Key4),
                     Block::BlipSpawn {
+                        out_dir: Dir3::X_POS,
                         kind: BlipKind::A,
                         num_spawns: None,
                         activated: None,
@@ -129,6 +130,7 @@ impl Default for Config {
                 (
                     ModifiedKey::new(VirtualKeyCode::Key5),
                     Block::BlipSpawn {
+                        out_dir: Dir3::X_POS,
                         kind: BlipKind::A,
                         num_spawns: Some(1),
                         activated: None,
@@ -137,6 +139,7 @@ impl Default for Config {
                 (
                     ModifiedKey::new(VirtualKeyCode::Key6),
                     Block::BlipDuplicator {
+                        out_dirs: (Dir3::X_NEG, Dir3::X_POS),
                         kind: Some(BlipKind::A),
                         activated: None,
                     },
@@ -144,15 +147,24 @@ impl Default for Config {
                 (
                     ModifiedKey::new(VirtualKeyCode::Key7),
                     Block::BlipDuplicator {
+                        out_dirs: (Dir3::X_NEG, Dir3::X_POS),
                         kind: None,
                         activated: None,
                     },
                 ),
                 (
                     ModifiedKey::new(VirtualKeyCode::Key8),
-                    Block::BlipWindSource { activated: false },
+                    Block::BlipWindSource {
+                        button_dir: Dir3::Y_NEG,
+                        activated: false,
+                    },
                 ),
-                (ModifiedKey::new(VirtualKeyCode::Key9), Block::FunnelXY),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key9),
+                    Block::FunnelXY {
+                        flow_dir: Dir3::X_POS,
+                    },
+                ),
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key1),
                     Block::Pipe(Dir3::Y_NEG, Dir3::Y_POS),
@@ -172,13 +184,6 @@ impl Default for Config {
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key5),
                     Block::Pipe(Dir3::Z_POS, Dir3::X_POS),
-                ),
-                (ModifiedKey::ctrl(VirtualKeyCode::Key6), Block::PipeMergeXY),
-                (
-                    ModifiedKey::ctrl(VirtualKeyCode::Key7),
-                    Block::PipeSplitXY {
-                        open_move_hole_y: grid::Sign::Pos,
-                    },
                 ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
             ],

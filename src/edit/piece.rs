@@ -80,7 +80,7 @@ impl Piece {
                 .map(|(p, mut placed_block)| {
                     let rotated_p = grid::Point3::new(p.y, self.grid_size().y - p.x, p.z);
 
-                    placed_block.rotate_cw_xy();
+                    placed_block.block.mutate_dirs(|dir| dir.rotated_cw_xy());
 
                     (rotated_p, placed_block)
                 })
@@ -97,7 +97,7 @@ impl Piece {
     pub fn next_kind(&mut self) {
         for (_, placed_block) in self.blocks.iter_mut() {
             if let Some(kind) = placed_block.block.kind() {
-                placed_block.block = placed_block.block.with_kind(kind.next());
+                placed_block.block.set_kind(kind.next());
             }
         }
     }
