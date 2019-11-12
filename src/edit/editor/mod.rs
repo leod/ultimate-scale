@@ -500,6 +500,8 @@ impl Editor {
             self.action_rotate_cw();
         } else if key == self.config.rotate_block_ccw_key {
             self.action_rotate_ccw();
+        } else if key == self.config.mirror_y_key {
+            self.action_mirror_y();
         }
 
         // Switch to specific layer

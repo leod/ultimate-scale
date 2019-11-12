@@ -94,6 +94,24 @@ impl Piece {
         }
     }
 
+    pub fn mirror_y(&mut self) {
+        self.blocks = Self::blocks_to_origin(
+            &self
+                .blocks
+                .clone()
+                .into_iter()
+                .map(|(p, mut placed_block)| {
+                    let mirrored_p = grid::Point3::new(self.grid_size().x - p.x, p.y, p.z);
+
+                    placed_block.rotate_cw_xy();
+                    placed_block.rotate_cw_xy();
+
+                    (mirrored_p, placed_block)
+                })
+                .collect::<Vec<_>>(),
+        );
+    }
+
     pub fn next_kind(&mut self) {
         for (_, placed_block) in self.blocks.iter_mut() {
             if let Some(kind) = placed_block.block.kind() {

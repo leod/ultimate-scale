@@ -76,6 +76,7 @@ pub struct Config {
 
     pub rotate_block_cw_key: ModifiedKey,
     pub rotate_block_ccw_key: ModifiedKey,
+    pub mirror_y_key: ModifiedKey,
     pub block_kind_key: ModifiedKey,
 
     pub undo_key: ModifiedKey,
@@ -104,6 +105,7 @@ impl Default for Config {
             cancel_key: ModifiedKey::new(VirtualKeyCode::Escape),
             rotate_block_cw_key: ModifiedKey::new(VirtualKeyCode::R),
             rotate_block_ccw_key: ModifiedKey::shift(VirtualKeyCode::R),
+            mirror_y_key: ModifiedKey::new(VirtualKeyCode::M),
             block_kind_key: ModifiedKey::new(VirtualKeyCode::C),
             undo_key: ModifiedKey::ctrl(VirtualKeyCode::Z),
             redo_key: ModifiedKey::ctrl(VirtualKeyCode::Y),
