@@ -48,6 +48,12 @@ impl Spec {
         }
     }
 
+    pub fn description(&self) -> String {
+        match self {
+            Spec::Id { .. } => "Produce the same outputs as the inputs!".to_string(),
+        }
+    }
+
     pub fn generate_inputs_outputs<R: Rng + ?Sized>(&self, rng: &mut R) -> InputsOutputs {
         match self {
             Spec::Id { dim } => {
