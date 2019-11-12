@@ -378,12 +378,13 @@ pub fn render_block(
             );
         }
         Block::FunnelXY { flow_dir } => {
-            /*let (pitch, yaw) = flow_dir.to_pitch_yaw_x();
+            let (pitch, yaw) = flow_dir.invert().to_pitch_yaw_x();
             let cube_color = na::Vector4::new(1.0, 0.5, 0.5, alpha);
             let cube_transform = translation
                 * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.1, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.6, 0.8, 0.6));
+                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
+                * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0))
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.6, 0.6));
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
@@ -393,13 +394,11 @@ pub fn render_block(
                 },
             );
 
-            let input_dir = Dir2::Y_NEG;
             let input_size = 0.4;
-
             let input_transform = translation
                 * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.0, -0.3, 0.0))
-                * na::Matrix4::new_rotation(input_dir.to_radians() * na::Vector3::z())
+                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
+                * na::Matrix4::new_translation(&na::Vector3::new(-0.3, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
                     0.9, input_size, input_size,
                 ));
@@ -410,7 +409,7 @@ pub fn render_block(
                     color: na::Vector4::new(1.0, 1.0, 1.0, alpha),
                     ..Default::default()
                 },
-            );*/
+            );
         }
         Block::WindSource => {
             let scaling = na::Matrix4::new_scaling(0.75);
