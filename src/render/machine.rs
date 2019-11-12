@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::machine::grid::{self, Dir2, Dir3};
+use crate::machine::grid::{self, Dir3};
 use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
@@ -730,7 +730,7 @@ pub fn block_center(pos: &grid::Point3) -> na::Point3<f32> {
     na::Point3::from(coords_float) + na::Vector3::new(0.5, 0.5, 0.5)
 }
 
-pub fn placed_block_transform(placed_block: &PlacedBlock) -> na::Matrix4<f32> {
+pub fn placed_block_transform(_placed_block: &PlacedBlock) -> na::Matrix4<f32> {
     //na::Matrix4::new_rotation(placed_block.angle_xy_radians() * na::Vector3::z())
     na::Matrix4::identity()
 }

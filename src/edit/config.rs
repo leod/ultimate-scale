@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use glium::glutin::VirtualKeyCode;
 
-use crate::machine::grid::{self, Dir3};
+use crate::machine::grid::Dir3;
 use crate::machine::{BlipKind, Block};
 
 // TODO: Shift does not work for some reason, we don't get any key press events
