@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use floating_duration::TimeAsFloat;
+use imgui::{im_str, ImString};
 use log::info;
 use nalgebra as na;
 
@@ -9,9 +10,9 @@ use glium::glutin;
 use crate::config::{self, Config};
 use crate::edit::Editor;
 use crate::exec::play::{self, Play};
-use crate::exec::ExecView;
+use crate::exec::{ExecView, LevelStatus};
 use crate::input_state::InputState;
-use crate::machine::Machine;
+use crate::machine::{level, Machine};
 
 use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
 use crate::render::pipeline::deferred::DeferredShading;
@@ -42,6 +43,8 @@ pub struct Game {
     editor: Editor,
     play: Play,
     exec: Option<(play::Status, ExecView)>,
+
+    inputs_outputs_example: Option<level::InputsOutputs>,
 
     elapsed_time: Duration,
     fps: f32,
@@ -93,6 +96,12 @@ impl Game {
         let editor = Editor::new(&config.editor, initial_machine);
         let play = Play::new(&config.play);
 
+        let inputs_outputs_example = editor
+            .machine()
+            .level
+            .as_ref()
+            .map(|level| level.spec.gen_inputs_outputs(&mut rand::thread_rng()));
+
         Ok(Game {
             config: config.clone(),
             resources,
@@ -105,6 +114,7 @@ impl Game {
             editor,
             play,
             exec: None,
+            inputs_outputs_example,
             elapsed_time: Default::default(),
             fps: 0.0,
         })
@@ -244,15 +254,9 @@ impl Game {
                     } = s
                     {
                         for _ in 0..*num_ticks_since_last_update {
-                            // Execution may want to pause the game if a level
-                            // has been completed or failed.
-                            let finished = exec.run_tick();
+                            exec.run_tick();
 
-                            if finished {
-                                // For showing finished machine state, always
-                                // set tick timer to zero.
-                                //time.next_tick_timer.reset();
-
+                            if exec.level_status() != LevelStatus::Running {
                                 *s = play::Status::Finished { time: time.clone() };
                                 break;
                             }
@@ -286,6 +290,105 @@ impl Game {
 
         let play_state = self.exec.as_ref().map(|(play_state, _)| play_state);
         self.play.ui(window_size, play_state, ui);
+
+        if let Some(level) = self.editor.machine().level.as_ref() {
+            let mut updated_example = None;
+
+            imgui::Window::new(im_str!("Level"))
+                .horizontal_scrollbar(true)
+                .position([window_size.x / 2.0, 10.0], imgui::Condition::FirstUseEver)
+                .position_pivot([0.5, 0.0])
+                //.content_size([300.0, 0.0])
+                .always_auto_resize(true)
+                .bg_alpha(0.8)
+                .build(&ui, || {
+                    let goal = "Goal: ".to_string() + &level.spec.description();
+                    ui.bullet_text(&ImString::new(&goal));
+
+                    let status = "Status: ".to_string()
+                        + &if let Some((_, exec)) = self.exec.as_ref() {
+                            match exec.level_status() {
+                                LevelStatus::Running => "Running".to_string(),
+                                LevelStatus::Completed => "Completed!".to_string(),
+                                LevelStatus::Failed => "Failed".to_string(),
+                            }
+                        } else {
+                            "Editing".to_string()
+                        };
+
+                    ui.bullet_text(&ImString::new(&status));
+
+                    imgui::TreeNode::new(ui, im_str!("Example"))
+                        .opened(false, imgui::Condition::FirstUseEver)
+                        .build(|| {
+                            if ui.button(im_str!("Generate"), [80.0, 20.0]) {
+                                updated_example =
+                                    self.editor.machine().level.as_ref().map(|level| {
+                                        level.spec.gen_inputs_outputs(&mut rand::thread_rng())
+                                    });
+                            }
+
+                            if let Some(example) = self.inputs_outputs_example.as_ref() {
+                                self.ui_show_example(example, ui);
+                            }
+                        });
+                });
+
+            if updated_example.is_some() {
+                self.inputs_outputs_example = updated_example;
+            }
+        }
+    }
+
+    fn ui_show_example(&self, example: &level::InputsOutputs, ui: &imgui::Ui) {
+        for (index, row) in example.inputs.iter().enumerate() {
+            self.ui_show_blip_row(&format!("In {}", index), row.iter().copied(), ui);
+        }
+
+        //ui.separator();
+
+        for (index, row) in example.outputs.iter().enumerate() {
+            self.ui_show_blip_row(
+                &format!("Out {}", index),
+                row.iter().map(|kind| Some(level::Input::Blip(*kind))),
+                ui,
+            );
+        }
+    }
+
+    fn ui_show_blip_row(
+        &self,
+        label: &str,
+        row: impl Iterator<Item = Option<level::Input>>,
+        ui: &imgui::Ui,
+    ) {
+        let draw_list = ui.get_window_draw_list();
+        let blip_size = 16.0;
+
+        ui.text(&ImString::new(label));
+
+        for (column, input) in row.enumerate() {
+            ui.same_line(if column == 0 { 80.0 } else { 0.0 });
+
+            match input {
+                Some(level::Input::Blip(kind)) => {
+                    let color: [f32; 3] = render::machine::blip_color(kind).into();
+                    let cursor_pos = ui.cursor_screen_pos();
+
+                    draw_list.add_rect_filled_multicolor(
+                        cursor_pos,
+                        [cursor_pos[0] + blip_size, cursor_pos[1] + blip_size],
+                        color,
+                        color,
+                        color,
+                        color,
+                    );
+                }
+                None => (),
+            }
+
+            ui.dummy([blip_size, blip_size]);
+        }
     }
 
     pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {

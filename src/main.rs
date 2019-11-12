@@ -22,10 +22,10 @@ use log::info;
 use game::Game;
 use input_state::InputState;
 use machine::level::{Level, Spec};
-use machine::{grid, Machine, SavedMachine};
+use machine::{grid, BlipKind, Machine, SavedMachine};
 
 fn main() {
-    simple_logger::init_with_level(log::Level::Debug).unwrap();
+    simple_logger::init_with_level(log::Level::Info).unwrap();
 
     let args = App::new("Ultimate Scale")
         .version("0.0.1")
@@ -123,8 +123,15 @@ fn main() {
     let level = if let Some(level) = args.value_of("level") {
         if level == "id_3" {
             Some(Level {
-                size: grid::Vector3::new(30, 30, 4),
+                size: grid::Vector3::new(27, 27, 4),
                 spec: Spec::Id { dim: 3 },
+            })
+        } else if level == "clock" {
+            Some(Level {
+                size: grid::Vector3::new(9, 9, 1),
+                spec: Spec::Clock {
+                    pattern: vec![BlipKind::A, BlipKind::B],
+                },
             })
         } else {
             None
@@ -140,8 +147,10 @@ fn main() {
         let saved_machine: SavedMachine = serde_json::from_reader(reader).unwrap();
         saved_machine.into_machine()
     } else if let Some(level) = level {
+        info!("Running level \"{}\"", level.spec.description());
         Machine::new_from_level(level)
     } else {
+        info!("Starting in sandbox mode");
         let grid_size = grid::Vector3::new(30, 30, 4);
         Machine::new_sandbox(grid_size)
     };

@@ -65,8 +65,6 @@ impl DeferredShading {
 
         info!("Creating deferred scene program");
         let scene_core = shader::scene_buffers_core_transform(pipeline::simple::plain_core());
-        println!("{}", scene_core.vertex.compile());
-        println!("{}", scene_core.fragment.compile());
         let scene_program = scene_core.build_program(facade)?;
 
         info!("Creating deferred light program");
