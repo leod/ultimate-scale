@@ -46,12 +46,12 @@ pub struct Blip {
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct WindState {
-    pub wind_in: [bool; Dir3::NUM_INDICES],
+    pub wind_out: [bool; Dir3::NUM_INDICES],
 }
 
 impl WindState {
-    pub fn wind_in(self, dir: Dir3) -> bool {
-        self.wind_in[dir.to_index()]
+    pub fn wind_out(self, dir: Dir3) -> bool {
+        self.wind_out[dir.to_index()]
     }
 }
 
@@ -222,34 +222,21 @@ impl Exec {
 
         match placed_block.block {
             Block::WindSource => {
-                for dir in &Dir3::ALL {
-                    let neighbor_pos = *block_pos + dir.to_vector();
-                    let neighbor_index = block_ids.get(&neighbor_pos);
-                    if let Some(Some(neighbor_index)) = neighbor_index {
-                        if block_data[*neighbor_index].1.has_wind_hole_in(dir.invert()) {
-                            wind_state[*neighbor_index].wind_in[dir.invert().to_index()] = true;
-                        }
-                    }
+                for &dir in &Dir3::ALL {
+                    wind_state[block_index].wind_out[dir.to_index()] = true;
                 }
             }
             Block::BlipWindSource {
                 button_dir,
                 activated,
             } => {
-                for dir in &Dir3::ALL {
-                    if *dir == button_dir {
+                for &dir in &Dir3::ALL {
+                    if dir == button_dir {
                         // Don't put wind in the direction of our blip button
                         continue;
                     }
 
-                    let neighbor_pos = *block_pos + dir.to_vector();
-                    let neighbor_index = block_ids.get(&neighbor_pos);
-                    if let Some(Some(neighbor_index)) = neighbor_index {
-                        if block_data[*neighbor_index].1.has_wind_hole_in(dir.invert()) {
-                            wind_state[*neighbor_index].wind_in[dir.invert().to_index()] =
-                                activated;
-                        }
-                    }
+                    wind_state[block_index].wind_out[dir.to_index()] = activated;
                 }
 
                 // Note: activated will be set to false in the same tick in
@@ -274,39 +261,34 @@ impl Exec {
                 // spawned blip.
                 let active = true;
 
-                let neighbor_pos = *block_pos + out_dir.to_vector();
-                let neighbor_index = block_ids.get(&neighbor_pos);
-                if let Some(Some(neighbor_index)) = neighbor_index {
-                    if block_data[*neighbor_index]
-                        .1
-                        .has_wind_hole_in(out_dir.invert())
-                    {
-                        wind_state[*neighbor_index].wind_in[out_dir.invert().to_index()] = active;
-                    }
-                }
+                wind_state[block_index].wind_out[out_dir.to_index()] = active;
             }
             _ => {
-                let any_in = placed_block
-                    .wind_holes_in()
-                    .iter()
-                    .any(|dir| old_wind_state[block_index].wind_in(*dir));
+                // Check if we got any wind in flow from our neighbors in the
+                // old state
+                let mut any_in = false;
+                let mut dirs_in = [false; Dir3::NUM_INDICES];
 
-                debug!("wind holes {:?}", placed_block.wind_holes(),);
-                for dir in &placed_block.wind_holes_out() {
+                for &dir in &placed_block.wind_holes_in() {
                     let neighbor_pos = *block_pos + dir.to_vector();
 
-                    debug!("check wind guy {:?} at {:?}", block_pos, neighbor_pos);
-                    if let Some(Some(neighbor_index)) = block_ids.get(&neighbor_pos) {
-                        let neighbor_in_flow = if any_in {
-                            !old_wind_state[block_index].wind_in[dir.to_index()]
-                                && block_data[*neighbor_index].1.has_wind_hole_in(dir.invert())
+                    dirs_in[dir.to_index()] =
+                        if let Some(Some(neighbor_index)) = block_ids.get(&neighbor_pos) {
+                            old_wind_state[*neighbor_index].wind_out(dir.invert())
+                                && block_data[*neighbor_index]
+                                    .1
+                                    .has_wind_hole_out(dir.invert())
                         } else {
                             false
                         };
 
-                        wind_state[*neighbor_index].wind_in[dir.invert().to_index()] =
-                            neighbor_in_flow;
-                    }
+                    any_in = any_in || dirs_in[dir.to_index()];
+                }
+
+                // Forward in flow to our outgoing wind hole directions
+                for &dir in &placed_block.wind_holes_out() {
+                    wind_state[block_index].wind_out[dir.to_index()] =
+                        any_in && !dirs_in[dir.to_index()];
                 }
             }
         }
@@ -513,15 +495,21 @@ impl Exec {
             // TODO: At some point, we'll need to precompute neighbor
             //       indices.
 
-            let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
-            let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
-                wind_state[*neighbor_index].wind_in(dir.invert())
-                    && block_data[*neighbor_index].1.has_move_hole(dir.invert())
+            let block_index = block_ids.get(&blip.pos);
+            let block_out = if let Some(Some(block_index)) = block_index {
+                wind_state[*block_index].wind_out(*dir) && placed_block.has_move_hole(*dir)
             } else {
                 false
             };
 
-            neighbor_in && placed_block.has_move_hole(*dir)
+            let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
+            let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
+                block_data[*neighbor_index].1.has_move_hole(dir.invert())
+            } else {
+                false
+            };
+
+            block_out && neighbor_in
         };
 
         // Note that there might be multiple directions the blip can move in.
