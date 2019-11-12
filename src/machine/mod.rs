@@ -164,6 +164,14 @@ impl Block {
         }
     }
 
+    pub fn is_pipe(&self) -> bool {
+        match self {
+            Block::Pipe(_, _) => true,
+            Block::PipeMergeXY => true,
+            _ => false,
+        }
+    }
+
     pub fn kind(&self) -> Option<BlipKind> {
         match self {
             Block::BlipSpawn { kind, .. } => Some(*kind),

@@ -237,6 +237,10 @@ pub fn render_wind_mills(
         let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
             let t = tick_time.tick_progress();
 
+            if anim.is_out_deadend(dir) {
+                return 0.0;
+            }
+
             std::f32::consts::PI
                 * 2.0
                 * match anim.wind_out(dir) {
