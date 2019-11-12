@@ -161,7 +161,7 @@ impl ExecView {
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
 
         // The cylinder object points in the direction of the x axis
-        let (pitch, yaw) = in_dir.to_pitch_yaw_x();
+        let (pitch, yaw) = in_dir.invert().to_pitch_yaw_x();
 
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
@@ -191,7 +191,7 @@ impl ExecView {
             let anim_state = WindAnimState::from_exec_block(&self.exec, block_index);
 
             for &dir in &Dir3::ALL {
-                match anim_state.wind_in(dir) {
+                match anim_state.wind_out(dir) {
                     WindLife::None => {}
                     WindLife::Appearing => {
                         // Interpolate, i.e. draw partial line
