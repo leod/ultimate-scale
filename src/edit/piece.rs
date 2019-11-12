@@ -103,8 +103,13 @@ impl Piece {
                 .map(|(p, mut placed_block)| {
                     let mirrored_p = grid::Point3::new(self.grid_size().x - p.x, p.y, p.z);
 
-                    placed_block.rotate_cw_xy();
-                    placed_block.rotate_cw_xy();
+                    placed_block.block.mutate_dirs(|dir| {
+                        if dir.0 == grid::Axis3::X {
+                            dir.invert()
+                        } else {
+                            dir
+                        }
+                    });
 
                     (mirrored_p, placed_block)
                 })
