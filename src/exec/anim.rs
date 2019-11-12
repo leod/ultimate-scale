@@ -56,19 +56,19 @@ impl WindAnimState {
         let mut wind_out = [WindLife::None; Dir3::NUM_INDICES];
 
         for &dir in &Dir3::ALL {
-            // Incoming wind
-            wind_in[dir.to_index()] = WindLife::from_states(
-                exec.old_wind_state()[block_index].wind_in(dir),
-                exec.wind_state()[block_index].wind_in(dir),
+            // Outgoing wind
+            wind_out[dir.to_index()] = WindLife::from_states(
+                exec.old_wind_state()[block_index].wind_out(dir),
+                exec.wind_state()[block_index].wind_out(dir),
             );
 
-            // Outgoing wind
+            // Incoming wind
             let neighbor_pos = machine.block_pos_at_index(block_index) + dir.to_vector();
             let neighbor_block = machine.get_block_at_pos(&neighbor_pos);
             if let Some((neighbor_index, _neighbor_block)) = neighbor_block {
-                wind_out[dir.to_index()] = WindLife::from_states(
-                    exec.old_wind_state()[neighbor_index].wind_in(dir.invert()),
-                    exec.wind_state()[neighbor_index].wind_in(dir.invert()),
+                wind_in[dir.to_index()] = WindLife::from_states(
+                    exec.old_wind_state()[neighbor_index].wind_out(dir.invert()),
+                    exec.wind_state()[neighbor_index].wind_out(dir.invert()),
                 );
             }
         }
