@@ -25,7 +25,7 @@ use machine::level::{Level, Spec};
 use machine::{grid, Machine, SavedMachine};
 
 fn main() {
-    simple_logger::init_with_level(log::Level::Debug).unwrap();
+    simple_logger::init_with_level(log::Level::Info).unwrap();
 
     let args = App::new("Ultimate Scale")
         .version("0.0.1")
@@ -140,8 +140,10 @@ fn main() {
         let saved_machine: SavedMachine = serde_json::from_reader(reader).unwrap();
         saved_machine.into_machine()
     } else if let Some(level) = level {
+        info!("Running level \"{}\"", level.spec.description());
         Machine::new_from_level(level)
     } else {
+        info!("Starting in sandbox mode");
         let grid_size = grid::Vector3::new(30, 30, 4);
         Machine::new_sandbox(grid_size)
     };
