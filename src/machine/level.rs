@@ -25,6 +25,7 @@ pub struct InputsOutputs {
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub enum Spec {
     Id { dim: usize },
+    Clock { pattern: Vec<BlipKind> },
 }
 
 pub fn gen_random_blip_kind<R: Rng + ?Sized>(rng: &mut R) -> BlipKind {
@@ -39,18 +40,21 @@ impl Spec {
     pub fn input_dim(&self) -> usize {
         match *self {
             Spec::Id { dim } => dim,
+            Spec::Clock { .. } => 0,
         }
     }
 
     pub fn output_dim(&self) -> usize {
         match *self {
             Spec::Id { dim } => dim,
+            Spec::Clock { .. } => 1,
         }
     }
 
     pub fn description(&self) -> String {
         match self {
-            Spec::Id { .. } => "Produce the same outputs as the inputs!".to_string(),
+            Spec::Id { .. } => "Produce the same outputs as the inputs".to_string(),
+            Spec::Clock { .. } => "Produce a repeating clock pattern".to_string(),
         }
     }
 
@@ -72,6 +76,17 @@ impl Spec {
                             .collect()
                     })
                     .collect();
+
+                InputsOutputs { inputs, outputs }
+            }
+            Spec::Clock { pattern } => {
+                let inputs = Vec::new();
+                let outputs = vec![pattern
+                    .iter()
+                    .cycle()
+                    .take(pattern.len() * 10)
+                    .copied()
+                    .collect()];
 
                 InputsOutputs { inputs, outputs }
             }
