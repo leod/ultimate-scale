@@ -195,8 +195,11 @@ impl Exec {
             );
         }
 
-        // Check machine output, comparing to the level specification
-        self.level_status = Self::check_output(&mut self.machine.blocks.data);
+        // Check machine output, comparing to the level specification (unless
+        // running in sandbox mode)
+        if self.machine.level.is_some() {
+            self.level_status = Self::check_output(&mut self.machine.blocks.data);
+        }
 
         self.check_consistency();
 
