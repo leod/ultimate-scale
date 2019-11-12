@@ -57,13 +57,14 @@ impl ExecView {
         );
     }
 
-    pub fn run_tick(&mut self) -> bool {
+    pub fn run_tick(&mut self) {
         profile!("tick");
 
         self.exec.update();
+    }
 
-        // Is execution finished? `Game` will update `play::Status` accordingly.
-        self.exec.level_status() != LevelStatus::Running
+    pub fn level_status(&self) -> LevelStatus {
+        self.exec.level_status()
     }
 
     pub fn on_event(&mut self, event: &WindowEvent) {
