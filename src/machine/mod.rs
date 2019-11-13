@@ -1,6 +1,8 @@
 pub mod grid;
 pub mod level;
 
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 use crate::util::vec_option::VecOption;
@@ -36,6 +38,18 @@ impl BlipKind {
             BlipKind::B => BlipKind::C,
             BlipKind::C => BlipKind::A,
         }
+    }
+}
+
+impl fmt::Display for BlipKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // TODO: These names are preliminary, should look into something that
+        // avoids using colors.
+        f.write_str(match self {
+            BlipKind::A => "green",
+            BlipKind::B => "orange",
+            BlipKind::C => "blue",
+        })
     }
 }
 

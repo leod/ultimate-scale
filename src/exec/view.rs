@@ -5,7 +5,7 @@ use nalgebra as na;
 use glium::glutin::{self, WindowEvent};
 
 use crate::edit::pick;
-use crate::exec::anim::{WindAnimState, WindLife};
+use crate::exec::anim::{WindAnimState, WindDeadend, WindLife};
 use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
@@ -192,16 +192,21 @@ impl ExecView {
             let anim_state = WindAnimState::from_exec_block(&self.exec, block_index);
 
             for &dir in &Dir3::ALL {
-                // Draw half of the wind if it points towards a deadend
-                let max = if anim_state.is_out_deadend(dir) {
-                    if !placed_block.block.is_pipe() {
-                        // Don't draw wind towards deadends for non-pipes
+                // Draw half or none of the wind if it points towards a deadend
+                let max = match anim_state.out_deadend(dir) {
+                    Some(WindDeadend::Block) => {
+                        // Don't draw wind towards block deadends
                         continue;
-                    } else {
-                        0.5
                     }
-                } else {
-                    1.0
+                    Some(WindDeadend::Space) => {
+                        if !placed_block.block.is_pipe() {
+                            // Don't draw wind towards deadends from non-pipes
+                            continue;
+                        } else {
+                            0.5
+                        }
+                    }
+                    None => 1.0,
                 };
 
                 match anim_state.wind_out(dir) {
