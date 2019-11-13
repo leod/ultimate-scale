@@ -19,6 +19,13 @@ pub enum WindLife {
     Disappearing,
 }
 
+/// Wind going into a deadend is shown differently.
+#[derive(Debug, Copy, Clone)]
+pub enum WindDeadend {
+    Block,
+    Space,
+}
+
 impl WindLife {
     /// Returns the WindLife given the flow state in previous and current tick.
     pub fn from_states(old: bool, new: bool) -> Self {
@@ -44,7 +51,7 @@ impl WindLife {
 pub struct WindAnimState {
     pub wind_in: [WindLife; Dir3::NUM_INDICES],
     pub wind_out: [WindLife; Dir3::NUM_INDICES],
-    pub is_out_deadend: [bool; Dir3::NUM_INDICES],
+    pub out_deadend: [Option<WindDeadend>; Dir3::NUM_INDICES],
 }
 
 impl WindAnimState {
@@ -55,7 +62,7 @@ impl WindAnimState {
 
         let mut wind_in = [WindLife::None; Dir3::NUM_INDICES];
         let mut wind_out = [WindLife::None; Dir3::NUM_INDICES];
-        let mut is_out_deadend = [false; Dir3::NUM_INDICES];
+        let mut out_deadend = [None; Dir3::NUM_INDICES];
 
         for &dir in &Dir3::ALL {
             // Outgoing wind
@@ -68,21 +75,28 @@ impl WindAnimState {
             let neighbor_pos = machine.block_pos_at_index(block_index) + dir.to_vector();
             let neighbor_block = machine.get_block_at_pos(&neighbor_pos);
             if let Some((neighbor_index, neighbor_block)) = neighbor_block {
+                // If neighboring block has no wind connection in this
+                // direction, we won't show wind.
+                out_deadend[dir.to_index()] = if !neighbor_block.has_wind_hole_in(dir.invert()) {
+                    Some(WindDeadend::Block)
+                } else {
+                    None
+                };
+
                 wind_in[dir.to_index()] = WindLife::from_states(
                     exec.old_wind_state()[neighbor_index].wind_out(dir.invert()),
                     exec.wind_state()[neighbor_index].wind_out(dir.invert()),
                 );
-
-                is_out_deadend[dir.to_index()] = !neighbor_block.has_wind_hole_in(dir.invert());
             } else {
-                is_out_deadend[dir.to_index()] = true;
+                // No block, will show wind partially.
+                out_deadend[dir.to_index()] = Some(WindDeadend::Space);
             }
         }
 
         WindAnimState {
             wind_in,
             wind_out,
-            is_out_deadend,
+            out_deadend,
         }
     }
 
@@ -94,8 +108,8 @@ impl WindAnimState {
         self.wind_out[dir.to_index()]
     }
 
-    pub fn is_out_deadend(&self, dir: Dir3) -> bool {
-        self.is_out_deadend[dir.to_index()]
+    pub fn out_deadend(&self, dir: Dir3) -> Option<WindDeadend> {
+        self.out_deadend[dir.to_index()]
     }
 
     pub fn num_alive_in(&self) -> usize {

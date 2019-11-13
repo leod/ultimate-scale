@@ -237,7 +237,7 @@ pub fn render_wind_mills(
         let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
             let t = tick_time.tick_progress();
 
-            if anim.is_out_deadend(dir) {
+            if anim.out_deadend(dir).is_some() {
                 return 0.0;
             }
 
