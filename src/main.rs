@@ -133,6 +133,11 @@ fn main() {
                     pattern: vec![BlipKind::A, BlipKind::B],
                 },
             })
+        } else if level == "o_beats_g" {
+            Some(Level {
+                size: grid::Vector3::new(19, 19, 2),
+                spec: Spec::BitwiseMax,
+            })
         } else {
             None
         }

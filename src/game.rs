@@ -298,7 +298,6 @@ impl Game {
                 .horizontal_scrollbar(true)
                 .position([window_size.x / 2.0, 10.0], imgui::Condition::FirstUseEver)
                 .position_pivot([0.5, 0.0])
-                //.content_size([300.0, 0.0])
                 .always_auto_resize(true)
                 .bg_alpha(0.8)
                 .build(&ui, || {
