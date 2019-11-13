@@ -505,8 +505,8 @@ impl Exec {
             let neighbor_index = block_ids.get(&(blip.pos + dir.to_vector()));
             let neighbor_in = if let Some(Some(neighbor_index)) = neighbor_index {
                 let neighbor_block = &block_data[*neighbor_index].1;
-                neighbor_block.has_move_hole(dir.invert()) &&
-                    neighbor_block.has_wind_hole_in(dir.invert())
+                neighbor_block.has_move_hole(dir.invert())
+                    && neighbor_block.has_wind_hole_in(dir.invert())
             } else {
                 false
             };
