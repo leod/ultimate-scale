@@ -135,7 +135,7 @@ fn main() {
             })
         } else if level == "o_beats_g" {
             Some(Level {
-                size: grid::Vector3::new(19, 19, 1),
+                size: grid::Vector3::new(19, 19, 2),
                 spec: Spec::BitwiseMax,
             })
         } else {
