@@ -1,0 +1,9 @@
+# TODO
+## Editor
+- Select all
+- Deleting with right click while in `Mode::Select`
+- Not allowing deletion of `Block::Input` and `Block::Output`
+- Make `Mode::PipeTool` handle situations around connective blocks better
+- Show some info on mouse over of blocks
+- Better handling of multi-layer editing
+    - For example, don't move grid on Z, but show a smaller grid on top
