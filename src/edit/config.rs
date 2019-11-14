@@ -139,18 +139,18 @@ impl Default for Config {
                     },
                 ),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key6),
-                    Block::BlipDuplicator {
-                        out_dirs: (Dir3::X_NEG, Dir3::X_POS),
-                        kind: Some(BlipKind::A),
-                        activated: None,
-                    },
-                ),
-                (
                     ModifiedKey::new(VirtualKeyCode::Key7),
                     Block::BlipDuplicator {
                         out_dirs: (Dir3::X_NEG, Dir3::X_POS),
                         kind: None,
+                        activated: None,
+                    },
+                ),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key6),
+                    Block::BlipDuplicator {
+                        out_dirs: (Dir3::X_NEG, Dir3::X_POS),
+                        kind: Some(BlipKind::A),
                         activated: None,
                     },
                 ),
@@ -186,6 +186,10 @@ impl Default for Config {
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key5),
                     Block::Pipe(Dir3::Z_POS, Dir3::X_POS),
+                ),
+                (
+                    ModifiedKey::ctrl(VirtualKeyCode::Key6),
+                    Block::PipeMergeXY,
                 ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
             ],
