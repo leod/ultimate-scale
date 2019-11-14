@@ -187,10 +187,7 @@ impl Default for Config {
                     ModifiedKey::ctrl(VirtualKeyCode::Key5),
                     Block::Pipe(Dir3::Z_POS, Dir3::X_POS),
                 ),
-                (
-                    ModifiedKey::ctrl(VirtualKeyCode::Key6),
-                    Block::PipeMergeXY,
-                ),
+                (ModifiedKey::ctrl(VirtualKeyCode::Key6), Block::PipeMergeXY),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
             ],
             layer_keys: vec![

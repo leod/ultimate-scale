@@ -151,8 +151,8 @@ impl Block {
     pub fn description(&self) -> &'static str {
         match self {
             Block::Pipe(_, _) => "Conducts both wind and blips.",
-            Block::PipeMergeXY => "Four-way pipe. But why?",
-            Block::FunnelXY { .. } => "Not so useful.",
+            Block::PipeMergeXY => "Four-way pipe.",
+            Block::FunnelXY { .. } => "Conducts in only one direction.",
             Block::WindSource => "Produces a stream of wind in all directions.",
             Block::BlipSpawn {
                 num_spawns: None, ..
@@ -166,10 +166,10 @@ impl Block {
                 ..
             } => "Spawns a limited number of blips.",
             Block::BlipDuplicator { kind: None, .. } => {
-                "Produces two copies of whatever blip activates it."
+                "Produces two copies of whatever blip activates it.\n\nDESTROYS blips that are in its way!"
             }
             Block::BlipDuplicator { kind: Some(_), .. } => {
-                "Produces two copies of a specific kind of blip that may activate it."
+                "Produces two copies of a specific kind of blip that may activate it.\n\nDESTROYS blips that are in its way!"
             }
             Block::BlipWindSource { .. } => "Spawns one thrust of wind when activated by a blip.",
             Block::Solid => "Eats blips.",
