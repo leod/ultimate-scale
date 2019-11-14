@@ -710,8 +710,8 @@ impl Exec {
                         blips,
                     );
 
-                    *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
                     if did_spawn {
+                        *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
                         *activated = Some(cur_tick);
                     }
                 }
