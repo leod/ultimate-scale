@@ -442,11 +442,7 @@ pub fn render_block(
             num_spawns,
             activated,
         } => {
-            let cube_color = if num_spawns.is_some() {
-                na::Vector4::new(0.0, 0.5, 0.0, alpha)
-            } else {
-                block_color(&blip_color(kind), alpha)
-            };
+            let cube_color = block_color(&blip_color(kind), alpha);
             let (pitch, yaw) = out_dir.to_pitch_yaw_x();
             let cube_transform = translation
                 * transform
