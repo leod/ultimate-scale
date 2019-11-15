@@ -320,15 +320,15 @@ impl Game {
                     imgui::TreeNode::new(ui, im_str!("Example"))
                         .opened(false, imgui::Condition::FirstUseEver)
                         .build(|| {
+                            if let Some(example) = self.inputs_outputs_example.as_ref() {
+                                self.ui_show_example(example, ui);
+                            }
+
                             if ui.button(im_str!("Generate"), [80.0, 20.0]) {
                                 updated_example =
                                     self.editor.machine().level.as_ref().map(|level| {
                                         level.spec.gen_inputs_outputs(&mut rand::thread_rng())
                                     });
-                            }
-
-                            if let Some(example) = self.inputs_outputs_example.as_ref() {
-                                self.ui_show_example(example, ui);
                             }
                         });
                 });
