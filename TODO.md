@@ -18,3 +18,15 @@
 
 ## Gameplay
 - Campaign mode
+
+## Level Ideas
+### Introductory
+- Append orange
+- Flip color
+- Even/odd
+
+### Intermediate
+- Splitting input into two outputs
+- Something about buffering?
+
+### Hard
