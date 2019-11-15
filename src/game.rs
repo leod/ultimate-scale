@@ -10,9 +10,9 @@ use glium::glutin;
 use crate::config::{self, Config};
 use crate::edit::Editor;
 use crate::exec::play::{self, Play};
-use crate::exec::{ExecView, LevelStatus};
+use crate::exec::{Exec, ExecView, LevelStatus};
 use crate::input_state::InputState;
-use crate::machine::{level, Machine};
+use crate::machine::{level, Block, Machine};
 
 use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
 use crate::render::pipeline::deferred::DeferredShading;
@@ -44,7 +44,9 @@ pub struct Game {
     play: Play,
     exec: Option<(play::Status, ExecView)>,
 
-    inputs_outputs_example: Option<level::InputsOutputs>,
+    /// Current example to show for the level inputs/outputs. Optionally, store
+    /// the progress through the inputs/outputs when executing.
+    inputs_outputs_example: Option<(level::InputsOutputs, Option<InputsOutputsProgress>)>,
 
     elapsed_time: Duration,
     fps: f32,
@@ -100,7 +102,7 @@ impl Game {
             .machine()
             .level
             .as_ref()
-            .map(|level| level.spec.gen_inputs_outputs(&mut rand::thread_rng()));
+            .map(|level| (level.spec.gen_inputs_outputs(&mut rand::thread_rng()), None));
 
         Ok(Game {
             config: config.clone(),
@@ -292,6 +294,19 @@ impl Game {
         self.play.ui(window_size, play_state, ui);
 
         if let Some(level) = self.editor.machine().level.as_ref() {
+            if let Some((_, exec)) = self.exec.as_ref() {
+                // During execution, set the shown example to the generated
+                // one. Also remember the progress, so that it can still be
+                // shown after execution.
+                if let Some(example) = exec.inputs_outputs() {
+                    self.inputs_outputs_example = Some((
+                        example.clone(),
+                        Some(InputsOutputsProgress::new_from_exec(example, exec.exec())),
+                    ));
+                }
+            }
+
+            // UI allows generating new example when not executing
             let mut updated_example = None;
 
             imgui::Window::new(im_str!("Level"))
@@ -317,39 +332,65 @@ impl Game {
 
                     ui.bullet_text(&ImString::new(&status));
 
-                    imgui::TreeNode::new(ui, im_str!("Example"))
+                    imgui::TreeNode::new(ui, im_str!("Show example"))
                         .opened(false, imgui::Condition::FirstUseEver)
                         .build(|| {
-                            if ui.button(im_str!("Generate"), [80.0, 20.0]) {
+                            if let Some((example, progress)) = self.inputs_outputs_example.as_ref()
+                            {
+                                self.ui_show_example(example, progress.as_ref(), ui);
+                            }
+
+                            if self.exec.is_none() && ui.button(im_str!("Generate"), [80.0, 20.0]) {
                                 updated_example =
                                     self.editor.machine().level.as_ref().map(|level| {
                                         level.spec.gen_inputs_outputs(&mut rand::thread_rng())
                                     });
                             }
-
-                            if let Some(example) = self.inputs_outputs_example.as_ref() {
-                                self.ui_show_example(example, ui);
-                            }
                         });
                 });
 
-            if updated_example.is_some() {
-                self.inputs_outputs_example = updated_example;
+            if let Some(example) = updated_example {
+                self.inputs_outputs_example = Some((example, None));
             }
         }
     }
 
-    fn ui_show_example(&self, example: &level::InputsOutputs, ui: &imgui::Ui) {
+    fn ui_show_example(
+        &self,
+        example: &level::InputsOutputs,
+        progress: Option<&InputsOutputsProgress>,
+        ui: &imgui::Ui,
+    ) {
         for (index, row) in example.inputs.iter().enumerate() {
-            self.ui_show_blip_row(&format!("In {}", index), row.iter().copied(), ui);
+            let input_progress = progress
+                .and_then(|progress| progress.inputs.get(index).copied())
+                .unwrap_or(0);
+            let input_failed = false; // Input can't fail
+
+            self.ui_show_blip_row(
+                &format!("In {}", index),
+                row.iter().copied(),
+                input_progress,
+                input_failed,
+                ui,
+            );
         }
 
         //ui.separator();
 
         for (index, row) in example.outputs.iter().enumerate() {
+            let output_progress = progress
+                .and_then(|progress| progress.outputs.get(index).copied())
+                .unwrap_or(0);
+            let output_failed = progress
+                .and_then(|progress| progress.outputs_failed.get(index).copied())
+                .unwrap_or(false);
+
             self.ui_show_blip_row(
                 &format!("Out {}", index),
                 row.iter().map(|kind| Some(level::Input::Blip(*kind))),
+                output_progress,
+                output_failed,
                 ui,
             );
         }
@@ -359,10 +400,16 @@ impl Game {
         &self,
         label: &str,
         row: impl Iterator<Item = Option<level::Input>>,
+        progress: usize,
+        failed: bool,
         ui: &imgui::Ui,
     ) {
-        let draw_list = ui.get_window_draw_list();
+        let border_margin = 2.0;
+        let progress_color = [1.0, 1.0, 1.0];
+        let failed_color = [1.0, 0.0, 0.0];
         let blip_size = 16.0;
+
+        let draw_list = ui.get_window_draw_list();
 
         ui.text(&ImString::new(label));
 
@@ -373,6 +420,27 @@ impl Game {
                 Some(level::Input::Blip(kind)) => {
                     let color: [f32; 3] = render::machine::blip_color(kind).into();
                     let cursor_pos = ui.cursor_screen_pos();
+
+                    let border_a = [cursor_pos[0] - border_margin, cursor_pos[1] - border_margin];
+                    let border_b = [
+                        cursor_pos[0] + blip_size + border_margin,
+                        cursor_pos[1] + blip_size + border_margin,
+                    ];
+
+                    if !failed && progress == column + 1 {
+                        draw_list
+                            .add_rect(border_a, border_b, progress_color)
+                            .build();
+                    } else if failed && progress == column {
+                        draw_list.add_rect_filled_multicolor(
+                            border_a,
+                            border_b,
+                            failed_color,
+                            failed_color,
+                            failed_color,
+                            failed_color,
+                        );
+                    }
 
                     draw_list.add_rect_filled_multicolor(
                         cursor_pos,
@@ -444,5 +512,120 @@ impl From<shadow::CreationError> for CreationError {
 impl From<resources::CreationError> for CreationError {
     fn from(err: resources::CreationError) -> CreationError {
         CreationError::ResourcesCreationError(err)
+    }
+}
+
+/// `InputsOutputsProgress` stores the progress through the current
+/// `InputsOutputs` example while executing. The state is entirely derived from
+/// the machine's execution state. We store it, so that the user can see where
+/// execution failed even while editing afterwards.
+struct InputsOutputsProgress {
+    /// How many inputs have been fed by index?
+    ///
+    /// This vector has the same length as the level's `InputOutputs::inputs`.
+    inputs: Vec<usize>,
+
+    /// How many outputs have been correctly fed by index?
+    ///
+    /// This vector has the same length as the level's `InputOutputs::outputs`.
+    outputs: Vec<usize>,
+
+    /// Which outputs have failed (in their last time step)?
+    ///
+    /// This vector has the same length as the level's `InputOutputs::outputs`.
+    outputs_failed: Vec<bool>,
+}
+
+impl InputsOutputsProgress {
+    pub fn new_from_exec(example: &level::InputsOutputs, exec: &Exec) -> Self {
+        let machine = exec.machine();
+        let inputs = example
+            .inputs
+            .iter()
+            .enumerate()
+            .map(|(i, spec)| {
+                let progress = machine
+                    .blocks
+                    .data
+                    .values()
+                    .find_map(|(_block_pos, block)| {
+                        // Block::Input index is assumed to be unique within
+                        // the machine
+                        match &block.block {
+                            Block::Input { index, inputs, .. } if *index == i => {
+                                // Note that `inputs` here stores the remaining
+                                // inputs that will be fed into the machine.
+                                Some(if spec.len() >= inputs.len() {
+                                    spec.len() - inputs.len()
+                                } else {
+                                    // This case can only happen if `example`
+                                    // comes from the wrong source, ignore
+                                    0
+                                })
+                            }
+                            _ => None,
+                        }
+                    });
+
+                // Just show no progress if we ever have missing input blocks
+                progress.unwrap_or(0)
+            })
+            .collect();
+
+        let outputs_and_failed = example
+            .outputs
+            .iter()
+            .enumerate()
+            .map(|(i, spec)| {
+                let progress = machine
+                    .blocks
+                    .data
+                    .values()
+                    .find_map(|(_block_pos, block)| {
+                        // Block::Output index is assumed to be unique within
+                        // the machine
+                        match &block.block {
+                            Block::Output {
+                                index,
+                                outputs,
+                                activated,
+                                failed,
+                                ..
+                            } if *index == i => {
+                                // Note that `outputs` here stores the remaining
+                                // outputs that need to come out of the machine.
+                                let mut remaining = outputs.len();
+
+                                // If `activated` matches the next expected
+                                // output, there has been one more progress.
+                                if remaining > 0
+                                    && activated.is_some()
+                                    && *activated == outputs.last().copied()
+                                {
+                                    remaining -= 1;
+                                }
+
+                                Some(if spec.len() >= remaining {
+                                    (spec.len() - remaining, *failed)
+                                } else {
+                                    // This case can only happen if `example`
+                                    // comes from the wrong source, ignore
+                                    (0, false)
+                                })
+                            }
+                            _ => None,
+                        }
+                    });
+
+                // Just show no progress if we ever have missing input blocks
+                progress.unwrap_or((0, false))
+            })
+            .collect::<Vec<_>>();
+
+        Self {
+            inputs,
+            outputs: outputs_and_failed.iter().map(|(a, _)| *a).collect(),
+            outputs_failed: outputs_and_failed.iter().map(|(_, b)| *b).collect(),
+        }
     }
 }
