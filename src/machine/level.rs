@@ -30,6 +30,7 @@ pub enum Spec {
     Clock { pattern: Vec<BlipKind> },
     BitwiseMax,
     MakeItN { n: usize, max: usize },
+    MultiplyByN { n: usize, max: usize },
 }
 
 pub fn gen_blip_kind<R: Rng + ?Sized>(rng: &mut R) -> BlipKind {
@@ -64,6 +65,7 @@ impl Spec {
             Spec::Clock { .. } => 0,
             Spec::BitwiseMax => 2,
             Spec::MakeItN { .. } => 1,
+            Spec::MultiplyByN { .. } => 1,
         }
     }
 
@@ -73,6 +75,7 @@ impl Spec {
             Spec::Clock { .. } => 1,
             Spec::BitwiseMax => 1,
             Spec::MakeItN { .. } => 1,
+            Spec::MultiplyByN { .. } => 1,
         }
     }
 
@@ -82,6 +85,7 @@ impl Spec {
             Spec::Clock { .. } => "Produce a repeating clock pattern".to_string(),
             Spec::BitwiseMax => format!("{} beats {}", BlipKind::B, BlipKind::A),
             Spec::MakeItN { n, .. } => format!("Round up to the next multiple of {}", n),
+            Spec::MultiplyByN { n, .. } => format!("Multiply by {}", n),
         }
     }
 
@@ -127,6 +131,16 @@ impl Spec {
             Spec::MakeItN { n, max } => {
                 let len_input: usize = rng.gen_range(1, *max);
                 let len_output = (len_input / n + (len_input % n > 0) as usize) * n;
+                let inputs = vec![iter::repeat(Some(Input::Blip(BlipKind::A)))
+                    .take(len_input)
+                    .collect()];
+                let outputs = vec![iter::repeat(BlipKind::A).take(len_output).collect()];
+
+                InputsOutputs { inputs, outputs }
+            }
+            Spec::MultiplyByN { n, max } => {
+                let len_input: usize = rng.gen_range(0, *max);
+                let len_output = len_input * n;
                 let inputs = vec![iter::repeat(Some(Input::Blip(BlipKind::A)))
                     .take(len_input)
                     .collect()];
