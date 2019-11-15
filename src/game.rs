@@ -317,14 +317,25 @@ impl Game {
 
                     ui.bullet_text(&ImString::new(&status));
 
-                    imgui::TreeNode::new(ui, im_str!("Example"))
+                    let example_name = if self.exec.is_some() {
+                        "Current example"
+                    } else {
+                        "Show examples"
+                    };
+
+                    imgui::TreeNode::new(ui, &ImString::new(example_name.to_string()))
                         .opened(false, imgui::Condition::FirstUseEver)
                         .build(|| {
-                            if let Some(example) = self.inputs_outputs_example.as_ref() {
+                            let example = match self.exec.as_ref() {
+                                Some((_, exec)) => exec.inputs_outputs(),
+                                None => self.inputs_outputs_example.as_ref(),
+                            };
+
+                            if let Some(example) = example {
                                 self.ui_show_example(example, ui);
                             }
 
-                            if ui.button(im_str!("Generate"), [80.0, 20.0]) {
+                            if self.exec.is_none() && ui.button(im_str!("Generate"), [80.0, 20.0]) {
                                 updated_example =
                                     self.editor.machine().level.as_ref().map(|level| {
                                         level.spec.gen_inputs_outputs(&mut rand::thread_rng())
