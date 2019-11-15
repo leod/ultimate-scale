@@ -294,6 +294,19 @@ impl Game {
         self.play.ui(window_size, play_state, ui);
 
         if let Some(level) = self.editor.machine().level.as_ref() {
+            if let Some((_, exec)) = self.exec.as_ref() {
+                // During execution, set the shown example to the generated
+                // one. Also remember the progress, so that it can still be
+                // shown after execution.
+                if let Some(example) = exec.inputs_outputs() {
+                    self.inputs_outputs_example = Some((
+                        example.clone(),
+                        Some(InputsOutputsProgress::new_from_exec(example, exec.exec())),
+                    ));
+                }
+            }
+
+            // UI allows generating new example when not executing
             let mut updated_example = None;
 
             imgui::Window::new(im_str!("Level"))
@@ -319,25 +332,12 @@ impl Game {
 
                     ui.bullet_text(&ImString::new(&status));
 
-                    let example_name = if self.exec.is_some() {
-                        "Current example"
-                    } else {
-                        "Show examples"
-                    };
-
-                    imgui::TreeNode::new(ui, &ImString::new(example_name.to_string()))
+                    imgui::TreeNode::new(ui, im_str!("Show example"))
                         .opened(false, imgui::Condition::FirstUseEver)
                         .build(|| {
-                            let example = match self.exec.as_ref() {
-                                Some((_, exec)) => exec.inputs_outputs(),
-                                None => self
-                                    .inputs_outputs_example
-                                    .as_ref()
-                                    .map(|(example, _)| example),
-                            };
-
-                            if let Some(example) = example {
-                                self.ui_show_example(example, ui);
+                            if let Some((example, progress)) = self.inputs_outputs_example.as_ref()
+                            {
+                                self.ui_show_example(example, progress.as_ref(), ui);
                             }
 
                             if self.exec.is_none() && ui.button(im_str!("Generate"), [80.0, 20.0]) {
@@ -355,17 +355,42 @@ impl Game {
         }
     }
 
-    fn ui_show_example(&self, example: &level::InputsOutputs, ui: &imgui::Ui) {
+    fn ui_show_example(
+        &self,
+        example: &level::InputsOutputs,
+        progress: Option<&InputsOutputsProgress>,
+        ui: &imgui::Ui,
+    ) {
         for (index, row) in example.inputs.iter().enumerate() {
-            self.ui_show_blip_row(&format!("In {}", index), row.iter().copied(), ui);
+            let input_progress = progress
+                .and_then(|progress| progress.inputs.get(index).copied())
+                .unwrap_or(0);
+            let input_failed = false; // Input can't fail
+
+            self.ui_show_blip_row(
+                &format!("In {}", index),
+                row.iter().copied(),
+                input_progress,
+                input_failed,
+                ui,
+            );
         }
 
         //ui.separator();
 
         for (index, row) in example.outputs.iter().enumerate() {
+            let output_progress = progress
+                .and_then(|progress| progress.outputs.get(index).copied())
+                .unwrap_or(0);
+            let output_failed = progress
+                .and_then(|progress| progress.outputs_failed.get(index).copied())
+                .unwrap_or(false);
+
             self.ui_show_blip_row(
                 &format!("Out {}", index),
                 row.iter().map(|kind| Some(level::Input::Blip(*kind))),
+                output_progress,
+                output_failed,
                 ui,
             );
         }
@@ -375,10 +400,16 @@ impl Game {
         &self,
         label: &str,
         row: impl Iterator<Item = Option<level::Input>>,
+        progress: usize,
+        failed: bool,
         ui: &imgui::Ui,
     ) {
-        let draw_list = ui.get_window_draw_list();
+        let border_margin = 2.0;
+        let progress_color = [1.0, 1.0, 1.0];
+        let failed_color = [1.0, 0.0, 0.0];
         let blip_size = 16.0;
+
+        let draw_list = ui.get_window_draw_list();
 
         ui.text(&ImString::new(label));
 
@@ -389,6 +420,27 @@ impl Game {
                 Some(level::Input::Blip(kind)) => {
                     let color: [f32; 3] = render::machine::blip_color(kind).into();
                     let cursor_pos = ui.cursor_screen_pos();
+
+                    let border_a = [cursor_pos[0] - border_margin, cursor_pos[1] - border_margin];
+                    let border_b = [
+                        cursor_pos[0] + blip_size + border_margin,
+                        cursor_pos[1] + blip_size + border_margin,
+                    ];
+
+                    if !failed && progress == column + 1 {
+                        draw_list
+                            .add_rect(border_a, border_b, progress_color)
+                            .build();
+                    } else if failed && progress == column {
+                        draw_list.add_rect_filled_multicolor(
+                            border_a,
+                            border_b,
+                            failed_color,
+                            failed_color,
+                            failed_color,
+                            failed_color,
+                        );
+                    }
 
                     draw_list.add_rect_filled_multicolor(
                         cursor_pos,
@@ -481,11 +533,11 @@ struct InputsOutputsProgress {
     /// Which outputs have failed (in their last time step)?
     ///
     /// This vector has the same length as the level's `InputOutputs::outputs`.
-    failed_outputs: Vec<bool>,
+    outputs_failed: Vec<bool>,
 }
 
 impl InputsOutputsProgress {
-    pub fn from_exec(example: &level::InputsOutputs, exec: &Exec) -> Self {
+    pub fn new_from_exec(example: &level::InputsOutputs, exec: &Exec) -> Self {
         let machine = exec.machine();
         let inputs = example
             .inputs
@@ -536,13 +588,25 @@ impl InputsOutputsProgress {
                             Block::Output {
                                 index,
                                 outputs,
+                                activated,
                                 failed,
                                 ..
                             } if *index == i => {
                                 // Note that `outputs` here stores the remaining
                                 // outputs that need to come out of the machine.
-                                Some(if spec.len() >= outputs.len() {
-                                    (spec.len() - outputs.len(), *failed)
+                                let mut remaining = outputs.len();
+
+                                // If `activated` matches the next expected
+                                // output, there has been one more progress.
+                                if remaining > 0
+                                    && activated.is_some()
+                                    && *activated == outputs.last().copied()
+                                {
+                                    remaining -= 1;
+                                }
+
+                                Some(if spec.len() >= remaining {
+                                    (spec.len() - remaining, *failed)
                                 } else {
                                     // This case can only happen if `example`
                                     // comes from the wrong source, ignore
@@ -561,7 +625,7 @@ impl InputsOutputsProgress {
         Self {
             inputs,
             outputs: outputs_and_failed.iter().map(|(a, _)| *a).collect(),
-            failed_outputs: outputs_and_failed.iter().map(|(_, b)| *b).collect(),
+            outputs_failed: outputs_and_failed.iter().map(|(_, b)| *b).collect(),
         }
     }
 }
