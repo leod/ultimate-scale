@@ -376,11 +376,11 @@ impl Machine {
             level: Some(level.clone()),
         };
 
-        let input_y_start = level.size.y / 2 - level.spec.input_dim() as isize / 2;
+        let input_y_start = level.size.y / 2 + level.spec.input_dim() as isize / 2;
 
         for index in 0..level.spec.input_dim() {
             machine.set_block_at_pos(
-                &Point3::new(0, input_y_start + index as isize, 0),
+                &Point3::new(0, input_y_start - index as isize, 0),
                 Some(PlacedBlock {
                     block: Block::Input {
                         out_dir: Dir3::X_POS,
@@ -392,11 +392,11 @@ impl Machine {
             );
         }
 
-        let output_y_start = level.size.y / 2 - level.spec.output_dim() as isize / 2;
+        let output_y_start = level.size.y / 2 + level.spec.output_dim() as isize / 2;
 
         for index in 0..level.spec.output_dim() {
             machine.set_block_at_pos(
-                &Point3::new(level.size.x - 1, output_y_start + index as isize, 0),
+                &Point3::new(level.size.x - 1, output_y_start - index as isize, 0),
                 Some(PlacedBlock {
                     block: Block::Output {
                         in_dir: Dir3::X_NEG,
