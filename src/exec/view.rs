@@ -9,7 +9,7 @@ use crate::exec::anim::{WindAnimState, WindDeadend, WindLife};
 use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
-use crate::machine::{grid, BlipKind, Machine};
+use crate::machine::{grid, level, BlipKind, Machine};
 use crate::render::pipeline::{wind, RenderLists};
 use crate::render::{self, Camera, EditCameraView};
 
@@ -65,6 +65,10 @@ impl ExecView {
 
     pub fn level_status(&self) -> LevelStatus {
         self.exec.level_status()
+    }
+
+    pub fn inputs_outputs(&self) -> Option<&level::InputsOutputs> {
+        self.exec.inputs_outputs()
     }
 
     pub fn on_event(&mut self, event: &WindowEvent) {

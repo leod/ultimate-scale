@@ -74,6 +74,7 @@ pub struct Exec {
 
     machine: Machine,
 
+    inputs_outputs: Option<level::InputsOutputs>,
     level_status: LevelStatus,
 
     blips: VecOption<Blip>,
@@ -102,7 +103,7 @@ impl Exec {
             .as_ref()
             .map(|level| level.spec.gen_inputs_outputs(rng));
 
-        if let Some(inputs_outputs) = inputs_outputs {
+        if let Some(inputs_outputs) = inputs_outputs.as_ref() {
             Self::initialize_inputs_outputs(inputs_outputs, &mut machine);
         }
 
@@ -115,6 +116,7 @@ impl Exec {
             cur_tick: 0,
             machine,
             level_status: LevelStatus::Running,
+            inputs_outputs,
             blips: VecOption::new(),
             wind_state,
             old_wind_state,
@@ -129,6 +131,10 @@ impl Exec {
 
     pub fn level_status(&self) -> LevelStatus {
         self.level_status
+    }
+
+    pub fn inputs_outputs(&self) -> Option<&level::InputsOutputs> {
+        self.inputs_outputs.as_ref()
     }
 
     pub fn wind_state(&self) -> &[WindState] {
@@ -830,14 +836,14 @@ impl Exec {
         vec![Default::default(); machine.num_blocks()]
     }
 
-    fn initialize_inputs_outputs(inputs_outputs: level::InputsOutputs, machine: &mut Machine) {
-        for (i, input_spec) in inputs_outputs.inputs.into_iter().enumerate() {
+    fn initialize_inputs_outputs(inputs_outputs: &level::InputsOutputs, machine: &mut Machine) {
+        for (i, input_spec) in inputs_outputs.inputs.iter().enumerate() {
             for (_, (_, block)) in machine.blocks.data.iter_mut() {
                 match &mut block.block {
                     Block::Input { index, inputs, .. } if *index == i => {
                         // We reverse the inputs so that we can use Vec::pop
                         // during execution to get the next input.
-                        *inputs = input_spec.into_iter().rev().collect();
+                        *inputs = input_spec.iter().copied().rev().collect();
 
                         // Block::Input index is assumed to be unique
                         break;
@@ -847,13 +853,13 @@ impl Exec {
             }
         }
 
-        for (i, output_spec) in inputs_outputs.outputs.into_iter().enumerate() {
+        for (i, output_spec) in inputs_outputs.outputs.iter().enumerate() {
             for (_, (_, block)) in machine.blocks.data.iter_mut() {
                 match &mut block.block {
                     Block::Output { index, outputs, .. } if *index == i => {
                         // We reverse the outputs so that we can use Vec::pop
                         // during execution to get the next expected output.
-                        *outputs = output_spec.into_iter().rev().collect();
+                        *outputs = output_spec.iter().copied().rev().collect();
 
                         // Block::Output index is assumed to be unique
                         break;
