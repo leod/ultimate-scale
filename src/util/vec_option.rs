@@ -44,15 +44,21 @@ impl<T> VecOption<T> {
     }
 
     pub fn iter(&self) -> Iter<T> {
+        // TODO: Simplify now that we have impl traits
         Iter {
             iter: self.data.iter().enumerate(),
         }
     }
 
     pub fn iter_mut(&mut self) -> IterMut<T> {
+        // TODO: Simplify now that we have impl traits
         IterMut {
             iter: self.data.iter_mut().enumerate(),
         }
+    }
+
+    pub fn values(&self) -> impl Iterator<Item = &T> {
+        self.iter().map(|(_index, value)| value)
     }
 
     pub fn len(&self) -> usize {

@@ -10,9 +10,9 @@ use glium::glutin;
 use crate::config::{self, Config};
 use crate::edit::Editor;
 use crate::exec::play::{self, Play};
-use crate::exec::{ExecView, LevelStatus};
+use crate::exec::{Exec, ExecView, LevelStatus};
 use crate::input_state::InputState;
-use crate::machine::{level, Machine};
+use crate::machine::{level, Block, Machine};
 
 use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
 use crate::render::pipeline::deferred::DeferredShading;
@@ -44,7 +44,9 @@ pub struct Game {
     play: Play,
     exec: Option<(play::Status, ExecView)>,
 
-    inputs_outputs_example: Option<level::InputsOutputs>,
+    /// Current example to show for the level inputs/outputs. Optionally, store
+    /// the progress through the inputs/outputs when executing.
+    inputs_outputs_example: Option<(level::InputsOutputs, Option<InputsOutputsProgress>)>,
 
     elapsed_time: Duration,
     fps: f32,
@@ -100,7 +102,7 @@ impl Game {
             .machine()
             .level
             .as_ref()
-            .map(|level| level.spec.gen_inputs_outputs(&mut rand::thread_rng()));
+            .map(|level| (level.spec.gen_inputs_outputs(&mut rand::thread_rng()), None));
 
         Ok(Game {
             config: config.clone(),
@@ -328,7 +330,10 @@ impl Game {
                         .build(|| {
                             let example = match self.exec.as_ref() {
                                 Some((_, exec)) => exec.inputs_outputs(),
-                                None => self.inputs_outputs_example.as_ref(),
+                                None => self
+                                    .inputs_outputs_example
+                                    .as_ref()
+                                    .map(|(example, _)| example),
                             };
 
                             if let Some(example) = example {
@@ -344,8 +349,8 @@ impl Game {
                         });
                 });
 
-            if updated_example.is_some() {
-                self.inputs_outputs_example = updated_example;
+            if let Some(example) = updated_example {
+                self.inputs_outputs_example = Some((example, None));
             }
         }
     }
@@ -455,5 +460,108 @@ impl From<shadow::CreationError> for CreationError {
 impl From<resources::CreationError> for CreationError {
     fn from(err: resources::CreationError) -> CreationError {
         CreationError::ResourcesCreationError(err)
+    }
+}
+
+/// `InputsOutputsProgress` stores the progress through the current
+/// `InputsOutputs` example while executing. The state is entirely derived from
+/// the machine's execution state. We store it, so that the user can see where
+/// execution failed even while editing afterwards.
+struct InputsOutputsProgress {
+    /// How many inputs have been fed by index?
+    ///
+    /// This vector has the same length as the level's `InputOutputs::inputs`.
+    inputs: Vec<usize>,
+
+    /// How many outputs have been correctly fed by index?
+    ///
+    /// This vector has the same length as the level's `InputOutputs::outputs`.
+    outputs: Vec<usize>,
+
+    /// Which outputs have failed (in their last time step)?
+    ///
+    /// This vector has the same length as the level's `InputOutputs::outputs`.
+    failed_outputs: Vec<bool>,
+}
+
+impl InputsOutputsProgress {
+    pub fn from_exec(example: &level::InputsOutputs, exec: &Exec) -> Self {
+        let machine = exec.machine();
+        let inputs = example
+            .inputs
+            .iter()
+            .enumerate()
+            .map(|(i, spec)| {
+                let progress = machine
+                    .blocks
+                    .data
+                    .values()
+                    .find_map(|(_block_pos, block)| {
+                        // Block::Input index is assumed to be unique within
+                        // the machine
+                        match &block.block {
+                            Block::Input { index, inputs, .. } if *index == i => {
+                                // Note that `inputs` here stores the remaining
+                                // inputs that will be fed into the machine.
+                                Some(if spec.len() >= inputs.len() {
+                                    spec.len() - inputs.len()
+                                } else {
+                                    // This case can only happen if `example`
+                                    // comes from the wrong source, ignore
+                                    0
+                                })
+                            }
+                            _ => None,
+                        }
+                    });
+
+                // Just show no progress if we ever have missing input blocks
+                progress.unwrap_or(0)
+            })
+            .collect();
+
+        let outputs_and_failed = example
+            .outputs
+            .iter()
+            .enumerate()
+            .map(|(i, spec)| {
+                let progress = machine
+                    .blocks
+                    .data
+                    .values()
+                    .find_map(|(_block_pos, block)| {
+                        // Block::Output index is assumed to be unique within
+                        // the machine
+                        match &block.block {
+                            Block::Output {
+                                index,
+                                outputs,
+                                failed,
+                                ..
+                            } if *index == i => {
+                                // Note that `outputs` here stores the remaining
+                                // outputs that need to come out of the machine.
+                                Some(if spec.len() >= outputs.len() {
+                                    (spec.len() - outputs.len(), *failed)
+                                } else {
+                                    // This case can only happen if `example`
+                                    // comes from the wrong source, ignore
+                                    (0, false)
+                                })
+                            }
+                            _ => None,
+                        }
+                    });
+
+                // Just show no progress if we ever have missing input blocks
+                progress.unwrap_or((0, false))
+            })
+            .collect::<Vec<_>>();
+
+        Self {
+            inputs,
+            outputs: outputs_and_failed.iter().map(|(a, _)| *a).collect(),
+            failed_outputs: outputs_and_failed.iter().map(|(_, b)| *b).collect(),
+        }
     }
 }

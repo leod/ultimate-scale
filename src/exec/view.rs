@@ -71,6 +71,10 @@ impl ExecView {
         self.exec.inputs_outputs()
     }
 
+    pub fn exec(&self) -> &Exec {
+        &self.exec
+    }
+
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(*input),
