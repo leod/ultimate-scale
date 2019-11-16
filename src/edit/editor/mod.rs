@@ -202,6 +202,22 @@ impl Editor {
                 // Stop trying to go into drag and drop mode.
                 Mode::new_selection(selection)
             }
+            Mode::Select {
+                selection,
+                dragged_mouse_pos: _,
+            } if input_state.is_button_pressed(MouseButton::Right) => {
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
+                    let edit = Edit::SetBlocks(maplit::hashmap! {
+                        mouse_block_pos => None,
+                    });
+                    self.run_and_track_edit(edit);
+                }
+
+                Mode::Select {
+                    selection,
+                    dragged_mouse_pos: None,
+                }
+            }
             Mode::RectSelect {
                 existing_selection,
                 new_selection,
