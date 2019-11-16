@@ -548,6 +548,7 @@ impl Exec {
             }
         } else {
             // No specific directional preference
+            // TODO: Assign preference based on wind in directions
             let mut dirs = Dir3::ALL.iter().cloned();
 
             dirs.find(can_move_to_dir)
