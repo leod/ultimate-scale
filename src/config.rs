@@ -2,8 +2,7 @@ use glium::glutin;
 
 use crate::edit;
 use crate::exec;
-use crate::render::camera;
-use crate::render::pipeline::{deferred, shadow};
+use crate::render::{self, camera};
 
 #[derive(Debug, Clone)]
 pub struct ViewConfig {
@@ -20,26 +19,11 @@ impl Default for ViewConfig {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct RenderConfig {
-    pub shadow_mapping: Option<shadow::Config>,
-    pub deferred_shading: Option<deferred::Config>,
-}
-
-impl Default for RenderConfig {
-    fn default() -> RenderConfig {
-        RenderConfig {
-            shadow_mapping: Some(Default::default()),
-            deferred_shading: None, //Some(Default::default()),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Default)]
 pub struct Config {
     pub camera: camera::Config,
     pub view: ViewConfig,
-    pub render: RenderConfig,
+    pub render_pipeline: render::pipeline::Config,
     pub editor: edit::Config,
     pub exec: exec::view::Config,
     pub play: exec::play::Config,
