@@ -8,7 +8,11 @@ pub mod wind;
 
 use nalgebra as na;
 
+use crate::config::ViewConfig;
 use crate::render::{Camera, Resources};
+
+use deferred::DeferredShading;
+use shadow::ShadowMapping;
 
 pub use instance::{DefaultInstanceParams, Instance, InstanceParams};
 pub use light::Light;
@@ -53,10 +57,6 @@ pub struct RenderLists {
 }
 
 impl RenderLists {
-    pub fn new() -> RenderLists {
-        Default::default()
-    }
-
     pub fn clear(&mut self) {
         self.solid.clear();
         self.solid_wind.clear();
@@ -67,49 +67,157 @@ impl RenderLists {
     }
 }
 
-// TODO: Factor out into some struct that also holds the necessary programs
-pub fn render_frame_straight<S: glium::Surface>(
-    resources: &Resources,
-    context: &Context,
-    render_lists: &RenderLists,
-    target: &mut S,
-) -> Result<(), glium::DrawError> {
-    let blend = glium::DrawParameters {
-        blend: glium::draw_parameters::Blend::alpha_blending(),
-        ..Default::default()
-    };
+#[derive(Debug, Clone)]
+pub struct Config {
+    pub shadow_mapping: Option<shadow::Config>,
+    pub deferred_shading: Option<deferred::Config>,
+}
 
-    {
-        profile!("solid");
-        render_lists
-            .solid
-            .render(resources, context, &Default::default(), target)?;
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            shadow_mapping: Some(Default::default()),
+            deferred_shading: None, //Some(Default::default()),
+        }
+    }
+}
+
+pub struct Pipeline {
+    shadow_mapping: Option<ShadowMapping>,
+    deferred_shading: Option<DeferredShading>,
+}
+
+impl Pipeline {
+    pub fn create<F: glium::backend::Facade>(
+        facade: &F,
+        config: &Config,
+        view_config: &ViewConfig,
+    ) -> Result<Pipeline, CreationError> {
+        let shadow_mapping = config
+            .shadow_mapping
+            .as_ref()
+            .map(|config| ShadowMapping::create(facade, config, false))
+            .transpose()?;
+
+        let deferred_shading = config
+            .deferred_shading
+            .as_ref()
+            .map(|deferred_shading_config| {
+                DeferredShading::create(
+                    facade,
+                    &deferred_shading_config,
+                    view_config.window_size,
+                    &config.shadow_mapping,
+                )
+            })
+            .transpose()?;
+
+        Ok(Pipeline {
+            shadow_mapping,
+            deferred_shading,
+        })
     }
 
-    {
-        profile!("wind");
-        render_lists.solid_wind.render_with_program(
-            resources,
-            context,
-            &Default::default(),
-            &resources.wind_program,
-            target,
-        )?;
+    pub fn render<S: glium::Surface>(
+        &mut self,
+        display: &glium::backend::glutin::Display,
+        resources: &Resources,
+        context: &Context,
+        render_lists: &mut RenderLists,
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
+        if let Some(deferred_shading) = &mut self.deferred_shading {
+            profile!("deferred");
+
+            let intensity = 1.0;
+            render_lists.lights.push(Light {
+                position: context.main_light_pos,
+                attenuation: na::Vector3::new(1.0, 0.01, 0.00001),
+                color: na::Vector3::new(intensity, intensity, intensity),
+                radius: 160.0,
+            });
+
+            deferred_shading.render_frame(display, resources, context, render_lists, target)?;
+        } else if let Some(shadow_mapping) = &mut self.shadow_mapping {
+            profile!("shadow");
+
+            shadow_mapping.render_frame(display, resources, context, render_lists, target)?;
+        } else {
+            profile!("straight");
+
+            self.render_straight(resources, context, render_lists, target)?;
+        }
+
+        Ok(())
     }
 
-    {
-        profile!("plain");
-        render_lists
-            .plain
-            .render(resources, context, &Default::default(), target)?;
+    pub fn render_straight<S: glium::Surface>(
+        &self,
+        resources: &Resources,
+        context: &Context,
+        render_lists: &RenderLists,
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
+        let blend = glium::DrawParameters {
+            blend: glium::draw_parameters::Blend::alpha_blending(),
+            ..Default::default()
+        };
+
+        {
+            profile!("solid");
+            render_lists
+                .solid
+                .render(resources, context, &Default::default(), target)?;
+        }
+
+        {
+            profile!("wind");
+            render_lists.solid_wind.render_with_program(
+                resources,
+                context,
+                &Default::default(),
+                &resources.wind_program,
+                target,
+            )?;
+        }
+
+        {
+            profile!("plain");
+            render_lists
+                .plain
+                .render(resources, context, &Default::default(), target)?;
+        }
+
+        {
+            profile!("transparent");
+            render_lists
+                .transparent
+                .render(resources, context, &blend, target)?;
+        }
+
+        Ok(())
     }
 
-    {
-        profile!("transparent");
-        render_lists
-            .transparent
-            .render(resources, context, &blend, target)?;
-    }
+    pub fn on_window_resize<F: glium::backend::Facade>(
+        &mut self,
+        facade: &F,
+        new_window_size: glium::glutin::dpi::LogicalSize,
+    ) -> Result<(), CreationError> {
+        if let Some(deferred_shading) = self.deferred_shading.as_mut() {
+            deferred_shading.on_window_resize(facade, new_window_size)?;
+        }
 
-    Ok(())
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub enum CreationError {
+    ShadowMappingCreationError(shadow::CreationError),
+}
+
+impl From<shadow::CreationError> for CreationError {
+    fn from(err: shadow::CreationError) -> CreationError {
+        CreationError::ShadowMappingCreationError(err)
+    }
 }

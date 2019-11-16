@@ -250,7 +250,7 @@ fn main() {
         if let Some(new_window_size) = new_window_size {
             info!("Window resized to: {:?}", new_window_size);
 
-            game.on_window_resize(&display, new_window_size);
+            game.on_window_resize(&display, new_window_size).unwrap();
         }
 
         let now_clock = Instant::now();
