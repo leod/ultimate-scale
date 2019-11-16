@@ -15,29 +15,19 @@ use crate::input_state::InputState;
 use crate::machine::{level, Block, Machine};
 
 use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
-use crate::render::pipeline::deferred::DeferredShading;
-use crate::render::pipeline::shadow::{self, ShadowMapping};
-use crate::render::pipeline::{Light, RenderLists};
+use crate::render::pipeline::RenderLists;
 use crate::render::Resources;
 use crate::render::{self, resources};
 
-#[derive(Debug)]
-pub enum CreationError {
-    ShadowMappingCreationError(shadow::CreationError),
-    ResourcesCreationError(resources::CreationError),
-}
-
 pub struct Game {
     config: Config,
-
-    resources: Resources,
 
     camera: Camera,
     edit_camera_view: EditCameraView,
     edit_camera_view_input: EditCameraViewInput,
 
-    shadow_mapping: Option<ShadowMapping>,
-    deferred_shading: Option<DeferredShading>,
+    resources: Resources,
+    render_pipeline: render::Pipeline,
     render_lists: RenderLists,
 
     editor: Editor,
@@ -59,7 +49,6 @@ impl Game {
         initial_machine: Machine,
     ) -> Result<Game, CreationError> {
         info!("Creating resources");
-        let resources = Resources::create(facade)?;
 
         let viewport_size = na::Vector2::new(
             config.view.window_size.width as f32,
@@ -72,28 +61,10 @@ impl Game {
         let edit_camera_view = EditCameraView::new();
         let edit_camera_view_input = EditCameraViewInput::new(&config.camera);
 
-        let shadow_mapping = config
-            .render
-            .shadow_mapping
-            .as_ref()
-            .map(|config| ShadowMapping::create(facade, config, false))
-            .transpose()?;
-
-        let deferred_shading = config
-            .render
-            .deferred_shading
-            .as_ref()
-            .map(|deferred_shading_config| {
-                DeferredShading::create(
-                    facade,
-                    &deferred_shading_config,
-                    config.view.window_size,
-                    &config.render.shadow_mapping,
-                )
-            })
-            .transpose()?;
-
-        let render_lists = RenderLists::new();
+        let resources = Resources::create(facade)?;
+        let render_pipeline =
+            render::Pipeline::create(facade, &config.render_pipeline, &config.view)?;
+        let render_lists = RenderLists::default();
 
         let editor = Editor::new(&config.editor, initial_machine);
         let play = Play::new(&config.play);
@@ -106,12 +77,11 @@ impl Game {
 
         Ok(Game {
             config: config.clone(),
-            resources,
             camera,
             edit_camera_view,
             edit_camera_view_input,
-            shadow_mapping,
-            deferred_shading,
+            resources,
+            render_pipeline,
             render_lists,
             editor,
             play,
@@ -127,6 +97,16 @@ impl Game {
         display: &glium::backend::glutin::Display,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
+        self.render_lists.clear();
+
+        target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
+
+        if let Some((play_status, exec)) = self.exec.as_mut() {
+            exec.render(&play_status.time(), &mut self.render_lists);
+        } else {
+            self.editor.render(&mut self.render_lists)?;
+        }
+
         let render_context = render::pipeline::Context {
             camera: self.camera.clone(),
             elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
@@ -142,54 +122,13 @@ impl Game {
             main_light_center: na::Point3::new(15.0, 15.0, 0.0),
         };
 
-        self.render_lists.clear();
-
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
-
-        if let Some((play_status, exec)) = self.exec.as_mut() {
-            exec.render(&play_status.time(), &mut self.render_lists);
-        } else {
-            self.editor.render(&mut self.render_lists)?;
-        }
-
-        if let Some(deferred_shading) = &mut self.deferred_shading {
-            profile!("deferred");
-
-            let intensity = 1.0;
-            self.render_lists.lights.push(Light {
-                position: render_context.main_light_pos,
-                attenuation: na::Vector3::new(1.0, 0.01, 0.00001),
-                color: na::Vector3::new(intensity, intensity, intensity),
-                radius: 160.0,
-            });
-
-            deferred_shading.render_frame(
-                display,
-                &self.resources,
-                &render_context,
-                &self.render_lists,
-                target,
-            )?;
-        } else if let Some(shadow_mapping) = &mut self.shadow_mapping {
-            profile!("shadow");
-
-            shadow_mapping.render_frame(
-                display,
-                &self.resources,
-                &render_context,
-                &self.render_lists,
-                target,
-            )?;
-        } else {
-            profile!("straight");
-
-            render::pipeline::render_frame_straight(
-                &self.resources,
-                &render_context,
-                &self.render_lists,
-                target,
-            )?;
-        }
+        self.render_pipeline.render(
+            display,
+            &self.resources,
+            &render_context,
+            &mut self.render_lists,
+            target,
+        )?;
 
         // Render screen-space stuff on top
         let ortho_projection = na::Matrix4::new_orthographic(
@@ -473,7 +412,7 @@ impl Game {
         &mut self,
         facade: &F,
         new_window_size: glutin::dpi::LogicalSize,
-    ) {
+    ) -> Result<(), CreationError> {
         self.camera.projection = Self::perspective_matrix(&self.config.view, new_window_size);
         self.camera.viewport = na::Vector4::new(
             0.0,
@@ -482,11 +421,10 @@ impl Game {
             new_window_size.height as f32,
         );
 
-        if let Some(deferred_shading) = self.deferred_shading.as_mut() {
-            deferred_shading
-                .on_window_resize(facade, new_window_size)
-                .unwrap();
-        }
+        self.render_pipeline
+            .on_window_resize(facade, new_window_size)?;
+
+        Ok(())
     }
 
     fn perspective_matrix(
@@ -500,18 +438,6 @@ impl Game {
             10000.0,
         );
         projection.to_homogeneous()
-    }
-}
-
-impl From<shadow::CreationError> for CreationError {
-    fn from(err: shadow::CreationError) -> CreationError {
-        CreationError::ShadowMappingCreationError(err)
-    }
-}
-
-impl From<resources::CreationError> for CreationError {
-    fn from(err: resources::CreationError) -> CreationError {
-        CreationError::ResourcesCreationError(err)
     }
 }
 
@@ -627,5 +553,23 @@ impl InputsOutputsProgress {
             outputs: outputs_and_failed.iter().map(|(a, _)| *a).collect(),
             outputs_failed: outputs_and_failed.iter().map(|(_, b)| *b).collect(),
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum CreationError {
+    RenderPipelineCreationError(render::pipeline::CreationError),
+    ResourcesCreationError(resources::CreationError),
+}
+
+impl From<render::pipeline::CreationError> for CreationError {
+    fn from(err: render::pipeline::CreationError) -> CreationError {
+        CreationError::RenderPipelineCreationError(err)
+    }
+}
+
+impl From<resources::CreationError> for CreationError {
+    fn from(err: resources::CreationError) -> CreationError {
+        CreationError::ResourcesCreationError(err)
     }
 }
