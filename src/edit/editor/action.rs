@@ -126,7 +126,11 @@ impl Editor {
                 *offset = -piece.grid_center_xy();
             }
             Mode::Select { selection, .. } => {
-                edit = Some(Edit::RotateCWXY(selection.clone()));
+                if !selection.is_empty() {
+                    edit = Some(Edit::RotateCWXY(selection.clone()));
+                } else if let Some(mouse_block_pos) = self.mouse_block_pos {
+                    edit = Some(Edit::RotateCWXY(vec![mouse_block_pos]));
+                }
             }
             Mode::DragAndDrop { rotation_xy, .. } => {
                 *rotation_xy += 1;
@@ -159,7 +163,11 @@ impl Editor {
                 *offset = -piece.grid_center_xy();
             }
             Mode::Select { selection, .. } => {
-                edit = Some(Edit::RotateCCWXY(selection.clone()));
+                if !selection.is_empty() {
+                    edit = Some(Edit::RotateCCWXY(selection.clone()));
+                } else if let Some(mouse_block_pos) = self.mouse_block_pos {
+                    edit = Some(Edit::RotateCCWXY(vec![mouse_block_pos]));
+                }
             }
             Mode::DragAndDrop { rotation_xy, .. } => {
                 if *rotation_xy == 0 {
