@@ -10,7 +10,9 @@ use crate::util::timer::{self, Timer};
 /// Possible choices in the UI for number of ticks per second to play.
 /// (Specifying these as strings instead of floats here is easier than figuring
 ///  out how to format floats nicely.)
-pub const TICKS_PER_SEC_CHOICES: &[&str] = &["0.25", "0.5", "1", "2", "4", "8", "16", "32", "64", "128", "256", "512"];
+pub const TICKS_PER_SEC_CHOICES: &[&str] = &[
+    "0.25", "0.5", "1", "2", "4", "8", "16", "32", "64", "128", "256", "512",
+];
 
 pub const MAX_TICKS_PER_UPDATE: usize = 100;
 
