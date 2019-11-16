@@ -146,7 +146,7 @@ fn main() {
         } else if level == "mul_by_3" {
             Some(Level {
                 size: grid::Vector3::new(19, 19, 2),
-                spec: Spec::MultiplyByN { n: 3, max: 5 },
+                spec: Spec::MultiplyByN { n: 3, max: 15 },
             })
         } else {
             None
