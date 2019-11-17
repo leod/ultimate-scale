@@ -9,8 +9,6 @@ pub use crate::render::CreationError;
 
 pub struct Resources {
     pub object_buffers: Vec<ObjectBuffers>,
-    pub program: glium::Program,
-    pub wind_program: glium::Program,
     pub plain_program: glium::Program,
 }
 
@@ -27,21 +25,11 @@ impl Resources {
             object_buffers.push(object.create_buffers(facade)?);
         }
 
-        info!("Creating straight render program");
-        let program = pipeline::simple::diffuse_core_transform(pipeline::simple::plain_core())
-            .build_program(facade)?;
-
-        info!("Creating straight wind program");
-        let wind_core = pipeline::simple::diffuse_core_transform(pipeline::wind::core()).link();
-        let wind_program = wind_core.build_program(facade)?;
-
         info!("Creating plain render program");
-        let plain_program = pipeline::simple::plain_core().build_program(facade)?;
+        let plain_program = pipeline::simple::plain_scene_core().build_program(facade)?;
 
         Ok(Resources {
             object_buffers,
-            program,
-            wind_program,
             plain_program,
         })
     }

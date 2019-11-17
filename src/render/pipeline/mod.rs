@@ -2,6 +2,7 @@ pub mod deferred;
 pub mod glow;
 pub mod instance;
 pub mod light;
+pub mod pass;
 pub mod render_list;
 pub mod shadow;
 pub mod simple;
@@ -9,15 +10,19 @@ pub mod wind;
 
 use nalgebra as na;
 
+use glium::{uniform, Surface};
+
 use crate::config::ViewConfig;
-use crate::render::{Camera, Resources};
+use crate::render::screen_quad::ScreenQuad;
+use crate::render::{self, object, screen_quad, shader, Camera, DrawError, Resources};
 
 use deferred::DeferredShading;
 use glow::Glow;
 use shadow::ShadowMapping;
 
-pub use instance::{DefaultInstanceParams, Instance, InstanceParams};
+pub use instance::{DefaultInstanceParams, Instance, InstanceParams, UniformsOption, UniformsPair};
 pub use light::Light;
+pub use pass::{CompositionPassComponent, RenderPass, ScenePassComponent};
 pub use render_list::RenderList;
 
 #[derive(Debug, Clone)]
@@ -44,7 +49,8 @@ impl Default for Context {
 #[derive(Default, Clone)]
 pub struct RenderLists {
     pub solid: RenderList<DefaultInstanceParams>,
-    pub solid_wind: RenderList<wind::Params>,
+    pub wind: RenderList<wind::Params>,
+    pub solid_glow: RenderList<DefaultInstanceParams>,
 
     /// Transparent instances.
     pub transparent: RenderList<DefaultInstanceParams>,
@@ -61,11 +67,26 @@ pub struct RenderLists {
 impl RenderLists {
     pub fn clear(&mut self) {
         self.solid.clear();
-        self.solid_wind.clear();
+        self.wind.clear();
+        self.solid_glow.clear();
         self.transparent.clear();
         self.plain.clear();
         self.lights.clear();
         self.ortho.clear();
+    }
+
+    pub fn append(&mut self, other: &mut Self) {
+        self.solid.instances.append(&mut other.solid.instances);
+        self.wind.instances.append(&mut other.wind.instances);
+        self.solid_glow
+            .instances
+            .append(&mut other.solid_glow.instances);
+        self.transparent
+            .instances
+            .append(&mut other.transparent.instances);
+        self.plain.instances.append(&mut other.plain.instances);
+        self.lights.append(&mut other.lights);
+        self.ortho.instances.append(&mut other.ortho.instances);
     }
 }
 
@@ -86,23 +107,34 @@ impl Default for Config {
     }
 }
 
-pub struct Pipeline {
+struct Components {
     shadow_mapping: Option<ShadowMapping>,
     deferred_shading: Option<DeferredShading>,
     glow: Option<Glow>,
 }
 
-impl Pipeline {
-    pub fn create<F: glium::backend::Facade>(
+#[derive(Debug, Clone)]
+struct ScenePassSetup {
+    shadow: bool,
+    glow: bool,
+}
+
+struct ScenePass<P: InstanceParams, V: glium::vertex::Vertex> {
+    setup: ScenePassSetup,
+    shader_core: shader::Core<(Context, P), V>,
+    program: glium::Program,
+}
+
+impl Components {
+    fn create<F: glium::backend::Facade>(
         facade: &F,
         config: &Config,
         view_config: &ViewConfig,
-    ) -> Result<Pipeline, CreationError> {
-        let have_glow = config.glow.is_some();
+    ) -> Result<Self, CreationError> {
         let shadow_mapping = config
             .shadow_mapping
             .as_ref()
-            .map(|config| ShadowMapping::create(facade, config, false, have_glow))
+            .map(|config| ShadowMapping::create(facade, config))
             .transpose()
             .map_err(CreationError::ShadowMapping)?;
 
@@ -110,12 +142,7 @@ impl Pipeline {
             .deferred_shading
             .as_ref()
             .map(|deferred_shading_config| {
-                DeferredShading::create(
-                    facade,
-                    &deferred_shading_config,
-                    view_config.window_size,
-                    &config.shadow_mapping,
-                )
+                DeferredShading::create(facade, &deferred_shading_config, view_config.window_size)
             })
             .transpose()
             .map_err(CreationError::DeferredShading)?;
@@ -127,24 +154,249 @@ impl Pipeline {
             .transpose()
             .map_err(CreationError::Glow)?;
 
-        Ok(Pipeline {
+        Ok(Self {
             shadow_mapping,
             deferred_shading,
             glow,
         })
     }
 
-    pub fn render<S: glium::Surface>(
+    fn create_scene_pass<
+        F: glium::backend::Facade,
+        P: InstanceParams + Default,
+        V: glium::vertex::Vertex,
+    >(
+        &self,
+        facade: &F,
+        setup: ScenePassSetup,
+        mut shader_core: shader::Core<(Context, P), V>,
+    ) -> Result<ScenePass<P, V>, render::CreationError> {
+        if setup.shadow {
+            if let Some(shadow_mapping) = self.shadow_mapping.as_ref() {
+                shader_core = ScenePassComponent::core_transform(shadow_mapping, shader_core);
+            }
+        }
+
+        if setup.glow {
+            if let Some(glow) = self.glow.as_ref() {
+                shader_core = ScenePassComponent::core_transform(glow, shader_core);
+            }
+        }
+
+        if let Some(deferred_shading) = self.deferred_shading.as_ref() {
+            shader_core = ScenePassComponent::core_transform(deferred_shading, shader_core);
+        } else {
+            shader_core = simple::diffuse_scene_core_transform(shader_core);
+        }
+
+        let program = shader_core.build_program(facade)?;
+
+        Ok(ScenePass {
+            setup,
+            shader_core,
+            program,
+        })
+    }
+
+    fn composition_core(&self) -> shader::Core<(), screen_quad::Vertex> {
+        let mut core = simple::composition_core();
+
+        if let Some(deferred_shading) = self.deferred_shading.as_ref() {
+            core = CompositionPassComponent::core_transform(deferred_shading, core);
+        }
+
+        // TODO: Glow here
+
+        core
+    }
+
+    fn clear_buffers<F: glium::backend::Facade>(&self, facade: &F) -> Result<(), DrawError> {
+        self.shadow_mapping
+            .as_ref()
+            .map(|c| c.clear_buffers(facade))
+            .transpose()?;
+        self.deferred_shading
+            .as_ref()
+            .map(|c| c.clear_buffers(facade))
+            .transpose()?;
+        self.glow
+            .as_ref()
+            .map(|c| c.clear_buffers(facade))
+            .transpose()?;
+
+        Ok(())
+    }
+
+    fn scene_output_textures(
+        &self,
+        setup: &ScenePassSetup,
+    ) -> Vec<(&'static str, &glium::texture::Texture2d)> {
+        let mut textures = Vec::new();
+
+        textures.extend(
+            self.deferred_shading
+                .as_ref()
+                .map_or(Vec::new(), ScenePassComponent::output_textures),
+        );
+
+        if setup.glow {
+            textures.extend(
+                self.glow
+                    .as_ref()
+                    .map_or(Vec::new(), ScenePassComponent::output_textures),
+            );
+        }
+
+        textures
+    }
+
+    fn scene_pass<F: glium::backend::Facade, P: InstanceParams, V: glium::vertex::Vertex>(
+        &self,
+        facade: &F,
+        resources: &Resources,
+        context: &Context,
+        pass: &ScenePass<P, V>,
+        render_list: &RenderList<P>,
+        color_texture: &glium::texture::Texture2d,
+        depth_texture: &glium::texture::DepthTexture2d,
+    ) -> Result<(), DrawError> {
+        let mut output_textures = self.scene_output_textures(&pass.setup);
+        output_textures.push((shader::F_COLOR, color_texture));
+
+        let mut framebuffer = glium::framebuffer::MultiOutputFrameBuffer::with_depth_buffer(
+            facade,
+            output_textures.into_iter(),
+            depth_texture,
+        )?;
+
+        let params = glium::DrawParameters {
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            depth: glium::Depth {
+                test: glium::DepthTest::IfLessOrEqual,
+                write: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        // TODO: Instancing (lol)
+        for instance in &render_list.instances {
+            let buffers = resources.get_object_buffers(instance.object);
+
+            // TODO: Move `shared_uniforms` out of loop by having UniformsPair with refs
+            let shared_uniforms = UniformsPair(
+                context.uniforms(),
+                UniformsOption(
+                    self.shadow_mapping
+                        .as_ref()
+                        .map(|c| c.scene_pass_uniforms(context)),
+                ),
+            );
+            let uniforms = UniformsPair(shared_uniforms, instance.params.uniforms());
+
+            buffers.index_buffer.draw(
+                &buffers.vertex_buffer,
+                &pass.program,
+                &uniforms,
+                &params,
+                &mut framebuffer,
+            )?;
+        }
+
+        Ok(())
+    }
+}
+
+pub struct Pipeline {
+    components: Components,
+
+    scene_pass_solid: ScenePass<DefaultInstanceParams, object::Vertex>,
+    scene_pass_solid_glow: ScenePass<DefaultInstanceParams, object::Vertex>,
+    scene_pass_plain: ScenePass<DefaultInstanceParams, object::Vertex>,
+    scene_pass_wind: ScenePass<wind::Params, object::Vertex>,
+
+    scene_color_texture: glium::texture::Texture2d,
+    scene_depth_texture: glium::texture::DepthTexture2d,
+
+    composition_program: glium::Program,
+    screen_quad: ScreenQuad,
+}
+
+impl Pipeline {
+    pub fn create<F: glium::backend::Facade>(
+        facade: &F,
+        config: &Config,
+        view_config: &ViewConfig,
+    ) -> Result<Pipeline, CreationError> {
+        let components = Components::create(facade, config, view_config)?;
+
+        let scene_pass_solid = components.create_scene_pass(
+            facade,
+            ScenePassSetup {
+                shadow: true,
+                glow: false,
+            },
+            simple::plain_scene_core(),
+        )?;
+        let scene_pass_solid_glow = components.create_scene_pass(
+            facade,
+            ScenePassSetup {
+                shadow: true,
+                glow: true,
+            },
+            simple::plain_scene_core(),
+        )?;
+        let scene_pass_plain = components.create_scene_pass(
+            facade,
+            ScenePassSetup {
+                shadow: false,
+                glow: false,
+            },
+            simple::plain_scene_core(),
+        )?;
+        let scene_pass_wind = components.create_scene_pass(
+            facade,
+            ScenePassSetup {
+                shadow: false,
+                glow: false,
+            },
+            wind::scene_core(),
+        )?;
+
+        let rounded_size: (u32, u32) = view_config.window_size.into();
+        let scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
+        let scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
+
+        let composition_program = components
+            .composition_core()
+            .build_program(facade)
+            .map_err(render::CreationError::from)?;
+        let screen_quad = ScreenQuad::create(facade)?;
+
+        Ok(Pipeline {
+            components,
+            scene_pass_solid,
+            scene_pass_solid_glow,
+            scene_pass_plain,
+            scene_pass_wind,
+            scene_color_texture,
+            scene_depth_texture,
+            composition_program,
+            screen_quad,
+        })
+    }
+
+    pub fn draw_frame<F: glium::backend::Facade, S: glium::Surface>(
         &mut self,
-        display: &glium::backend::glutin::Display,
+        facade: &F,
         resources: &Resources,
         context: &Context,
         render_lists: &mut RenderLists,
         target: &mut S,
-    ) -> Result<(), glium::DrawError> {
-        if let Some(deferred_shading) = &mut self.deferred_shading {
-            profile!("deferred");
+    ) -> Result<(), DrawError> {
+        profile!("pipeline");
 
+        if self.components.deferred_shading.is_some() {
             let intensity = 1.0;
             render_lists.lights.push(Light {
                 position: context.main_light_pos,
@@ -152,63 +404,95 @@ impl Pipeline {
                 color: na::Vector3::new(intensity, intensity, intensity),
                 radius: 160.0,
             });
-
-            deferred_shading.render_frame(display, resources, context, render_lists, target)?;
-        } else if let Some(shadow_mapping) = &mut self.shadow_mapping {
-            profile!("shadow");
-
-            shadow_mapping.render_frame(display, resources, context, render_lists, target)?;
-        } else {
-            profile!("straight");
-
-            self.render_straight(resources, context, render_lists, target)?;
         }
 
-        Ok(())
-    }
-
-    pub fn render_straight<S: glium::Surface>(
-        &self,
-        resources: &Resources,
-        context: &Context,
-        render_lists: &RenderLists,
-        target: &mut S,
-    ) -> Result<(), glium::DrawError> {
-        let blend = glium::DrawParameters {
-            blend: glium::draw_parameters::Blend::alpha_blending(),
-            ..Default::default()
-        };
-
+        // Clear buffers
         {
-            profile!("solid");
-            render_lists
-                .solid
-                .render(resources, context, &Default::default(), target)?;
+            profile!("clear");
+
+            let mut framebuffer = glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(
+                facade,
+                &self.scene_color_texture,
+                &self.scene_depth_texture,
+            )?;
+            framebuffer.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
+
+            self.components.clear_buffers(facade)?;
         }
 
+        // Create shadow map from the main light's point of view
+        if let Some(shadow_mapping) = self.components.shadow_mapping.as_ref() {
+            profile!("shadow_pass");
+
+            shadow_mapping.shadow_pass(facade, resources, context, render_lists)?;
+        }
+
+        // Render scene into buffers
         {
-            profile!("wind");
-            render_lists.solid_wind.render_with_program(
+            profile!("scene_pass");
+
+            self.components.scene_pass(
+                facade,
                 resources,
                 context,
-                &Default::default(),
-                &resources.wind_program,
-                target,
+                &self.scene_pass_solid,
+                &render_lists.solid,
+                &self.scene_color_texture,
+                &self.scene_depth_texture,
+            )?;
+            self.components.scene_pass(
+                facade,
+                resources,
+                context,
+                &self.scene_pass_solid_glow,
+                &render_lists.solid_glow,
+                &self.scene_color_texture,
+                &self.scene_depth_texture,
+            )?;
+            self.components.scene_pass(
+                facade,
+                resources,
+                context,
+                &self.scene_pass_plain,
+                &render_lists.plain,
+                &self.scene_color_texture,
+                &self.scene_depth_texture,
+            )?;
+            self.components.scene_pass(
+                facade,
+                resources,
+                context,
+                &self.scene_pass_wind,
+                &render_lists.wind,
+                &self.scene_color_texture,
+                &self.scene_depth_texture,
             )?;
         }
 
-        {
-            profile!("plain");
-            render_lists
-                .plain
-                .render(resources, context, &Default::default(), target)?;
+        // Render light sources into a buffer
+        if let Some(deferred_shading) = self.components.deferred_shading.as_ref() {
+            profile!("light_pass");
+
+            deferred_shading.light_pass(facade, &render_lists.lights)?;
         }
 
+        // Combine buffers and draw to target surface
         {
-            profile!("transparent");
-            render_lists
-                .transparent
-                .render(resources, context, &blend, target)?;
+            profile!("composition_pass");
+
+            let uniforms = uniform! {
+                color_texture: &self.scene_color_texture,
+            };
+
+            // TODO: Glow here
+
+            if let Some(deferred_shading) = self.components.deferred_shading.as_ref() {
+                let uniforms = UniformsPair(uniforms, deferred_shading.composition_pass_uniforms());
+
+                self.composition_pass(&uniforms, target)?;
+            } else {
+                self.composition_pass(&uniforms, target)?;
+            }
         }
 
         Ok(())
@@ -219,18 +503,64 @@ impl Pipeline {
         facade: &F,
         new_window_size: glium::glutin::dpi::LogicalSize,
     ) -> Result<(), CreationError> {
-        if let Some(deferred_shading) = self.deferred_shading.as_mut() {
+        if let Some(deferred_shading) = self.components.deferred_shading.as_mut() {
             deferred_shading
                 .on_window_resize(facade, new_window_size)
                 .map_err(CreationError::DeferredShading)?;
         }
 
-        if let Some(glow) = self.glow.as_mut() {
+        if let Some(glow) = self.components.glow.as_mut() {
             glow.on_window_resize(facade, new_window_size)
                 .map_err(CreationError::Glow)?;
         }
 
+        let rounded_size: (u32, u32) = new_window_size.into();
+        self.scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
+        self.scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
+
         Ok(())
+    }
+
+    fn composition_pass<S: glium::Surface, U: glium::uniforms::Uniforms>(
+        &self,
+        uniforms: &U,
+        target: &mut S,
+    ) -> Result<(), glium::DrawError> {
+        target.draw(
+            &self.screen_quad.vertex_buffer,
+            &self.screen_quad.index_buffer,
+            &self.composition_program,
+            uniforms,
+            &Default::default(),
+        )
+    }
+
+    fn create_color_texture<F: glium::backend::Facade>(
+        facade: &F,
+        size: (u32, u32),
+    ) -> Result<glium::texture::Texture2d, CreationError> {
+        Ok(glium::texture::Texture2d::empty_with_format(
+            facade,
+            glium::texture::UncompressedFloatFormat::F32F32F32,
+            glium::texture::MipmapsOption::NoMipmap,
+            size.0,
+            size.1,
+        )
+        .map_err(render::CreationError::from)?)
+    }
+
+    fn create_depth_texture<F: glium::backend::Facade>(
+        facade: &F,
+        size: (u32, u32),
+    ) -> Result<glium::texture::DepthTexture2d, render::CreationError> {
+        Ok(glium::texture::DepthTexture2d::empty_with_format(
+            facade,
+            glium::texture::DepthFormat::F32,
+            glium::texture::MipmapsOption::NoMipmap,
+            size.0,
+            size.1,
+        )
+        .map_err(render::CreationError::from)?)
     }
 }
 
@@ -239,4 +569,11 @@ pub enum CreationError {
     ShadowMapping(shadow::CreationError),
     DeferredShading(deferred::CreationError),
     Glow(glow::CreationError),
+    CreationError(render::CreationError),
+}
+
+impl From<render::CreationError> for CreationError {
+    fn from(err: render::CreationError) -> CreationError {
+        CreationError::CreationError(err)
+    }
 }

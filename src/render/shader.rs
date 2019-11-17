@@ -208,6 +208,10 @@ impl<P: InstanceParams> FragmentCore<P> {
         self.in_defs.iter().find(|((n, _t), _q)| n == name)
     }
 
+    pub fn has_in(&self, name: &str) -> bool {
+        self.get_in_def(name).is_some()
+    }
+
     pub fn has_out(&self, name: &str) -> bool {
         self.out_defs
             .iter()

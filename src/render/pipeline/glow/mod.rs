@@ -2,10 +2,10 @@ pub mod shader;
 
 use log::info;
 
-use glium::glutin;
+use glium::{glutin, Surface};
 
-use crate::render::pipeline::{Context, InstanceParams, RenderList};
-use crate::render::{Resources, ScreenQuad};
+use crate::render::pipeline::{Context, InstanceParams, RenderPass, ScenePassComponent};
+use crate::render::{self, DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
 
@@ -15,9 +15,26 @@ pub struct Config {}
 pub struct Glow {
     glow_texture: glium::texture::Texture2d,
 
-    composition_program: glium::Program,
-
     screen_quad: ScreenQuad,
+}
+
+impl RenderPass for Glow {
+    fn clear_buffers<F: glium::backend::Facade>(&self, facade: &F) -> Result<(), DrawError> {
+        let mut framebuffer =
+            glium::framebuffer::SimpleFrameBuffer::new(facade, &self.glow_texture)?;
+        framebuffer.clear_color(0.0, 0.0, 0.0, 0.0);
+
+        Ok(())
+    }
+}
+
+impl ScenePassComponent for Glow {
+    fn core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+        &self,
+        core: render::shader::Core<(Context, P), V>,
+    ) -> render::shader::Core<(Context, P), V> {
+        shader::glow_map_core_transform(core)
+    }
 }
 
 impl Glow {
@@ -29,25 +46,16 @@ impl Glow {
         let rounded_size: (u32, u32) = window_size.into();
         let glow_texture = Self::create_texture(facade, rounded_size)?;
 
-        info!("Creating glow composition program");
-        let composition_core = shader::composition_core();
-        let composition_program = composition_core.build_program(facade)?;
-
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
 
         Ok(Glow {
             glow_texture,
-            composition_program,
             screen_quad,
         })
     }
 
-    pub fn glow_texture(&self) -> &glium::texture::Texture2d {
-        &self.glow_texture
-    }
-
-    pub fn blur_glow_texture(&mut self) -> Result<(), glium::DrawError> {
+    pub fn blur_pass(&self) -> Result<(), glium::DrawError> {
         Ok(())
     }
 

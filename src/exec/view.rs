@@ -141,7 +141,9 @@ impl ExecView {
         self.render_blocks(time, out);
         self.render_blips(time, out);
 
-        if let Some(mouse_block_pos) = self.mouse_block_pos {
+        // Draw a box around the picked block position. This turned out to be a
+        // bit annoying during actual execution, so I've disabled it for now.
+        /*if let Some(mouse_block_pos) = self.mouse_block_pos {
             assert!(self.exec.machine().is_valid_pos(&mouse_block_pos));
 
             let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
@@ -155,7 +157,7 @@ impl ExecView {
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
                 &mut out.plain,
             );
-        }
+        }*/
     }
 
     fn render_wind(
@@ -179,7 +181,7 @@ impl ExecView {
         let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
 
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
-            out.solid_wind.add(
+            out.wind.add(
                 render::Object::TessellatedCylinder,
                 &wind::Params {
                     transform,
