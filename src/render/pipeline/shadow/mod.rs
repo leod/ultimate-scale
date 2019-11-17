@@ -1,5 +1,8 @@
-/// Heavily inspired by:
-/// https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
+//! Shadow mapping.
+//!
+//! Heavily inspired by:
+//! https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
+
 mod shader;
 
 use log::info;
@@ -9,7 +12,7 @@ use nalgebra as na;
 use glium::{implement_vertex, uniform, Surface};
 
 use crate::render::pipeline::instance::UniformsPair;
-use crate::render::pipeline::{self, Context, InstanceParams, RenderLists};
+use crate::render::pipeline::{self, glow, Context, InstanceParams, RenderLists};
 use crate::render::{Camera, Resources};
 
 #[derive(Debug, Clone)]
@@ -69,6 +72,8 @@ pub struct ShadowMapping {
 
     shadow_map_program: glium::Program,
     render_program: glium::Program,
+    render_glow_program: Option<glium::Program>,
+
     debug_shadow_map_program: glium::Program,
     shadow_texture: glium::texture::DepthTexture2d,
 
@@ -82,6 +87,7 @@ impl ShadowMapping {
         facade: &F,
         config: &Config,
         deferred: bool,
+        glow: bool,
     ) -> Result<ShadowMapping, CreationError> {
         // Shaders for creating the shadow map from light source's perspective
         info!("Creating shadow map program");
@@ -99,8 +105,21 @@ impl ShadowMapping {
         } else {
             pipeline::simple::diffuse_core_transform(core)
         };
-
         let render_program = core.build_program(facade)?;
+
+        let render_glow_program = if glow {
+            let core = pipeline::simple::plain_core();
+            let core = glow::shader::glow_map_core_transform(core);
+            let core = shader::render_shadowed_core_transform(core);
+            let core = if deferred {
+                pipeline::deferred::shader::scene_buffers_core_transform(core)
+            } else {
+                pipeline::simple::diffuse_core_transform(core)
+            };
+            Some(core.build_program(facade)?)
+        } else {
+            None
+        };
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
             facade,
@@ -158,6 +177,7 @@ impl ShadowMapping {
             config: config.clone(),
             shadow_map_program,
             render_program,
+            render_glow_program,
             shadow_texture,
             debug_vertex_buffer,
             debug_index_buffer,
@@ -234,13 +254,12 @@ impl ShadowMapping {
                 ..Default::default()
             };
 
-            for instance in &render_lists.solid.instances {
-                let mat_light_view_projection: [[f32; 4]; 4] =
-                    (light_projection * light_view).into();
-                let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
-                    .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
-                    .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
+            let mat_light_view_projection: [[f32; 4]; 4] = (light_projection * light_view).into();
+            let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
+                .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
+                .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
 
+            for instance in &render_lists.solid.instances {
                 let uniforms = UniformsPair(
                     UniformsPair(context.uniforms(), instance.params.uniforms()),
                     uniform! {
