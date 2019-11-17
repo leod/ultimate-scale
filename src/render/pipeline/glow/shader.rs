@@ -5,9 +5,8 @@
 
 use glium::uniforms::UniformType;
 
-use crate::render::pipeline::deferred;
 use crate::render::pipeline::InstanceParams;
-use crate::render::shader;
+use crate::render::{screen_quad, shader};
 
 pub const F_GLOW_COLOR: &str = "f_glow_color";
 
@@ -18,8 +17,8 @@ pub fn f_glow_color() -> shader::FragmentOutDef {
     )
 }
 
-/// Shader core for rendering color into a texture so that it can be blurred
-/// and composed for a glow effect later in the pipeline.
+/// Shader core transform for rendering color into a texture so that it can be
+/// blurred and composed for a glow effect later in the pipeline.
 pub fn glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
@@ -32,7 +31,7 @@ pub fn glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
 }
 
 /// Shader core for composing the glow texture with the scene texture.
-pub fn composition_core() -> shader::Core<(), deferred::vertex::QuadVertex> {
+pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
     let vertex = shader::VertexCore {
         out_defs: vec![shader::v_tex_coord_def()],
         out_exprs: shader_out_exprs! {

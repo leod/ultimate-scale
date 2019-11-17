@@ -80,7 +80,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             shadow_mapping: Some(Default::default()),
-            deferred_shading: None, //Some(Default::default()),
+            deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
         }
     }
@@ -103,7 +103,8 @@ impl Pipeline {
             .shadow_mapping
             .as_ref()
             .map(|config| ShadowMapping::create(facade, config, false, have_glow))
-            .transpose()?;
+            .transpose()
+            .map_err(CreationError::ShadowMapping)?;
 
         let deferred_shading = config
             .deferred_shading
@@ -116,13 +117,15 @@ impl Pipeline {
                     &config.shadow_mapping,
                 )
             })
-            .transpose()?;
+            .transpose()
+            .map_err(CreationError::DeferredShading)?;
 
         let glow = config
             .glow
             .as_ref()
             .map(|config| Glow::create(facade, config, view_config.window_size))
-            .transpose()?;
+            .transpose()
+            .map_err(CreationError::Glow)?;
 
         Ok(Pipeline {
             shadow_mapping,
@@ -217,11 +220,14 @@ impl Pipeline {
         new_window_size: glium::glutin::dpi::LogicalSize,
     ) -> Result<(), CreationError> {
         if let Some(deferred_shading) = self.deferred_shading.as_mut() {
-            deferred_shading.on_window_resize(facade, new_window_size)?;
+            deferred_shading
+                .on_window_resize(facade, new_window_size)
+                .map_err(CreationError::DeferredShading)?;
         }
 
         if let Some(glow) = self.glow.as_mut() {
-            glow.on_window_resize(facade, new_window_size)?;
+            glow.on_window_resize(facade, new_window_size)
+                .map_err(CreationError::Glow)?;
         }
 
         Ok(())
@@ -230,11 +236,7 @@ impl Pipeline {
 
 #[derive(Debug)]
 pub enum CreationError {
-    ShadowMappingCreationError(shadow::CreationError),
-}
-
-impl From<shadow::CreationError> for CreationError {
-    fn from(err: shadow::CreationError) -> CreationError {
-        CreationError::ShadowMappingCreationError(err)
-    }
+    ShadowMapping(shadow::CreationError),
+    DeferredShading(deferred::CreationError),
+    Glow(glow::CreationError),
 }
