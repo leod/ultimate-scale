@@ -296,7 +296,7 @@ impl DeferredShading {
     ) -> Result<glium::texture::Texture2d, CreationError> {
         Ok(glium::texture::Texture2d::empty_with_format(
             facade,
-            glium::texture::UncompressedFloatFormat::F32F32F32F32,
+            glium::texture::UncompressedFloatFormat::F32F32F32,
             glium::texture::MipmapsOption::NoMipmap,
             size.0,
             size.1,
