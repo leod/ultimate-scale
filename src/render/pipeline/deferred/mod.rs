@@ -1,7 +1,7 @@
 /// Heavily inspired by:
 /// https://github.com/glium/glium/blob/master/examples/deferred.rs
 pub mod shader;
-mod vertex;
+pub mod vertex;
 
 pub use crate::render::pipeline::shadow::CreationError; // TODO
 

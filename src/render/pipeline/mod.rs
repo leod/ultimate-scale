@@ -1,4 +1,5 @@
 pub mod deferred;
+pub mod glow;
 pub mod instance;
 pub mod light;
 pub mod render_list;
@@ -12,6 +13,7 @@ use crate::config::ViewConfig;
 use crate::render::{Camera, Resources};
 
 use deferred::DeferredShading;
+use glow::Glow;
 use shadow::ShadowMapping;
 
 pub use instance::{DefaultInstanceParams, Instance, InstanceParams};
@@ -71,6 +73,7 @@ impl RenderLists {
 pub struct Config {
     pub shadow_mapping: Option<shadow::Config>,
     pub deferred_shading: Option<deferred::Config>,
+    pub glow: Option<glow::Config>,
 }
 
 impl Default for Config {
@@ -78,6 +81,7 @@ impl Default for Config {
         Self {
             shadow_mapping: Some(Default::default()),
             deferred_shading: None, //Some(Default::default()),
+            glow: Some(Default::default()),
         }
     }
 }
@@ -85,6 +89,7 @@ impl Default for Config {
 pub struct Pipeline {
     shadow_mapping: Option<ShadowMapping>,
     deferred_shading: Option<DeferredShading>,
+    glow: Option<Glow>,
 }
 
 impl Pipeline {
@@ -112,9 +117,16 @@ impl Pipeline {
             })
             .transpose()?;
 
+        let glow = config
+            .glow
+            .as_ref()
+            .map(|config| Glow::create(facade, config, view_config.window_size))
+            .transpose()?;
+
         Ok(Pipeline {
             shadow_mapping,
             deferred_shading,
+            glow,
         })
     }
 
@@ -205,6 +217,10 @@ impl Pipeline {
     ) -> Result<(), CreationError> {
         if let Some(deferred_shading) = self.deferred_shading.as_mut() {
             deferred_shading.on_window_resize(facade, new_window_size)?;
+        }
+
+        if let Some(glow) = self.glow.as_mut() {
+            glow.on_window_resize(facade, new_window_size)?;
         }
 
         Ok(())
