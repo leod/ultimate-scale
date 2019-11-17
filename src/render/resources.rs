@@ -2,32 +2,16 @@ use log::info;
 
 use num_traits::ToPrimitive;
 
-use crate::render::object::{self, Object, ObjectBuffers};
+use crate::render::object::{Object, ObjectBuffers};
 use crate::render::pipeline;
+
+pub use crate::render::CreationError;
 
 pub struct Resources {
     pub object_buffers: Vec<ObjectBuffers>,
     pub program: glium::Program,
     pub wind_program: glium::Program,
     pub plain_program: glium::Program,
-}
-
-#[derive(Debug)]
-pub enum CreationError {
-    ObjectCreationError(object::CreationError),
-    ProgramCreationError(glium::program::ProgramCreationError),
-}
-
-impl From<object::CreationError> for CreationError {
-    fn from(err: object::CreationError) -> CreationError {
-        CreationError::ObjectCreationError(err)
-    }
-}
-
-impl From<glium::program::ProgramCreationError> for CreationError {
-    fn from(err: glium::program::ProgramCreationError) -> CreationError {
-        CreationError::ProgramCreationError(err)
-    }
 }
 
 impl Resources {

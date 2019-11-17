@@ -15,6 +15,8 @@ use crate::render::pipeline::instance::UniformsPair;
 use crate::render::pipeline::{self, glow, Context, InstanceParams, RenderLists};
 use crate::render::{Camera, Resources};
 
+pub use crate::render::CreationError;
+
 #[derive(Debug, Clone)]
 pub struct Config {
     pub shadow_map_size: na::Vector2<u32>,
@@ -25,45 +27,6 @@ impl Default for Config {
         Config {
             shadow_map_size: na::Vector2::new(4096, 4096),
         }
-    }
-}
-
-#[derive(Debug)]
-pub enum CreationError {
-    TextureCreationError(glium::texture::TextureCreationError),
-    ProgramCreationError(glium::program::ProgramCreationError),
-    FrameBufferValidationError(glium::framebuffer::ValidationError),
-    VertexBufferCreationError(glium::vertex::BufferCreationError),
-    IndexBufferCreationError(glium::index::BufferCreationError),
-}
-
-impl From<glium::texture::TextureCreationError> for CreationError {
-    fn from(err: glium::texture::TextureCreationError) -> CreationError {
-        CreationError::TextureCreationError(err)
-    }
-}
-
-impl From<glium::program::ProgramCreationError> for CreationError {
-    fn from(err: glium::program::ProgramCreationError) -> CreationError {
-        CreationError::ProgramCreationError(err)
-    }
-}
-
-impl From<glium::framebuffer::ValidationError> for CreationError {
-    fn from(err: glium::framebuffer::ValidationError) -> CreationError {
-        CreationError::FrameBufferValidationError(err)
-    }
-}
-
-impl From<glium::vertex::BufferCreationError> for CreationError {
-    fn from(err: glium::vertex::BufferCreationError) -> CreationError {
-        CreationError::VertexBufferCreationError(err)
-    }
-}
-
-impl From<glium::index::BufferCreationError> for CreationError {
-    fn from(err: glium::index::BufferCreationError) -> CreationError {
-        CreationError::IndexBufferCreationError(err)
     }
 }
 

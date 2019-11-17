@@ -1,9 +1,10 @@
-use std::io;
 use std::path::Path;
 
 use glium::{self, implement_vertex};
 use log::info;
 use num_derive::{FromPrimitive, ToPrimitive};
+
+pub use crate::render::CreationError;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, FromPrimitive, ToPrimitive)]
 pub enum Object {
@@ -138,31 +139,6 @@ impl ObjectBuffers {
             vertex_buffer,
             index_buffer,
         })
-    }
-}
-
-#[derive(Debug)]
-pub enum CreationError {
-    VertexBufferCreationError(glium::vertex::BufferCreationError),
-    IndexBufferCreationError(glium::index::BufferCreationError),
-    IOError(io::Error),
-}
-
-impl From<glium::vertex::BufferCreationError> for CreationError {
-    fn from(err: glium::vertex::BufferCreationError) -> CreationError {
-        CreationError::VertexBufferCreationError(err)
-    }
-}
-
-impl From<glium::index::BufferCreationError> for CreationError {
-    fn from(err: glium::index::BufferCreationError) -> CreationError {
-        CreationError::IndexBufferCreationError(err)
-    }
-}
-
-impl From<io::Error> for CreationError {
-    fn from(err: io::Error) -> CreationError {
-        CreationError::IOError(err)
     }
 }
 

@@ -4,13 +4,10 @@ use log::info;
 
 use glium::glutin;
 
-pub use crate::render::pipeline::shadow::CreationError; // TODO
-
-use crate::render::Resources;
-
-// TODO: Move screen quad into `Resources` or something like that
-use crate::render::pipeline::deferred;
 use crate::render::pipeline::{Context, InstanceParams, RenderList};
+use crate::render::{Resources, ScreenQuad};
+
+pub use crate::render::CreationError;
 
 #[derive(Debug, Clone, Default)]
 pub struct Config {}
@@ -20,8 +17,7 @@ pub struct Glow {
 
     composition_program: glium::Program,
 
-    quad_vertex_buffer: glium::VertexBuffer<deferred::vertex::QuadVertex>,
-    quad_index_buffer: glium::IndexBuffer<u16>,
+    screen_quad: ScreenQuad,
 }
 
 impl Glow {
@@ -31,25 +27,19 @@ impl Glow {
         window_size: glutin::dpi::LogicalSize,
     ) -> Result<Self, CreationError> {
         let rounded_size: (u32, u32) = window_size.into();
-        let glow_texture = Self::create_glow_texture(facade, rounded_size)?;
-
-        let quad_vertex_buffer = glium::VertexBuffer::new(facade, deferred::vertex::QUAD_VERTICES)?;
-
-        let quad_index_buffer = glium::IndexBuffer::new(
-            facade,
-            glium::index::PrimitiveType::TrianglesList,
-            deferred::vertex::QUAD_INDICES,
-        )?;
+        let glow_texture = Self::create_texture(facade, rounded_size)?;
 
         info!("Creating glow composition program");
         let composition_core = shader::composition_core();
         let composition_program = composition_core.build_program(facade)?;
 
+        info!("Creating screen quad");
+        let screen_quad = ScreenQuad::create(facade)?;
+
         Ok(Glow {
             glow_texture,
             composition_program,
-            quad_vertex_buffer,
-            quad_index_buffer,
+            screen_quad,
         })
     }
 
@@ -67,18 +57,18 @@ impl Glow {
         new_window_size: glutin::dpi::LogicalSize,
     ) -> Result<(), CreationError> {
         let rounded_size: (u32, u32) = new_window_size.into();
-        self.glow_texture = Self::create_glow_texture(facade, rounded_size)?;
+        self.glow_texture = Self::create_texture(facade, rounded_size)?;
 
         Ok(())
     }
 
-    fn create_glow_texture<F: glium::backend::Facade>(
+    fn create_texture<F: glium::backend::Facade>(
         facade: &F,
         size: (u32, u32),
     ) -> Result<glium::texture::Texture2d, CreationError> {
         Ok(glium::texture::Texture2d::empty_with_format(
             facade,
-            glium::texture::UncompressedFloatFormat::F32F32F32F32,
+            glium::texture::UncompressedFloatFormat::F32F32F32,
             glium::texture::MipmapsOption::NoMipmap,
             size.0,
             size.1,

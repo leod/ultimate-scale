@@ -1,7 +1,7 @@
 use glium::uniforms::UniformType;
 
-use crate::render::pipeline::{deferred, InstanceParams, Light};
-use crate::render::shader;
+use crate::render::pipeline::{InstanceParams, Light};
+use crate::render::{screen_quad, shader};
 
 pub const F_WORLD_POS: &str = "f_world_pos";
 pub const F_WORLD_NORMAL: &str = "f_world_normal";
@@ -61,13 +61,12 @@ pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>
 
 /// Shader core for rendering a light source, given the position/normal buffers
 /// from the scene pass.
-pub fn light_core() -> shader::Core<Light, deferred::vertex::QuadVertex> {
+pub fn light_core() -> shader::Core<Light, screen_quad::Vertex> {
     let vertex = shader::VertexCore {
-        extra_uniforms: vec![("mat_orthogonal".into(), UniformType::FloatMat4)],
         out_defs: vec![shader::v_tex_coord_def()],
         out_exprs: shader_out_exprs! {
             shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "mat_orthogonal * position",
+            shader::V_POSITION => "position",
         },
         ..Default::default()
     };
@@ -114,13 +113,12 @@ pub fn light_core() -> shader::Core<Light, deferred::vertex::QuadVertex> {
 }
 
 /// Shader core for composing the buffers.
-pub fn composition_core() -> shader::Core<(), deferred::vertex::QuadVertex> {
+pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
     let vertex = shader::VertexCore {
-        extra_uniforms: vec![("mat_orthogonal".into(), UniformType::FloatMat4)],
         out_defs: vec![shader::v_tex_coord_def()],
         out_exprs: shader_out_exprs! {
             shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "mat_orthogonal * position",
+            shader::V_POSITION => "position",
         },
         ..Default::default()
     };

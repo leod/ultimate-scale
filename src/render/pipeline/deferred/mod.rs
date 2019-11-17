@@ -4,9 +4,6 @@
 //! https://github.com/glium/glium/blob/master/examples/deferred.rs
 
 pub mod shader;
-pub mod vertex;
-
-pub use crate::render::pipeline::shadow::CreationError; // TODO
 
 use log::info;
 
@@ -16,7 +13,9 @@ use glium::{glutin, uniform, Surface};
 
 use crate::render::pipeline::instance::UniformsPair;
 use crate::render::pipeline::{self, shadow, Context, InstanceParams, Light, RenderLists};
-use crate::render::Resources;
+use crate::render::{Resources, ScreenQuad};
+
+pub use crate::render::CreationError;
 
 #[derive(Debug, Clone, Default)]
 pub struct Config;
@@ -35,8 +34,7 @@ pub struct DeferredShading {
     light_program: glium::Program,
     composition_program: glium::Program,
 
-    quad_vertex_buffer: glium::VertexBuffer<vertex::QuadVertex>,
-    quad_index_buffer: glium::IndexBuffer<u16>,
+    screen_quad: ScreenQuad,
 
     shadow_mapping: Option<shadow::ShadowMapping>,
 }
@@ -78,19 +76,14 @@ impl DeferredShading {
         let composition_core = shader::composition_core();
         let composition_program = composition_core.build_program(facade)?;
 
-        let quad_vertex_buffer = glium::VertexBuffer::new(facade, vertex::QUAD_VERTICES)?;
-
-        let quad_index_buffer = glium::IndexBuffer::new(
-            facade,
-            glium::index::PrimitiveType::TrianglesList,
-            vertex::QUAD_INDICES,
-        )?;
-
         let shadow_mapping = if let Some(config) = shadow_mapping_config {
             Some(shadow::ShadowMapping::create(facade, config, true, false)?)
         } else {
             None
         };
+
+        info!("Creating screen quad");
+        let screen_quad = ScreenQuad::create(facade)?;
 
         info!("Deferred shading initialized");
 
@@ -103,8 +96,7 @@ impl DeferredShading {
             scene_program,
             light_program,
             composition_program,
-            quad_vertex_buffer,
-            quad_index_buffer,
+            screen_quad,
             shadow_mapping,
         })
     }
@@ -261,15 +253,14 @@ impl DeferredShading {
             let uniforms = UniformsPair(
                 light.uniforms(),
                 uniform! {
-                    mat_orthogonal: self.orthogonal_projection(),
                     position_texture: &self.scene_textures[1],
                     normal_texture: &self.scene_textures[2],
                 },
             );
 
             light_buffer.draw(
-                &self.quad_vertex_buffer,
-                &self.quad_index_buffer,
+                &self.screen_quad.vertex_buffer,
+                &self.screen_quad.index_buffer,
                 &self.light_program,
                 &uniforms,
                 &draw_params,
@@ -286,38 +277,17 @@ impl DeferredShading {
         profile!("composition");
 
         let uniforms = uniform! {
-            mat_orthogonal: self.orthogonal_projection(),
             color_texture: &self.scene_textures[0],
             light_texture: &self.light_texture,
         };
 
         target.draw(
-            &self.quad_vertex_buffer,
-            &self.quad_index_buffer,
+            &self.screen_quad.vertex_buffer,
+            &self.screen_quad.index_buffer,
             &self.composition_program,
             &uniforms,
             &Default::default(),
         )
-    }
-
-    fn orthogonal_projection(&self) -> [[f32; 4]; 4] {
-        // Scale our unit size quad to screen size before orthogonal projection
-        let mat_scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-            self.window_size.width as f32,
-            self.window_size.height as f32,
-            1.0,
-        ));
-        let mat_orthogonal = na::Matrix4::new_orthographic(
-            0.0,
-            self.window_size.width as f32,
-            0.0,
-            self.window_size.height as f32,
-            -1.0,
-            1.0,
-        ) * mat_scaling;
-        let mat_orthogonal: [[f32; 4]; 4] = mat_orthogonal.into();
-
-        mat_orthogonal
     }
 
     fn create_texture<F: glium::backend::Facade>(
