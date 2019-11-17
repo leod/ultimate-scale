@@ -55,7 +55,7 @@ fn v_discard() -> shader::VertexOutDef {
     )
 }
 
-pub fn core() -> shader::Core<(Context, Params), object::Vertex> {
+pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
     let vertex = shader::VertexCore {
         out_defs: vec![
             shader::v_world_normal_def(),

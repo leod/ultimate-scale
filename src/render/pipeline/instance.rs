@@ -22,7 +22,7 @@ impl InstanceParams for () {
     }
 }
 
-pub struct UniformsPair<T: Uniforms, U: Uniforms>(pub T, pub U);
+pub struct UniformsPair<T, U>(pub T, pub U);
 
 impl<T: Uniforms, U: Uniforms> Uniforms for UniformsPair<T, U> {
     fn visit_values<'a, F>(&'a self, mut output: F)
@@ -32,6 +32,19 @@ impl<T: Uniforms, U: Uniforms> Uniforms for UniformsPair<T, U> {
         // F is not Copy, so we have to wrap into a lambda here
         self.0.visit_values(|x, y| output(x, y));
         self.1.visit_values(|x, y| output(x, y));
+    }
+}
+
+pub struct UniformsOption<T: Uniforms>(pub Option<T>);
+
+impl<T: Uniforms> Uniforms for UniformsOption<T> {
+    fn visit_values<'a, F>(&'a self, mut output: F)
+    where
+        F: FnMut(&str, UniformValue<'a>),
+    {
+        if let Some(uniforms) = self.0.as_ref() {
+            uniforms.visit_values(output);
+        }
     }
 }
 

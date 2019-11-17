@@ -9,11 +9,12 @@ use log::info;
 
 use nalgebra as na;
 
-use glium::{implement_vertex, uniform, Surface};
+use glium::{uniform, Surface};
 
-use crate::render::pipeline::instance::UniformsPair;
-use crate::render::pipeline::{self, glow, Context, InstanceParams, RenderLists};
-use crate::render::{Camera, Resources};
+use crate::render::pipeline::{
+    self, Context, InstanceParams, RenderLists, RenderPass, ScenePassComponent,
+};
+use crate::render::{self, Camera, DrawError, Resources};
 
 pub use crate::render::CreationError;
 
@@ -32,16 +33,32 @@ impl Default for Config {
 
 pub struct ShadowMapping {
     config: Config,
-
     shadow_map_program: glium::Program,
-    render_program: glium::Program,
-    render_glow_program: Option<glium::Program>,
-
-    debug_shadow_map_program: glium::Program,
     shadow_texture: glium::texture::DepthTexture2d,
+}
 
-    debug_vertex_buffer: glium::VertexBuffer<DebugVertex>,
-    debug_index_buffer: glium::IndexBuffer<u16>,
+impl RenderPass for ShadowMapping {
+    fn clear_buffers<F: glium::backend::Facade>(&self, facade: &F) -> Result<(), DrawError> {
+        let mut shadow_target =
+            glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)?;
+
+        shadow_target.clear_depth(1.0);
+
+        Ok(())
+    }
+}
+
+impl ScenePassComponent for ShadowMapping {
+    /// Transforms a shader so that it shadows the scene.
+    ///
+    /// Note that the transformed shader will require additional uniforms,
+    /// which are given by `ShadowMapping::scene_pass_uniforms`.
+    fn core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+        &self,
+        core: render::shader::Core<(Context, P), V>,
+    ) -> render::shader::Core<(Context, P), V> {
+        shader::render_shadowed_core_transform(core)
+    }
 }
 
 impl ShadowMapping {
@@ -49,40 +66,12 @@ impl ShadowMapping {
     pub fn create<F: glium::backend::Facade>(
         facade: &F,
         config: &Config,
-        deferred: bool,
-        glow: bool,
     ) -> Result<ShadowMapping, CreationError> {
-        // Shaders for creating the shadow map from light source's perspective
+        // Shader for creating the shadow map from light source's perspective
         info!("Creating shadow map program");
         let shadow_map_program = shader::depth_map_core_transform(
-            pipeline::simple::plain_core(),
+            pipeline::simple::plain_scene_core(),
         ).build_program(facade)?;
-
-        // Shaders for rendering the shadowed scene
-        info!("Creating shadow render program");
-
-        let core = pipeline::simple::plain_core();
-        let core = shader::render_shadowed_core_transform(core);
-        let core = if deferred {
-            pipeline::deferred::shader::scene_buffers_core_transform(core)
-        } else {
-            pipeline::simple::diffuse_core_transform(core)
-        };
-        let render_program = core.build_program(facade)?;
-
-        let render_glow_program = if glow {
-            let core = pipeline::simple::plain_core();
-            let core = glow::shader::glow_map_core_transform(core);
-            let core = shader::render_shadowed_core_transform(core);
-            let core = if deferred {
-                pipeline::deferred::shader::scene_buffers_core_transform(core)
-            } else {
-                pipeline::simple::diffuse_core_transform(core)
-            };
-            Some(core.build_program(facade)?)
-        } else {
-            None
-        };
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
             facade,
@@ -90,61 +79,10 @@ impl ShadowMapping {
             config.shadow_map_size.y,
         )?;
 
-        let debug_vertex_buffer = glium::VertexBuffer::new(
-            facade,
-            &[
-                DebugVertex::new([0.25, -1.0], [0.0, 0.0]),
-                DebugVertex::new([0.25, -0.25], [0.0, 1.0]),
-                DebugVertex::new([1.0, -0.25], [1.0, 1.0]),
-                DebugVertex::new([1.0, -1.0], [1.0, 0.0]),
-            ],
-        )
-        .unwrap(); // TODO: unwrap
-
-        let debug_index_buffer = glium::IndexBuffer::new(
-            facade,
-            glium::index::PrimitiveType::TrianglesList,
-            &[0u16, 1, 2, 0, 2, 3],
-        )
-        .unwrap(); // TODO: unwrap
-
-        let debug_shadow_map_program = glium::Program::from_source(
-            facade,
-            // Vertex Shader
-            "
-                #version 140
-                in vec2 position;
-                in vec2 tex_coords;
-                out vec2 v_tex_coords;
-                void main() {
-                    gl_Position = vec4(position, 0.0, 1.0);
-                    v_tex_coords = tex_coords;
-                }
-            ",
-            // Fragment Shader
-            "
-                #version 140
-                uniform sampler2D tex;
-                in vec2 v_tex_coords;
-                out vec4 f_color;
-                void main() {
-                    f_color = vec4(texture(tex, v_tex_coords).rgb, 1.0);
-                }
-            ",
-            None,
-        )?;
-
-        info!("Shadow mapping initialized");
-
         Ok(ShadowMapping {
             config: config.clone(),
             shadow_map_program,
-            render_program,
-            render_glow_program,
             shadow_texture,
-            debug_vertex_buffer,
-            debug_index_buffer,
-            debug_shadow_map_program,
         })
     }
 
@@ -161,173 +99,51 @@ impl ShadowMapping {
         )
     }
 
-    pub fn render_shadowed<F: glium::backend::Facade, S: glium::Surface>(
-        &mut self,
+    /// Render scene from the light's point of view into depth buffer.
+    pub fn shadow_pass<F: glium::backend::Facade>(
+        &self,
         facade: &F,
         resources: &Resources,
         context: &Context,
         render_lists: &RenderLists,
-        target: &mut S,
-    ) -> Result<(), glium::DrawError> {
-        // TODO: unwrap
-        // TODO: Can we do this in glium without recreating the
-        //       `SimpleFrameBuffer` every frame?
+    ) -> Result<(), DrawError> {
         let mut shadow_target =
-            glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)
-                .unwrap();
+            glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)?;
 
         let light_projection = self.light_projection();
         let light_view = self.light_view(context);
 
-        // Render scene from the light's point of view into depth buffer
-        {
-            profile!("shadow_map");
+        let camera = Camera {
+            viewport: na::Vector4::new(0.0, 0.0, 0.0, 0.0), // dummy value
+            projection: light_projection,
+            view: light_view,
+        };
 
-            let camera = Camera {
-                viewport: na::Vector4::new(0.0, 0.0, 0.0, 0.0), // dummy value
-                projection: light_projection,
-                view: light_view,
-            };
+        let light_context = Context { camera, ..*context };
 
-            let light_context = Context { camera, ..*context };
-
-            shadow_target.clear_color(1.0, 1.0, 1.0, 1.0);
-            shadow_target.clear_depth(1.0);
-
-            render_lists.solid.render_with_program(
-                resources,
-                &light_context,
-                &Default::default(),
-                &self.shadow_map_program,
-                &mut shadow_target,
-            )?;
-        }
-
-        // Render scene from the camera's point of view
-        {
-            profile!("shadowed_scene");
-
-            let params = glium::DrawParameters {
-                backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
-                depth: glium::Depth {
-                    test: glium::DepthTest::IfLessOrEqual,
-                    write: true,
-                    ..Default::default()
-                },
-                ..Default::default()
-            };
-
-            let mat_light_view_projection: [[f32; 4]; 4] = (light_projection * light_view).into();
-            let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
-                .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
-                .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
-
-            for instance in &render_lists.solid.instances {
-                let uniforms = UniformsPair(
-                    UniformsPair(context.uniforms(), instance.params.uniforms()),
-                    uniform! {
-                        mat_light_view_projection: mat_light_view_projection,
-                        shadow_map: shadow_map,
-                    },
-                );
-
-                let buffers = resources.get_object_buffers(instance.object);
-                buffers.index_buffer.draw(
-                    &buffers.vertex_buffer,
-                    &self.render_program,
-                    &uniforms,
-                    &params,
-                    target,
-                )?;
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn render_frame<F: glium::backend::Facade, S: glium::Surface>(
-        &mut self,
-        facade: &F,
-        resources: &Resources,
-        context: &Context,
-        render_lists: &RenderLists,
-        target: &mut S,
-    ) -> Result<(), glium::DrawError> {
-        self.render_shadowed(facade, resources, context, render_lists, target)?;
-
-        // Render debug texture
-        /*{
-            let sampler = glium::uniforms::Sampler::new(&self.shadow_texture)
-                .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
-                .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
-
-            let uniforms = uniform! {
-                tex: sampler,
-            };
-
-            target.clear_depth(1.0);
-            target
-                .draw(
-                    &self.debug_vertex_buffer,
-                    &self.debug_index_buffer,
-                    &self.debug_shadow_map_program,
-                    &uniforms,
-                    &Default::default(),
-                )
-                .unwrap();
-        }*/
-
-        // Render plain objects
-        {
-            profile!("plain");
-
-            render_lists
-                .plain
-                .render(resources, context, &Default::default(), target)?;
-        }
-
-        // Render wind
-        {
-            profile!("wind");
-
-            render_lists.solid_wind.render_with_program(
-                resources,
-                context,
-                &Default::default(),
-                &resources.wind_program,
-                target,
-            )?;
-        }
-
-        // Render transparent objects
-        // TODO: "Integration" with deferred shading
-        render_lists.transparent.render(
+        render_lists.solid.render_with_program(
             resources,
-            context,
-            &glium::DrawParameters {
-                blend: glium::draw_parameters::Blend::alpha_blending(),
-                ..Default::default()
-            },
-            target,
+            &light_context,
+            &Default::default(),
+            &self.shadow_map_program,
+            &mut shadow_target,
         )?;
 
         Ok(())
     }
-}
 
-#[derive(Clone, Copy, Debug)]
-struct DebugVertex {
-    position: [f32; 2],
-    tex_coords: [f32; 2],
-}
+    /// Returns uniforms for binding the shadow map during scene pass.
+    pub fn scene_pass_uniforms(&self, context: &Context) -> impl glium::uniforms::Uniforms + '_ {
+        let light_projection = self.light_projection();
+        let light_view = self.light_view(context);
+        let mat_light_view_projection: [[f32; 4]; 4] = (light_projection * light_view).into();
+        let shadow_map = glium::uniforms::Sampler::new(&self.shadow_texture)
+            .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
+            .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest);
 
-impl DebugVertex {
-    pub fn new(position: [f32; 2], tex_coords: [f32; 2]) -> DebugVertex {
-        Self {
-            position,
-            tex_coords,
+        uniform! {
+            mat_light_view_projection: mat_light_view_projection,
+            shadow_map: shadow_map,
         }
     }
 }
-
-implement_vertex!(DebugVertex, position, tex_coords);

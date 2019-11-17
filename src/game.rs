@@ -93,20 +93,22 @@ impl Game {
         })
     }
 
-    pub fn render<S: glium::Surface>(
+    pub fn draw<S: glium::Surface>(
         &mut self,
         display: &glium::backend::glutin::Display,
         target: &mut S,
-    ) -> Result<(), glium::DrawError> {
-        self.render_lists.clear();
+    ) -> Result<(), render::DrawError> {
+        {
+            profile!("render");
 
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
+            self.render_lists.clear();
 
-        if let Some((play_status, exec)) = self.exec.as_mut() {
-            exec.render(&play_status.time(), &mut self.render_lists);
-        } else {
-            self.editor.render(&mut self.render_lists)?;
-        }
+            if let Some((play_status, exec)) = self.exec.as_mut() {
+                exec.render(&play_status.time(), &mut self.render_lists);
+            } else {
+                self.editor.render(&mut self.render_lists)?;
+            }
+        };
 
         let render_context = render::pipeline::Context {
             camera: self.camera.clone(),
@@ -123,7 +125,7 @@ impl Game {
             main_light_center: na::Point3::new(15.0, 15.0, 0.0),
         };
 
-        self.render_pipeline.render(
+        self.render_pipeline.draw_frame(
             display,
             &self.resources,
             &render_context,
@@ -132,6 +134,8 @@ impl Game {
         )?;
 
         // Render screen-space stuff on top
+        profile!("ortho");
+
         let ortho_projection = na::Matrix4::new_orthographic(
             0.0,
             self.camera.viewport.z,
