@@ -80,7 +80,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             shadow_mapping: Some(Default::default()),
-            deferred_shading: Some(Default::default()),
+            deferred_shading: None, //Some(Default::default()),
             glow: Some(Default::default()),
         }
     }
