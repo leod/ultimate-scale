@@ -98,10 +98,11 @@ impl Pipeline {
         config: &Config,
         view_config: &ViewConfig,
     ) -> Result<Pipeline, CreationError> {
+        let have_glow = config.glow.is_some();
         let shadow_mapping = config
             .shadow_mapping
             .as_ref()
-            .map(|config| ShadowMapping::create(facade, config, false))
+            .map(|config| ShadowMapping::create(facade, config, false, have_glow))
             .transpose()?;
 
         let deferred_shading = config

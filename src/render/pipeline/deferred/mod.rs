@@ -1,5 +1,8 @@
-/// Heavily inspired by:
-/// https://github.com/glium/glium/blob/master/examples/deferred.rs
+//! Deferred shading.
+//!
+//! Heavily inspired by:
+//! https://github.com/glium/glium/blob/master/examples/deferred.rs
+
 pub mod shader;
 pub mod vertex;
 
@@ -84,7 +87,7 @@ impl DeferredShading {
         )?;
 
         let shadow_mapping = if let Some(config) = shadow_mapping_config {
-            Some(shadow::ShadowMapping::create(facade, config, true)?)
+            Some(shadow::ShadowMapping::create(facade, config, true, false)?)
         } else {
             None
         };

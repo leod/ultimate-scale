@@ -1,5 +1,7 @@
 pub mod shader;
 
+use log::info;
+
 use glium::glutin;
 
 pub use crate::render::pipeline::shadow::CreationError; // TODO
@@ -15,6 +17,8 @@ pub struct Config {}
 
 pub struct Glow {
     glow_texture: glium::texture::Texture2d,
+
+    composition_program: glium::Program,
 
     quad_vertex_buffer: glium::VertexBuffer<deferred::vertex::QuadVertex>,
     quad_index_buffer: glium::IndexBuffer<u16>,
@@ -37,11 +41,24 @@ impl Glow {
             deferred::vertex::QUAD_INDICES,
         )?;
 
+        info!("Creating glow composition program");
+        let composition_core = shader::composition_core();
+        let composition_program = composition_core.build_program(facade)?;
+
         Ok(Glow {
             glow_texture,
+            composition_program,
             quad_vertex_buffer,
             quad_index_buffer,
         })
+    }
+
+    pub fn glow_texture(&self) -> &glium::texture::Texture2d {
+        &self.glow_texture
+    }
+
+    pub fn blur_glow_texture(&mut self) -> Result<(), glium::DrawError> {
+        Ok(())
     }
 
     pub fn on_window_resize<F: glium::backend::Facade>(
