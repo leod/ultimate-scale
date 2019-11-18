@@ -16,7 +16,7 @@ pub struct Config {}
 
 pub struct Glow {
     glow_texture: glium::texture::Texture2d,
-
+    blur_program: glium::Program,
     screen_quad: ScreenQuad,
 }
 
@@ -61,11 +61,15 @@ impl Glow {
         let rounded_size: (u32, u32) = window_size.into();
         let glow_texture = Self::create_texture(facade, rounded_size)?;
 
+        info!("Creating blur program");
+        let blur_program = shader::blur_core().build_program(facade)?;
+
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
 
         Ok(Glow {
             glow_texture,
+            blur_program,
             screen_quad,
         })
     }
