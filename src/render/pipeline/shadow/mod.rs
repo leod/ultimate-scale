@@ -130,6 +130,13 @@ impl ShadowMapping {
             &self.shadow_map_program,
             &mut shadow_target,
         )?;
+        render_lists.solid_glow.render_with_program(
+            resources,
+            &light_context,
+            &Default::default(),
+            &self.shadow_map_program,
+            &mut shadow_target,
+        )?;
 
         Ok(())
     }

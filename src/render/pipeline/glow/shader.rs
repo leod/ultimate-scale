@@ -30,6 +30,23 @@ pub fn glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     }
 }
 
+/// Shader core for non-glowing objects. This is necessary because otherwise
+/// glowing objects will glow through non-glowing objects.
+///
+/// TODO: Figure out if we can have glow be an uniform instead.
+pub fn no_glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+    core: shader::Core<P, V>,
+) -> shader::Core<P, V> {
+    let fragment = core
+        .fragment
+        .with_out(f_glow_color(), "vec3(0.0, 0.0, 0.0)");
+
+    shader::Core {
+        vertex: core.vertex,
+        fragment,
+    }
+}
+
 /// Shader core for blurring the glow texture.
 pub fn blur_core() -> shader::Core<(), screen_quad::Vertex> {
     let vertex = shader::VertexCore {
