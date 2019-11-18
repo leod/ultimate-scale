@@ -2,10 +2,12 @@ pub mod shader;
 
 use log::info;
 
-use glium::{glutin, Surface};
+use glium::{glutin, uniform, Surface};
 
-use crate::render::pipeline::{Context, InstanceParams, RenderPass, ScenePassComponent};
-use crate::render::{self, DrawError, ScreenQuad};
+use crate::render::pipeline::{
+    CompositionPassComponent, Context, InstanceParams, RenderPass, ScenePassComponent,
+};
+use crate::render::{self, screen_quad, DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
 
@@ -34,6 +36,19 @@ impl ScenePassComponent for Glow {
         core: render::shader::Core<(Context, P), V>,
     ) -> render::shader::Core<(Context, P), V> {
         shader::glow_map_core_transform(core)
+    }
+
+    fn output_textures(&self) -> Vec<(&'static str, &glium::texture::Texture2d)> {
+        vec![("f_glow_color", &self.glow_texture)]
+    }
+}
+
+impl CompositionPassComponent for Glow {
+    fn core_transform(
+        &self,
+        core: render::shader::Core<(), screen_quad::Vertex>,
+    ) -> render::shader::Core<(), screen_quad::Vertex> {
+        shader::composition_core_transform(core)
     }
 }
 
@@ -68,6 +83,12 @@ impl Glow {
         self.glow_texture = Self::create_texture(facade, rounded_size)?;
 
         Ok(())
+    }
+
+    pub fn composition_pass_uniforms(&self) -> impl glium::uniforms::Uniforms + '_ {
+        uniform! {
+            glow_texture: &self.glow_texture,
+        }
     }
 
     fn create_texture<F: glium::backend::Facade>(
