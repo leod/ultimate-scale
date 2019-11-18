@@ -183,14 +183,17 @@ impl Components {
             std::any::type_name::<V>(),
         );
 
-        if setup.glow {
-            if let Some(glow) = self.glow.as_ref() {
+        if let Some(glow) = self.glow.as_ref() {
+            if setup.glow {
                 shader_core = ScenePassComponent::core_transform(glow, shader_core);
+            } else {
+                // Whoopsie there goes the abstraction, heh. All good though.
+                shader_core = glow::shader::no_glow_map_core_transform(shader_core);
             }
         }
 
-        if setup.shadow {
-            if let Some(shadow_mapping) = self.shadow_mapping.as_ref() {
+        if let Some(shadow_mapping) = self.shadow_mapping.as_ref() {
+            if setup.shadow {
                 shader_core = ScenePassComponent::core_transform(shadow_mapping, shader_core);
             }
         }
@@ -497,6 +500,13 @@ impl Pipeline {
             profile!("light_pass");
 
             deferred_shading.light_pass(facade, &render_lists.lights)?;
+        }
+
+        // Blur the glow texture
+        if let Some(glow) = self.components.glow.as_ref() {
+            profile!("blur_glow_pass");
+
+            glow.blur_pass(facade)?;
         }
 
         // Combine buffers and draw to target surface
