@@ -13,10 +13,19 @@ use crate::render::{self, screen_quad, DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
 
-#[derive(Debug, Clone, Default)]
-pub struct Config {}
+#[derive(Debug, Clone)]
+pub struct Config {
+    num_blur_passes: usize,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self { num_blur_passes: 5 }
+    }
+}
 
 pub struct Glow {
+    config: Config,
     glow_texture: glium::texture::Texture2d,
     glow_texture_back: glium::texture::Texture2d,
     blur_program: glium::Program,
@@ -72,6 +81,7 @@ impl Glow {
         let screen_quad = ScreenQuad::create(facade)?;
 
         Ok(Glow {
+            config: config.clone(),
             glow_texture,
             glow_texture_back,
             blur_program,
@@ -80,8 +90,6 @@ impl Glow {
     }
 
     pub fn blur_pass<F: glium::backend::Facade>(&self, facade: &F) -> Result<(), DrawError> {
-        let num_passes = 5;
-
         let glow_map = Sampler::new(&self.glow_texture)
             .magnify_filter(MagnifySamplerFilter::Linear)
             .minify_filter(MinifySamplerFilter::Linear)
@@ -94,7 +102,7 @@ impl Glow {
         let mut glow_buffer = SimpleFrameBuffer::new(facade, &self.glow_texture)?;
         let mut glow_buffer_back = SimpleFrameBuffer::new(facade, &self.glow_texture_back)?;
 
-        for _ in 0..num_passes {
+        for _ in 0..self.config.num_blur_passes {
             glow_buffer_back.draw(
                 &self.screen_quad.vertex_buffer,
                 &self.screen_quad.index_buffer,
