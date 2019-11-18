@@ -157,6 +157,8 @@ impl DeferredShading {
                 },
             );
 
+            // TODO: Don't use screen quad for rendering lights. Instead,
+            // determine either a smaller quad or some geometry thingy.
             light_buffer.draw(
                 &self.screen_quad.vertex_buffer,
                 &self.screen_quad.index_buffer,

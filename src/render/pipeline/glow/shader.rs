@@ -31,33 +31,28 @@ pub fn glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
 }
 
 /// Shader core for composing the glow texture with the scene texture.
-pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
-    let vertex = shader::VertexCore {
-        out_defs: vec![shader::v_tex_coord_def()],
-        out_exprs: shader_out_exprs! {
-            shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "position",
-        },
-        ..Default::default()
-    };
+pub fn composition_core_transform(
+    core: shader::Core<(), screen_quad::Vertex>,
+) -> shader::Core<(), screen_quad::Vertex> {
+    assert!(
+        core.fragment.has_in(shader::V_TEX_COORD),
+        "FragmentCore needs V_TEX_COORD input for glow composition pass"
+    );
+    assert!(
+        core.fragment.has_out(shader::F_COLOR),
+        "FragmentCore needs F_COLOR output for glow composition pass"
+    );
 
-    let fragment = shader::FragmentCore {
-        extra_uniforms: vec![
-            ("scene_texture".into(), UniformType::Sampler2d),
-            ("glow_texture".into(), UniformType::Sampler2d),
-        ],
-        in_defs: vec![shader::v_tex_coord_def()],
-        out_defs: vec![shader::f_color_def()],
-        body: "
-            vec3 scene_value = texture(scene_texture, v_tex_coord).rgb;
-            vec3 glow_value = texture(glow_texture, v_tex_coord).rgb;
-        "
-        .into(),
-        out_exprs: shader_out_exprs! {
-            shader::F_COLOR => "vec4(scene_value + glow_value, 1.0)",
-        },
-        ..Default::default()
-    };
+    let fragment = core
+        .fragment
+        .with_extra_uniform(("glow_texture".into(), UniformType::Sampler2d))
+        .with_out_expr(
+            shader::F_COLOR,
+            "f_color + vec4(texture(glow_texture, v_tex_coord).rgb, 0.0)",
+        );
 
-    shader::Core { vertex, fragment }
+    shader::Core {
+        vertex: core.vertex,
+        fragment,
+    }
 }

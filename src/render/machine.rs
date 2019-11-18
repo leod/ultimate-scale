@@ -417,7 +417,7 @@ pub fn render_block(
         }
         Block::WindSource => {
             let scaling = na::Matrix4::new_scaling(0.75);
-            out.solid.add(
+            out.solid_glow.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,

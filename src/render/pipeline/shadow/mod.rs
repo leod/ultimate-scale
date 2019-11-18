@@ -79,6 +79,8 @@ impl ShadowMapping {
             config.shadow_map_size.y,
         )?;
 
+        info!("Shadow mapping initialized");
+
         Ok(ShadowMapping {
             config: config.clone(),
             shadow_map_program,
