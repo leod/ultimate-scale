@@ -61,9 +61,10 @@ impl Game {
         let edit_camera_view = EditCameraView::new();
         let edit_camera_view_input = EditCameraViewInput::new(&config.camera);
 
-        let resources = Resources::create(facade)?;
+        let resources = Resources::create(facade).map_err(CreationError::RenderResources)?;
         let render_pipeline =
-            render::Pipeline::create(facade, &config.render_pipeline, &config.view)?;
+            render::Pipeline::create(facade, &config.render_pipeline, &config.view)
+                .map_err(CreationError::RenderPipeline)?;
         let render_lists = RenderLists::default();
 
         let editor = Editor::new(&config.editor, initial_machine);
@@ -92,20 +93,22 @@ impl Game {
         })
     }
 
-    pub fn render<S: glium::Surface>(
+    pub fn draw<S: glium::Surface>(
         &mut self,
         display: &glium::backend::glutin::Display,
         target: &mut S,
-    ) -> Result<(), glium::DrawError> {
-        self.render_lists.clear();
+    ) -> Result<(), render::DrawError> {
+        {
+            profile!("render");
 
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
+            self.render_lists.clear();
 
-        if let Some((play_status, exec)) = self.exec.as_mut() {
-            exec.render(&play_status.time(), &mut self.render_lists);
-        } else {
-            self.editor.render(&mut self.render_lists)?;
-        }
+            if let Some((play_status, exec)) = self.exec.as_mut() {
+                exec.render(&play_status.time(), &mut self.render_lists);
+            } else {
+                self.editor.render(&mut self.render_lists)?;
+            }
+        };
 
         let render_context = render::pipeline::Context {
             camera: self.camera.clone(),
@@ -122,7 +125,7 @@ impl Game {
             main_light_center: na::Point3::new(15.0, 15.0, 0.0),
         };
 
-        self.render_pipeline.render(
+        self.render_pipeline.draw_frame(
             display,
             &self.resources,
             &render_context,
@@ -131,6 +134,8 @@ impl Game {
         )?;
 
         // Render screen-space stuff on top
+        profile!("ortho");
+
         let ortho_projection = na::Matrix4::new_orthographic(
             0.0,
             self.camera.viewport.z,
@@ -422,7 +427,8 @@ impl Game {
         );
 
         self.render_pipeline
-            .on_window_resize(facade, new_window_size)?;
+            .on_window_resize(facade, new_window_size)
+            .map_err(CreationError::RenderPipeline)?;
 
         Ok(())
     }
@@ -558,18 +564,6 @@ impl InputsOutputsProgress {
 
 #[derive(Debug)]
 pub enum CreationError {
-    RenderPipelineCreationError(render::pipeline::CreationError),
-    ResourcesCreationError(resources::CreationError),
-}
-
-impl From<render::pipeline::CreationError> for CreationError {
-    fn from(err: render::pipeline::CreationError) -> CreationError {
-        CreationError::RenderPipelineCreationError(err)
-    }
-}
-
-impl From<resources::CreationError> for CreationError {
-    fn from(err: resources::CreationError) -> CreationError {
-        CreationError::ResourcesCreationError(err)
-    }
+    RenderPipeline(render::pipeline::CreationError),
+    RenderResources(resources::CreationError),
 }

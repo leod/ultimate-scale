@@ -1,8 +1,9 @@
-use crate::render::object::Vertex;
-use crate::render::pipeline::{Context, DefaultInstanceParams, InstanceParams};
-use crate::render::shader;
+use glium::uniforms::UniformType;
 
-pub fn plain_core() -> shader::Core<(Context, DefaultInstanceParams), Vertex> {
+use crate::render::pipeline::{Context, DefaultInstanceParams, InstanceParams};
+use crate::render::{object, screen_quad, shader};
+
+pub fn plain_scene_core() -> shader::Core<(Context, DefaultInstanceParams), object::Vertex> {
     shader::Core {
         vertex: shader::VertexCore {
             out_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
@@ -24,7 +25,7 @@ pub fn plain_core() -> shader::Core<(Context, DefaultInstanceParams), Vertex> {
     }
 }
 
-pub fn diffuse_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+pub fn diffuse_scene_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
     let color_expr = if core.fragment.has_out(shader::F_SHADOW) {
@@ -53,4 +54,27 @@ pub fn diffuse_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
             )
             .with_out_expr(shader::F_COLOR, color_expr),
     }
+}
+
+pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
+    let vertex = shader::VertexCore {
+        out_defs: vec![shader::v_tex_coord_def()],
+        out_exprs: shader_out_exprs! {
+            shader::V_TEX_COORD => "tex_coord",
+            shader::V_POSITION => "position",
+        },
+        ..Default::default()
+    };
+
+    let fragment = shader::FragmentCore {
+        extra_uniforms: vec![("color_texture".into(), UniformType::Sampler2d)],
+        in_defs: vec![shader::v_tex_coord_def()],
+        out_defs: vec![shader::f_color_def()],
+        out_exprs: shader_out_exprs! {
+            shader::F_COLOR => "vec4(texture(color_texture, v_tex_coord).rgb, 1.0)",
+        },
+        ..Default::default()
+    };
+
+    shader::Core { vertex, fragment }
 }

@@ -278,10 +278,14 @@ fn main() {
         };
 
         {
-            profile!("render");
+            profile!("draw");
 
-            let mut target = display.draw();
-            game.render(&display, &mut target).unwrap();
+            let mut target = {
+                profile!("lock");
+                display.draw()
+            };
+
+            game.draw(&display, &mut target).unwrap();
 
             {
                 profile!("ui");

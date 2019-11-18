@@ -1,7 +1,7 @@
 use glium::uniforms::UniformType;
 
-use crate::render::pipeline::{deferred, InstanceParams, Light};
-use crate::render::shader;
+use crate::render::pipeline::{InstanceParams, Light};
+use crate::render::{screen_quad, shader};
 
 pub const F_WORLD_POS: &str = "f_world_pos";
 pub const F_WORLD_NORMAL: &str = "f_world_normal";
@@ -27,15 +27,15 @@ pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>
 ) -> shader::Core<P, V> {
     assert!(
         core.vertex.has_out(shader::V_WORLD_POS),
-        "VertexCore needs V_WORLD_POS output for deferred shading"
+        "VertexCore needs V_WORLD_POS output for deferred shading scene pass"
     );
     assert!(
         core.vertex.has_out(shader::V_WORLD_NORMAL),
-        "VertexCore needs V_WORLD_NORMAL output for deferred shading"
+        "VertexCore needs V_WORLD_NORMAL output for deferred shading scene pass"
     );
     assert!(
         core.fragment.has_out(shader::F_COLOR),
-        "FragmentCore needs F_COLOR output for deferred shading"
+        "FragmentCore needs F_COLOR output for deferred shading scene pass"
     );
 
     let color_expr = if core.fragment.has_out(shader::F_SHADOW) {
@@ -61,13 +61,12 @@ pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>
 
 /// Shader core for rendering a light source, given the position/normal buffers
 /// from the scene pass.
-pub fn light_core() -> shader::Core<Light, deferred::vertex::QuadVertex> {
+pub fn light_core() -> shader::Core<Light, screen_quad::Vertex> {
     let vertex = shader::VertexCore {
-        extra_uniforms: vec![("mat_orthogonal".into(), UniformType::FloatMat4)],
         out_defs: vec![shader::v_tex_coord_def()],
         out_exprs: shader_out_exprs! {
             shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "mat_orthogonal * position",
+            shader::V_POSITION => "position",
         },
         ..Default::default()
     };
@@ -113,35 +112,29 @@ pub fn light_core() -> shader::Core<Light, deferred::vertex::QuadVertex> {
     shader::Core { vertex, fragment }
 }
 
-/// Shader core for composing the buffers.
-pub fn composition_core() -> shader::Core<(), deferred::vertex::QuadVertex> {
-    let vertex = shader::VertexCore {
-        extra_uniforms: vec![("mat_orthogonal".into(), UniformType::FloatMat4)],
-        out_defs: vec![shader::v_tex_coord_def()],
-        out_exprs: shader_out_exprs! {
-            shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "mat_orthogonal * position",
-        },
-        ..Default::default()
-    };
+/// Composition shader core transform for composing our buffers.
+pub fn composition_core_transform(
+    core: shader::Core<(), screen_quad::Vertex>,
+) -> shader::Core<(), screen_quad::Vertex> {
+    assert!(
+        core.fragment.has_in(shader::V_TEX_COORD),
+        "FragmentCore needs V_TEX_COORD input for deferred shading composition pass"
+    );
+    assert!(
+        core.fragment.has_out(shader::F_COLOR),
+        "FragmentCore needs F_COLOR output for deferred shading composition pass"
+    );
 
-    let fragment = shader::FragmentCore {
-        extra_uniforms: vec![
-            ("color_texture".into(), UniformType::Sampler2d),
-            ("light_texture".into(), UniformType::Sampler2d),
-        ],
-        in_defs: vec![shader::v_tex_coord_def()],
-        out_defs: vec![shader::f_color_def()],
-        body: "
-            vec3 color_value = texture(color_texture, v_tex_coord).rgb;
-            vec3 light_value = texture(light_texture, v_tex_coord).rgb;
-        "
-        .into(),
-        out_exprs: shader_out_exprs! {
-            shader::F_COLOR => "vec4(color_value * light_value, 1.0)",
-        },
-        ..Default::default()
-    };
+    let fragment = core
+        .fragment
+        .with_extra_uniform(("light_texture".into(), UniformType::Sampler2d))
+        .with_out_expr(
+            shader::F_COLOR,
+            "f_color * vec4(texture(light_texture, v_tex_coord).rgb, 1.0)",
+        );
 
-    shader::Core { vertex, fragment }
+    shader::Core {
+        vertex: core.vertex,
+        fragment,
+    }
 }

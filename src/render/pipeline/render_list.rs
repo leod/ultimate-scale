@@ -60,16 +60,6 @@ impl<T: InstanceParams> RenderList<T> {
         Ok(())
     }
 
-    pub fn render<S: glium::Surface>(
-        &self,
-        resources: &Resources,
-        context: &Context,
-        params: &glium::DrawParameters,
-        target: &mut S,
-    ) -> Result<(), glium::DrawError> {
-        self.render_with_program(resources, context, params, &resources.program, target)
-    }
-
     pub fn clear(&mut self) {
         self.instances.clear();
     }
