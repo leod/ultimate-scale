@@ -376,7 +376,7 @@ impl Pipeline {
             facade,
             ScenePassSetup {
                 shadow: false,
-                glow: false,
+                glow: true,
             },
             wind::scene_core(),
         )?;

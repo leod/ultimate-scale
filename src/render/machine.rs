@@ -417,7 +417,13 @@ pub fn render_block(
         }
         Block::WindSource => {
             let scaling = na::Matrix4::new_scaling(0.75);
-            out.solid_glow.add(
+
+            let render_list = if wind_anim_state.is_some() {
+                &mut out.solid_glow
+            } else {
+                &mut out.solid
+            };
+            render_list.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform * scaling,
@@ -529,11 +535,17 @@ pub fn render_block(
                 na::Vector4::new(0.5, 0.0, 0.0, alpha)
             };
 
+            let render_list = if activated {
+                &mut out.solid_glow
+            } else {
+                &mut out.solid
+            };
+
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.75, 0.75, 0.75));
-            out.solid.add(
+            render_list.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
