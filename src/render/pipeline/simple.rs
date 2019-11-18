@@ -78,3 +78,26 @@ pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
 
     shader::Core { vertex, fragment }
 }
+
+pub fn hdr_composition_core_transform(
+    core: shader::Core<(), screen_quad::Vertex>,
+) -> shader::Core<(), screen_quad::Vertex> {
+    assert!(
+        core.fragment.has_out(shader::F_COLOR),
+        "FragmentCore needs F_COLOR output for HDR composition pass"
+    );
+
+    let defs = "
+
+    ";
+
+    let fragment = core
+        .fragment
+        .with_defs(defs.into())
+        .with_out_expr(shader::F_COLOR, "vec4(vec3(1.0) - exp(-f_color.rgb), 1.0)");
+
+    shader::Core {
+        vertex: core.vertex,
+        fragment,
+    }
+}
