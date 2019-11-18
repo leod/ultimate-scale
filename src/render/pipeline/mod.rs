@@ -269,8 +269,9 @@ impl Components {
             depth_texture,
         )?;
 
+        // TODO: Fix cylinder so that we can reenable backface culling
         let params = glium::DrawParameters {
-            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            //backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
                 test: glium::DepthTest::IfLessOrEqual,
                 write: true,
