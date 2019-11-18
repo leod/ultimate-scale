@@ -30,6 +30,78 @@ pub fn glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
     }
 }
 
+/// Shader core for blurring the glow texture.
+pub fn blur_core() -> shader::Core<(), screen_quad::Vertex> {
+    let vertex = shader::VertexCore {
+        out_defs: vec![shader::v_tex_coord_def()],
+        out_exprs: shader_out_exprs! {
+            shader::V_TEX_COORD => "tex_coord",
+            shader::V_POSITION => "position",
+        },
+        ..Default::default()
+    };
+
+    let defs = "
+		float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+	";
+
+    let body = "
+        // Size of a single texel (0 is the LOD parameter here)
+        vec2 texel_size = 1.0 / textureSize(glow_texture, 0);
+
+        // Center fragment contribution
+        vec3 blur_result = texture(glow_texture, v_tex_coord).rgb * weight[0];
+
+        // Note that this if is not a problem, since it depends on a uniform only, i.e. it is 
+        // constant during the draw call.
+        //
+        // See also:
+        // https://stackoverflow.com/questions/37827216/do-conditional-statements-slow-down-shaders
+        if (horizontal) {
+            for (int i = 1; i < 5; ++i) {
+                blur_result += texture(
+                    glow_texture,
+                    v_tex_coord + vec2(texel_size.x * i, 0.0)
+                ).rgb * weight[i];
+
+                blur_result += texture(
+                    glow_texture,
+                    v_tex_coord - vec2(texel_size.x * i, 0.0)
+                ).rgb * weight[i];
+            }
+        } else {
+            for (int i = 1; i < 5; ++i) {
+                blur_result += texture(
+                    glow_texture,
+                    v_tex_coord + vec2(0.0, texel_size.y * i)
+                ).rgb * weight[i];
+
+                blur_result += texture(
+                    glow_texture,
+                    v_tex_coord - vec2(0.0, texel_size.y * i)
+                ).rgb * weight[i];
+            }
+        }
+    ";
+
+    let fragment = shader::FragmentCore {
+        extra_uniforms: vec![
+            ("horizontal".into(), UniformType::Bool),
+            ("glow_texture".into(), UniformType::Sampler2d),
+        ],
+        in_defs: vec![shader::v_tex_coord_def()],
+        out_defs: vec![shader::f_color_def()],
+        defs: defs.into(),
+        body: body.into(),
+        out_exprs: shader_out_exprs! {
+            shader::F_COLOR => "vec4(blur_result, 1.0)",
+        },
+        ..Default::default()
+    };
+
+    shader::Core { vertex, fragment }
+}
+
 /// Shader core for composing the glow texture with the scene texture.
 pub fn composition_core_transform(
     core: shader::Core<(), screen_quad::Vertex>,
