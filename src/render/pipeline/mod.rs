@@ -103,7 +103,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             shadow_mapping: Some(Default::default()),
-            deferred_shading: None, //Some(Default::default()),
+            deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
         }
     }
@@ -214,17 +214,19 @@ impl Components {
     }
 
     fn composition_core(&self) -> shader::Core<(), screen_quad::Vertex> {
-        let mut core = simple::composition_core();
+        let mut shader_core = simple::composition_core();
 
         if let Some(deferred_shading) = self.deferred_shading.as_ref() {
-            core = CompositionPassComponent::core_transform(deferred_shading, core);
+            shader_core = CompositionPassComponent::core_transform(deferred_shading, shader_core);
         }
 
         if let Some(glow) = self.glow.as_ref() {
-            core = CompositionPassComponent::core_transform(glow, core);
+            shader_core = CompositionPassComponent::core_transform(glow, shader_core);
         }
 
-        core
+        shader_core = simple::hdr_composition_core_transform(shader_core);
+
+        shader_core
     }
 
     fn clear_buffers<F: glium::backend::Facade>(&self, facade: &F) -> Result<(), DrawError> {
