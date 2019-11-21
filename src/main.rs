@@ -285,6 +285,11 @@ fn main() {
                 display.draw()
             };
 
+            {
+                profile!("update_resources");
+                game.update_resources(&display).unwrap();
+            }
+
             game.draw(&display, &mut target).unwrap();
 
             {

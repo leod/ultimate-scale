@@ -330,7 +330,7 @@ impl ExecView {
             out.lights.push(render::pipeline::Light {
                 position: pos,
                 attenuation: na::Vector3::new(1.0, 0.0, 2.0),
-                color: render::machine::blip_color(blip.kind), //na::Vector3::new(0.2, 10.0, 0.5),
+                color: render::machine::blip_color(blip.kind),
                 radius: 2.0,
             });
         }
