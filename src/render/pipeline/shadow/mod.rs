@@ -79,6 +79,8 @@ impl ShadowMapping {
             config.shadow_map_size.y,
         )?;
 
+        info!("Shadow mapping initialized");
+
         Ok(ShadowMapping {
             config: config.clone(),
             shadow_map_program,
@@ -122,6 +124,13 @@ impl ShadowMapping {
         let light_context = Context { camera, ..*context };
 
         render_lists.solid.render_with_program(
+            resources,
+            &light_context,
+            &Default::default(),
+            &self.shadow_map_program,
+            &mut shadow_target,
+        )?;
+        render_lists.solid_glow.render_with_program(
             resources,
             &light_context,
             &Default::default(),
