@@ -102,7 +102,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            shadow_mapping: Some(Default::default()),
+            shadow_mapping: None, //Some(Default::default()),
             deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
         }
@@ -428,7 +428,7 @@ impl Pipeline {
             let intensity = 1.0;
             render_lists.lights.push(Light {
                 position: context.main_light_pos,
-                attenuation: na::Vector3::new(1.0, 0.01, 0.00001),
+                attenuation: na::Vector3::new(1.0, 0.0, 0.0),
                 color: na::Vector3::new(intensity, intensity, intensity),
                 radius: 160.0,
             });

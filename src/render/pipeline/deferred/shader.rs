@@ -87,19 +87,16 @@ pub fn light_core() -> shader::Core<Light, screen_quad::Vertex> {
 
             float diffuse = max(dot(normal, light_vector / light_distance), 0.0);
 
-            if (diffuse > 0.0) {
-                float attenuation = 1.0 / (
-                    light_attenuation.x +
-                    light_attenuation.y * light_distance +
-                    light_attenuation.z * light_distance * light_distance
-                );
-                attenuation *= 1.0 - pow(light_distance / light_radius, 2.0);
-                attenuation = max(attenuation, 0.0);
+            float attenuation = 1.0 / (
+                light_attenuation.x +
+                light_attenuation.y * light_distance +
+                light_attenuation.z * light_distance * light_distance
+            );
+            attenuation *= 1.0 - pow(light_distance / light_radius, 2.0);
+            attenuation = max(attenuation, 0.0);
 
-                diffuse *= attenuation;
-            }
+            diffuse *= attenuation;
 
-            float ambient = 0.3;
             float radiance = diffuse;
         "
         .into(),
