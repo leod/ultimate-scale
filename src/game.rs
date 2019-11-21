@@ -40,6 +40,9 @@ pub struct Game {
 
     elapsed_time: Duration,
     fps: f32,
+
+    show_config_ui: bool,
+    recreate_render_pipeline: bool,
 }
 
 impl Game {
@@ -90,7 +93,29 @@ impl Game {
             inputs_outputs_example,
             elapsed_time: Default::default(),
             fps: 0.0,
+            show_config_ui: false,
+            recreate_render_pipeline: false,
         })
+    }
+
+    pub fn update_resources<F: glium::backend::Facade>(
+        &mut self,
+        facade: &F,
+    ) -> Result<(), CreationError> {
+        if self.recreate_render_pipeline {
+            info!(
+                "Recreating render pipeline with config: {:?}",
+                self.config.render_pipeline
+            );
+
+            self.render_pipeline =
+                render::Pipeline::create(facade, &self.config.render_pipeline, &self.config.view)
+                    .map_err(CreationError::RenderPipeline)?;
+
+            self.recreate_render_pipeline = false;
+        }
+
+        Ok(())
     }
 
     pub fn draw<S: glium::Surface>(
@@ -236,6 +261,45 @@ impl Game {
 
         let play_state = self.exec.as_ref().map(|(play_state, _)| play_state);
         self.play.ui(window_size, play_state, ui);
+
+        if self.show_config_ui {
+            imgui::Window::new(im_str!("Config"))
+                .horizontal_scrollbar(true)
+                .position([window_size.x, 10.0], imgui::Condition::FirstUseEver)
+                .position_pivot([1.0, 0.0])
+                .always_auto_resize(true)
+                .bg_alpha(0.8)
+                .build(&ui, || {
+                    let mut shadow_mapping = self.config.render_pipeline.shadow_mapping.is_some();
+                    if ui.checkbox(im_str!("Shadow mapping"), &mut shadow_mapping) {
+                        self.config.render_pipeline.shadow_mapping = if shadow_mapping {
+                            Some(Default::default())
+                        } else {
+                            None
+                        };
+                    }
+
+                    let mut deferred_shading =
+                        self.config.render_pipeline.deferred_shading.is_some();
+                    if ui.checkbox(im_str!("Deferred shading"), &mut deferred_shading) {
+                        self.config.render_pipeline.deferred_shading = if deferred_shading {
+                            Some(Default::default())
+                        } else {
+                            None
+                        };
+                    }
+
+                    let mut glow = self.config.render_pipeline.glow.is_some();
+                    if ui.checkbox(im_str!("Glow"), &mut glow) {
+                        self.config.render_pipeline.glow =
+                            if glow { Some(Default::default()) } else { None };
+                    }
+
+                    if ui.button(im_str!("Apply"), [80.0, 20.0]) {
+                        self.recreate_render_pipeline = true;
+                    }
+                });
+        }
 
         if let Some(level) = self.editor.machine().level.as_ref() {
             if let Some((_, exec)) = self.exec.as_ref() {
@@ -403,6 +467,14 @@ impl Game {
     }
 
     pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {
+        if let glutin::WindowEvent::KeyboardInput { input, .. } = event {
+            if input.state == glutin::ElementState::Pressed
+                && input.virtual_keycode == Some(glutin::VirtualKeyCode::P)
+            {
+                self.show_config_ui = !self.show_config_ui;
+            }
+        }
+
         self.edit_camera_view_input.on_event(event);
         self.play.on_event(event);
 
@@ -418,6 +490,8 @@ impl Game {
         facade: &F,
         new_window_size: glutin::dpi::LogicalSize,
     ) -> Result<(), CreationError> {
+        self.config.view.window_size = new_window_size;
+
         self.camera.projection = Self::perspective_matrix(&self.config.view, new_window_size);
         self.camera.viewport = na::Vector4::new(
             0.0,

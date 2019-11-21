@@ -387,11 +387,7 @@ impl Pipeline {
         let scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
         let scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
 
-        info!("Creating composition program");
         let composition_core = components.composition_core();
-        println!("{}", composition_core.vertex.compile());
-        println!("{}", composition_core.fragment.compile());
-
         let composition_program = composition_core
             .build_program(facade)
             .map_err(render::CreationError::from)?;
