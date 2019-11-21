@@ -245,17 +245,17 @@ pub fn render_mill(
     transform: &na::Matrix4<f32>,
     roll: f32,
     color: &na::Vector4<f32>,
+    length: f32,
     out: &mut RenderList<DefaultInstanceParams>,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
     let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
     let (pitch, yaw) = dir.to_pitch_yaw_x();
-    let length = 0.45;
     let transform = translation
         * transform
         * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
         * na::Matrix4::from_euler_angles(roll, pitch, yaw)
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.07));
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.09));
     out.add(
         Object::Cube,
         &DefaultInstanceParams {
@@ -273,6 +273,7 @@ pub fn render_wind_mills(
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: &na::Vector4<f32>,
+    length: f32,
     out: &mut RenderLists,
 ) {
     for &dir in &Dir3::ALL {
@@ -321,6 +322,7 @@ pub fn render_wind_mills(
                 transform,
                 roll + 2.0 * phase * std::f32::consts::PI,
                 color,
+                length,
                 &mut out.solid,
             );
         }
@@ -461,7 +463,7 @@ pub fn render_block(
             );
         }
         Block::WindSource => {
-            let scaling = na::Matrix4::new_scaling(0.75);
+            let scaling = na::Matrix4::new_scaling(0.5);
 
             let render_list = if wind_anim_state.is_some() {
                 &mut out.solid_glow
@@ -484,6 +486,7 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(1.0, 1.0, 1.0, alpha),
+                0.325,
                 out,
             );
         }
@@ -620,6 +623,7 @@ pub fn render_block(
                 center,
                 transform,
                 &block_color(&wind_mill_color(), alpha),
+                0.45,
                 out,
             );
         }
