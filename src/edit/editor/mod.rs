@@ -55,9 +55,6 @@ pub struct Editor {
 
     /// Position of the *block* the mouse is currently pointing to, if any.
     mouse_block_pos: Option<grid::Point3>,
-
-    /// We keep track of the window size for fixing window positions in the UI.
-    window_size: na::Vector2<f32>,
 }
 
 impl Editor {
@@ -72,7 +69,6 @@ impl Editor {
             current_layer: 0,
             mouse_grid_pos: None,
             mouse_block_pos: None,
-            window_size: na::Vector2::zeros(),
         }
     }
 
@@ -144,8 +140,6 @@ impl Editor {
             edit_camera_view.target().y,
             self.current_layer as f32,
         ));
-
-        self.window_size = na::Vector2::new(camera.viewport.z, camera.viewport.w);
 
         self.mouse_grid_pos = pick::pick_in_layer_plane(
             &self.machine,
