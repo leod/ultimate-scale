@@ -71,7 +71,8 @@ pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
 }
 
 pub fn floor_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.1608, 0.4235, 0.5725)
+    na::Vector3::new(0.1608, 0.4235, 0.4725)
+    //na::Vector3::new(0.0, 0.0, 0.0)
 }
 
 #[derive(Clone, Debug)]

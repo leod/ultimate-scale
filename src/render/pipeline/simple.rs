@@ -87,14 +87,33 @@ pub fn hdr_composition_core_transform(
         "FragmentCore needs F_COLOR output for HDR composition pass"
     );
 
-    let defs = "
-
-    ";
-
     let fragment = core
         .fragment
-        .with_defs(defs.into())
-        .with_out_expr(shader::F_COLOR, "vec4(vec3(1.0) - exp(-f_color.rgb), 1.0)");
+        //.with_out_expr(shader::F_COLOR, "vec4(vec3(1.0) - exp(-f_color.rgb), 1.0)");
+        .with_out_expr(
+            shader::F_COLOR,
+            "vec4(vec3(f_color) / (vec3(f_color) + 1.0), 1.0)",
+        );
+
+    shader::Core {
+        vertex: core.vertex,
+        fragment,
+    }
+}
+
+pub fn gamma_correction_composition_core_transform(
+    core: shader::Core<(), screen_quad::Vertex>,
+    gamma: f32,
+) -> shader::Core<(), screen_quad::Vertex> {
+    assert!(
+        core.fragment.has_out(shader::F_COLOR),
+        "FragmentCore needs F_COLOR output for gamma correction composition pass"
+    );
+
+    let fragment = core.fragment.with_out_expr(
+        shader::F_COLOR,
+        &format!("vec4(pow(vec3(f_color), vec3(1.0 / {})), 1.0)", gamma),
+    );
 
     shader::Core {
         vertex: core.vertex,

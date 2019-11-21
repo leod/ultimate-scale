@@ -97,14 +97,18 @@ pub struct Config {
     pub shadow_mapping: Option<shadow::Config>,
     pub deferred_shading: Option<deferred::Config>,
     pub glow: Option<glow::Config>,
+    pub hdr: Option<f32>,
+    pub gamma_correction: Option<f32>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            shadow_mapping: None, //Some(Default::default()),
+            shadow_mapping: Some(Default::default()),
             deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
+            hdr: None,
+            gamma_correction: None,
         }
     }
 }
@@ -213,7 +217,7 @@ impl Components {
         })
     }
 
-    fn composition_core(&self) -> shader::Core<(), screen_quad::Vertex> {
+    fn composition_core(&self, config: &Config) -> shader::Core<(), screen_quad::Vertex> {
         let mut shader_core = simple::composition_core();
 
         if let Some(deferred_shading) = self.deferred_shading.as_ref() {
@@ -224,7 +228,14 @@ impl Components {
             shader_core = CompositionPassComponent::core_transform(glow, shader_core);
         }
 
-        //shader_core = simple::hdr_composition_core_transform(shader_core);
+        if let Some(_) = config.hdr {
+            // TODO: Use factor
+            shader_core = simple::hdr_composition_core_transform(shader_core);
+        }
+
+        if let Some(gamma) = config.gamma_correction {
+            shader_core = simple::gamma_correction_composition_core_transform(shader_core, gamma);
+        }
 
         shader_core
     }
@@ -387,7 +398,7 @@ impl Pipeline {
         let scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
         let scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
 
-        let composition_core = components.composition_core();
+        let composition_core = components.composition_core(config);
         let composition_program = composition_core
             .build_program(facade)
             .map_err(render::CreationError::from)?;
