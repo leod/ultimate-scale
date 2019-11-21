@@ -295,6 +295,17 @@ impl Game {
                             if glow { Some(Default::default()) } else { None };
                     }
 
+                    let mut gamma = self.config.render_pipeline.gamma_correction.unwrap_or(1.0);
+
+                    imgui::Slider::new(im_str!("Gamma"), 0.5..=4.0).build(ui, &mut gamma);
+
+                    self.config.render_pipeline.gamma_correction = Some(gamma);
+
+                    let mut hdr = self.config.render_pipeline.hdr.is_some();
+                    if ui.checkbox(im_str!("HDR"), &mut hdr) {
+                        self.config.render_pipeline.hdr = if hdr { Some(42.0) } else { None };
+                    }
+
                     if ui.button(im_str!("Apply"), [80.0, 20.0]) {
                         self.recreate_render_pipeline = true;
                     }
