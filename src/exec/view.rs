@@ -281,7 +281,7 @@ impl ExecView {
         for (_index, blip) in self.exec.blips().iter() {
             let center = render::machine::block_center(&blip.pos);
 
-            let size = 0.25
+            let size = 0.175
                 * match blip.status {
                     BlipStatus::Spawning => {
                         // Animate spawning the blip
@@ -325,7 +325,8 @@ impl ExecView {
                 },
             };
 
-            out.solid_glow.add_instance(&instance);
+            //out.solid_glow.add_instance(&instance);
+            out.solid.add_instance(&instance);
 
             out.lights.push(render::pipeline::Light {
                 position: pos,
