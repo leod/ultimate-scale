@@ -12,13 +12,17 @@ use crate::exec::{Exec, TickTime};
 pub const PIPE_THICKNESS: f32 = 0.05;
 
 pub fn wind_source_color() -> na::Vector3<f32> {
-    na::Vector3::new(246.0, 81.0, 29.0) / 255.0
+    na::Vector3::new(1.0, 0.557, 0.0)
+}
+
+pub fn blip_spawn_color() -> na::Vector3<f32> {
+    na::Vector3::new(60.0, 179.0, 113.0) / 255.0
 }
 
 pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
     match kind {
-        BlipKind::A => na::Vector3::new(0.0, 166.0, 237.0) / 255.0,
-        BlipKind::B => na::Vector3::new(127.0, 184.0, 0.0) / 255.0,
+        BlipKind::A => na::Vector3::new(0.2, 0.2, 0.8),
+        BlipKind::B => na::Vector3::new(0.0, 0.737, 0.361),
         BlipKind::C => na::Vector3::new(0.098, 0.129, 0.694),
     }
 }
@@ -28,7 +32,7 @@ pub fn pipe_color() -> na::Vector3<f32> {
 }
 
 pub fn funnel_in_color() -> na::Vector3<f32> {
-    na::Vector3::new(255.0, 180.0, 0.0) / 255.0
+    na::Vector3::new(1.0, 0.5, 0.5)
 }
 
 pub fn funnel_out_color() -> na::Vector3<f32> {
@@ -45,7 +49,7 @@ pub fn inactive_blip_wind_source_color() -> na::Vector3<f32> {
 }
 
 pub fn solid_color() -> na::Vector3<f32> {
-    na::Vector3::new(202.0, 21.0, 81.0) / 255.0
+    na::Vector3::new(0.3, 0.2, 0.9)
 }
 
 pub fn wind_mill_color() -> na::Vector3<f32> {
@@ -71,8 +75,8 @@ pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
 }
 
 pub fn floor_color() -> na::Vector3<f32> {
-    //na::Vector3::new(0.1608, 0.4235, 0.4725)
-    na::Vector3::new(0.3, 0.3, 0.3)
+    na::Vector3::new(0.1608, 0.4235, 0.5725)
+    //na::Vector3::new(0.3, 0.3, 0.3)
 }
 
 #[derive(Clone, Debug)]

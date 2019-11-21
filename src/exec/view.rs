@@ -325,8 +325,8 @@ impl ExecView {
                 },
             };
 
-            //out.solid_glow.add_instance(&instance);
-            out.solid.add_instance(&instance);
+            out.solid_glow.add_instance(&instance);
+            //out.solid.add_instance(&instance);
 
             out.lights.push(render::pipeline::Light {
                 position: pos,

@@ -108,7 +108,7 @@ impl Default for Config {
             deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
             hdr: None,
-            gamma_correction: None,
+            gamma_correction: Some(0.7),
         }
     }
 }
