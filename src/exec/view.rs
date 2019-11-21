@@ -281,7 +281,7 @@ impl ExecView {
         for (_index, blip) in self.exec.blips().iter() {
             let center = render::machine::block_center(&blip.pos);
 
-            let size = 0.175
+            let size = 0.25
                 * match blip.status {
                     BlipStatus::Spawning => {
                         // Animate spawning the blip

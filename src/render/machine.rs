@@ -12,23 +12,23 @@ use crate::exec::{Exec, TickTime};
 pub const PIPE_THICKNESS: f32 = 0.05;
 
 pub fn wind_source_color() -> na::Vector3<f32> {
-    na::Vector3::new(52.0, 89.0, 149.0) / 255.0
+    na::Vector3::new(246.0, 81.0, 29.0) / 255.0
 }
 
 pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
     match kind {
-        BlipKind::A => na::Vector3::new(251.0, 77.0, 61.0) / 255.0,
-        BlipKind::B => na::Vector3::new(3.0, 206.0, 164.0) / 255.0,
+        BlipKind::A => na::Vector3::new(0.0, 166.0, 237.0) / 255.0,
+        BlipKind::B => na::Vector3::new(127.0, 184.0, 0.0) / 255.0,
         BlipKind::C => na::Vector3::new(0.098, 0.129, 0.694),
     }
 }
 
 pub fn pipe_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.5, 0.5, 0.5)
+    na::Vector3::new(0.75, 0.75, 0.75)
 }
 
 pub fn funnel_in_color() -> na::Vector3<f32> {
-    na::Vector3::new(234.0, 196.0, 53.0) / 255.0
+    na::Vector3::new(255.0, 180.0, 0.0) / 255.0
 }
 
 pub fn funnel_out_color() -> na::Vector3<f32> {
@@ -71,8 +71,8 @@ pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
 }
 
 pub fn floor_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.1608, 0.4235, 0.4725)
-    //na::Vector3::new(0.0, 0.0, 0.0)
+    //na::Vector3::new(0.1608, 0.4235, 0.4725)
+    na::Vector3::new(0.3, 0.3, 0.3)
 }
 
 #[derive(Clone, Debug)]
@@ -461,7 +461,7 @@ pub fn render_block(
             );
         }
         Block::WindSource => {
-            let scaling = na::Matrix4::new_scaling(0.5);
+            let scaling = na::Matrix4::new_scaling(0.6);
 
             let render_list = if wind_anim_state.is_some() {
                 &mut out.solid_glow
@@ -484,7 +484,7 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(1.0, 1.0, 1.0, alpha),
-                0.325,
+                0.375,
                 out,
             );
         }
