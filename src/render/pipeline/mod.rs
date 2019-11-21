@@ -8,6 +8,8 @@ pub mod shadow;
 pub mod simple;
 pub mod wind;
 
+use log::info;
+
 use nalgebra as na;
 
 use glium::{uniform, Surface};
@@ -101,7 +103,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             shadow_mapping: Some(Default::default()),
-            deferred_shading: None, //Some(Default::default()),
+            deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
         }
     }
@@ -121,7 +123,11 @@ struct ScenePassSetup {
 
 struct ScenePass<P: InstanceParams, V: glium::vertex::Vertex> {
     setup: ScenePassSetup,
+
+    /// Currently just used as a phantom.
+    #[allow(dead_code)]
     shader_core: shader::Core<(Context, P), V>,
+
     program: glium::Program,
 }
 
@@ -171,15 +177,24 @@ impl Components {
         setup: ScenePassSetup,
         mut shader_core: shader::Core<(Context, P), V>,
     ) -> Result<ScenePass<P, V>, render::CreationError> {
-        if setup.shadow {
-            if let Some(shadow_mapping) = self.shadow_mapping.as_ref() {
-                shader_core = ScenePassComponent::core_transform(shadow_mapping, shader_core);
+        info!(
+            "Creating scene pass for InstanceParams={}, Vertex={}",
+            std::any::type_name::<P>(),
+            std::any::type_name::<V>(),
+        );
+
+        if let Some(glow) = self.glow.as_ref() {
+            if setup.glow {
+                shader_core = ScenePassComponent::core_transform(glow, shader_core);
+            } else {
+                // Whoopsie there goes the abstraction, heh. All good though.
+                shader_core = glow::shader::no_glow_map_core_transform(shader_core);
             }
         }
 
-        if setup.glow {
-            if let Some(glow) = self.glow.as_ref() {
-                shader_core = ScenePassComponent::core_transform(glow, shader_core);
+        if let Some(shadow_mapping) = self.shadow_mapping.as_ref() {
+            if setup.shadow {
+                shader_core = ScenePassComponent::core_transform(shadow_mapping, shader_core);
             }
         }
 
@@ -199,15 +214,19 @@ impl Components {
     }
 
     fn composition_core(&self) -> shader::Core<(), screen_quad::Vertex> {
-        let mut core = simple::composition_core();
+        let mut shader_core = simple::composition_core();
 
         if let Some(deferred_shading) = self.deferred_shading.as_ref() {
-            core = CompositionPassComponent::core_transform(deferred_shading, core);
+            shader_core = CompositionPassComponent::core_transform(deferred_shading, shader_core);
         }
 
-        // TODO: Glow here
+        if let Some(glow) = self.glow.as_ref() {
+            shader_core = CompositionPassComponent::core_transform(glow, shader_core);
+        }
 
-        core
+        //shader_core = simple::hdr_composition_core_transform(shader_core);
+
+        shader_core
     }
 
     fn clear_buffers<F: glium::backend::Facade>(&self, facade: &F) -> Result<(), DrawError> {
@@ -269,8 +288,9 @@ impl Components {
             depth_texture,
         )?;
 
+        // TODO: Fix cylinder so that we can reenable backface culling
         let params = glium::DrawParameters {
-            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            //backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
                 test: glium::DepthTest::IfLessOrEqual,
                 write: true,
@@ -358,7 +378,7 @@ impl Pipeline {
             facade,
             ScenePassSetup {
                 shadow: false,
-                glow: false,
+                glow: true,
             },
             wind::scene_core(),
         )?;
@@ -367,11 +387,19 @@ impl Pipeline {
         let scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
         let scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
 
-        let composition_program = components
-            .composition_core()
+        info!("Creating composition program");
+        let composition_core = components.composition_core();
+        println!("{}", composition_core.vertex.compile());
+        println!("{}", composition_core.fragment.compile());
+
+        let composition_program = composition_core
             .build_program(facade)
             .map_err(render::CreationError::from)?;
+
+        info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
+
+        info!("Pipeline initialized");
 
         Ok(Pipeline {
             components,
@@ -476,23 +504,46 @@ impl Pipeline {
             deferred_shading.light_pass(facade, &render_lists.lights)?;
         }
 
+        // Blur the glow texture
+        if let Some(glow) = self.components.glow.as_ref() {
+            profile!("blur_glow_pass");
+
+            glow.blur_pass(facade)?;
+        }
+
         // Combine buffers and draw to target surface
         {
             profile!("composition_pass");
 
-            let uniforms = uniform! {
+            let color_uniform = uniform! {
                 color_texture: &self.scene_color_texture,
             };
+            let deferred_shading_uniforms = self
+                .components
+                .deferred_shading
+                .as_ref()
+                .map(|c| c.composition_pass_uniforms());
+            let glow_uniforms = self
+                .components
+                .glow
+                .as_ref()
+                .map(|c| c.composition_pass_uniforms());
 
-            // TODO: Glow here
+            let uniforms = UniformsPair(
+                color_uniform,
+                UniformsPair(
+                    UniformsOption(deferred_shading_uniforms),
+                    UniformsOption(glow_uniforms),
+                ),
+            );
 
-            if let Some(deferred_shading) = self.components.deferred_shading.as_ref() {
-                let uniforms = UniformsPair(uniforms, deferred_shading.composition_pass_uniforms());
-
-                self.composition_pass(&uniforms, target)?;
-            } else {
-                self.composition_pass(&uniforms, target)?;
-            }
+            target.draw(
+                &self.screen_quad.vertex_buffer,
+                &self.screen_quad.index_buffer,
+                &self.composition_program,
+                &uniforms,
+                &Default::default(),
+            )?;
         }
 
         Ok(())
@@ -521,27 +572,13 @@ impl Pipeline {
         Ok(())
     }
 
-    fn composition_pass<S: glium::Surface, U: glium::uniforms::Uniforms>(
-        &self,
-        uniforms: &U,
-        target: &mut S,
-    ) -> Result<(), glium::DrawError> {
-        target.draw(
-            &self.screen_quad.vertex_buffer,
-            &self.screen_quad.index_buffer,
-            &self.composition_program,
-            uniforms,
-            &Default::default(),
-        )
-    }
-
     fn create_color_texture<F: glium::backend::Facade>(
         facade: &F,
         size: (u32, u32),
     ) -> Result<glium::texture::Texture2d, CreationError> {
         Ok(glium::texture::Texture2d::empty_with_format(
             facade,
-            glium::texture::UncompressedFloatFormat::F32F32F32,
+            glium::texture::UncompressedFloatFormat::F32F32F32F32,
             glium::texture::MipmapsOption::NoMipmap,
             size.0,
             size.1,
