@@ -224,7 +224,7 @@ impl Components {
             shader_core = CompositionPassComponent::core_transform(glow, shader_core);
         }
 
-        shader_core = simple::hdr_composition_core_transform(shader_core);
+        //shader_core = simple::hdr_composition_core_transform(shader_core);
 
         shader_core
     }
@@ -578,7 +578,7 @@ impl Pipeline {
     ) -> Result<glium::texture::Texture2d, CreationError> {
         Ok(glium::texture::Texture2d::empty_with_format(
             facade,
-            glium::texture::UncompressedFloatFormat::F32F32F32,
+            glium::texture::UncompressedFloatFormat::F32F32F32F32,
             glium::texture::MipmapsOption::NoMipmap,
             size.0,
             size.1,
