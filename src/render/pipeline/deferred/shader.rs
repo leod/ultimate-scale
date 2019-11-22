@@ -92,7 +92,7 @@ pub fn light_core() -> shader::Core<Light, screen_quad::Vertex> {
                 light_attenuation.y * light_distance +
                 light_attenuation.z * light_distance * light_distance
             );
-            attenuation *= 1.0 - pow(light_distance / light_radius, 2.0);
+            //attenuation *= 1.0 - pow(light_distance / light_radius, 2.0);
             attenuation = max(attenuation, 0.0);
 
             diffuse *= attenuation;
