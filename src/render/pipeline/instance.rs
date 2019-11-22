@@ -38,7 +38,7 @@ impl<T: Uniforms, U: Uniforms> Uniforms for UniformsPair<T, U> {
 pub struct UniformsOption<T: Uniforms>(pub Option<T>);
 
 impl<T: Uniforms> Uniforms for UniformsOption<T> {
-    fn visit_values<'a, F>(&'a self, mut output: F)
+    fn visit_values<'a, F>(&'a self, output: F)
     where
         F: FnMut(&str, UniformValue<'a>),
     {

@@ -97,6 +97,8 @@ pub struct Config {
     pub shadow_mapping: Option<shadow::Config>,
     pub deferred_shading: Option<deferred::Config>,
     pub glow: Option<glow::Config>,
+    pub hdr: Option<f32>,
+    pub gamma_correction: Option<f32>,
 }
 
 impl Default for Config {
@@ -105,6 +107,8 @@ impl Default for Config {
             shadow_mapping: Some(Default::default()),
             deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
+            hdr: None,
+            gamma_correction: Some(0.7),
         }
     }
 }
@@ -213,7 +217,7 @@ impl Components {
         })
     }
 
-    fn composition_core(&self) -> shader::Core<(), screen_quad::Vertex> {
+    fn composition_core(&self, config: &Config) -> shader::Core<(), screen_quad::Vertex> {
         let mut shader_core = simple::composition_core();
 
         if let Some(deferred_shading) = self.deferred_shading.as_ref() {
@@ -224,7 +228,14 @@ impl Components {
             shader_core = CompositionPassComponent::core_transform(glow, shader_core);
         }
 
-        //shader_core = simple::hdr_composition_core_transform(shader_core);
+        if let Some(_) = config.hdr {
+            // TODO: Use factor
+            shader_core = simple::hdr_composition_core_transform(shader_core);
+        }
+
+        if let Some(gamma) = config.gamma_correction {
+            shader_core = simple::gamma_correction_composition_core_transform(shader_core, gamma);
+        }
 
         shader_core
     }
@@ -387,11 +398,7 @@ impl Pipeline {
         let scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
         let scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
 
-        info!("Creating composition program");
-        let composition_core = components.composition_core();
-        println!("{}", composition_core.vertex.compile());
-        println!("{}", composition_core.fragment.compile());
-
+        let composition_core = components.composition_core(config);
         let composition_program = composition_core
             .build_program(facade)
             .map_err(render::CreationError::from)?;
@@ -425,11 +432,11 @@ impl Pipeline {
         profile!("pipeline");
 
         if self.components.deferred_shading.is_some() {
-            let intensity = 1.0;
             render_lists.lights.push(Light {
                 position: context.main_light_pos,
-                attenuation: na::Vector3::new(1.0, 0.01, 0.00001),
-                color: na::Vector3::new(intensity, intensity, intensity),
+                attenuation: na::Vector3::new(1.0, 0.0, 0.0),
+                color: na::Vector3::new(1.0, 1.0, 1.0),
+                //color: na::Vector3::new(0.5, 0.5, 0.8) * 2.0,
                 radius: 160.0,
             });
         }
