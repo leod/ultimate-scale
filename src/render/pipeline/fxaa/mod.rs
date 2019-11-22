@@ -29,7 +29,9 @@ impl FXAA {
         config: &Config,
     ) -> Result<Self, CreationError> {
         info!("Creating FXAA program");
-        let program = shader::postprocessing_core().build_program(facade)?;
+        let core = shader::postprocessing_core(shader::EXPLORATION_OFFSETS_HIGH);
+
+        let program = core.build_program(facade)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
