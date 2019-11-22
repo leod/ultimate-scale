@@ -1,4 +1,5 @@
 pub mod deferred;
+pub mod fxaa;
 pub mod glow;
 pub mod instance;
 pub mod light;
@@ -7,7 +8,6 @@ pub mod render_list;
 pub mod shadow;
 pub mod simple;
 pub mod wind;
-pub mod fxaa;
 
 use log::info;
 
@@ -20,6 +20,7 @@ use crate::render::screen_quad::ScreenQuad;
 use crate::render::{self, object, screen_quad, shader, Camera, DrawError, Resources};
 
 use deferred::DeferredShading;
+use fxaa::FXAA;
 use glow::Glow;
 use shadow::ShadowMapping;
 
@@ -100,6 +101,7 @@ pub struct Config {
     pub glow: Option<glow::Config>,
     pub hdr: Option<f32>,
     pub gamma_correction: Option<f32>,
+    pub fxaa: Option<fxaa::Config>,
 }
 
 impl Default for Config {
@@ -110,6 +112,7 @@ impl Default for Config {
             glow: Some(Default::default()),
             hdr: None,
             gamma_correction: Some(0.7),
+            fxaa: Some(Default::default()),
         }
     }
 }
@@ -351,6 +354,9 @@ pub struct Pipeline {
     scene_depth_texture: glium::texture::DepthTexture2d,
 
     composition_program: glium::Program,
+
+    fxaa: Option<(glium::texture::Texture2d, FXAA)>,
+
     screen_quad: ScreenQuad,
 }
 
@@ -404,6 +410,14 @@ impl Pipeline {
             .build_program(facade)
             .map_err(render::CreationError::from)?;
 
+        let fxaa: Option<Result<_, CreationError>> = config.fxaa.as_ref().map(|config| {
+            let target_texture = Self::create_color_texture(facade, rounded_size)?;
+            let fxaa = fxaa::FXAA::create(facade, config).map_err(CreationError::FXAA)?;
+
+            Ok((target_texture, fxaa))
+        });
+        let fxaa = fxaa.transpose()?;
+
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
 
@@ -418,12 +432,47 @@ impl Pipeline {
             scene_color_texture,
             scene_depth_texture,
             composition_program,
+            fxaa,
             screen_quad,
         })
     }
 
     pub fn draw_frame<F: glium::backend::Facade, S: glium::Surface>(
         &mut self,
+        facade: &F,
+        resources: &Resources,
+        context: &Context,
+        render_lists: &mut RenderLists,
+        target: &mut S,
+    ) -> Result<(), DrawError> {
+        if let Some((target_texture, fxaa)) = self.fxaa.as_ref() {
+            let mut target_buffer =
+                glium::framebuffer::SimpleFrameBuffer::new(facade, target_texture)?;
+
+            self.draw_frame_without_postprocessing(
+                facade,
+                resources,
+                context,
+                render_lists,
+                &mut target_buffer,
+            )?;
+
+            fxaa.draw(target_texture, target)?;
+        } else {
+            self.draw_frame_without_postprocessing(
+                facade,
+                resources,
+                context,
+                render_lists,
+                target,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    pub fn draw_frame_without_postprocessing<F: glium::backend::Facade, S: glium::Surface>(
+        &self,
         facade: &F,
         resources: &Resources,
         context: &Context,
@@ -614,6 +663,7 @@ pub enum CreationError {
     ShadowMapping(shadow::CreationError),
     DeferredShading(deferred::CreationError),
     Glow(glow::CreationError),
+    FXAA(fxaa::CreationError),
     CreationError(render::CreationError),
 }
 
