@@ -432,11 +432,11 @@ impl Pipeline {
         profile!("pipeline");
 
         if self.components.deferred_shading.is_some() {
-            let intensity = 1.0;
             render_lists.lights.push(Light {
                 position: context.main_light_pos,
                 attenuation: na::Vector3::new(1.0, 0.0, 0.0),
-                color: na::Vector3::new(intensity, intensity, intensity),
+                color: na::Vector3::new(1.0, 1.0, 1.0),
+                //color: na::Vector3::new(0.5, 0.5, 0.8) * 2.0,
                 radius: 160.0,
             });
         }
