@@ -2,16 +2,15 @@ mod shader;
 
 use log::info;
 
-use glium::{uniform, Texture2d, Program, Surface};
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Sampler, SamplerWrapFunction};
+use glium::{uniform, Program, Surface, Texture2d};
 
-use crate::render::{ScreenQuad, DrawError};
+use crate::render::{DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
 
 #[derive(Debug, Clone)]
-pub struct Config {
-}
+pub struct Config {}
 
 impl Default for Config {
     fn default() -> Self {
@@ -41,12 +40,7 @@ impl FXAA {
         })
     }
 
-    pub fn run<F: glium::backend::Facade, S: Surface>(
-        &self,
-        facade: &F,
-        texture: &Texture2d,
-        target: &mut S,
-    ) -> Result<(), DrawError> {
+    pub fn draw<S: Surface>(&self, texture: &Texture2d, target: &mut S) -> Result<(), DrawError> {
         let texture_map = Sampler::new(texture)
             .magnify_filter(MagnifySamplerFilter::Linear)
             .minify_filter(MinifySamplerFilter::Linear)
@@ -57,7 +51,7 @@ impl FXAA {
             &self.screen_quad.index_buffer,
             &self.program,
             &uniform! {
-                texture: texture_map,
+                input_texture: texture_map,
             },
             &Default::default(),
         )?;
