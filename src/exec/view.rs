@@ -326,12 +326,13 @@ impl ExecView {
             };
 
             out.solid_glow.add_instance(&instance);
+            //out.solid.add_instance(&instance);
 
             out.lights.push(render::pipeline::Light {
                 position: pos,
-                attenuation: na::Vector3::new(0.0, 0.0, 100.0),
-                color: na::Vector3::new(0.2, 10.0, 0.5),
-                radius: 10.0,
+                attenuation: na::Vector3::new(1.0, 0.0, 2.0),
+                color: render::machine::blip_color(blip.kind),
+                radius: 2.0,
             });
         }
     }

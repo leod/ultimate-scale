@@ -12,7 +12,7 @@ use crate::exec::{Exec, TickTime};
 pub const PIPE_THICKNESS: f32 = 0.05;
 
 pub fn wind_source_color() -> na::Vector3<f32> {
-    na::Vector3::new(1.0, 0.08, 0.24)
+    na::Vector3::new(1.0, 0.557, 0.0)
 }
 
 pub fn blip_spawn_color() -> na::Vector3<f32> {
@@ -21,14 +21,62 @@ pub fn blip_spawn_color() -> na::Vector3<f32> {
 
 pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
     match kind {
-        BlipKind::A => na::Vector3::new(0.0, 0.737, 0.361),
-        BlipKind::B => na::Vector3::new(1.0, 0.557, 0.0),
+        BlipKind::A => na::Vector3::new(0.2, 0.2, 0.8),
+        BlipKind::B => na::Vector3::new(0.0, 0.737, 0.361),
         BlipKind::C => na::Vector3::new(0.098, 0.129, 0.694),
     }
 }
 
 pub fn pipe_color() -> na::Vector3<f32> {
     na::Vector3::new(0.75, 0.75, 0.75)
+}
+
+pub fn funnel_in_color() -> na::Vector3<f32> {
+    na::Vector3::new(1.0, 0.5, 0.5)
+}
+
+pub fn funnel_out_color() -> na::Vector3<f32> {
+    na::Vector3::new(1.0, 1.0, 1.0)
+}
+
+pub fn inactive_blip_duplicator_color() -> na::Vector3<f32> {
+    na::Vector3::new(0.6, 0.6, 0.6)
+}
+
+pub fn inactive_blip_wind_source_color() -> na::Vector3<f32> {
+    wind_source_color()
+    //na::Vector3::new(0.5, 0.0, 0.0)
+}
+
+pub fn solid_color() -> na::Vector3<f32> {
+    na::Vector3::new(0.3, 0.2, 0.9)
+}
+
+pub fn wind_mill_color() -> na::Vector3<f32> {
+    na::Vector3::new(1.0, 1.0, 1.0)
+}
+
+pub fn patient_bridge_color() -> na::Vector3<f32> {
+    na::Vector3::new(0.9, 0.9, 0.9)
+}
+
+pub fn impatient_bridge_color() -> na::Vector3<f32> {
+    na::Vector3::new(0.8, 0.8, 0.8)
+}
+
+pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
+    if failed {
+        na::Vector3::new(0.9, 0.0, 0.0)
+    } else if completed {
+        na::Vector3::new(0.8, 0.8, 0.8)
+    } else {
+        na::Vector3::new(0.3, 0.3, 0.3)
+    }
+}
+
+pub fn floor_color() -> na::Vector3<f32> {
+    na::Vector3::new(0.1608, 0.4235, 0.5725)
+    //na::Vector3::new(0.3, 0.3, 0.3)
 }
 
 #[derive(Clone, Debug)]
@@ -199,17 +247,17 @@ pub fn render_mill(
     transform: &na::Matrix4<f32>,
     roll: f32,
     color: &na::Vector4<f32>,
+    length: f32,
     out: &mut RenderList<DefaultInstanceParams>,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
     let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
     let (pitch, yaw) = dir.to_pitch_yaw_x();
-    let length = 0.45;
     let transform = translation
         * transform
         * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
         * na::Matrix4::from_euler_angles(roll, pitch, yaw)
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.07));
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.09));
     out.add(
         Object::Cube,
         &DefaultInstanceParams {
@@ -227,6 +275,7 @@ pub fn render_wind_mills(
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: &na::Vector4<f32>,
+    length: f32,
     out: &mut RenderLists,
 ) {
     for &dir in &Dir3::ALL {
@@ -275,6 +324,7 @@ pub fn render_wind_mills(
                 transform,
                 roll + 2.0 * phase * std::f32::consts::PI,
                 color,
+                length,
                 &mut out.solid,
             );
         }
@@ -383,7 +433,6 @@ pub fn render_block(
         }
         Block::FunnelXY { flow_dir } => {
             let (pitch, yaw) = flow_dir.invert().to_pitch_yaw_x();
-            let cube_color = na::Vector4::new(1.0, 0.5, 0.5, alpha);
             let cube_transform = translation
                 * transform
                 * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
@@ -393,7 +442,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: cube_transform,
-                    color: cube_color,
+                    color: block_color(&funnel_in_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -410,13 +459,13 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: input_transform,
-                    color: na::Vector4::new(1.0, 1.0, 1.0, alpha),
+                    color: block_color(&funnel_out_color(), alpha),
                     ..Default::default()
                 },
             );
         }
         Block::WindSource => {
-            let scaling = na::Matrix4::new_scaling(0.75);
+            let scaling = na::Matrix4::new_scaling(0.6);
 
             let render_list = if wind_anim_state.is_some() {
                 &mut out.solid_glow
@@ -439,6 +488,7 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(1.0, 1.0, 1.0, alpha),
+                0.375,
                 out,
             );
         }
@@ -474,7 +524,7 @@ pub fn render_block(
                 bridge_size,
                 center,
                 transform,
-                &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                &block_color(&patient_bridge_color(), alpha),
                 &mut out.solid,
             );
         }
@@ -492,7 +542,7 @@ pub fn render_block(
 
             let kind_color = match activated.or(kind) {
                 Some(kind) => blip_color(kind),
-                None => na::Vector3::new(0.6, 0.6, 0.6),
+                None => inactive_blip_duplicator_color(),
             };
             out.solid.add(
                 Object::Cube,
@@ -512,7 +562,7 @@ pub fn render_block(
                 0.3,
                 center,
                 transform,
-                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                &block_color(&impatient_bridge_color(), alpha),
                 &mut out.solid,
             );
             render_bridge(
@@ -521,7 +571,7 @@ pub fn render_block(
                 0.3,
                 center,
                 transform,
-                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                &block_color(&impatient_bridge_color(), alpha),
                 &mut out.solid,
             );
         }
@@ -529,11 +579,14 @@ pub fn render_block(
             button_dir,
             activated,
         } => {
-            let cube_color = if activated {
-                block_color(&wind_source_color(), alpha)
-            } else {
-                na::Vector4::new(0.5, 0.0, 0.0, alpha)
-            };
+            let cube_color = block_color(
+                &if activated {
+                    wind_source_color()
+                } else {
+                    inactive_blip_wind_source_color()
+                },
+                alpha,
+            );
 
             let render_list = if activated {
                 &mut out.solid_glow
@@ -561,7 +614,7 @@ pub fn render_block(
                 0.5,
                 center,
                 transform,
-                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                &block_color(&impatient_bridge_color(), alpha),
                 &mut out.solid,
             );
 
@@ -571,7 +624,8 @@ pub fn render_block(
                 wind_anim_state,
                 center,
                 transform,
-                &na::Vector4::new(1.0, 1.0, 1.0, alpha),
+                &block_color(&wind_mill_color(), alpha),
+                0.45,
                 out,
             );
         }
@@ -580,7 +634,7 @@ pub fn render_block(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * transform,
-                    color: na::Vector4::new(0.3, 0.2, 0.9, alpha),
+                    color: block_color(&solid_color(), alpha),
                     ..Default::default()
                 },
             );
@@ -632,7 +686,7 @@ pub fn render_block(
                 0.3,
                 center,
                 transform,
-                &na::Vector4::new(0.8, 0.8, 0.8, alpha),
+                &block_color(&patient_bridge_color(), alpha),
                 &mut out.solid,
             );
         }
@@ -676,14 +730,7 @@ pub fn render_block(
                 && activated == outputs.last().copied())
                 || (outputs.is_empty() && wind_anim_state.is_some());
 
-            let status_color = if failed {
-                na::Vector3::new(0.9, 0.0, 0.0)
-            } else if completed {
-                na::Vector3::new(0.8, 0.8, 0.8)
-            } else {
-                na::Vector3::new(0.3, 0.3, 0.3)
-            };
-
+            let status_color = output_status_color(failed, completed);
             let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));
             let floor_scaling =
                 na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.8, 0.15));
@@ -697,7 +744,7 @@ pub fn render_block(
             );
 
             let expected_next_color = block_color(
-                &expected_kind.map_or(na::Vector3::new(0.8, 0.8, 0.8), blip_color),
+                &expected_kind.map_or(impatient_bridge_color(), blip_color),
                 alpha,
             );
 
@@ -761,8 +808,7 @@ pub fn render_machine<'a>(
         Object::Quad,
         &DefaultInstanceParams {
             transform: floor_transform,
-            //color: na::Vector4::new(0.1608, 0.4235, 0.5725, 1.0),
-            color: na::Vector4::new(0.33, 0.64, 0.82, 1.0),
+            color: block_color(&floor_color(), 1.0),
             ..Default::default()
         },
     );
