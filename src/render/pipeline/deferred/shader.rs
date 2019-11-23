@@ -142,7 +142,7 @@ pub fn composition_core_transform(
         .with_extra_uniform(("light_texture".into(), UniformType::Sampler2d));
 
     let light_expr = "texture(light_texture, v_tex_coord).rgb";
-    let ambient_expr = "vec3(0.3, 0.3, 0.3)";
+    let ambient_expr = "vec3(0.1, 0.1, 0.1)";
 
     let fragment = if have_shadows {
         fragment
