@@ -34,6 +34,7 @@ pub const EXPLORATION_OFFSETS_HIGH: &[f32] =
 const DEFS: &str = "
     #define EDGE_THRESHOLD_MIN 0.0312
     #define EDGE_THRESHOLD_MAX 0.125
+    #define SUBPIXEL_QUALITY 0.75
 
     float rgb2luma(vec3 rgb){
         return sqrt(dot(rgb, vec3(0.299, 0.587, 0.114)));
@@ -278,6 +279,21 @@ const BODY_FINISH: &str = "
     bool is_end_smaller = (is_direction_1_closer ? luma_at_1 : luma_at_2) < 0.0;
 
     pixel_offset = (is_luma_center_smaller != is_end_smaller) ? pixel_offset : 0.0;
+
+    // Sorry about this, but there is one more thing to check so that we
+    // correctly handle subpixel aliasing.
+    float luma_average = 1.0 / 12.0 * (2.0 * (luma_down_up + luma_left_right)
+        + luma_left_corners
+        + luma_right_corners
+    );
+
+    float sub_pixel_offset_1 = clamp(abs(luma_average - luma_center) / luma_range, 0.0, 1.0);
+    float sub_pixel_offset_2 = (-2.0 * sub_pixel_offset_1 + 3.0)
+        * sub_pixel_offset_1
+        * sub_pixel_offset_1;
+    float sub_pixel_offset = sub_pixel_offset_2 * sub_pixel_offset_2 * SUBPIXEL_QUALITY;
+
+    pixel_offset = max(pixel_offset, sub_pixel_offset);
 
     // Compute the final tex coords according to the offset.
     vec2 final_tex_coord = v_tex_coord;
