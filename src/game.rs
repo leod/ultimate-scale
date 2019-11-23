@@ -15,7 +15,7 @@ use crate::input_state::InputState;
 use crate::machine::{level, Block, Machine};
 
 use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
-use crate::render::pipeline::RenderLists;
+use crate::render::pipeline::{fxaa, RenderLists};
 use crate::render::Resources;
 use crate::render::{self, resources};
 
@@ -305,6 +305,36 @@ impl Game {
                     if ui.checkbox(im_str!("HDR"), &mut hdr) {
                         self.config.render_pipeline.hdr = if hdr { Some(42.0) } else { None };
                     }
+
+                    ui.separator();
+
+                    let mut fxaa_quality = self
+                        .config
+                        .render_pipeline
+                        .fxaa
+                        .as_ref()
+                        .map(|config| config.quality);
+                    ui.radio_button(im_str!("No anti-aliasing"), &mut fxaa_quality, None);
+                    ui.radio_button(
+                        im_str!("FXAA (low)"),
+                        &mut fxaa_quality,
+                        Some(fxaa::Quality::Low),
+                    );
+                    ui.radio_button(
+                        im_str!("FXAA (medium)"),
+                        &mut fxaa_quality,
+                        Some(fxaa::Quality::Medium),
+                    );
+                    ui.radio_button(
+                        im_str!("FXAA (high)"),
+                        &mut fxaa_quality,
+                        Some(fxaa::Quality::High),
+                    );
+
+                    self.config.render_pipeline.fxaa =
+                        fxaa_quality.map(|quality| fxaa::Config { quality });
+
+                    ui.separator();
 
                     if ui.button(im_str!("Apply"), [80.0, 20.0]) {
                         self.recreate_render_pipeline = true;
