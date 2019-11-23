@@ -111,7 +111,7 @@ impl Default for Config {
             deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
             hdr: None,
-            gamma_correction: Some(0.7),
+            gamma_correction: Some(1.0),
             fxaa: Some(Default::default()),
         }
     }
@@ -625,6 +625,10 @@ impl Pipeline {
         let rounded_size: (u32, u32) = new_window_size.into();
         self.scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
         self.scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
+
+        if let Some((target_texture, _)) = self.fxaa.as_mut() {
+            *target_texture = Self::create_color_texture(facade, rounded_size)?;
+        }
 
         Ok(())
     }
