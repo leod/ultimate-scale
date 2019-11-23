@@ -311,16 +311,19 @@ impl<P: InstanceParams + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
         // Thus, everything turns out too light when already using corrected
         // colors. Seems weird, and there's definitely still something else
         // going on here.
-        glium::Program::new(facade, glium::program::ProgramCreationInput::SourceCode {
-            vertex_shader: &vertex,
-            fragment_shader: &fragment,
-            geometry_shader: None,
-            tessellation_control_shader: None,
-            tessellation_evaluation_shader: None,
-            transform_feedback_varyings: None,
-            outputs_srgb: true,
-            uses_point_size: false,
-        })
+        glium::Program::new(
+            facade,
+            glium::program::ProgramCreationInput::SourceCode {
+                vertex_shader: &vertex,
+                fragment_shader: &fragment,
+                geometry_shader: None,
+                tessellation_control_shader: None,
+                tessellation_evaluation_shader: None,
+                transform_feedback_varyings: None,
+                outputs_srgb: true,
+                uses_point_size: false,
+            },
+        )
     }
 }
 
