@@ -23,6 +23,7 @@ pub fn f_world_normal_def() -> shader::FragmentOutDef {
 /// Shader core transform for writing position/normal/color into separate
 /// buffers, so that they may be combined in a subsequent pass.
 pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+    always_include_shadow_out: bool,
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
     assert!(
@@ -38,20 +39,33 @@ pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>
         "FragmentCore needs F_COLOR output for deferred shading scene pass"
     );
 
-    let color_expr = if core.fragment.has_out(shader::F_SHADOW) {
-        // TODO: Write shadow value to a separate buffer?
-        "f_shadow * f_color"
-    } else {
-        "f_color"
-    };
-
-    let fragment = core
+    let mut fragment = core
         .fragment
         .with_in_def(shader::v_world_pos_def())
         .with_in_def(shader::v_world_normal_def())
-        .with_out_expr(shader::F_COLOR, color_expr)
         .with_out(f_world_pos_def(), "v_world_pos")
         .with_out(f_world_normal_def(), "vec4(v_world_normal, 0.0)");
+
+    // We may have the case that we want to attach an `f_shadow` output, but
+    // the given `core` does not provide any shadow values (i.e. it wants to
+    // be unshadowed). In that case, we still need to provide a shadow value.
+    if always_include_shadow_out && !fragment.has_out(shader::F_SHADOW) {
+        fragment = fragment.with_out(shader::f_shadow_def(), "1.0");
+    }
+
+    // This is a bit sneaky: we turn `f_shadow` from a local variable into
+    // something that is output by the fragment shader.
+    fragment.out_defs = fragment
+        .out_defs
+        .iter()
+        .map(|(def, qualifier)| {
+            if def.0 == shader::F_SHADOW {
+                (def.clone(), shader::FragmentOutQualifier::Yield)
+            } else {
+                (def.clone(), *qualifier)
+            }
+        })
+        .collect();
 
     shader::Core {
         vertex: core.vertex,
@@ -111,6 +125,7 @@ pub fn light_core() -> shader::Core<Light, screen_quad::Vertex> {
 
 /// Composition shader core transform for composing our buffers.
 pub fn composition_core_transform(
+    have_shadows: bool,
     core: shader::Core<(), screen_quad::Vertex>,
 ) -> shader::Core<(), screen_quad::Vertex> {
     assert!(
@@ -124,11 +139,27 @@ pub fn composition_core_transform(
 
     let fragment = core
         .fragment
-        .with_extra_uniform(("light_texture".into(), UniformType::Sampler2d))
-        .with_out_expr(
+        .with_extra_uniform(("light_texture".into(), UniformType::Sampler2d));
+
+    let light_expr = "texture(light_texture, v_tex_coord).rgb";
+    let ambient_expr = "vec3(0.3, 0.3, 0.3)";
+
+    let fragment = if have_shadows {
+        fragment
+            .with_extra_uniform(("shadow_texture".into(), UniformType::Sampler2d))
+            .with_out_expr(
+                shader::F_COLOR,
+                &format!(
+                    "f_color * vec4({} * texture(shadow_texture, v_tex_coord).r + {}, 1.0)",
+                    light_expr, ambient_expr
+                ),
+            )
+    } else {
+        fragment.with_out_expr(
             shader::F_COLOR,
-            "f_color * vec4(texture(light_texture, v_tex_coord).rgb, 1.0)",
-        );
+            &format!("f_color * vec4({} + {}, 1.0)", light_expr, ambient_expr),
+        )
+    };
 
     shader::Core {
         vertex: core.vertex,
