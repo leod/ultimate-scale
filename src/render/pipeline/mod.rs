@@ -111,7 +111,7 @@ impl Default for Config {
             deferred_shading: Some(Default::default()),
             glow: Some(Default::default()),
             hdr: None,
-            gamma_correction: Some(1.0),
+            gamma_correction: Some(2.2),
             fxaa: Some(Default::default()),
         }
     }
@@ -155,8 +155,13 @@ impl Components {
         let deferred_shading = config
             .deferred_shading
             .as_ref()
-            .map(|deferred_shading_config| {
-                DeferredShading::create(facade, &deferred_shading_config, view_config.window_size)
+            .map(|config| {
+                DeferredShading::create(
+                    facade,
+                    &config,
+                    shadow_mapping.is_some(),
+                    view_config.window_size,
+                )
             })
             .transpose()
             .map_err(CreationError::DeferredShading)?;
