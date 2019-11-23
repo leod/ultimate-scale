@@ -14,7 +14,7 @@ impl Default for ViewConfig {
     fn default() -> ViewConfig {
         ViewConfig {
             window_size: glutin::dpi::LogicalSize::new(1280.0, 720.0),
-            fov_degrees: 45.0,
+            fov_degrees: 60.0,
         }
     }
 }
