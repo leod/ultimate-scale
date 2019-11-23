@@ -303,7 +303,24 @@ impl<P: InstanceParams + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
         let vertex = self.vertex.compile();
         let fragment = self.fragment.compile();
 
-        glium::Program::from_source(facade, &vertex, &fragment, None)
+        // We use the long form of `glium::Program` construction here, since
+        // glium by default sets `outputs_rgb` to false, which causes it to
+        // enable `GL_FRAMEBUFFER_SRGB` later on when rendering. This
+        // apparently has the effect of OpenGL applying gamma correction when
+        // rendering to the screen, at least from what I could tell on Ubuntu.
+        // Thus, everything turns out too light when already using corrected
+        // colors. Seems weird, and there's definitely still something else
+        // going on here.
+        glium::Program::new(facade, glium::program::ProgramCreationInput::SourceCode {
+            vertex_shader: &vertex,
+            fragment_shader: &fragment,
+            geometry_shader: None,
+            tessellation_control_shader: None,
+            tessellation_evaluation_shader: None,
+            transform_feedback_varyings: None,
+            outputs_srgb: true,
+            uses_point_size: false,
+        })
     }
 }
 
