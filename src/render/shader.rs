@@ -311,6 +311,8 @@ impl<P: InstanceParams + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
         // Thus, everything turns out too light when already using corrected
         // colors. Seems weird, and there's definitely still something else
         // going on here.
+        //
+        // Related issue: https://github.com/rust-windowing/glutin/issues/1175
         glium::Program::new(
             facade,
             glium::program::ProgramCreationInput::SourceCode {
