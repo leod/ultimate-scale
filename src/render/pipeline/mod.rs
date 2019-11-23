@@ -457,7 +457,10 @@ impl Pipeline {
                 &mut target_buffer,
             )?;
 
-            fxaa.draw(target_texture, target)?;
+            {
+                profile!("fxaa");
+                fxaa.draw(target_texture, target)?;
+            }
         } else {
             self.draw_frame_without_postprocessing(
                 facade,
