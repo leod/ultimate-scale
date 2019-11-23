@@ -105,7 +105,7 @@ pub fn render_line(line: &Line, out: &mut RenderList<DefaultInstanceParams>) {
 
     // This will roll the line somewhat, works nicely for the cuboid wireframe
     let up = d.cross(&na::Vector3::x()) + d.cross(&na::Vector3::y()) + d.cross(&na::Vector3::z());
-    let rot = na::Rotation3::new(d.normalize() * line.roll);
+    let rot = na::Rotation3::new(d.normalize() * (line.roll + std::f32::consts::PI / 4.0));
     let look_at = na::Isometry3::face_towards(&center, &line.end, &(rot * up));
 
     let scaling = na::Vector3::new(
@@ -772,26 +772,6 @@ pub fn render_block(
             );
         }
     }
-}
-
-pub fn render_arrow(line: &Line, _roll: f32, out: &mut RenderList<DefaultInstanceParams>) {
-    render_line(line, out);
-
-    // TODO
-    /*let head_transform = na::Matrix4::face_towards(
-        &line.end,
-        &(line.end + (line.end - line.start)),
-        &na::Vector3::y(),
-    ) * na::Matrix4::new_scaling(0.9);
-
-    out.add(
-        Object::Triangle,
-        &DefaultInstanceParams {
-            transform: head_transform,
-            color: line.color,
-            ..Default::default()
-        },
-    );*/
 }
 
 pub fn block_center(pos: &grid::Point3) -> na::Point3<f32> {
