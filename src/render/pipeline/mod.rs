@@ -484,20 +484,10 @@ impl Pipeline {
         facade: &F,
         resources: &Resources,
         context: &Context,
-        render_lists: &mut RenderLists,
+        render_lists: &RenderLists,
         target: &mut S,
     ) -> Result<(), DrawError> {
         profile!("pipeline");
-
-        if self.components.deferred_shading.is_some() {
-            render_lists.lights.push(Light {
-                position: context.main_light_pos,
-                attenuation: na::Vector3::new(1.0, 0.0, 0.0),
-                color: na::Vector3::new(1.0, 1.0, 1.0),
-                //color: na::Vector3::new(0.5, 0.5, 0.8) * 2.0,
-                radius: 160.0,
-            });
-        }
 
         // Clear buffers
         {
