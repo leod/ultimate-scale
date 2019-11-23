@@ -32,12 +32,12 @@ pub const EXPLORATION_OFFSETS_HIGH: &[f32] =
 
 /// Definitions for the fragment shader.
 const DEFS: &str = "
+    #define EDGE_THRESHOLD 0.125
     #define EDGE_THRESHOLD_MIN 0.0312
-    #define EDGE_THRESHOLD_MAX 0.125
     #define SUBPIXEL_QUALITY 0.75
 
     float rgb2luma(vec3 rgb){
-        return sqrt(dot(rgb, vec3(0.299, 0.587, 0.114)));
+        return dot(rgb, vec3(0.299, 0.587, 0.114));
     }
 ";
 
@@ -84,12 +84,7 @@ const BODY_INIT: &str = "
     // There are two situations in which we won't apply AA:
     // 1) The variation in luma is lower than a minimal threshold, or
     // 2) We are in a really dark area.
-    //
-    // Q: This seems to be a weird way to check for dark areas. Why not just
-    //    something like `luma_max < EDGE_THRESHOLD_MAX`? Is this perhaps even
-    //    an optimization here by being able to use `max` instead of a
-    //    boolean or?
-    if (luma_range < max(EDGE_THRESHOLD_MIN, luma_max * EDGE_THRESHOLD_MAX)) {
+    if (luma_range < max(EDGE_THRESHOLD_MIN, luma_max * EDGE_THRESHOLD)) {
         f_color = vec4(color_center, 1.0);
         return;
     }

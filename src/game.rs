@@ -297,7 +297,7 @@ impl Game {
 
                     let mut gamma = self.config.render_pipeline.gamma_correction.unwrap_or(1.0);
 
-                    imgui::Slider::new(im_str!("Gamma"), 0.5..=4.0).build(ui, &mut gamma);
+                    imgui::Slider::new(im_str!("Gamma"), 0.3..=4.0).build(ui, &mut gamma);
 
                     self.config.render_pipeline.gamma_correction = Some(gamma);
 
