@@ -81,7 +81,7 @@ pub fn render_shadowed_core_transform<P: InstanceParams, V: glium::vertex::Verte
                 float closest_depth = texture(shadow_map, proj_coords.xy).r;
                 float current_depth = proj_coords.z;
 
-                return current_depth > closest_depth ? 0.75 : 1.0;
+                return current_depth > closest_depth ? 0.0 : 1.0;
             }
             ",
         )

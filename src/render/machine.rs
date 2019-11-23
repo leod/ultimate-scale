@@ -85,8 +85,8 @@ pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
 }
 
 pub fn floor_color() -> na::Vector3<f32> {
-    gamma_correct(&na::Vector3::new(0.1608, 0.4235, 0.5725))
-    //na::Vector3::new(0.3, 0.3, 0.3)
+    //gamma_correct(&na::Vector3::new(0.1608, 0.4235, 0.5725))
+    gamma_correct(&na::Vector3::new(0.2, 0.2, 0.2))
 }
 
 #[derive(Clone, Debug)]
