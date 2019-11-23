@@ -38,7 +38,7 @@ pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
 }
 
 pub fn pipe_color() -> na::Vector3<f32> {
-    gamma_correct(&na::Vector3::new(0.75, 0.75, 0.75))
+    gamma_correct(&na::Vector3::new(0.85, 0.85, 0.85))
 }
 
 pub fn funnel_in_color() -> na::Vector3<f32> {
@@ -50,7 +50,7 @@ pub fn funnel_out_color() -> na::Vector3<f32> {
 }
 
 pub fn inactive_blip_duplicator_color() -> na::Vector3<f32> {
-    gamma_correct(&na::Vector3::new(0.6, 0.6, 0.6))
+    gamma_correct(&na::Vector3::new(0.7, 0.7, 0.7))
 }
 
 pub fn inactive_blip_wind_source_color() -> na::Vector3<f32> {
@@ -67,11 +67,11 @@ pub fn wind_mill_color() -> na::Vector3<f32> {
 }
 
 pub fn patient_bridge_color() -> na::Vector3<f32> {
-    gamma_correct(&na::Vector3::new(0.9, 0.9, 0.9))
+    gamma_correct(&na::Vector3::new(0.95, 0.95, 0.95))
 }
 
 pub fn impatient_bridge_color() -> na::Vector3<f32> {
-    gamma_correct(&na::Vector3::new(0.8, 0.8, 0.8))
+    gamma_correct(&na::Vector3::new(0.9, 0.9, 0.9))
 }
 
 pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
@@ -86,7 +86,7 @@ pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
 
 pub fn floor_color() -> na::Vector3<f32> {
     //gamma_correct(&na::Vector3::new(0.1608, 0.4235, 0.5725))
-    gamma_correct(&na::Vector3::new(0.2, 0.2, 0.2))
+    gamma_correct(&na::Vector3::new(0.3, 0.3, 0.3))
 }
 
 #[derive(Clone, Debug)]
