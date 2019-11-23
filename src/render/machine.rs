@@ -11,36 +11,42 @@ use crate::exec::{Exec, TickTime};
 
 pub const PIPE_THICKNESS: f32 = 0.05;
 
+const GAMMA: f32 = 2.2;
+
+pub fn gamma_correct(color: &na::Vector3<f32>) -> na::Vector3<f32> {
+    na::Vector3::new(color.x.powf(GAMMA), color.y.powf(GAMMA), color.z.powf(GAMMA))
+}
+
 pub fn wind_source_color() -> na::Vector3<f32> {
-    na::Vector3::new(1.0, 0.557, 0.0)
+    gamma_correct(&na::Vector3::new(1.0, 0.557, 0.0))
 }
 
 pub fn blip_spawn_color() -> na::Vector3<f32> {
-    na::Vector3::new(60.0, 179.0, 113.0) / 255.0
+    gamma_correct(&(na::Vector3::new(60.0, 179.0, 113.0) / 255.0))
 }
 
 pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
-    match kind {
+    gamma_correct(&match kind {
         BlipKind::A => na::Vector3::new(0.2, 0.2, 0.8),
         BlipKind::B => na::Vector3::new(0.0, 0.737, 0.361),
         BlipKind::C => na::Vector3::new(0.098, 0.129, 0.694),
-    }
+    })
 }
 
 pub fn pipe_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.75, 0.75, 0.75)
+    gamma_correct(&na::Vector3::new(0.75, 0.75, 0.75))
 }
 
 pub fn funnel_in_color() -> na::Vector3<f32> {
-    na::Vector3::new(1.0, 0.5, 0.5)
+    gamma_correct(&na::Vector3::new(1.0, 0.5, 0.5))
 }
 
 pub fn funnel_out_color() -> na::Vector3<f32> {
-    na::Vector3::new(1.0, 1.0, 1.0)
+    gamma_correct(&na::Vector3::new(1.0, 1.0, 1.0))
 }
 
 pub fn inactive_blip_duplicator_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.6, 0.6, 0.6)
+    gamma_correct(&na::Vector3::new(0.6, 0.6, 0.6))
 }
 
 pub fn inactive_blip_wind_source_color() -> na::Vector3<f32> {
@@ -49,33 +55,33 @@ pub fn inactive_blip_wind_source_color() -> na::Vector3<f32> {
 }
 
 pub fn solid_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.3, 0.2, 0.9)
+    gamma_correct(&na::Vector3::new(0.3, 0.2, 0.9))
 }
 
 pub fn wind_mill_color() -> na::Vector3<f32> {
-    na::Vector3::new(1.0, 1.0, 1.0)
+    gamma_correct(&na::Vector3::new(1.0, 1.0, 1.0))
 }
 
 pub fn patient_bridge_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.9, 0.9, 0.9)
+    gamma_correct(&na::Vector3::new(0.9, 0.9, 0.9))
 }
 
 pub fn impatient_bridge_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.8, 0.8, 0.8)
+    gamma_correct(&na::Vector3::new(0.8, 0.8, 0.8))
 }
 
 pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
-    if failed {
+    gamma_correct(&if failed {
         na::Vector3::new(0.9, 0.0, 0.0)
     } else if completed {
         na::Vector3::new(0.8, 0.8, 0.8)
     } else {
         na::Vector3::new(0.3, 0.3, 0.3)
-    }
+    })
 }
 
 pub fn floor_color() -> na::Vector3<f32> {
-    na::Vector3::new(0.1608, 0.4235, 0.5725)
+    gamma_correct(&na::Vector3::new(0.1608, 0.4235, 0.5725))
     //na::Vector3::new(0.3, 0.3, 0.3)
 }
 
