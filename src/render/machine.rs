@@ -14,7 +14,11 @@ pub const PIPE_THICKNESS: f32 = 0.05;
 const GAMMA: f32 = 2.2;
 
 pub fn gamma_correct(color: &na::Vector3<f32>) -> na::Vector3<f32> {
-    na::Vector3::new(color.x.powf(GAMMA), color.y.powf(GAMMA), color.z.powf(GAMMA))
+    na::Vector3::new(
+        color.x.powf(GAMMA),
+        color.y.powf(GAMMA),
+        color.z.powf(GAMMA),
+    )
 }
 
 pub fn wind_source_color() -> na::Vector3<f32> {
