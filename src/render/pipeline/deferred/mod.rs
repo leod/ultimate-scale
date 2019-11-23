@@ -146,7 +146,7 @@ impl DeferredShading {
         let mut light_buffer =
             glium::framebuffer::SimpleFrameBuffer::new(facade, &self.light_texture)?;
 
-        light_buffer.clear_color(0.3, 0.3, 0.3, 1.0);
+        light_buffer.clear_color_srgb(0.3, 0.3, 0.3, 1.0);
 
         for light in lights.iter() {
             let uniforms = UniformsPair(
