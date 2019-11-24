@@ -1,5 +1,5 @@
-use std::time::Duration;
 use std::fmt;
+use std::time::Duration;
 
 use glium::glutin::{ElementState, VirtualKeyCode, WindowEvent};
 use imgui::{im_str, ImString};

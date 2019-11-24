@@ -180,12 +180,16 @@ impl ExecView {
         let color = render::machine::wind_source_color();
         let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
 
+        let stripe_color = render::machine::wind_stripe_color();
+        let stripe_color = na::Vector4::new(stripe_color.x, stripe_color.y, stripe_color.z, 1.0);
+
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
             out.wind.add(
                 render::Object::TessellatedCylinder,
                 &wind::Params {
                     transform,
                     color,
+                    stripe_color,
                     start: in_t,
                     end: out_t,
                     phase: 2.0 * phase * std::f32::consts::PI,
