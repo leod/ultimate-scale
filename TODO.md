@@ -1,4 +1,8 @@
 # TODO
+## Movement
+- Turn faster on shift
+- Shame pulsator for crossing
+
 ## Editor
 - Select all
 - Not allowing deletion of `Block::Input` and `Block::Output`
