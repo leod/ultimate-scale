@@ -25,6 +25,10 @@ pub fn wind_source_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(1.0, 0.557, 0.0))
 }
 
+pub fn wind_stripe_color() -> na::Vector3<f32> {
+    gamma_correct(&na::Vector3::new(1.0, 0.325, 0.286))
+}
+
 pub fn blip_spawn_color() -> na::Vector3<f32> {
     gamma_correct(&(na::Vector3::new(60.0, 179.0, 113.0) / 255.0))
 }
