@@ -357,7 +357,7 @@ pub fn render_half_pipe(
     let rotation = na::Matrix4::from_euler_angles(0.0, pitch, yaw);
 
     out.add(
-        Object::TessellatedCylinder,
+        Object::Cube,
         &DefaultInstanceParams {
             transform: translation * transform * rotation * offset * scaling,
             color: *color,
