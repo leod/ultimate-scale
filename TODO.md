@@ -13,9 +13,7 @@
 ## Rendering
 - Render block inputs
 
-- Fix rough edges of deferred shading
 - Check if it's okay to rely on `glutin::dpi::LogicalSize` for texture sizes
-- Make generic over glium `Display` where it is not yet
 - Instanced rendering to reduce draw calls
 
 ## Gameplay
