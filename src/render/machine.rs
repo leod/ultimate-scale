@@ -301,7 +301,6 @@ pub fn render_wind_mills(
             }
 
             std::f32::consts::PI
-                * 2.0
                 * match anim.wind_out(dir) {
                     WindLife::None => 0.0,
                     WindLife::Appearing => {

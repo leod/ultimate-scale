@@ -69,7 +69,10 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
         "
         .to_string(),
         body: "
-            float angle = (position.x + 0.5 + 2.0 * tick_progress) * 1.0 * PI + phase;
+            float angle = (position.x + 0.5) * PI
+                + tick_progress * PI / 2.0
+                + phase;
+
             float rot_s = sin(angle);
             float rot_c = cos(angle);
             mat2 rot_m = mat2(rot_c, -rot_s, rot_s, rot_c);
@@ -77,19 +80,6 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
             vec3 scaled_pos = position;
             scaled_pos.yz *= scale;
             scaled_pos.z += radius;
-
-            if (bend) {
-                // Currently unused, for wind bending
-                float tau = (0.5 - position.x) * PI / 2.0;
-                scaled_pos.x = 0.5 * cos(tau);
-                scaled_pos.y += 0.5 * sin(tau);
-
-                vec3 normal = vec3(cos(tau), sin(tau), 0.0);
-                scaled_pos += normal * sin(angle) * 0.05;
-            }
-
-            //scaled_pos.y += sin(angle) * radius;
-            //scaled_pos.z += cos(angle) * radius;
 
             vec3 rot_normal = normal;
             scaled_pos.yz = rot_m * scaled_pos.yz;
