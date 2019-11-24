@@ -154,7 +154,7 @@ impl Game {
             position: render_context.main_light_pos,
             attenuation: na::Vector3::new(1.0, 0.0, 0.0),
             color: na::Vector3::new(1.0, 1.0, 1.0),
-            radius: 160.0,
+            is_main: true,
         });
 
         self.render_pipeline.draw_frame(
