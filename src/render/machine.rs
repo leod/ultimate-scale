@@ -390,8 +390,8 @@ pub fn render_block(
                     * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
                         if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0
                         {
-                            1.0 + 0.1
-                                * (tick_time.tick_progress() * 2.0 * std::f32::consts::PI)
+                            1.0 + 0.05
+                                * (tick_time.tick_progress() * std::f32::consts::PI)
                                     .sin()
                                     .powf(2.0)
                         } else {
