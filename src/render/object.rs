@@ -298,13 +298,13 @@ impl Object {
                 
                     for j in 0..m {
                                             
-                        indices.push((i + 0) + ((j + 0) % m) * m);
-                        indices.push((i + 0) + ((j + 1) % m) * m);
-                        indices.push((i + 1) + ((j + 0) % m) * m);
+                        indices.push((i + 0) * m + ((j + 0) % m));
+                        indices.push((i + 1) * m + ((j + 0) % m));
+                        indices.push((i + 0) * m + ((j + 1) % m));
 
-                        indices.push((i + 0) + ((j + 1) % m) * m);
-                        indices.push((i + 1) + ((j + 1) % m) * m);
-                        indices.push((i + 1) + ((j + 0) % m) * m);
+                        indices.push((i + 0) * m + ((j + 1) % m));
+                        indices.push((i + 1) * m + ((j + 0) % m));
+                        indices.push((i + 1) * m + ((j + 1) % m));
                         
                     }
                 }
