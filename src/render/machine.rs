@@ -12,6 +12,8 @@ use crate::exec::{Exec, TickTime};
 pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
+pub const OUTLINE_THICKNESS: f32 = 0.02;
+pub const OUTLINE_MARGIN: f32 = 0.015;
 
 const GAMMA: f32 = 2.2;
 
@@ -93,6 +95,10 @@ pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
 pub fn floor_color() -> na::Vector3<f32> {
     //gamma_correct(&na::Vector3::new(0.1608, 0.4235, 0.5725))
     gamma_correct(&na::Vector3::new(0.3, 0.3, 0.3))
+}
+
+pub fn outline_color() -> na::Vector3<f32> {
+    gamma_correct(&na::Vector3::new(0.05, 0.05, 0.05))
 }
 
 #[derive(Clone, Debug)]
@@ -252,7 +258,7 @@ pub fn render_bridge(
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: &na::Vector4<f32>,
-    out: &mut RenderList<DefaultInstanceParams>,
+    out: &mut RenderLists,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
     let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
@@ -260,16 +266,17 @@ pub fn render_bridge(
     let output_transform = translation
         * transform
         * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
-        * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, size, size));
-    out.add(
+        * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+    let scaling = na::Vector3::new(length, size, size);
+    out.solid.add(
         Object::Cube,
         &DefaultInstanceParams {
-            transform: output_transform,
+            transform: output_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
             color: *color,
             ..Default::default()
         },
     );
+    render_outline(&output_transform, &scaling, color.w, out);
 }
 
 pub fn render_mill(
@@ -392,6 +399,25 @@ pub fn render_half_pipe(
     );
 }
 
+pub fn render_outline(
+    cube_transform: &na::Matrix4<f32>,
+    scaling: &na::Vector3<f32>,
+    alpha: f32,
+    out: &mut RenderLists,
+) {
+    let transform = cube_transform
+        * na::Matrix4::new_nonuniform_scaling(
+            &(scaling + na::Vector3::new(OUTLINE_MARGIN, OUTLINE_MARGIN, OUTLINE_MARGIN)),
+        );
+
+    render_cuboid_wireframe_with_transform(
+        OUTLINE_THICKNESS,
+        &block_color(&outline_color(), alpha),
+        &transform,
+        &mut out.plain,
+    );
+}
+
 pub fn render_block(
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
@@ -472,36 +498,38 @@ pub fn render_block(
             let cube_transform = translation
                 * transform
                 * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
-                * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.6, 0.6));
+                * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0));
+            let scaling = na::Vector3::new(0.8, 0.6, 0.6);
+
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: cube_transform,
+                    transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                     color: block_color(&funnel_in_color(), alpha),
                     ..Default::default()
                 },
             );
+            render_outline(&cube_transform, &scaling, alpha, out);
 
             let input_size = 0.4;
             let input_transform = translation
                 * transform
                 * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
-                * na::Matrix4::new_translation(&na::Vector3::new(-0.3, 0.0, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                    0.9, input_size, input_size,
-                ));
+                * na::Matrix4::new_translation(&na::Vector3::new(-0.3, 0.0, 0.0));
+            let scaling = &na::Vector3::new(0.9, input_size, input_size);
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: input_transform,
+                    transform: input_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                     color: block_color(&funnel_out_color(), alpha),
                     ..Default::default()
                 },
             );
+            render_outline(&input_transform, &scaling, alpha, out);
         }
         Block::WindSource => {
-            let scaling = na::Matrix4::new_scaling(0.6);
+            let cube_transform = translation * transform;
+            let scaling = na::Vector3::new(0.6, 0.6, 0.6);
 
             let render_list = if wind_anim_state.is_some() {
                 &mut out.solid_glow
@@ -511,11 +539,13 @@ pub fn render_block(
             render_list.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: translation * transform * scaling,
+                    transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                     color: block_color(&wind_source_color(), alpha),
                     ..Default::default()
                 },
             );
+
+            render_outline(&cube_transform, &scaling, alpha, out);
 
             if wind_anim_state.is_some() {
                 out.lights.push(Light {
@@ -548,16 +578,17 @@ pub fn render_block(
             let cube_transform = translation
                 * transform
                 * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
-                * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
+                * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0));
+            let scaling = na::Vector3::new(0.65, 0.95, 0.95);
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: cube_transform,
+                    transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                     color: cube_color,
                     ..Default::default()
                 },
             );
+            render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
             let bridge_length =
@@ -570,7 +601,7 @@ pub fn render_block(
                 center,
                 transform,
                 &block_color(&patient_bridge_color(), alpha),
-                &mut out.solid,
+                out,
             );
         }
         Block::BlipDuplicator {
@@ -580,10 +611,9 @@ pub fn render_block(
             ..
         } => {
             let (pitch, yaw) = out_dirs.0.to_pitch_yaw_x();
-            let cube_transform = translation
-                * transform
-                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.65, 1.0, 1.0));
+            let cube_transform =
+                translation * transform * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+            let scaling = na::Vector3::new(0.65, 0.95, 0.95);
 
             let kind_color = match activated.or(kind) {
                 Some(kind) => blip_color(kind),
@@ -592,11 +622,12 @@ pub fn render_block(
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: cube_transform,
+                    transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                     color: block_color(&kind_color, alpha),
                     ..Default::default()
                 },
             );
+            render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_length =
                 bridge_length_animation(0.35, 0.75, activated.is_some(), tick_time.tick_progress());
@@ -608,7 +639,7 @@ pub fn render_block(
                 center,
                 transform,
                 &block_color(&impatient_bridge_color(), alpha),
-                &mut out.solid,
+                out,
             );
             render_bridge(
                 out_dirs.1,
@@ -617,7 +648,7 @@ pub fn render_block(
                 center,
                 transform,
                 &block_color(&impatient_bridge_color(), alpha),
-                &mut out.solid,
+                out,
             );
         }
         Block::BlipWindSource {
@@ -641,16 +672,17 @@ pub fn render_block(
 
             let cube_transform = translation
                 * transform
-                * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0))
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.75, 0.75, 0.75));
+                * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0));
+            let scaling = na::Vector3::new(0.75, 0.75, 0.75);
             render_list.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: cube_transform,
+                    transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                     color: cube_color,
                     ..Default::default()
                 },
             );
+            render_outline(&cube_transform, &scaling, alpha, out);
 
             if activated {
                 out.lights.push(Light {
@@ -669,7 +701,7 @@ pub fn render_block(
                 center,
                 transform,
                 &block_color(&impatient_bridge_color(), alpha),
-                &mut out.solid,
+                out,
             );
 
             render_wind_mills(
@@ -711,24 +743,26 @@ pub fn render_block(
                     0.0
                 };
             let rotation = na::Matrix4::from_euler_angles(angle, 0.0, 0.0);
-            let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.6, 0.6));
 
             let color = block_color(
                 &active_blip_kind.map_or(na::Vector3::new(0.3, 0.3, 0.3), blip_color),
                 alpha,
             );
 
+            let cube_transform = translation * transform * rotation;
+            let scaling = na::Vector3::new(0.8, 0.6, 0.6);
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: translation * transform * rotation * scaling,
+                    transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                     color,
                     ..Default::default()
                 },
             );
+            render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_length = bridge_length_animation(
-                0.35,
+                0.4,
                 0.75,
                 active_blip_kind.is_some(),
                 tick_time.tick_progress(),
@@ -741,7 +775,7 @@ pub fn render_block(
                 center,
                 transform,
                 &block_color(&patient_bridge_color(), alpha),
-                &mut out.solid,
+                out,
             );
         }
         Block::Output {
@@ -806,7 +840,7 @@ pub fn render_block(
                 na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.3));
             let thingy_scaling =
                 na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.2, 0.2, 0.4));
-            out.solid.add(
+            out.solid_glow.add(
                 Object::Cube,
                 &DefaultInstanceParams {
                     transform: translation * thingy_translation * transform * thingy_scaling,
