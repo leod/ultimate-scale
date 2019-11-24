@@ -285,7 +285,11 @@ impl ExecView {
                 * match blip.status {
                     BlipStatus::Spawning => {
                         // Animate spawning the blip
-                        Self::blip_spawn_size_animation(time.tick_progress())
+                        if time.tick_progress() >= 0.75 {
+                            Self::blip_spawn_size_animation((time.tick_progress() - 0.75) * 4.0)
+                        } else {
+                            0.0
+                        }
                     }
                     BlipStatus::Existing => 1.0,
                     BlipStatus::Dying => {
