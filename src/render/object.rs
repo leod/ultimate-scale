@@ -271,10 +271,10 @@ impl Object {
                 let mut indices = Vec::new();
 
                 // Number of subdivisions along the x axis
-                let n = 64;
+                let n = 32;
 
                 // Number of subdivisions along the angle
-                let m = 12;
+                let m = 8;
 
                 // Add positions and normals
                 for i in 0..n+1 {
