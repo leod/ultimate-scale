@@ -312,7 +312,7 @@ impl ExecView {
             };
 
             let mut transform =
-                na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
+                na::Matrix4::new_translation(&pos.coords) ;
 
             // Rotate blip if it is moving
             if let Some(old_move_dir) = blip.old_move_dir {
@@ -328,10 +328,12 @@ impl ExecView {
                 object: render::Object::Cube,
                 params: render::pipeline::DefaultInstanceParams {
                     color: na::Vector4::new(color.x, color.y, color.z, 1.0),
-                    transform,
+                    transform: transform * na::Matrix4::new_scaling(size),
                     ..Default::default()
                 },
             };
+
+            render::machine::render_outline(&transform, &na::Vector3::new(size, size, size), 0.0, out);
 
             out.solid_glow.add_instance(&instance);
             //out.solid.add_instance(&instance);
