@@ -3,7 +3,7 @@ use nalgebra as na;
 use crate::machine::grid::{self, Dir3};
 use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
-use crate::render::pipeline::{DefaultInstanceParams, RenderList, RenderLists};
+use crate::render::pipeline::{DefaultInstanceParams, Light, RenderList, RenderLists};
 use crate::render::Object;
 
 use crate::exec::anim::{WindAnimState, WindLife};
@@ -490,6 +490,15 @@ pub fn render_block(
                 },
             );
 
+            if wind_anim_state.is_some() {
+                out.lights.push(Light {
+                    position: *center,
+                    attenuation: na::Vector3::new(1.0, 0.0, 3.0),
+                    color: 8.0 * wind_source_color(),
+                    is_main: false,
+                });
+            }
+
             render_wind_mills(
                 placed_block,
                 tick_time,
@@ -615,6 +624,15 @@ pub fn render_block(
                     ..Default::default()
                 },
             );
+
+            if activated {
+                out.lights.push(Light {
+                    position: *center,
+                    attenuation: na::Vector3::new(1.0, 0.0, 3.0),
+                    color: 8.0 * wind_source_color(),
+                    is_main: false,
+                });
+            }
 
             let button_length = if activated { 0.4 } else { 0.45 };
             render_bridge(
