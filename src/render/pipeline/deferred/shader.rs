@@ -75,7 +75,7 @@ pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>
 
 /// Shader core for rendering a light source, given the position/normal buffers
 /// from the scene pass.
-pub fn light_core() -> shader::Core<Light, screen_quad::Vertex> {
+pub fn light_core(have_shadows: bool) -> shader::Core<Light, screen_quad::Vertex> {
     let vertex = shader::VertexCore {
         out_defs: vec![shader::v_tex_coord_def()],
         out_exprs: shader_out_exprs! {
@@ -85,7 +85,7 @@ pub fn light_core() -> shader::Core<Light, screen_quad::Vertex> {
         ..Default::default()
     };
 
-    let fragment = shader::FragmentCore {
+    let mut fragment = shader::FragmentCore {
         extra_uniforms: vec![
             ("position_texture".into(), UniformType::Sampler2d),
             ("normal_texture".into(), UniformType::Sampler2d),
@@ -120,12 +120,23 @@ pub fn light_core() -> shader::Core<Light, screen_quad::Vertex> {
         ..Default::default()
     };
 
+    if have_shadows {
+        fragment = fragment
+            .with_extra_uniform(("shadow_texture".into(), UniformType::Sampler2d))
+            .with_body(
+                "
+                if (light_is_main) {
+                    radiance *= texture(shadow_texture, v_tex_coord).r;
+                }
+            ",
+            );
+    }
+
     shader::Core { vertex, fragment }
 }
 
 /// Composition shader core transform for composing our buffers.
 pub fn composition_core_transform(
-    have_shadows: bool,
     core: shader::Core<(), screen_quad::Vertex>,
 ) -> shader::Core<(), screen_quad::Vertex> {
     assert!(
@@ -137,29 +148,16 @@ pub fn composition_core_transform(
         "FragmentCore needs F_COLOR output for deferred shading composition pass"
     );
 
-    let fragment = core
-        .fragment
-        .with_extra_uniform(("light_texture".into(), UniformType::Sampler2d));
-
     let light_expr = "texture(light_texture, v_tex_coord).rgb";
     let ambient_expr = "vec3(0.1, 0.1, 0.1)";
 
-    let fragment = if have_shadows {
-        fragment
-            .with_extra_uniform(("shadow_texture".into(), UniformType::Sampler2d))
-            .with_out_expr(
-                shader::F_COLOR,
-                &format!(
-                    "f_color * vec4({} * texture(shadow_texture, v_tex_coord).r + {}, 1.0)",
-                    light_expr, ambient_expr
-                ),
-            )
-    } else {
-        fragment.with_out_expr(
+    let fragment = core
+        .fragment
+        .with_extra_uniform(("light_texture".into(), UniformType::Sampler2d))
+        .with_out_expr(
             shader::F_COLOR,
             &format!("f_color * vec4({} + {}, 1.0)", light_expr, ambient_expr),
-        )
-    };
+        );
 
     shader::Core {
         vertex: core.vertex,
