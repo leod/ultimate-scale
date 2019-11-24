@@ -1,4 +1,5 @@
 use std::time::Duration;
+use std::fmt;
 
 use glium::glutin::{ElementState, VirtualKeyCode, WindowEvent};
 use imgui::{im_str, ImString};
@@ -58,6 +59,12 @@ impl TickTime {
 
     pub fn tick_progress(&self) -> f32 {
         self.next_tick_timer.progress()
+    }
+}
+
+impl fmt::Display for TickTime {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:.2}", self.as_f32())
     }
 }
 
@@ -157,7 +164,7 @@ impl Play {
 
         match &status {
             Some(Status::Playing { time, .. }) if play_pause_pressed => {
-                info!("Pausing exec");
+                info!("Pausing exec at time {}", time);
                 Some(Status::Paused { time: time.clone() })
             }
             Some(Status::Playing { .. }) if stop_pressed => None,
@@ -179,18 +186,18 @@ impl Play {
                 })
             }
             Some(Status::Paused { time }) if play_pause_pressed => {
-                info!("Resuming exec");
+                info!("Resuming exec at time {}", time);
                 Some(Status::Playing {
                     num_ticks_since_last_update: 0,
                     time: time.clone(),
                 })
             }
-            Some(Status::Paused { .. }) if stop_pressed => {
-                info!("Stopping exec");
+            Some(Status::Paused { time }) if stop_pressed => {
+                info!("Stopping exec at time {}", time);
                 None
             }
-            Some(Status::Finished { .. }) if stop_pressed => {
-                info!("Stopping exec");
+            Some(Status::Finished { time }) if stop_pressed => {
+                info!("Stopping exec at time {}", time);
                 None
             }
             Some(Status::Finished { time }) => {
