@@ -10,6 +10,8 @@ use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::{Exec, TickTime};
 
 pub const PIPE_THICKNESS: f32 = 0.05;
+pub const MILL_THICKNESS: f32 = 0.2;
+pub const MILL_DEPTH: f32 = 0.09;
 
 const GAMMA: f32 = 2.2;
 
@@ -271,7 +273,11 @@ pub fn render_mill(
         * transform
         * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
         * na::Matrix4::from_euler_angles(roll, pitch, yaw)
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(length, 0.2, 0.09));
+        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+            length,
+            MILL_THICKNESS,
+            MILL_DEPTH,
+        ));
     out.add(
         Object::Cube,
         &DefaultInstanceParams {
@@ -304,15 +310,17 @@ pub fn render_wind_mills(
                 return 0.0;
             }
 
-            std::f32::consts::PI
+            let wind_time_offset = length;
+
+            std::f32::consts::PI / 2.0
                 * match anim.wind_out(dir) {
                     WindLife::None => 0.0,
                     WindLife::Appearing => {
                         // The wind will start moving inside of the block, so
                         // delay mill rotation until the wind reaches the
                         // outside.
-                        if t >= 0.5 {
-                            t - 0.5
+                        if t >= wind_time_offset {
+                            (t - wind_time_offset) / (1.0 - wind_time_offset)
                         } else {
                             0.0
                         }
@@ -321,8 +329,8 @@ pub fn render_wind_mills(
                     WindLife::Disappearing => {
                         // Stop mill rotation when wind reaches the inside of
                         // the block.
-                        if t < 0.5 {
-                            t
+                        if t < wind_time_offset {
+                            t / wind_time_offset
                         } else {
                             0.0
                         }

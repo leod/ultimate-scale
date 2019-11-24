@@ -318,7 +318,7 @@ impl ExecView {
             if let Some(old_move_dir) = blip.old_move_dir {
                 let old_pos = blip.pos - old_move_dir.to_vector();
                 let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                let angle = time.tick_progress() * std::f32::consts::PI / 2.0;
+                let angle = -time.tick_progress() * std::f32::consts::PI / 2.0;
                 let rot = na::Rotation3::new(delta.normalize() * angle);
                 transform = transform * rot.to_homogeneous();
             }
