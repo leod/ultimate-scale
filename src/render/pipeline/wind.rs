@@ -101,7 +101,7 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
 
             float x = 0.5 - position.x;
 
-            if (x < start || x > end)
+            if (x < start || x > end || start == end)
                 v_discard = 1.0;
             else
                 v_discard = 0.0;
