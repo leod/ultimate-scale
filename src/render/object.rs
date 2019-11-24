@@ -276,41 +276,39 @@ impl Object {
                 // Number of subdivisions along the angle
                 let m = 12;
 
-                for i in 0..n {
-                    let x_left = i as f32 / n as f32 - 0.5;
-                    let x_right = (i + 1) as f32 / n as f32 - 0.5;
+                // Add positions and normals
+                for i in 0..(n+1) {
+                    let x = i as f32 / n as f32 - 0.5;
 
                     // Add one x-slice of the cylinder
                     for j in 0..m {
                         // Add one stripe of the cylinder
                         let theta = j as f32 / m as f32 * 2.0 * std::f32::consts::PI;
-                        let theta_next = (j + 1) as f32 / m as f32 * 2.0 * std::f32::consts::PI;
 
                         let y = theta.sin();
                         let z = theta.cos();
-                        let y_next = theta_next.sin();
-                        let z_next = theta_next.cos();
-
-                        let index = positions.len() as u32;
-
-                        positions.push([x_left, y, z]);
-                        positions.push([x_right, y, z]);
-                        positions.push([x_right, y_next, z_next]);
-                        positions.push([x_left, y_next, z_next]);
-
+                        positions.push([x, y, z]);
                         normals.push([0.0, y, z]);
-                        normals.push([0.0, y, z]);
-                        normals.push([0.0, y_next, z_next]);
-                        normals.push([0.0, y_next, z_next]);
 
-                        indices.push(index + 2);
-                        indices.push(index + 1);
-                        indices.push(index + 0);
-                        indices.push(index + 0);
-                        indices.push(index + 3);
-                        indices.push(index + 2);
                     }
                 }
+
+                // Add triangles
+                for i in 0..n {
+                
+                    for j in 0..m {
+                                            
+                        indices.push((i + 0) + ((j + 0) % m) * m);
+                        indices.push((i + 0) + ((j + 1) % m) * m);
+                        indices.push((i + 1) + ((j + 0) % m) * m);
+
+                        indices.push((i + 0) + ((j + 1) % m) * m);
+                        indices.push((i + 1) + ((j + 1) % m) * m);
+                        indices.push((i + 1) + ((j + 0) % m) * m);
+                        
+                    }
+                }
+
                 ObjectBuffers::from_slices(
                     facade,
                     glium::index::PrimitiveType::TrianglesList,
