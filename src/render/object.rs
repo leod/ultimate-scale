@@ -277,7 +277,7 @@ impl Object {
                 let m = 12;
 
                 // Add positions and normals
-                for i in 0..(n+1) {
+                for i in 0..n+1 {
                     let x = i as f32 / n as f32 - 0.5;
 
                     // Add one x-slice of the cylinder
@@ -289,15 +289,12 @@ impl Object {
                         let z = theta.cos();
                         positions.push([x, y, z]);
                         normals.push([0.0, y, z]);
-
                     }
                 }
 
                 // Add triangles
                 for i in 0..n {
-                
                     for j in 0..m {
-                                            
                         indices.push((i + 0) * m + ((j + 0) % m));
                         indices.push((i + 1) * m + ((j + 0) % m));
                         indices.push((i + 0) * m + ((j + 1) % m));
@@ -305,7 +302,6 @@ impl Object {
                         indices.push((i + 0) * m + ((j + 1) % m));
                         indices.push((i + 1) * m + ((j + 0) % m));
                         indices.push((i + 1) * m + ((j + 1) % m));
-                        
                     }
                 }
 
