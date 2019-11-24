@@ -104,28 +104,35 @@ pub struct Line {
     pub color: na::Vector4<f32>,
 }
 
-pub fn render_line(line: &Line, out: &mut RenderList<DefaultInstanceParams>) {
-    let center = line.start + (line.end - line.start) / 2.0;
+pub fn render_line(
+    line: &Line,
+    transform: &na::Matrix4<f32>,
+    out: &mut RenderList<DefaultInstanceParams>,
+) {
+    let line_start = transform.transform_point(&line.start);
+    let line_end = transform.transform_point(&line.end);
 
-    let d = line.end - line.start;
+    let center = line_start + (line_end - line_start) / 2.0;
+
+    let d = line_end - line_start;
 
     // This will roll the line somewhat, works nicely for the cuboid wireframe
     let up = d.cross(&na::Vector3::x()) + d.cross(&na::Vector3::y()) + d.cross(&na::Vector3::z());
     let rot = na::Rotation3::new(d.normalize() * (line.roll + std::f32::consts::PI / 4.0));
-    let look_at = na::Isometry3::face_towards(&center, &line.end, &(rot * up));
+    let look_at = na::Isometry3::face_towards(&center, &line_end, &(rot * up));
 
     let scaling = na::Vector3::new(
         line.thickness,
         line.thickness,
-        (line.end - line.start).norm(),
+        (line_end - line_start).norm(),
     );
 
-    let transform = look_at.to_homogeneous() * na::Matrix4::new_nonuniform_scaling(&scaling);
+    let cube_transform = look_at.to_homogeneous() * na::Matrix4::new_nonuniform_scaling(&scaling);
 
     out.add(
         Object::Cube,
         &DefaultInstanceParams {
-            transform,
+            transform: cube_transform,
             color: line.color,
             ..Default::default()
         },
@@ -138,53 +145,61 @@ pub struct Cuboid {
     pub size: na::Vector3<f32>,
 }
 
-impl Cuboid {
-    pub fn corner_pos(&self, idx: [isize; 3]) -> na::Point3<f32> {
-        let point: na::Point3<f32> = na::convert(na::Point3::from_slice(&idx));
+#[rustfmt::skip]
+pub const CUBOID_WIREFRAME_LINES: &[([isize; 3], [isize; 3])] = &[
+    // Front
+    ([-1, -1,  1], [ 1, -1,  1]),
+    ([-1,  1,  1], [ 1,  1,  1]),
+    ([-1,  1,  1], [-1, -1,  1]),
+    ([ 1,  1,  1], [ 1, -1,  1]),
 
-        self.center + 0.5 * point.coords.component_mul(&self.size)
+    // Back
+    ([-1, -1, -1], [ 1, -1, -1]),
+    ([-1,  1, -1], [ 1,  1, -1]),
+    ([-1,  1, -1], [-1, -1, -1]),
+    ([ 1,  1, -1], [ 1, -1, -1]),
+
+    // Sides
+    ([-1, -1, -1], [-1, -1,  1]),
+    ([ 1, -1, -1], [ 1, -1,  1]),
+    ([-1,  1, -1], [-1,  1,  1]),
+    ([ 1,  1, -1], [ 1,  1,  1]),
+];
+
+pub fn render_cuboid_wireframe_with_transform(
+    thickness: f32,
+    color: &na::Vector4<f32>,
+    transform: &na::Matrix4<f32>,
+    out: &mut RenderList<DefaultInstanceParams>,
+) {
+    for (start, end) in CUBOID_WIREFRAME_LINES.iter() {
+        let start: na::Point3<f32> = na::convert(na::Point3::from_slice(start));
+        let end: na::Point3<f32> = na::convert(na::Point3::from_slice(end));
+
+        render_line(
+            &Line {
+                start: start / 2.0,
+                end: end / 2.0,
+                roll: 0.0,
+                thickness,
+                color: *color,
+            },
+            transform,
+            out,
+        );
     }
 }
 
-#[rustfmt::skip]
 pub fn render_cuboid_wireframe(
     cuboid: &Cuboid,
     thickness: f32,
     color: &na::Vector4<f32>,
     out: &mut RenderList<DefaultInstanceParams>,
 ) {
-    let lines = vec![
-        // Front
-        ([-1, -1,  1], [ 1, -1,  1]),
-        ([-1,  1,  1], [ 1,  1,  1]),
-        ([-1,  1,  1], [-1, -1,  1]),
-        ([ 1,  1,  1], [ 1, -1,  1]),
+    let transform = na::Matrix4::new_translation(&cuboid.center.coords)
+        * na::Matrix4::new_nonuniform_scaling(&cuboid.size);
 
-        // Back
-        ([-1, -1, -1], [ 1, -1, -1]),
-        ([-1,  1, -1], [ 1,  1, -1]),
-        ([-1,  1, -1], [-1, -1, -1]),
-        ([ 1,  1, -1], [ 1, -1, -1]),
-
-        // Sides
-        ([-1, -1, -1], [-1, -1,  1]),
-        ([ 1, -1, -1], [ 1, -1,  1]),
-        ([-1,  1, -1], [-1,  1,  1]),
-        ([ 1,  1, -1], [ 1,  1,  1]),
-    ];
-
-    for (start_idx, end_idx) in lines {
-        render_line(
-            &Line {
-                start: cuboid.corner_pos(start_idx),
-                end: cuboid.corner_pos(end_idx),
-                roll: 0.0,
-                thickness,
-                color: *color,
-            },
-            out
-        );
-    }
+    render_cuboid_wireframe_with_transform(thickness, color, &transform, out);
 }
 
 pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList<DefaultInstanceParams>) {
