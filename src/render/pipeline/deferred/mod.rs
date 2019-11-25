@@ -22,6 +22,8 @@ pub use crate::render::CreationError;
 #[derive(Debug, Clone, Default)]
 pub struct Config;
 
+const LIGHT_MIN_THRESHOLD: f32 = 0.02;
+
 const NUM_TEXTURES: usize = 2;
 
 pub struct DeferredShading {
@@ -208,7 +210,13 @@ impl DeferredShading {
                     &draw_params,
                 )?;
             } else {
-                let radius = 3.0;
+                let i_max = light.color.x.max(light.color.y).max(light.color.z);
+                let radicand = light.attenuation.y.powi(2)
+                    - 4.0
+                        * light.attenuation.z
+                        * (light.attenuation.x - i_max * 1.0 / LIGHT_MIN_THRESHOLD);
+                let radius = (-light.attenuation.y + radicand.sqrt()) / (2.0 * light.attenuation.z);
+
                 let light = Light {
                     radius,
                     ..light.clone()
