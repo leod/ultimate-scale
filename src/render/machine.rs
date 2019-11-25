@@ -14,6 +14,7 @@ pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 0.02;
 pub const OUTLINE_MARGIN: f32 = 0.0005;
+pub const BRIDGE_MARGIN: f32 = 0.005;
 
 const GAMMA: f32 = 2.2;
 
@@ -258,32 +259,35 @@ pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
     na::Vector4::new(color.x, color.y, color.z, alpha)
 }
 
-pub fn render_bridge(
-    dir: Dir3,
-    length: f32,
-    size: f32,
-    center: &na::Point3<f32>,
-    transform: &na::Matrix4<f32>,
-    color: &na::Vector4<f32>,
-    out: &mut RenderLists,
-) {
-    let translation = na::Matrix4::new_translation(&center.coords);
-    let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
-    let (pitch, yaw) = dir.to_pitch_yaw_x();
+pub struct Bridge {
+    pub center: na::Point3<f32>,
+    pub dir: Dir3,
+    pub offset: f32,
+    pub length: f32,
+    pub size: f32,
+    pub color: na::Vector4<f32>,
+}
+
+pub fn render_bridge(bridge: &Bridge, transform: &na::Matrix4<f32>, out: &mut RenderLists) {
+    let translation = na::Matrix4::new_translation(&bridge.center.coords);
+    let dir_offset: na::Vector3<f32> = na::convert(bridge.dir.to_vector());
+    let (pitch, yaw) = bridge.dir.to_pitch_yaw_x();
     let output_transform = translation
         * transform
-        * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
+        * na::Matrix4::new_translation(
+            &(dir_offset * (0.5 * bridge.length + bridge.offset + BRIDGE_MARGIN)),
+        )
         * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
-    let scaling = na::Vector3::new(length, size, size);
+    let scaling = na::Vector3::new(bridge.length, bridge.size, bridge.size);
     out.solid.add(
         Object::Cube,
         &DefaultInstanceParams {
             transform: output_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
-            color: *color,
+            color: bridge.color,
             ..Default::default()
         },
     );
-    render_outline(&output_transform, &scaling, color.w, out);
+    render_outline(&output_transform, &scaling, bridge.color.w, out);
 }
 
 pub fn render_mill(
@@ -599,15 +603,18 @@ pub fn render_block(
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
             let bridge_length =
-                bridge_length_animation(0.15, 0.75, activated.is_some(), tick_time.tick_progress());
+                bridge_length_animation(0.05, 0.6, activated.is_some(), tick_time.tick_progress());
 
             render_bridge(
-                out_dir,
-                bridge_length,
-                bridge_size,
-                center,
+                &Bridge {
+                    center: *center,
+                    dir: out_dir,
+                    offset: 0.65 / 2.0 - 0.35 / 2.0,
+                    length: bridge_length,
+                    size: bridge_size,
+                    color: block_color(&patient_bridge_color(), alpha),
+                },
                 transform,
-                &block_color(&patient_bridge_color(), alpha),
                 out,
             );
         }
@@ -637,26 +644,22 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_length =
-                bridge_length_animation(0.35, 0.75, activated.is_some(), tick_time.tick_progress());
+                bridge_length_animation(0.05, 0.4, activated.is_some(), tick_time.tick_progress());
 
-            render_bridge(
-                out_dirs.0,
-                bridge_length,
-                0.3,
-                center,
-                transform,
-                &block_color(&impatient_bridge_color(), alpha),
-                out,
-            );
-            render_bridge(
-                out_dirs.1,
-                bridge_length,
-                0.3,
-                center,
-                transform,
-                &block_color(&impatient_bridge_color(), alpha),
-                out,
-            );
+            for &dir in &[out_dirs.0, out_dirs.1] {
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: 0.65 / 2.0,
+                        length: bridge_length,
+                        size: 0.3,
+                        color: block_color(&impatient_bridge_color(), alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
         }
         Block::BlipWindSource {
             button_dir,
@@ -700,14 +703,17 @@ pub fn render_block(
                 });
             }
 
-            let button_length = if activated { 0.4 } else { 0.45 };
+            let button_length = if activated { 0.025 } else { 0.075 };
             render_bridge(
-                button_dir,
-                button_length,
-                0.5,
-                center,
+                &Bridge {
+                    center: *center,
+                    dir: button_dir,
+                    offset: 0.75 / 2.0,
+                    length: button_length,
+                    size: 0.5,
+                    color: block_color(&impatient_bridge_color(), alpha),
+                },
                 transform,
-                &block_color(&impatient_bridge_color(), alpha),
                 out,
             );
 
@@ -769,19 +775,22 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_length = bridge_length_animation(
-                0.4,
-                0.75,
+                0.05,
+                0.35,
                 active_blip_kind.is_some(),
                 tick_time.tick_progress(),
             );
 
             render_bridge(
-                out_dir,
-                bridge_length,
-                0.3,
-                center,
+                &Bridge {
+                    center: *center,
+                    dir: out_dir,
+                    offset: 0.4,
+                    length: bridge_length,
+                    size: 0.3,
+                    color: block_color(&patient_bridge_color(), alpha),
+                },
                 transform,
-                &block_color(&patient_bridge_color(), alpha),
                 out,
             );
         }
