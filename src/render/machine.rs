@@ -122,9 +122,7 @@ pub fn render_line(
 ) {
     let line_start = transform.transform_point(&line.start);
     let line_end = transform.transform_point(&line.end);
-
     let center = line_start + (line_end - line_start) / 2.0;
-
     let d = line_end - line_start;
 
     let up = d.cross(&na::Vector3::x()) + d.cross(&na::Vector3::y()) + d.cross(&na::Vector3::z());
@@ -132,23 +130,14 @@ pub fn render_line(
     let look_at = na::Isometry3::face_towards(&center, &line_end, &(rot * up));
 
     let scaling = na::Vector3::new(
+        line.thickness,
+        line.thickness,
         (line_end - line_start).norm(),
-        line.thickness,
-        line.thickness,
     );
-
-    // TODO: Hack
-    let cube_transform = na::Matrix4::from_columns(&[
-        na::Vector4::new(d.x, d.y, d.z, 0.0),
-        na::Vector4::zeros(),
-        na::Vector4::zeros(),
-        na::Vector4::new(line_start.x, line_start.y, line_start.z, 1.0),
-    ]);
-
-    //let cube_transform = look_at.to_homogeneous() * na::Matrix4::new_nonuniform_scaling(&scaling);
+    let cube_transform = look_at.to_homogeneous() * na::Matrix4::new_nonuniform_scaling(&scaling);
 
     out.add(
-        Object::LineX,
+        Object::Cube,
         &DefaultInstanceParams {
             transform: cube_transform,
             color: line.color,
@@ -425,12 +414,29 @@ pub fn render_outline(
             &(scaling + na::Vector3::new(OUTLINE_MARGIN, OUTLINE_MARGIN, OUTLINE_MARGIN)),
         );
 
-    render_cuboid_wireframe_with_transform(
-        OUTLINE_THICKNESS,
-        &block_color(&outline_color(), alpha),
-        &transform,
-        &mut out.plain,
-    );
+    for (start, end) in CUBOID_WIREFRAME_LINES.iter() {
+        let start: na::Point3<f32> = na::convert(na::Point3::from_slice(start));
+        let end: na::Point3<f32> = na::convert(na::Point3::from_slice(end));
+
+        let line_start = transform.transform_point(&(start * 0.5));
+        let line_end = transform.transform_point(&(end * 0.5));
+        let d = line_end - line_start;
+        let line_transform = na::Matrix4::from_columns(&[
+            na::Vector4::new(d.x, d.y, d.z, 0.0),
+            na::Vector4::zeros(),
+            na::Vector4::zeros(),
+            na::Vector4::new(line_start.x, line_start.y, line_start.z, 1.0),
+        ]);
+
+        out.plain.add(
+            Object::LineX,
+            &DefaultInstanceParams {
+                transform: line_transform,
+                color: block_color(&outline_color(), alpha),
+                ..Default::default()
+            },
+        );
+    }
 }
 
 pub fn render_block(
