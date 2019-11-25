@@ -315,6 +315,7 @@ impl Components {
                 write: true,
                 ..Default::default()
             },
+            line_width: Some(2.0),
             ..Default::default()
         };
 
