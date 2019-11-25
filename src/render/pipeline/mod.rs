@@ -359,8 +359,10 @@ pub struct Pipeline {
     scene_depth_texture: glium::texture::DepthTexture2d,
 
     composition_program: glium::Program,
+    composition_texture: glium::texture::Texture2d,
 
-    fxaa: Option<(glium::texture::Texture2d, FXAA)>,
+    fxaa: Option<FXAA>,
+    copy_texture_program: glium::Program,
 
     screen_quad: ScreenQuad,
 }
@@ -414,14 +416,14 @@ impl Pipeline {
         let composition_program = composition_core
             .build_program(facade)
             .map_err(render::CreationError::from)?;
+        let composition_texture = Self::create_color_texture(facade, rounded_size)?;
 
-        let fxaa: Option<Result<_, CreationError>> = config.fxaa.as_ref().map(|config| {
-            let target_texture = Self::create_color_texture(facade, rounded_size)?;
-            let fxaa = fxaa::FXAA::create(facade, config).map_err(CreationError::FXAA)?;
-
-            Ok((target_texture, fxaa))
-        });
-        let fxaa = fxaa.transpose()?;
+        let fxaa = config.fxaa.as_ref().map(|config| { fxaa::FXAA::create(facade, config) })
+            .transpose()
+            .map_err(CreationError::FXAA)?;
+        let copy_texture_program = simple::composition_core()
+            .build_program(facade)
+            .map_err(render::CreationError::from)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
@@ -437,49 +439,14 @@ impl Pipeline {
             scene_color_texture,
             scene_depth_texture,
             composition_program,
+            composition_texture,
             fxaa,
+            copy_texture_program,
             screen_quad,
         })
     }
 
     pub fn draw_frame<F: glium::backend::Facade, S: glium::Surface>(
-        &mut self,
-        facade: &F,
-        resources: &Resources,
-        context: &Context,
-        render_lists: &mut RenderLists,
-        target: &mut S,
-    ) -> Result<(), DrawError> {
-        if let Some((target_texture, fxaa)) = self.fxaa.as_ref() {
-            let mut target_buffer =
-                glium::framebuffer::SimpleFrameBuffer::new(facade, target_texture)?;
-
-            self.draw_frame_without_postprocessing(
-                facade,
-                resources,
-                context,
-                render_lists,
-                &mut target_buffer,
-            )?;
-
-            {
-                profile!("fxaa");
-                fxaa.draw(target_texture, target)?;
-            }
-        } else {
-            self.draw_frame_without_postprocessing(
-                facade,
-                resources,
-                context,
-                render_lists,
-                target,
-            )?;
-        }
-
-        Ok(())
-    }
-
-    pub fn draw_frame_without_postprocessing<F: glium::backend::Facade, S: glium::Surface>(
         &self,
         facade: &F,
         resources: &Resources,
@@ -566,9 +533,12 @@ impl Pipeline {
             glow.blur_pass(facade)?;
         }
 
-        // Combine buffers and draw to target surface
+        // Combine buffers
         {
             profile!("composition_pass");
+            
+            let mut target_buffer =
+                glium::framebuffer::SimpleFrameBuffer::new(facade, &self.composition_texture)?;
 
             let color_uniform = uniform! {
                 color_texture: &self.scene_color_texture,
@@ -592,11 +562,30 @@ impl Pipeline {
                 ),
             );
 
-            target.draw(
+            target_buffer.draw(
                 &self.screen_quad.vertex_buffer,
                 &self.screen_quad.index_buffer,
                 &self.composition_program,
                 &uniforms,
+                &Default::default(),
+            )?;
+        }
+
+        // Postprocessing
+        if let Some(fxaa) = self.fxaa.as_ref() {
+            profile!("fxaa");
+
+            fxaa.draw(&self.composition_texture, target)?;
+        } else {
+            profile!("copy_to_target");
+
+            target.draw(
+                &self.screen_quad.vertex_buffer,
+                &self.screen_quad.index_buffer,
+                &self.copy_texture_program,
+                &uniform! {
+                    color_texture: &self.composition_texture,
+                },
                 &Default::default(),
             )?;
         }
@@ -624,9 +613,7 @@ impl Pipeline {
         self.scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
         self.scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
 
-        if let Some((target_texture, _)) = self.fxaa.as_mut() {
-            *target_texture = Self::create_color_texture(facade, rounded_size)?;
-        }
+        self.composition_texture = Self::create_color_texture(facade, rounded_size)?;
 
         Ok(())
     }
