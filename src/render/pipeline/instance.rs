@@ -6,7 +6,7 @@ use glium::uniform;
 use glium::uniforms::{EmptyUniforms, UniformValue, Uniforms};
 
 use crate::render::pipeline::Context;
-use crate::render::Object;
+use crate::render::{Camera, Object};
 
 pub trait InstanceParams: Clone + Debug {
     type U: Uniforms;
@@ -48,21 +48,35 @@ impl<T: Uniforms> Uniforms for UniformsOption<T> {
     }
 }
 
-impl InstanceParams for Context {
+impl InstanceParams for Camera {
     type U = impl Uniforms;
 
     fn uniforms(&self) -> Self::U {
-        let mat_view: [[f32; 4]; 4] = self.camera.view.into();
-        let mat_projection: [[f32; 4]; 4] = self.camera.projection.into();
-        let light_pos: [f32; 3] = self.main_light_pos.coords.into();
+        let mat_view: [[f32; 4]; 4] = self.view.into();
+        let mat_projection: [[f32; 4]; 4] = self.projection.into();
+        let viewport: [f32; 4] = self.viewport.into();
 
         uniform! {
             mat_view: mat_view,
             mat_projection: mat_projection,
+            viewport: viewport,
+        }
+    }
+}
+
+impl InstanceParams for Context {
+    type U = impl Uniforms;
+
+    fn uniforms(&self) -> Self::U {
+        let light_pos: [f32; 3] = self.main_light_pos.coords.into();
+
+        let uniforms = uniform! {
             light_pos: light_pos,
             t: self.elapsed_time_secs,
             tick_progress: self.tick_progress,
-        }
+        };
+
+        UniformsPair(self.camera.uniforms(), uniforms)
     }
 }
 
