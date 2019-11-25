@@ -13,7 +13,7 @@ pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 0.02;
-pub const OUTLINE_MARGIN: f32 = 0.015;
+pub const OUTLINE_MARGIN: f32 = 0.005;
 
 const GAMMA: f32 = 2.2;
 
@@ -98,7 +98,7 @@ pub fn floor_color() -> na::Vector3<f32> {
 }
 
 pub fn outline_color() -> na::Vector3<f32> {
-    gamma_correct(&na::Vector3::new(0.05, 0.05, 0.05))
+    gamma_correct(&na::Vector3::new(0.01, 0.01, 0.01))
 }
 
 #[derive(Clone, Debug)]
@@ -122,21 +122,28 @@ pub fn render_line(
 
     let d = line_end - line_start;
 
-    // This will roll the line somewhat, works nicely for the cuboid wireframe
     let up = d.cross(&na::Vector3::x()) + d.cross(&na::Vector3::y()) + d.cross(&na::Vector3::z());
     let rot = na::Rotation3::new(d.normalize() * (line.roll + std::f32::consts::PI / 4.0));
     let look_at = na::Isometry3::face_towards(&center, &line_end, &(rot * up));
 
     let scaling = na::Vector3::new(
-        line.thickness,
-        line.thickness,
         (line_end - line_start).norm(),
+        line.thickness,
+        line.thickness,
     );
 
-    let cube_transform = look_at.to_homogeneous() * na::Matrix4::new_nonuniform_scaling(&scaling);
+    // TODO: Hack
+    let cube_transform = na::Matrix4::from_columns(&[
+        na::Vector4::new(d.x, d.y, d.z, 0.0),
+        na::Vector4::zeros(),
+        na::Vector4::zeros(),
+        na::Vector4::new(line_start.x, line_start.y, line_start.z, 1.0),
+    ]);
+
+    //let cube_transform = look_at.to_homogeneous() * na::Matrix4::new_nonuniform_scaling(&scaling);
 
     out.add(
-        Object::Cube,
+        Object::LineX,
         &DefaultInstanceParams {
             transform: cube_transform,
             color: line.color,
