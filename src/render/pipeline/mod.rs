@@ -289,25 +289,14 @@ impl Components {
         textures
     }
 
-    fn scene_pass<F: glium::backend::Facade, P: InstanceParams, V: glium::vertex::Vertex>(
+    fn scene_pass_to_surface<P: InstanceParams, V: glium::vertex::Vertex, S: glium::Surface>(
         &self,
-        facade: &F,
         resources: &Resources,
         context: &Context,
         pass: &ScenePass<P, V>,
         render_list: &RenderList<P>,
-        color_texture: &glium::texture::Texture2d,
-        depth_texture: &glium::texture::DepthTexture2d,
+        target: &mut S,
     ) -> Result<(), DrawError> {
-        let mut output_textures = self.scene_output_textures(&pass.setup);
-        output_textures.push((shader::F_COLOR, color_texture));
-
-        let mut framebuffer = glium::framebuffer::MultiOutputFrameBuffer::with_depth_buffer(
-            facade,
-            output_textures.into_iter(),
-            depth_texture,
-        )?;
-
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
@@ -339,11 +328,33 @@ impl Components {
                 &pass.program,
                 &uniforms,
                 &params,
-                &mut framebuffer,
+                target,
             )?;
         }
 
         Ok(())
+    }
+
+    fn scene_pass<F: glium::backend::Facade, P: InstanceParams, V: glium::vertex::Vertex>(
+        &self,
+        facade: &F,
+        resources: &Resources,
+        context: &Context,
+        pass: &ScenePass<P, V>,
+        render_list: &RenderList<P>,
+        color_texture: &glium::texture::Texture2d,
+        depth_texture: &glium::texture::DepthTexture2d,
+    ) -> Result<(), DrawError> {
+        let mut output_textures = self.scene_output_textures(&pass.setup);
+        output_textures.push((shader::F_COLOR, color_texture));
+
+        let mut framebuffer = glium::framebuffer::MultiOutputFrameBuffer::with_depth_buffer(
+            facade,
+            output_textures.into_iter(),
+            depth_texture,
+        )?;
+
+        self.scene_pass_to_surface(resources, context, pass, render_list, &mut framebuffer)
     }
 }
 
@@ -418,7 +429,10 @@ impl Pipeline {
             .map_err(render::CreationError::from)?;
         let composition_texture = Self::create_color_texture(facade, rounded_size)?;
 
-        let fxaa = config.fxaa.as_ref().map(|config| { fxaa::FXAA::create(facade, config) })
+        let fxaa = config
+            .fxaa
+            .as_ref()
+            .map(|config| fxaa::FXAA::create(facade, config))
             .transpose()
             .map_err(CreationError::FXAA)?;
         let copy_texture_program = simple::composition_core()
@@ -499,7 +513,7 @@ impl Pipeline {
                 &self.scene_color_texture,
                 &self.scene_depth_texture,
             )?;
-            self.components.scene_pass(
+            /*self.components.scene_pass(
                 facade,
                 resources,
                 context,
@@ -507,7 +521,7 @@ impl Pipeline {
                 &render_lists.plain,
                 &self.scene_color_texture,
                 &self.scene_depth_texture,
-            )?;
+            )?;*/
             self.components.scene_pass(
                 facade,
                 resources,
@@ -536,7 +550,7 @@ impl Pipeline {
         // Combine buffers
         {
             profile!("composition_pass");
-            
+
             let mut target_buffer =
                 glium::framebuffer::SimpleFrameBuffer::new(facade, &self.composition_texture)?;
 
@@ -568,6 +582,25 @@ impl Pipeline {
                 &self.composition_program,
                 &uniforms,
                 &Default::default(),
+            )?;
+        }
+
+        // Draw plain stuff on top
+        {
+            profile!("plain");
+
+            let mut framebuffer = glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(
+                facade,
+                &self.composition_texture,
+                &self.scene_depth_texture,
+            )?;
+
+            self.components.scene_pass_to_surface(
+                resources,
+                context,
+                &self.scene_pass_plain,
+                &render_lists.plain,
+                &mut framebuffer,
             )?;
         }
 
