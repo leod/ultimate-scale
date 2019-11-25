@@ -98,6 +98,10 @@ pub fn floor_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.3, 0.3, 0.3))
 }
 
+pub fn grid_color() -> na::Vector3<f32> {
+    gamma_correct(&na::Vector3::new(0.578, 0.578, 0.578))
+}
+
 pub fn outline_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.01, 0.01, 0.01))
 }
@@ -217,7 +221,7 @@ pub fn render_cuboid_wireframe(
 }
 
 pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList<DefaultInstanceParams>) {
-    let color = na::Vector4::new(0.7, 0.7, 0.7, 1.0);
+    let color = block_color(&grid_color(), 0.0);
 
     for x in 0..=size.x {
         let translation = na::Matrix4::new_translation(&na::Vector3::new(x as f32, 0.0, z));
@@ -296,29 +300,27 @@ pub fn render_mill(
     transform: &na::Matrix4<f32>,
     roll: f32,
     color: &na::Vector4<f32>,
+    offset: f32,
     length: f32,
-    out: &mut RenderList<DefaultInstanceParams>,
+    out: &mut RenderLists,
 ) {
     let translation = na::Matrix4::new_translation(&center.coords);
     let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
     let (pitch, yaw) = dir.to_pitch_yaw_x();
-    let transform = translation
+    let cube_transform = translation
         * transform
-        * na::Matrix4::new_translation(&(dir_offset * length * 0.5))
-        * na::Matrix4::from_euler_angles(roll, pitch, yaw)
-        * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-            length,
-            MILL_THICKNESS,
-            MILL_DEPTH,
-        ));
-    out.add(
+        * na::Matrix4::new_translation(&(dir_offset * (length * 0.5 + offset + BRIDGE_MARGIN)))
+        * na::Matrix4::from_euler_angles(roll, pitch, yaw);
+    let scaling = na::Vector3::new(length, MILL_THICKNESS, MILL_DEPTH);
+    out.solid.add(
         Object::Cube,
         &DefaultInstanceParams {
-            transform,
+            transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
             color: *color,
             ..Default::default()
         },
     );
+    //render_outline(&cube_transform, &scaling, color.w, out);
 }
 
 pub fn render_wind_mills(
@@ -328,6 +330,7 @@ pub fn render_wind_mills(
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: &na::Vector4<f32>,
+    offset: f32,
     length: f32,
     out: &mut RenderLists,
 ) {
@@ -343,7 +346,7 @@ pub fn render_wind_mills(
                 return 0.0;
             }
 
-            let wind_time_offset = length;
+            let wind_time_offset = offset + length;
 
             std::f32::consts::PI / 2.0
                 * match anim.wind_out(dir) {
@@ -378,8 +381,9 @@ pub fn render_wind_mills(
                 transform,
                 roll + 2.0 * phase * std::f32::consts::PI,
                 color,
+                offset,
                 length,
-                &mut out.solid,
+                out,
             );
         }
     }
@@ -574,7 +578,8 @@ pub fn render_block(
                 center,
                 transform,
                 &na::Vector4::new(1.0, 1.0, 1.0, alpha),
-                0.375,
+                0.3,
+                0.075,
                 out,
             );
         }
@@ -724,18 +729,26 @@ pub fn render_block(
                 center,
                 transform,
                 &block_color(&wind_mill_color(), alpha),
-                0.45,
+                0.75 / 2.0,
+                0.075,
                 out,
             );
         }
         Block::Solid => {
+            let cube_transform = translation * transform;
             out.solid.add(
                 Object::Cube,
                 &DefaultInstanceParams {
-                    transform: translation * transform,
+                    transform: cube_transform,
                     color: block_color(&solid_color(), alpha),
                     ..Default::default()
                 },
+            );
+            render_outline(
+                &cube_transform,
+                &na::Vector3::new(1.0, 1.0, 1.0),
+                alpha,
+                out,
             );
         }
         Block::Input {
