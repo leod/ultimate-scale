@@ -13,7 +13,7 @@ pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 0.02;
-pub const OUTLINE_MARGIN: f32 = 0.005;
+pub const OUTLINE_MARGIN: f32 = 0.0005;
 
 const GAMMA: f32 = 2.2;
 
