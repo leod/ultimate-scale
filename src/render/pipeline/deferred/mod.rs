@@ -75,7 +75,7 @@ impl CompositionPassComponent for DeferredShading {
         &self,
         core: render::shader::Core<(), screen_quad::Vertex>,
     ) -> render::shader::Core<(), screen_quad::Vertex> {
-        shader::composition_core_transform(self.shadow_texture.is_some(), core)
+        shader::composition_core_transform(core)
     }
 }
 
@@ -100,7 +100,7 @@ impl DeferredShading {
         let light_texture = Self::create_texture(facade, rounded_size)?;
 
         info!("Creating deferred light program");
-        let light_core = shader::light_core();
+        let light_core = shader::light_core(have_shadows);
         let light_program = light_core.build_program(facade)?;
 
         info!("Creating screen quad");
@@ -169,13 +169,19 @@ impl DeferredShading {
         light_buffer.clear_color(0.0, 0.0, 0.0, 1.0);
 
         for light in lights.iter() {
-            let uniforms = UniformsPair(
-                light.uniforms(),
+            let textures = UniformsPair(
                 uniform! {
                     position_texture: &self.scene_textures[0],
                     normal_texture: &self.scene_textures[1],
                 },
+                UniformsOption(self.shadow_texture.as_ref().map(|shadow_texture| {
+                    uniform! {
+                        shadow_texture: shadow_texture,
+                    }
+                })),
             );
+
+            let uniforms = UniformsPair(light.uniforms(), textures);
 
             // TODO: Don't use screen quad for rendering lights. Instead,
             // determine either a smaller quad or some geometry thingy.
@@ -192,18 +198,9 @@ impl DeferredShading {
     }
 
     pub fn composition_pass_uniforms(&self) -> impl glium::uniforms::Uniforms + '_ {
-        let shadow_uniform = UniformsOption(self.shadow_texture.as_ref().map(|shadow_texture| {
-            uniform! {
-                shadow_texture: shadow_texture
-            }
-        }));
-
-        UniformsPair(
-            uniform! {
-                light_texture: &self.light_texture,
-            },
-            shadow_uniform,
-        )
+        uniform! {
+            light_texture: &self.light_texture,
+        }
     }
 
     fn create_texture<F: glium::backend::Facade>(

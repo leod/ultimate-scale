@@ -150,6 +150,13 @@ impl Game {
             main_light_center: na::Point3::new(15.0, 15.0, 0.0),
         };
 
+        self.render_lists.lights.push(render::pipeline::Light {
+            position: render_context.main_light_pos,
+            attenuation: na::Vector3::new(1.0, 0.0, 0.0),
+            color: na::Vector3::new(1.0, 1.0, 1.0),
+            is_main: true,
+        });
+
         self.render_pipeline.draw_frame(
             display,
             &self.resources,

@@ -9,6 +9,7 @@ use crate::render::{object, shader};
 pub struct Params {
     pub transform: na::Matrix4<f32>,
     pub color: na::Vector4<f32>,
+    pub stripe_color: na::Vector4<f32>,
     pub phase: f32,
     pub start: f32,
     pub end: f32,
@@ -20,6 +21,7 @@ impl Default for Params {
         Self {
             transform: na::Matrix4::identity(),
             color: na::Vector4::zeros(),
+            stripe_color: na::Vector4::zeros(),
             phase: 0.0,
             start: 0.0,
             end: 0.0,
@@ -34,10 +36,12 @@ impl InstanceParams for Params {
     fn uniforms(&self) -> Self::U {
         let mat_model: [[f32; 4]; 4] = self.transform.into();
         let color: [f32; 4] = self.color.into();
+        let stripe_color: [f32; 4] = self.stripe_color.into();
 
         uniform! {
             mat_model: mat_model,
             color: color,
+            stripe_color: stripe_color,
             phase: self.phase,
             start: self.start,
             end: self.end,
@@ -55,21 +59,34 @@ fn v_discard() -> shader::VertexOutDef {
     )
 }
 
+const V_COLOR: &str = "v_color";
+
+fn v_color() -> shader::VertexOutDef {
+    (
+        (V_COLOR.into(), glium::uniforms::UniformType::FloatVec4),
+        shader::VertexOutQualifier::Smooth,
+    )
+}
+
 pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
     let vertex = shader::VertexCore {
         out_defs: vec![
             shader::v_world_normal_def(),
             shader::v_world_pos_def(),
             v_discard(),
+            v_color(),
         ],
         defs: "
             const float PI = 3.141592;
-            const float radius = 0.05;
-            const float scale = 0.0075;
+            const float radius = 0.04;
+            const float scale = 0.0105;
         "
         .to_string(),
         body: "
-            float angle = (position.x + 0.5 + 2.0 * tick_progress) * 1.0 * PI + phase;
+            float angle = (position.x + 0.5) * PI
+                + tick_progress * PI / 2.0
+                + phase;
+
             float rot_s = sin(angle);
             float rot_c = cos(angle);
             mat2 rot_m = mat2(rot_c, -rot_s, rot_s, rot_c);
@@ -78,27 +95,23 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
             scaled_pos.yz *= scale;
             scaled_pos.z += radius;
 
-            if (bend) {
-                // Currently unused, for wind bending
-                float tau = (0.5 - position.x) * PI / 2.0;
-                scaled_pos.x = 0.5 * cos(tau);
-                scaled_pos.y += 0.5 * sin(tau);
-
-                vec3 normal = vec3(cos(tau), sin(tau), 0.0);
-                scaled_pos += normal * sin(angle) * 0.05;
-            }
-
-            //scaled_pos.y += sin(angle) * radius;
-            //scaled_pos.z += cos(angle) * radius;
-
             vec3 rot_normal = normal;
             scaled_pos.yz = rot_m * scaled_pos.yz;
             rot_normal.yz = rot_m * rot_normal.yz;
 
-            if (0.5 - position.x < start || 0.5 - position.x > end)
+            float x = 0.5 - position.x;
+
+            if (x < start || x > end || start == end)
                 v_discard = 1.0;
             else
                 v_discard = 0.0;
+
+            if (x < tick_progress && x > tick_progress - 0.3)
+                v_color = stripe_color;
+            else if (end == 1.0 && x > 0.7 + tick_progress)
+                v_color = stripe_color;
+            else
+                v_color = color;
         "
         .to_string(),
         out_exprs: shader_out_exprs! {
@@ -110,7 +123,7 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
     };
 
     let fragment = shader::FragmentCore {
-        in_defs: vec![v_discard()],
+        in_defs: vec![v_discard(), v_color()],
         out_defs: vec![shader::f_color_def()],
         body: "
             if (v_discard >= 0.5)
@@ -118,7 +131,7 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
         "
         .to_string(),
         out_exprs: shader_out_exprs! {
-            shader::F_COLOR => "color",
+            shader::F_COLOR => "v_color",
         },
         ..Default::default()
     };

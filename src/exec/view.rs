@@ -180,12 +180,16 @@ impl ExecView {
         let color = render::machine::wind_source_color();
         let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
 
+        let stripe_color = render::machine::wind_stripe_color();
+        let stripe_color = na::Vector4::new(stripe_color.x, stripe_color.y, stripe_color.z, 1.0);
+
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
             out.wind.add(
                 render::Object::TessellatedCylinder,
                 &wind::Params {
                     transform,
                     color,
+                    stripe_color,
                     start: in_t,
                     end: out_t,
                     phase: 2.0 * phase * std::f32::consts::PI,
@@ -285,7 +289,11 @@ impl ExecView {
                 * match blip.status {
                     BlipStatus::Spawning => {
                         // Animate spawning the blip
-                        Self::blip_spawn_size_animation(time.tick_progress())
+                        if time.tick_progress() >= 0.75 {
+                            Self::blip_spawn_size_animation((time.tick_progress() - 0.75) * 4.0)
+                        } else {
+                            0.0
+                        }
                     }
                     BlipStatus::Existing => 1.0,
                     BlipStatus::Dying => {
@@ -303,14 +311,13 @@ impl ExecView {
                 center
             };
 
-            let mut transform =
-                na::Matrix4::new_translation(&pos.coords) * na::Matrix4::new_scaling(size);
+            let mut transform = na::Matrix4::new_translation(&pos.coords);
 
             // Rotate blip if it is moving
             if let Some(old_move_dir) = blip.old_move_dir {
                 let old_pos = blip.pos - old_move_dir.to_vector();
                 let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                let angle = time.tick_progress() * std::f32::consts::PI / 2.0;
+                let angle = -time.tick_progress() * std::f32::consts::PI / 2.0;
                 let rot = na::Rotation3::new(delta.normalize() * angle);
                 transform = transform * rot.to_homogeneous();
             }
@@ -320,19 +327,26 @@ impl ExecView {
                 object: render::Object::Cube,
                 params: render::pipeline::DefaultInstanceParams {
                     color: na::Vector4::new(color.x, color.y, color.z, 1.0),
-                    transform,
+                    transform: transform * na::Matrix4::new_scaling(size),
                     ..Default::default()
                 },
             };
+
+            render::machine::render_outline(
+                &transform,
+                &na::Vector3::new(size, size, size),
+                0.0,
+                out,
+            );
 
             out.solid_glow.add_instance(&instance);
             //out.solid.add_instance(&instance);
 
             out.lights.push(render::pipeline::Light {
                 position: pos,
-                attenuation: na::Vector3::new(1.0, 0.0, 2.0),
-                color: render::machine::blip_color(blip.kind),
-                radius: 2.0,
+                attenuation: na::Vector3::new(1.0, 0.0, 6.0),
+                color: 20.0 * render::machine::blip_color(blip.kind),
+                is_main: false,
             });
         }
     }

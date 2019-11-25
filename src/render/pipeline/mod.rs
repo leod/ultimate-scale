@@ -289,26 +289,14 @@ impl Components {
         textures
     }
 
-    fn scene_pass<F: glium::backend::Facade, P: InstanceParams, V: glium::vertex::Vertex>(
+    fn scene_pass_to_surface<P: InstanceParams, V: glium::vertex::Vertex, S: glium::Surface>(
         &self,
-        facade: &F,
         resources: &Resources,
         context: &Context,
         pass: &ScenePass<P, V>,
         render_list: &RenderList<P>,
-        color_texture: &glium::texture::Texture2d,
-        depth_texture: &glium::texture::DepthTexture2d,
+        target: &mut S,
     ) -> Result<(), DrawError> {
-        let mut output_textures = self.scene_output_textures(&pass.setup);
-        output_textures.push((shader::F_COLOR, color_texture));
-
-        let mut framebuffer = glium::framebuffer::MultiOutputFrameBuffer::with_depth_buffer(
-            facade,
-            output_textures.into_iter(),
-            depth_texture,
-        )?;
-
-        // TODO: Fix cylinder so that we can reenable backface culling
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
@@ -316,6 +304,7 @@ impl Components {
                 write: true,
                 ..Default::default()
             },
+            line_width: Some(2.0),
             ..Default::default()
         };
 
@@ -339,11 +328,33 @@ impl Components {
                 &pass.program,
                 &uniforms,
                 &params,
-                &mut framebuffer,
+                target,
             )?;
         }
 
         Ok(())
+    }
+
+    fn scene_pass<F: glium::backend::Facade, P: InstanceParams, V: glium::vertex::Vertex>(
+        &self,
+        facade: &F,
+        resources: &Resources,
+        context: &Context,
+        pass: &ScenePass<P, V>,
+        render_list: &RenderList<P>,
+        color_texture: &glium::texture::Texture2d,
+        depth_texture: &glium::texture::DepthTexture2d,
+    ) -> Result<(), DrawError> {
+        let mut output_textures = self.scene_output_textures(&pass.setup);
+        output_textures.push((shader::F_COLOR, color_texture));
+
+        let mut framebuffer = glium::framebuffer::MultiOutputFrameBuffer::with_depth_buffer(
+            facade,
+            output_textures.into_iter(),
+            depth_texture,
+        )?;
+
+        self.scene_pass_to_surface(resources, context, pass, render_list, &mut framebuffer)
     }
 }
 
@@ -352,15 +363,18 @@ pub struct Pipeline {
 
     scene_pass_solid: ScenePass<DefaultInstanceParams, object::Vertex>,
     scene_pass_solid_glow: ScenePass<DefaultInstanceParams, object::Vertex>,
-    scene_pass_plain: ScenePass<DefaultInstanceParams, object::Vertex>,
     scene_pass_wind: ScenePass<wind::Params, object::Vertex>,
+
+    scene_pass_plain: ScenePass<DefaultInstanceParams, object::Vertex>,
 
     scene_color_texture: glium::texture::Texture2d,
     scene_depth_texture: glium::texture::DepthTexture2d,
 
     composition_program: glium::Program,
+    composition_texture: glium::texture::Texture2d,
 
-    fxaa: Option<(glium::texture::Texture2d, FXAA)>,
+    fxaa: Option<FXAA>,
+    copy_texture_program: glium::Program,
 
     screen_quad: ScreenQuad,
 }
@@ -389,14 +403,6 @@ impl Pipeline {
             },
             simple::plain_scene_core(),
         )?;
-        let scene_pass_plain = components.create_scene_pass(
-            facade,
-            ScenePassSetup {
-                shadow: false,
-                glow: false,
-            },
-            simple::plain_scene_core(),
-        )?;
         let scene_pass_wind = components.create_scene_pass(
             facade,
             ScenePassSetup {
@@ -406,6 +412,19 @@ impl Pipeline {
             wind::scene_core(),
         )?;
 
+        let plain_core = simple::plain_scene_core();
+        let plain_program = plain_core
+            .build_program(facade)
+            .map_err(render::CreationError::from)?;
+        let scene_pass_plain = ScenePass {
+            setup: ScenePassSetup {
+                shadow: false,
+                glow: false,
+            },
+            shader_core: plain_core,
+            program: plain_program,
+        };
+
         let rounded_size: (u32, u32) = view_config.window_size.into();
         let scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
         let scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
@@ -414,14 +433,17 @@ impl Pipeline {
         let composition_program = composition_core
             .build_program(facade)
             .map_err(render::CreationError::from)?;
+        let composition_texture = Self::create_color_texture(facade, rounded_size)?;
 
-        let fxaa: Option<Result<_, CreationError>> = config.fxaa.as_ref().map(|config| {
-            let target_texture = Self::create_color_texture(facade, rounded_size)?;
-            let fxaa = fxaa::FXAA::create(facade, config).map_err(CreationError::FXAA)?;
-
-            Ok((target_texture, fxaa))
-        });
-        let fxaa = fxaa.transpose()?;
+        let fxaa = config
+            .fxaa
+            .as_ref()
+            .map(|config| fxaa::FXAA::create(facade, config))
+            .transpose()
+            .map_err(CreationError::FXAA)?;
+        let copy_texture_program = simple::composition_core()
+            .build_program(facade)
+            .map_err(render::CreationError::from)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
@@ -437,67 +459,22 @@ impl Pipeline {
             scene_color_texture,
             scene_depth_texture,
             composition_program,
+            composition_texture,
             fxaa,
+            copy_texture_program,
             screen_quad,
         })
     }
 
     pub fn draw_frame<F: glium::backend::Facade, S: glium::Surface>(
-        &mut self,
-        facade: &F,
-        resources: &Resources,
-        context: &Context,
-        render_lists: &mut RenderLists,
-        target: &mut S,
-    ) -> Result<(), DrawError> {
-        if let Some((target_texture, fxaa)) = self.fxaa.as_ref() {
-            let mut target_buffer =
-                glium::framebuffer::SimpleFrameBuffer::new(facade, target_texture)?;
-
-            self.draw_frame_without_postprocessing(
-                facade,
-                resources,
-                context,
-                render_lists,
-                &mut target_buffer,
-            )?;
-
-            {
-                profile!("fxaa");
-                fxaa.draw(target_texture, target)?;
-            }
-        } else {
-            self.draw_frame_without_postprocessing(
-                facade,
-                resources,
-                context,
-                render_lists,
-                target,
-            )?;
-        }
-
-        Ok(())
-    }
-
-    pub fn draw_frame_without_postprocessing<F: glium::backend::Facade, S: glium::Surface>(
         &self,
         facade: &F,
         resources: &Resources,
         context: &Context,
-        render_lists: &mut RenderLists,
+        render_lists: &RenderLists,
         target: &mut S,
     ) -> Result<(), DrawError> {
         profile!("pipeline");
-
-        if self.components.deferred_shading.is_some() {
-            render_lists.lights.push(Light {
-                position: context.main_light_pos,
-                attenuation: na::Vector3::new(1.0, 0.0, 0.0),
-                color: na::Vector3::new(1.0, 1.0, 1.0),
-                //color: na::Vector3::new(0.5, 0.5, 0.8) * 2.0,
-                radius: 160.0,
-            });
-        }
 
         // Clear buffers
         {
@@ -542,7 +519,7 @@ impl Pipeline {
                 &self.scene_color_texture,
                 &self.scene_depth_texture,
             )?;
-            self.components.scene_pass(
+            /*self.components.scene_pass(
                 facade,
                 resources,
                 context,
@@ -550,7 +527,7 @@ impl Pipeline {
                 &render_lists.plain,
                 &self.scene_color_texture,
                 &self.scene_depth_texture,
-            )?;
+            )?;*/
             self.components.scene_pass(
                 facade,
                 resources,
@@ -576,9 +553,12 @@ impl Pipeline {
             glow.blur_pass(facade)?;
         }
 
-        // Combine buffers and draw to target surface
+        // Combine buffers
         {
             profile!("composition_pass");
+
+            let mut target_buffer =
+                glium::framebuffer::SimpleFrameBuffer::new(facade, &self.composition_texture)?;
 
             let color_uniform = uniform! {
                 color_texture: &self.scene_color_texture,
@@ -602,11 +582,49 @@ impl Pipeline {
                 ),
             );
 
-            target.draw(
+            target_buffer.draw(
                 &self.screen_quad.vertex_buffer,
                 &self.screen_quad.index_buffer,
                 &self.composition_program,
                 &uniforms,
+                &Default::default(),
+            )?;
+        }
+
+        // Draw plain stuff on top
+        {
+            profile!("plain");
+
+            let mut framebuffer = glium::framebuffer::SimpleFrameBuffer::with_depth_buffer(
+                facade,
+                &self.composition_texture,
+                &self.scene_depth_texture,
+            )?;
+
+            self.components.scene_pass_to_surface(
+                resources,
+                context,
+                &self.scene_pass_plain,
+                &render_lists.plain,
+                &mut framebuffer,
+            )?;
+        }
+
+        // Postprocessing
+        if let Some(fxaa) = self.fxaa.as_ref() {
+            profile!("fxaa");
+
+            fxaa.draw(&self.composition_texture, target)?;
+        } else {
+            profile!("copy_to_target");
+
+            target.draw(
+                &self.screen_quad.vertex_buffer,
+                &self.screen_quad.index_buffer,
+                &self.copy_texture_program,
+                &uniform! {
+                    color_texture: &self.composition_texture,
+                },
                 &Default::default(),
             )?;
         }
@@ -634,9 +652,7 @@ impl Pipeline {
         self.scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
         self.scene_depth_texture = Self::create_depth_texture(facade, rounded_size)?;
 
-        if let Some((target_texture, _)) = self.fxaa.as_mut() {
-            *target_texture = Self::create_color_texture(facade, rounded_size)?;
-        }
+        self.composition_texture = Self::create_color_texture(facade, rounded_size)?;
 
         Ok(())
     }

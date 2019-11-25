@@ -7,6 +7,9 @@ use crate::machine::{Block, PlacedBlock};
 use crate::render;
 use crate::render::pipeline::RenderLists;
 
+pub const GRID_OFFSET_Z: f32 = 0.01;
+pub const GRID_OFFSET_2_Z: f32 = 0.02;
+
 impl Editor {
     pub fn render(&mut self, out: &mut RenderLists) -> Result<(), glium::DrawError> {
         profile!("editor");
@@ -14,7 +17,7 @@ impl Editor {
         let grid_size: na::Vector3<f32> = na::convert(self.machine.size());
         render::machine::render_cuboid_wireframe(
             &render::machine::Cuboid {
-                center: na::Point3::from(grid_size / 2.0),
+                center: na::Point3::from(grid_size / 2.0) + na::Vector3::z() * GRID_OFFSET_2_Z,
                 size: grid_size,
             },
             0.1,
@@ -37,7 +40,7 @@ impl Editor {
 
         render::machine::render_xy_grid(
             &self.machine.size(),
-            self.current_layer as f32 + 0.01,
+            self.current_layer as f32 + GRID_OFFSET_Z,
             &mut out.plain,
         );
 
@@ -183,7 +186,7 @@ impl Editor {
 
             render::machine::render_cuboid_wireframe(
                 &render::machine::Cuboid {
-                    center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
+                    center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_2_Z),
                     size: na::Vector3::new(1.0, 1.0, 1.0),
                 },
                 0.025,
@@ -205,7 +208,7 @@ impl Editor {
         render::machine::render_cuboid_wireframe(
             &render::machine::Cuboid {
                 // Slight z offset so that there is less overlap with e.g. the floor
-                center: pos + na::Vector3::new(0.5, 0.5, 0.51),
+                center: pos + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_2_Z),
                 size: na::Vector3::new(1.0, 1.0, 1.0),
             },
             thickness,
@@ -282,7 +285,7 @@ impl Editor {
             let wire_center = piece_pos + wire_size / 2.0;
             render::machine::render_cuboid_wireframe(
                 &render::machine::Cuboid {
-                    center: wire_center,
+                    center: wire_center + na::Vector3::z() * GRID_OFFSET_2_Z,
                     size: wire_size,
                 },
                 0.015,
