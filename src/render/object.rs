@@ -11,6 +11,8 @@ pub enum Object {
     Triangle,
     Quad,
     Cube,
+    Sphere,
+
     LineX,
     LineY,
     LineZ,
@@ -206,6 +208,67 @@ impl Object {
                     CUBE_POSITIONS,
                     CUBE_NORMALS,
                     CUBE_INDICES,
+                )
+            }
+            Object::Sphere => {
+                // For reference: http://www.songho.ca/opengl/gl_sphere.html
+
+                let mut positions = Vec::new();
+                let mut normals = Vec::new();
+                let mut indices = Vec::new();
+
+                let radius = 0.5;
+                let num_stacks = 10;
+                let num_sectors = 10;
+
+                let sector_step = 2.0 * std::f32::consts::PI / num_sectors as f32;
+                let stack_step = std::f32::consts::PI / num_stacks as f32;
+
+                for i in 0..num_stacks+1 {
+                    // Phi goes from pi/2 (top) to -pi/2 (bottom)
+                    let phi = std::f32::consts::PI / 2.0 - i as f32 * stack_step;
+
+                    for j in 0..num_sectors+1 {
+                        // Theta goes from 0 to 2*pi (around the sphere)
+                        let theta = j as f32 * sector_step;
+
+                        let x = phi.cos() * theta.cos();
+                        let y = phi.cos() * theta.sin();
+                        let z = phi.sin();
+
+                        positions.push([x * radius, y * radius, z * radius]);
+                        normals.push([x, y, z]);
+                    }
+                }
+
+                for i in 0..num_stacks {
+                    // Beginning of current stack
+                    let k_1 = i * (num_sectors + 1);
+
+                    // Beginning of next stack
+                    let k_2 = k_1 + (num_sectors + 1);
+
+                    for j in 0..num_sectors {
+                        if i != 0 {
+                            indices.push(k_1 + j);
+                            indices.push(k_2 + j);
+                            indices.push(k_1 + j + 1);
+                        }
+
+                        if i + 1 != num_stacks {
+                            indices.push(k_1 + j + 1);
+                            indices.push(k_2 + j);
+                            indices.push(k_2 + j + 1);
+                        }
+                    }
+                }
+
+                ObjectBuffers::from_slices(
+                    facade,
+                    glium::index::PrimitiveType::TrianglesList,
+                    &positions,
+                    &normals,
+                    &indices,
                 )
             }
             Object::LineX => {
