@@ -1,4 +1,8 @@
 # TODO
+## Movement
+- Turn faster on shift
+- Shame pulsator for crossing
+
 ## Editor
 - Select all
 - Not allowing deletion of `Block::Input` and `Block::Output`
@@ -13,9 +17,7 @@
 ## Rendering
 - Render block inputs
 
-- Fix rough edges of deferred shading
 - Check if it's okay to rely on `glutin::dpi::LogicalSize` for texture sizes
-- Make generic over glium `Display` where it is not yet
 - Instanced rendering to reduce draw calls
 
 ## Gameplay

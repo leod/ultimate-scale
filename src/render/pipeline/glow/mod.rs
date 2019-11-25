@@ -20,7 +20,7 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { num_blur_passes: 5 }
+        Self { num_blur_passes: 2 }
     }
 }
 
