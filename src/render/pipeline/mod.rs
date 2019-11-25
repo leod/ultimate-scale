@@ -363,8 +363,9 @@ pub struct Pipeline {
 
     scene_pass_solid: ScenePass<DefaultInstanceParams, object::Vertex>,
     scene_pass_solid_glow: ScenePass<DefaultInstanceParams, object::Vertex>,
-    scene_pass_plain: ScenePass<DefaultInstanceParams, object::Vertex>,
     scene_pass_wind: ScenePass<wind::Params, object::Vertex>,
+
+    scene_pass_plain: ScenePass<DefaultInstanceParams, object::Vertex>,
 
     scene_color_texture: glium::texture::Texture2d,
     scene_depth_texture: glium::texture::DepthTexture2d,
@@ -402,14 +403,6 @@ impl Pipeline {
             },
             simple::plain_scene_core(),
         )?;
-        let scene_pass_plain = components.create_scene_pass(
-            facade,
-            ScenePassSetup {
-                shadow: false,
-                glow: false,
-            },
-            simple::plain_scene_core(),
-        )?;
         let scene_pass_wind = components.create_scene_pass(
             facade,
             ScenePassSetup {
@@ -418,6 +411,19 @@ impl Pipeline {
             },
             wind::scene_core(),
         )?;
+
+        let plain_core = simple::plain_scene_core();
+        let plain_program = plain_core
+            .build_program(facade)
+            .map_err(render::CreationError::from)?;
+        let scene_pass_plain = ScenePass {
+            setup: ScenePassSetup {
+                shadow: false,
+                glow: false,
+            },
+            shader_core: plain_core,
+            program: plain_program,
+        };
 
         let rounded_size: (u32, u32) = view_config.window_size.into();
         let scene_color_texture = Self::create_color_texture(facade, rounded_size)?;
