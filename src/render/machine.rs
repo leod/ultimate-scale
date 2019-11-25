@@ -573,7 +573,7 @@ pub fn render_block(
                     position: *center,
                     attenuation: na::Vector3::new(1.0, 0.0, 3.0),
                     color: 8.0 * wind_source_color(),
-                    is_main: false,
+                    ..Default::default()
                 });
             }
 
@@ -710,7 +710,7 @@ pub fn render_block(
                     position: *center,
                     attenuation: na::Vector3::new(1.0, 0.0, 3.0),
                     color: 8.0 * wind_source_color(),
-                    is_main: false,
+                    ..Default::default()
                 });
             }
 

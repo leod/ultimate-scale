@@ -346,7 +346,7 @@ impl ExecView {
                 position: pos,
                 attenuation: na::Vector3::new(1.0, 0.0, 6.0),
                 color: 20.0 * render::machine::blip_color(blip.kind),
-                is_main: false,
+                ..Default::default()
             });
         }
     }

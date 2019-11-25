@@ -1,7 +1,7 @@
 use glium::uniforms::UniformType;
 
 use crate::render::pipeline::{InstanceParams, Light};
-use crate::render::{screen_quad, shader};
+use crate::render::{object, screen_quad, shader, Camera};
 
 pub const F_WORLD_POS: &str = "f_world_pos";
 pub const F_WORLD_NORMAL: &str = "f_world_normal";
@@ -73,28 +73,18 @@ pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>
     }
 }
 
-/// Shader core for rendering a light source, given the position/normal buffers
-/// from the scene pass.
-pub fn light_core(have_shadows: bool) -> shader::Core<Light, screen_quad::Vertex> {
-    let vertex = shader::VertexCore {
-        out_defs: vec![shader::v_tex_coord_def()],
-        out_exprs: shader_out_exprs! {
-            shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "position",
-        },
-        ..Default::default()
-    };
-
+fn light_fragment_core(have_shadows: bool) -> shader::FragmentCore<(Camera, Light)> {
     let mut fragment = shader::FragmentCore {
         extra_uniforms: vec![
             ("position_texture".into(), UniformType::Sampler2d),
             ("normal_texture".into(), UniformType::Sampler2d),
         ],
-        in_defs: vec![shader::v_tex_coord_def()],
         out_defs: vec![shader::f_color_def()],
         body: "
-            vec4 position = texture(position_texture, v_tex_coord);
-            vec3 normal = normalize(texture(normal_texture, v_tex_coord).xyz);
+            vec2 tex_coord = gl_FragCoord.xy / viewport.zw;
+
+            vec4 position = texture(position_texture, tex_coord);
+            vec3 normal = normalize(texture(normal_texture, tex_coord).xyz);
 
             vec3 light_vector = light_position - position.xyz;
             float light_distance = length(light_vector);
@@ -126,13 +116,49 @@ pub fn light_core(have_shadows: bool) -> shader::Core<Light, screen_quad::Vertex
             .with_body(
                 "
                 if (light_is_main) {
-                    radiance *= texture(shadow_texture, v_tex_coord).r;
+                    radiance *= texture(shadow_texture, tex_coord).r;
                 }
             ",
             );
     }
 
-    shader::Core { vertex, fragment }
+    fragment
+}
+
+/// Shader core for rendering a light source, given the position/normal buffers
+/// from the scene pass.
+pub fn light_screen_quad_core(
+    have_shadows: bool,
+) -> shader::Core<(Camera, Light), screen_quad::Vertex> {
+    let vertex = shader::VertexCore {
+        out_exprs: shader_out_exprs! {
+            shader::V_POSITION => "position",
+        },
+        ..Default::default()
+    };
+
+    shader::Core {
+        vertex,
+        fragment: light_fragment_core(have_shadows),
+    }
+}
+
+pub fn light_object_core(have_shadows: bool) -> shader::Core<(Camera, Light), object::Vertex> {
+    let vertex = shader::VertexCore {
+        out_exprs: shader_out_exprs! {
+            shader::V_POSITION => "
+                mat_projection
+                * mat_view
+                * (vec4(position * light_radius, 1.0) + vec4(light_position, 0))
+            ",
+        },
+        ..Default::default()
+    };
+
+    shader::Core {
+        vertex,
+        fragment: light_fragment_core(have_shadows),
+    }
 }
 
 /// Composition shader core transform for composing our buffers.
