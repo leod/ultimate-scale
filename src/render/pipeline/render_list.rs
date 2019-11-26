@@ -33,9 +33,8 @@ impl<T: InstanceParams> RenderList<T> {
         program: &glium::Program,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        // TODO: Fix cylinder so that we can reenable backface culling
         let params = glium::DrawParameters {
-            //backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
                 test: glium::DepthTest::IfLessOrEqual,
                 write: true,

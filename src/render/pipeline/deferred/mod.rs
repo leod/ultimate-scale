@@ -7,18 +7,22 @@ pub mod shader;
 
 use log::info;
 
+use nalgebra as na;
+
 use glium::{glutin, uniform, Surface};
 
 use crate::render::pipeline::instance::{UniformsOption, UniformsPair};
 use crate::render::pipeline::{
     CompositionPassComponent, Context, InstanceParams, Light, RenderPass, ScenePassComponent,
 };
-use crate::render::{self, screen_quad, DrawError, ScreenQuad};
+use crate::render::{self, screen_quad, Camera, DrawError, Object, Resources, ScreenQuad};
 
 pub use crate::render::CreationError;
 
 #[derive(Debug, Clone, Default)]
 pub struct Config;
+
+const LIGHT_MIN_THRESHOLD: f32 = 0.02;
 
 const NUM_TEXTURES: usize = 2;
 
@@ -30,7 +34,8 @@ pub struct DeferredShading {
 
     light_texture: glium::texture::Texture2d,
 
-    light_program: glium::Program,
+    light_screen_quad_program: glium::Program,
+    light_object_program: glium::Program,
 
     screen_quad: ScreenQuad,
 }
@@ -99,9 +104,11 @@ impl DeferredShading {
         };
         let light_texture = Self::create_texture(facade, rounded_size)?;
 
-        info!("Creating deferred light program");
-        let light_core = shader::light_core(have_shadows);
-        let light_program = light_core.build_program(facade)?;
+        info!("Creating deferred light programs");
+        let light_screen_quad_core = shader::light_screen_quad_core(have_shadows);
+        let light_screen_quad_program = light_screen_quad_core.build_program(facade)?;
+        let light_object_core = shader::light_object_core(have_shadows);
+        let light_object_program = light_object_core.build_program(facade)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
@@ -113,7 +120,8 @@ impl DeferredShading {
             scene_textures,
             shadow_texture,
             light_texture,
-            light_program,
+            light_screen_quad_program,
+            light_object_program,
             screen_quad,
         })
     }
@@ -146,9 +154,12 @@ impl DeferredShading {
     pub fn light_pass<F: glium::backend::Facade>(
         &self,
         facade: &F,
+        resources: &Resources,
+        camera: &Camera,
         lights: &[Light],
     ) -> Result<(), DrawError> {
         let draw_params = glium::DrawParameters {
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             blend: glium::Blend {
                 color: glium::BlendingFunction::Addition {
                     source: glium::LinearBlendingFactor::One,
@@ -181,17 +192,59 @@ impl DeferredShading {
                 })),
             );
 
-            let uniforms = UniformsPair(light.uniforms(), textures);
+            if light.is_main {
+                let no_camera = Camera {
+                    view: na::Matrix4::identity(),
+                    projection: na::Matrix4::identity(),
+                    viewport: camera.viewport,
+                };
 
-            // TODO: Don't use screen quad for rendering lights. Instead,
-            // determine either a smaller quad or some geometry thingy.
-            light_buffer.draw(
-                &self.screen_quad.vertex_buffer,
-                &self.screen_quad.index_buffer,
-                &self.light_program,
-                &uniforms,
-                &draw_params,
-            )?;
+                let uniforms = UniformsPair(light.uniforms(), textures);
+                let uniforms = UniformsPair(uniforms, no_camera.uniforms());
+
+                light_buffer.draw(
+                    &self.screen_quad.vertex_buffer,
+                    &self.screen_quad.index_buffer,
+                    &self.light_screen_quad_program,
+                    &uniforms,
+                    &draw_params,
+                )?;
+            } else {
+                let i_max = light.color.x.max(light.color.y).max(light.color.z);
+                let radicand = light.attenuation.y.powi(2)
+                    - 4.0
+                        * light.attenuation.z
+                        * (light.attenuation.x - i_max * 1.0 / LIGHT_MIN_THRESHOLD);
+                let radius = (-light.attenuation.y + radicand.sqrt()) / (2.0 * light.attenuation.z);
+
+                let light = Light {
+                    radius,
+                    ..light.clone()
+                };
+
+                let uniforms = UniformsPair(light.uniforms(), textures);
+                let uniforms = UniformsPair(uniforms, camera.uniforms());
+
+                // With backface culling, there is a problem in that lights are
+                // not rendered when the camera moves within the sphere. With
+                // frontface culling this problem does not happen.
+                // (I think there's some other downside, but I'm not sure what
+                // it is exactly.)
+                let draw_params = glium::DrawParameters {
+                    backface_culling:
+                        glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
+                    ..draw_params.clone()
+                };
+
+                let object = resources.get_object_buffers(Object::Sphere);
+                object.index_buffer.draw(
+                    &object.vertex_buffer,
+                    &self.light_object_program,
+                    &uniforms,
+                    &draw_params,
+                    &mut light_buffer,
+                )?;
+            }
         }
 
         Ok(())

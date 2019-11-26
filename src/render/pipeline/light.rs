@@ -10,6 +10,7 @@ pub struct Light {
     pub attenuation: na::Vector3<f32>,
     pub color: na::Vector3<f32>,
     pub is_main: bool,
+    pub radius: f32,
 }
 
 impl InstanceParams for Light {
@@ -25,6 +26,7 @@ impl InstanceParams for Light {
             light_attenuation: attenuation,
             light_color: color,
             light_is_main: self.is_main,
+            light_radius: self.radius,
         }
     }
 }
@@ -36,6 +38,7 @@ impl Default for Light {
             attenuation: na::Vector3::zeros(),
             color: na::Vector3::zeros(),
             is_main: false,
+            radius: 0.0,
         }
     }
 }
