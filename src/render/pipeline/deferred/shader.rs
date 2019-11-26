@@ -175,7 +175,7 @@ pub fn composition_core_transform(
     );
 
     let light_expr = "texture(light_texture, v_tex_coord).rgb";
-    let ambient_expr = "vec3(0.1, 0.1, 0.1)";
+    let ambient_expr = "vec3(0.3, 0.3, 0.3)";
 
     let fragment = core
         .fragment
