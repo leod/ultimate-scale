@@ -155,6 +155,7 @@ impl Game {
             attenuation: na::Vector3::new(1.0, 0.0, 0.0),
             color: na::Vector3::new(1.0, 1.0, 1.0),
             is_main: true,
+            ..Default::default()
         });
 
         self.render_pipeline.draw_frame(

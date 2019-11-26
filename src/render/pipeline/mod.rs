@@ -543,7 +543,12 @@ impl Pipeline {
         if let Some(deferred_shading) = self.components.deferred_shading.as_ref() {
             profile!("light_pass");
 
-            deferred_shading.light_pass(facade, &render_lists.lights)?;
+            deferred_shading.light_pass(
+                facade,
+                resources,
+                &context.camera,
+                &render_lists.lights,
+            )?;
         }
 
         // Blur the glow texture
