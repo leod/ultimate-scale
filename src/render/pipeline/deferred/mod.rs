@@ -225,6 +225,17 @@ impl DeferredShading {
                 let uniforms = UniformsPair(light.uniforms(), textures);
                 let uniforms = UniformsPair(uniforms, camera.uniforms());
 
+                // With backface culling, there is a problem in that lights are
+                // not rendered when the camera moves within the sphere. With
+                // frontface culling this problem does not happen.
+                // (I think there's some other downside, but I'm not sure what
+                // it is exactly.)
+                let draw_params = glium::DrawParameters {
+                    backface_culling:
+                        glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
+                    ..draw_params.clone()
+                };
+
                 let object = resources.get_object_buffers(Object::Sphere);
                 object.index_buffer.draw(
                     &object.vertex_buffer,
