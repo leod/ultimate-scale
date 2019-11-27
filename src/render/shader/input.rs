@@ -81,7 +81,7 @@ impl<'b, U> ToUniforms for &'b U
 where
     U: ToUniforms,
 {
-    fn visit_values<'a, F>(&'a self, mut output: F)
+    fn visit_values<'a, F>(&'a self, output: F)
     where
         F: FnMut(&str, UniformValue<'a>),
     {

@@ -1,11 +1,8 @@
 use nalgebra as na;
 
 use glium::glutin::{self, VirtualKeyCode, WindowEvent};
-use glium::uniform;
-use glium::uniforms::UniformValue;
 
 use crate::input_state::InputState;
-use crate::render::shader::ToUniforms;
 
 #[derive(Debug, Clone)]
 pub struct Config {
