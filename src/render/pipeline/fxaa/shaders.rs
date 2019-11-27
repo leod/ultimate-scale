@@ -301,10 +301,10 @@ const BODY_FINISH: &str = "
 
 pub fn postprocessing_core(exploration_offsets: &[f32]) -> shader::Core<(), screen_quad::Vertex> {
     let vertex = shader::VertexCore {
-        out_defs: vec![shader::v_tex_coord_def()],
+        out_defs: vec![shader::defs::v_tex_coord()],
         out_exprs: shader_out_exprs! {
-            shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "position",
+            shader::defs::V_TEX_COORD => "tex_coord",
+            shader::defs::V_POSITION => "position",
         },
         ..Default::default()
     };
@@ -334,11 +334,11 @@ pub fn postprocessing_core(exploration_offsets: &[f32]) -> shader::Core<(), scre
     let fragment = shader::FragmentCore {
         extra_uniforms: vec![("input_texture".into(), UniformType::Sampler2d)],
         defs: DEFS.into(),
-        in_defs: vec![shader::v_tex_coord_def()],
-        out_defs: vec![shader::f_color_def()],
+        in_defs: vec![shader::defs::v_tex_coord()],
+        out_defs: vec![shader::defs::f_color()],
         body,
         out_exprs: shader_out_exprs! {
-            shader::F_COLOR => "vec4(texture(input_texture, final_tex_coord).rgb, 1.0)",
+            shader::defs::F_COLOR => "vec4(texture(input_texture, final_tex_coord).rgb, 1.0)",
         },
         ..Default::default()
     };

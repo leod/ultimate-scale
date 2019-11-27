@@ -50,10 +50,10 @@ pub fn no_glow_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
 /// Shader core for blurring the glow texture.
 pub fn blur_core() -> shader::Core<(), screen_quad::Vertex> {
     let vertex = shader::VertexCore {
-        out_defs: vec![shader::v_tex_coord_def()],
+        out_defs: vec![shader::defs::v_tex_coord()],
         out_exprs: shader_out_exprs! {
-            shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "position",
+            shader::defs::V_TEX_COORD => "tex_coord",
+            shader::defs::V_POSITION => "position",
         },
         ..Default::default()
     };
@@ -106,12 +106,12 @@ pub fn blur_core() -> shader::Core<(), screen_quad::Vertex> {
             ("horizontal".into(), UniformType::Bool),
             ("glow_texture".into(), UniformType::Sampler2d),
         ],
-        in_defs: vec![shader::v_tex_coord_def()],
-        out_defs: vec![shader::f_color_def()],
+        in_defs: vec![shader::defs::v_tex_coord()],
+        out_defs: vec![shader::defs::f_color()],
         defs: defs.into(),
         body: body.into(),
         out_exprs: shader_out_exprs! {
-            shader::F_COLOR => "vec4(blur_result, 1.0)",
+            shader::defs::F_COLOR => "vec4(blur_result, 1.0)",
         },
         ..Default::default()
     };
@@ -124,11 +124,11 @@ pub fn composition_core_transform(
     core: shader::Core<(), screen_quad::Vertex>,
 ) -> shader::Core<(), screen_quad::Vertex> {
     assert!(
-        core.fragment.has_in(shader::V_TEX_COORD),
+        core.fragment.has_in(shader::defs::V_TEX_COORD),
         "FragmentCore needs V_TEX_COORD input for glow composition pass"
     );
     assert!(
-        core.fragment.has_out(shader::F_COLOR),
+        core.fragment.has_out(shader::defs::F_COLOR),
         "FragmentCore needs F_COLOR output for glow composition pass"
     );
 
@@ -136,7 +136,7 @@ pub fn composition_core_transform(
         .fragment
         .with_extra_uniform(("glow_texture".into(), UniformType::Sampler2d))
         .with_out_expr(
-            shader::F_COLOR,
+            shader::defs::F_COLOR,
             "f_color + vec4(texture(glow_texture, v_tex_coord).rgb, 0.0)",
         );
 
