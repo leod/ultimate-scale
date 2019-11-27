@@ -59,8 +59,8 @@ fn v_color() -> shader::VertexOutDef {
 pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
     let vertex = shader::VertexCore {
         out_defs: vec![
-            shader::v_world_normal_def(),
-            shader::v_world_pos_def(),
+            shader::defs::v_world_normal(),
+            shader::defs::v_world_pos(),
             v_discard(),
             v_color(),
         ],
@@ -103,23 +103,23 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
         "
         .to_string(),
         out_exprs: shader_out_exprs! {
-            shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * rot_normal)",
-            shader::V_WORLD_POS => "mat_model * vec4(scaled_pos, 1.0)",
-            shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
+            shader::defs::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * rot_normal)",
+            shader::defs::V_WORLD_POS => "mat_model * vec4(scaled_pos, 1.0)",
+            shader::defs::V_POSITION => "mat_projection * mat_view * v_world_pos",
         },
         ..Default::default()
     };
 
     let fragment = shader::FragmentCore {
         in_defs: vec![v_discard(), v_color()],
-        out_defs: vec![shader::f_color_def()],
+        out_defs: vec![shader::defs::f_color()],
         body: "
             if (v_discard >= 0.5)
                 discard;
         "
         .to_string(),
         out_exprs: shader_out_exprs! {
-            shader::F_COLOR => "v_color",
+            shader::defs::F_COLOR => "v_color",
         },
         ..Default::default()
     };

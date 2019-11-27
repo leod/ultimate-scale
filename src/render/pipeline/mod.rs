@@ -353,7 +353,7 @@ impl Components {
         depth_texture: &glium::texture::DepthTexture2d,
     ) -> Result<(), DrawError> {
         let mut output_textures = self.scene_output_textures(&pass.setup);
-        output_textures.push((shader::F_COLOR, color_texture));
+        output_textures.push((shader::defs::F_COLOR, color_texture));
 
         let mut framebuffer = glium::framebuffer::MultiOutputFrameBuffer::with_depth_buffer(
             facade,

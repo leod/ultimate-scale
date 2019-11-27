@@ -30,19 +30,19 @@ to_uniforms_impl!(
 pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
     shader::Core {
         vertex: shader::VertexCore {
-            out_defs: vec![shader::v_world_normal_def(), shader::v_world_pos_def()],
+            out_defs: vec![shader::defs::v_world_normal(), shader::defs::v_world_pos()],
             out_exprs: shader_out_exprs! {
                 // TODO: Precompute inverse of mat_model if we ever have lots of vertices
-                shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * normal)",
-                shader::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
-                shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
+                shader::defs::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * normal)",
+                shader::defs::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
+                shader::defs::V_POSITION => "mat_projection * mat_view * v_world_pos",
             },
             ..Default::default()
         },
         fragment: shader::FragmentCore {
-            out_defs: vec![shader::f_color_def()],
+            out_defs: vec![shader::defs::f_color()],
             out_exprs: shader_out_exprs! {
-                shader::F_COLOR => "color",
+                shader::defs::F_COLOR => "color",
             },
             ..Default::default()
         },

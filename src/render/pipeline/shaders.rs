@@ -6,7 +6,7 @@ use crate::render::shader::{self, ToUniforms};
 pub fn diffuse_scene_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
-    let color_expr = if core.fragment.has_out(shader::F_SHADOW) {
+    let color_expr = if core.fragment.has_out(shader::defs::F_SHADOW) {
         "vec4((0.3 + f_shadow * diffuse) * f_color.rgb, f_color.a)"
     } else {
         "vec4((0.3 + diffuse) * f_color.rgb, f_color.a)"
@@ -16,8 +16,8 @@ pub fn diffuse_scene_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
         vertex: core.vertex,
         fragment: core
             .fragment
-            .with_in_def(shader::v_world_normal_def())
-            .with_in_def(shader::v_world_pos_def())
+            .with_in_def(shader::defs::v_world_normal())
+            .with_in_def(shader::defs::v_world_pos())
             .with_body(
                 "
                 float ambient = 0.3;
@@ -30,26 +30,26 @@ pub fn diffuse_scene_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
                 );
             ",
             )
-            .with_out_expr(shader::F_COLOR, color_expr),
+            .with_out_expr(shader::defs::F_COLOR, color_expr),
     }
 }
 
 pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
     let vertex = shader::VertexCore {
-        out_defs: vec![shader::v_tex_coord_def()],
+        out_defs: vec![shader::defs::v_tex_coord()],
         out_exprs: shader_out_exprs! {
-            shader::V_TEX_COORD => "tex_coord",
-            shader::V_POSITION => "position",
+            shader::defs::V_TEX_COORD => "tex_coord",
+            shader::defs::V_POSITION => "position",
         },
         ..Default::default()
     };
 
     let fragment = shader::FragmentCore {
         extra_uniforms: vec![("color_texture".into(), UniformType::Sampler2d)],
-        in_defs: vec![shader::v_tex_coord_def()],
-        out_defs: vec![shader::f_color_def()],
+        in_defs: vec![shader::defs::v_tex_coord()],
+        out_defs: vec![shader::defs::f_color()],
         out_exprs: shader_out_exprs! {
-            shader::F_COLOR => "vec4(texture(color_texture, v_tex_coord).rgb, 1.0)",
+            shader::defs::F_COLOR => "vec4(texture(color_texture, v_tex_coord).rgb, 1.0)",
         },
         ..Default::default()
     };
@@ -61,7 +61,7 @@ pub fn hdr_composition_core_transform(
     core: shader::Core<(), screen_quad::Vertex>,
 ) -> shader::Core<(), screen_quad::Vertex> {
     assert!(
-        core.fragment.has_out(shader::F_COLOR),
+        core.fragment.has_out(shader::defs::F_COLOR),
         "FragmentCore needs F_COLOR output for HDR composition pass"
     );
 
@@ -69,7 +69,7 @@ pub fn hdr_composition_core_transform(
         .fragment
         //.with_out_expr(shader::F_COLOR, "vec4(vec3(1.0) - exp(-f_color.rgb), 1.0)");
         .with_out_expr(
-            shader::F_COLOR,
+            shader::defs::F_COLOR,
             "vec4(vec3(f_color) / (vec3(f_color) + 1.0), 1.0)",
         );
 
@@ -84,12 +84,12 @@ pub fn gamma_correction_composition_core_transform(
     gamma: f32,
 ) -> shader::Core<(), screen_quad::Vertex> {
     assert!(
-        core.fragment.has_out(shader::F_COLOR),
+        core.fragment.has_out(shader::defs::F_COLOR),
         "FragmentCore needs F_COLOR output for gamma correction composition pass"
     );
 
     let fragment = core.fragment.with_out_expr(
-        shader::F_COLOR,
+        shader::defs::F_COLOR,
         &format!("vec4(pow(vec3(f_color), vec3(1.0 / {})), 1.0)", gamma),
     );
 

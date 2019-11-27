@@ -1,5 +1,6 @@
 #[macro_use]
 pub mod input;
+pub mod defs;
 
 use std::marker::PhantomData;
 
@@ -7,65 +8,6 @@ use glium::uniforms::{UniformType, UniformValue, Uniforms};
 use glium::vertex::AttributeType;
 
 pub use input::ToUniforms;
-
-pub const V_WORLD_NORMAL: &str = "v_world_normal";
-pub const V_WORLD_POS: &str = "v_world_pos";
-pub const V_COLOR: &str = "v_color";
-pub const V_TEX_COORD: &str = "v_tex_coord";
-pub const V_POSITION: &str = "gl_Position";
-
-pub const F_COLOR: &str = "f_color";
-pub const F_FRAGMENT_DEPTH: &str = "f_fragment_depth";
-pub const F_SHADOW: &str = "f_shadow";
-
-pub fn v_world_normal_def() -> VertexOutDef {
-    (
-        (V_WORLD_NORMAL.into(), UniformType::FloatVec3),
-        VertexOutQualifier::Smooth,
-    )
-}
-
-pub fn v_world_pos_def() -> VertexOutDef {
-    (
-        (V_WORLD_POS.into(), UniformType::FloatVec4),
-        VertexOutQualifier::Smooth,
-    )
-}
-
-pub fn v_color_def() -> VertexOutDef {
-    (
-        (V_COLOR.into(), UniformType::FloatVec3),
-        VertexOutQualifier::Smooth,
-    )
-}
-
-pub fn v_tex_coord_def() -> VertexOutDef {
-    (
-        (V_TEX_COORD.into(), UniformType::FloatVec2),
-        VertexOutQualifier::Smooth,
-    )
-}
-
-pub fn f_color_def() -> FragmentOutDef {
-    (
-        (F_COLOR.into(), UniformType::FloatVec4),
-        FragmentOutQualifier::Yield,
-    )
-}
-
-pub fn f_fragment_depth_def() -> FragmentOutDef {
-    (
-        (F_FRAGMENT_DEPTH.into(), UniformType::Float),
-        FragmentOutQualifier::Yield,
-    )
-}
-
-pub fn f_shadow_def() -> FragmentOutDef {
-    (
-        (F_SHADOW.into(), UniformType::Float),
-        FragmentOutQualifier::Local,
-    )
-}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VertexOutQualifier {
