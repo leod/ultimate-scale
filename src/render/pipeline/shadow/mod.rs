@@ -3,7 +3,7 @@
 //! Heavily inspired by:
 //! https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
 
-mod shader;
+mod shaders;
 
 use log::info;
 
@@ -56,7 +56,7 @@ impl ScenePassComponent for ShadowMapping {
         &self,
         core: render::shader::Core<(Context, P), V>,
     ) -> render::shader::Core<(Context, P), V> {
-        shader::render_shadowed_core_transform(core)
+        shaders::render_shadowed_core_transform(core)
     }
 }
 
@@ -68,7 +68,7 @@ impl ShadowMapping {
     ) -> Result<ShadowMapping, CreationError> {
         // Shader for creating the shadow map from light source's perspective
         info!("Creating shadow map program");
-        let shadow_map_program = shader::depth_map_core_transform(
+        let shadow_map_program = shaders::depth_map_core_transform(
             pipeline::scene::model::scene_core(),
         ).build_program(facade)?;
 

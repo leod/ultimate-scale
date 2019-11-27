@@ -3,7 +3,7 @@
 //! Heavily inspired by:
 //! https://github.com/glium/glium/blob/master/examples/deferred.rs
 
-pub mod shader;
+pub mod shaders;
 
 use log::info;
 
@@ -58,7 +58,7 @@ impl ScenePassComponent for DeferredShading {
         core: render::shader::Core<(Context, P), V>,
     ) -> render::shader::Core<(Context, P), V> {
         // Write scene to separate buffers
-        shader::scene_buffers_core_transform(self.shadow_texture.is_some(), core)
+        shaders::scene_buffers_core_transform(self.shadow_texture.is_some(), core)
     }
 
     fn output_textures(&self) -> Vec<(&'static str, &glium::texture::Texture2d)> {
@@ -80,7 +80,7 @@ impl CompositionPassComponent for DeferredShading {
         &self,
         core: render::shader::Core<(), screen_quad::Vertex>,
     ) -> render::shader::Core<(), screen_quad::Vertex> {
-        shader::composition_core_transform(core)
+        shaders::composition_core_transform(core)
     }
 }
 
@@ -105,9 +105,9 @@ impl DeferredShading {
         let light_texture = Self::create_texture(facade, rounded_size)?;
 
         info!("Creating deferred light programs");
-        let light_screen_quad_core = shader::light_screen_quad_core(have_shadows);
+        let light_screen_quad_core = shaders::light_screen_quad_core(have_shadows);
         let light_screen_quad_program = light_screen_quad_core.build_program(facade)?;
-        let light_object_core = shader::light_object_core(have_shadows);
+        let light_object_core = shaders::light_object_core(have_shadows);
         let light_object_program = light_object_core.build_program(facade)?;
 
         info!("Creating screen quad");
