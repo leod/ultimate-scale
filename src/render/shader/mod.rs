@@ -2,7 +2,12 @@
 pub mod input;
 pub mod defs;
 
+use log::info;
+
 use std::marker::PhantomData;
+
+use glsl::parser::Parse;
+use glsl::visitor::Host;
 
 use glium::uniforms::{UniformType, UniformValue, Uniforms};
 use glium::vertex::AttributeType;
@@ -220,13 +225,95 @@ impl<P: ToUniforms> FragmentCore<P> {
     }
 }
 
-impl<P: ToUniforms + Clone, V: glium::vertex::Vertex> Core<P, V> {
+fn does_core_use_variable(
+    defs: &str,
+    body: &str,
+    out_exprs: &[(String, GLSL)],
+    var_name: &str,
+) -> bool {
+    struct Visitor<'a> {
+        var_name: &'a str,
+        is_used: bool
+    }
+
+    impl<'a> glsl::visitor::Visitor for Visitor<'a> {
+        fn visit_identifier(&mut self, identifier: &mut glsl::syntax::Identifier) -> glsl::visitor::Visit {
+            if identifier.as_str() == self.var_name {
+                self.is_used = true;
+            }
+
+            glsl::visitor::Visit::Children
+        }
+    }
+
+    let mut visitor = Visitor {
+        var_name,
+        is_used: false,
+    };
+
+    for (out_name, out_expr) in out_exprs {
+        if out_name != var_name {
+            glsl::syntax::Expr::parse(out_expr).unwrap().visit(&mut visitor);
+        }
+    }
+
+    if let Ok(mut body) = glsl::syntax::Statement::parse(body) {
+        body.visit(&mut visitor);
+    }
+
+    visitor.is_used
+}
+
+impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
     pub fn link(&self) -> LinkedCore<P, V> {
-        // TODO: Convert unused vertex outputs to local
+        let mut fragment = self.fragment.clone();
+
+        // TODO: Remove unused inputs from fragment shader.
+
+        // Demote vertex shader outputs to local when not needed by fragment
+        // shader.
+        let mut vertex = self.vertex.clone();
+
+        for ((name, _), q) in vertex.out_defs.iter_mut() {
+            if !fragment.has_in(&name) && name != defs::V_POSITION {
+                *q = VertexOutQualifier::Local;
+            }
+        }
+
+        // Remove unused local vertex shader outputs.
+        //
+        // We take the transitive closure by looping, since removing one output
+        // may cause another output to become unused.
+        let mut changed = true;
+
+        while changed {
+            changed = false;
+
+            for ((out_name, _), q) in vertex.out_defs.clone().iter() {
+                if *q == VertexOutQualifier::Local {
+                    let is_used = does_core_use_variable(
+                        &vertex.defs,
+                        &vertex.body,
+                        &vertex.out_exprs,
+                        &out_name
+                    );
+
+                    if !is_used {
+                        info!("Removing vertex output {}", out_name);
+
+                        vertex.out_defs.retain(|((name, _), _)| name != out_name);
+                        vertex.out_exprs.retain(|(name, _)| name != out_name);
+
+                        changed = true;
+                    }
+                }
+            }
+        }
+
         // TODO: Check non-duplicate inputs/outputs
         LinkedCore {
-            vertex: self.vertex.clone(),
-            fragment: self.fragment.clone(),
+            vertex,
+            fragment,
         }
     }
 }
