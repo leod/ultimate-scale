@@ -1,9 +1,6 @@
-use glium::uniform;
-
 use nalgebra as na;
 
 use crate::render::pipeline::Context;
-use crate::render::shader::ToUniforms;
 use crate::render::{object, shader};
 
 #[derive(Debug, Clone)]

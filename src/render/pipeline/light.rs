@@ -1,9 +1,5 @@
 use nalgebra as na;
 
-use glium::uniform;
-
-use crate::render::shader::ToUniforms;
-
 #[derive(Debug, Clone)]
 pub struct Light {
     pub position: na::Point3<f32>,

@@ -1,10 +1,8 @@
-use glium::uniform;
-
 use nalgebra as na;
 
 use crate::render::object;
 use crate::render::pipeline::Context;
-use crate::render::shader::{self, ToUniforms};
+use crate::render::shader;
 
 #[derive(Clone, Debug)]
 pub struct Params {
