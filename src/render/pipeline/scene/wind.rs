@@ -2,7 +2,8 @@ use glium::uniform;
 
 use nalgebra as na;
 
-use crate::render::pipeline::{Context, InstanceParams};
+use crate::render::pipeline::Context;
+use crate::render::shader::ToUniforms;
 use crate::render::{object, shader};
 
 #[derive(Debug, Clone)]
@@ -13,7 +14,6 @@ pub struct Params {
     pub phase: f32,
     pub start: f32,
     pub end: f32,
-    pub bend: bool,
 }
 
 impl Default for Params {
@@ -25,30 +25,21 @@ impl Default for Params {
             phase: 0.0,
             start: 0.0,
             end: 0.0,
-            bend: false,
         }
     }
 }
 
-impl InstanceParams for Params {
-    type U = impl glium::uniforms::Uniforms;
-
-    fn uniforms(&self) -> Self::U {
-        let mat_model: [[f32; 4]; 4] = self.transform.into();
-        let color: [f32; 4] = self.color.into();
-        let stripe_color: [f32; 4] = self.stripe_color.into();
-
-        uniform! {
-            mat_model: mat_model,
-            color: color,
-            stripe_color: stripe_color,
-            phase: self.phase,
-            start: self.start,
-            end: self.end,
-            bend: self.bend,
-        }
-    }
-}
+to_uniforms_impl!(
+    Params,
+    self => {
+        mat_model: Mat4 => self.transform.into(),
+        color: Vec4 => self.color.into(),
+        stripe_color: Vec4 => self.stripe_color.into(),
+        phase: Float => self.phase,
+        start: Float => self.start,
+        end: Float => self.end,
+    },
+);
 
 const V_DISCARD: &str = "v_discard";
 

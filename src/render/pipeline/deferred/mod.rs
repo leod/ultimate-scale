@@ -11,10 +11,10 @@ use nalgebra as na;
 
 use glium::{glutin, uniform, Surface};
 
-use crate::render::pipeline::instance::{UniformsOption, UniformsPair};
 use crate::render::pipeline::{
-    CompositionPassComponent, Context, InstanceParams, Light, RenderPass, ScenePassComponent,
+    CompositionPassComponent, Context, Light, RenderPass, ScenePassComponent,
 };
+use crate::render::shader::ToUniforms;
 use crate::render::{self, screen_quad, Camera, DrawError, Object, Resources, ScreenQuad};
 
 pub use crate::render::CreationError;
@@ -53,7 +53,7 @@ impl RenderPass for DeferredShading {
 }
 
 impl ScenePassComponent for DeferredShading {
-    fn core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
         &self,
         core: render::shader::Core<(Context, P), V>,
     ) -> render::shader::Core<(Context, P), V> {
@@ -179,19 +179,19 @@ impl DeferredShading {
 
         light_buffer.clear_color(0.0, 0.0, 0.0, 1.0);
 
-        for light in lights.iter() {
-            let textures = UniformsPair(
+        let textures = (
+            uniform! {
+                position_texture: &self.scene_textures[0],
+                normal_texture: &self.scene_textures[1],
+            },
+            self.shadow_texture.as_ref().map(|shadow_texture| {
                 uniform! {
-                    position_texture: &self.scene_textures[0],
-                    normal_texture: &self.scene_textures[1],
-                },
-                UniformsOption(self.shadow_texture.as_ref().map(|shadow_texture| {
-                    uniform! {
-                        shadow_texture: shadow_texture,
-                    }
-                })),
-            );
+                    shadow_texture: shadow_texture,
+                }
+            }),
+        );
 
+        for light in lights.iter() {
             if light.is_main {
                 let no_camera = Camera {
                     view: na::Matrix4::identity(),
@@ -199,14 +199,13 @@ impl DeferredShading {
                     viewport: camera.viewport,
                 };
 
-                let uniforms = UniformsPair(light.uniforms(), textures);
-                let uniforms = UniformsPair(uniforms, no_camera.uniforms());
+                let uniforms = (&textures, no_camera, &light);
 
                 light_buffer.draw(
                     &self.screen_quad.vertex_buffer,
                     &self.screen_quad.index_buffer,
                     &self.light_screen_quad_program,
-                    &uniforms,
+                    &uniforms.to_uniforms(),
                     &draw_params,
                 )?;
             } else {
@@ -222,8 +221,7 @@ impl DeferredShading {
                     ..light.clone()
                 };
 
-                let uniforms = UniformsPair(light.uniforms(), textures);
-                let uniforms = UniformsPair(uniforms, camera.uniforms());
+                let uniforms = (&textures, &camera, light);
 
                 // With backface culling, there is a problem in that lights are
                 // not rendered when the camera moves within the sphere. With
@@ -240,7 +238,7 @@ impl DeferredShading {
                 object.index_buffer.draw(
                     &object.vertex_buffer,
                     &self.light_object_program,
-                    &uniforms,
+                    &uniforms.to_uniforms(),
                     &draw_params,
                     &mut light_buffer,
                 )?;
@@ -250,7 +248,7 @@ impl DeferredShading {
         Ok(())
     }
 
-    pub fn composition_pass_uniforms(&self) -> impl glium::uniforms::Uniforms + '_ {
+    pub fn composition_pass_uniforms(&self) -> impl ToUniforms + '_ {
         uniform! {
             light_texture: &self.light_texture,
         }

@@ -2,7 +2,7 @@ use nalgebra as na;
 
 use glium::uniform;
 
-use crate::render::pipeline::InstanceParams;
+use crate::render::shader::ToUniforms;
 
 #[derive(Debug, Clone)]
 pub struct Light {
@@ -13,23 +13,16 @@ pub struct Light {
     pub radius: f32,
 }
 
-impl InstanceParams for Light {
-    type U = impl glium::uniforms::Uniforms;
-
-    fn uniforms(&self) -> Self::U {
-        let position: [f32; 3] = self.position.coords.into();
-        let attenuation: [f32; 3] = self.attenuation.into();
-        let color: [f32; 3] = self.color.into();
-
-        uniform! {
-            light_position: position,
-            light_attenuation: attenuation,
-            light_color: color,
-            light_is_main: self.is_main,
-            light_radius: self.radius,
-        }
-    }
-}
+to_uniforms_impl!(
+    Light,
+    self => {
+        light_position: Vec3 => self.position.coords.into(),
+        light_attenuation: Vec3 => self.attenuation.into(),
+        light_color: Vec3 => self.color.into(),
+        light_is_main: Bool => self.is_main,
+        light_radius: Float => self.radius,
+    },
+);
 
 impl Default for Light {
     fn default() -> Self {

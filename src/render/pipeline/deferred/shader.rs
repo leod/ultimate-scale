@@ -1,7 +1,8 @@
 use glium::uniforms::UniformType;
 
-use crate::render::pipeline::{InstanceParams, Light};
-use crate::render::{object, screen_quad, shader, Camera};
+use crate::render::pipeline::Light;
+use crate::render::shader::{self, ToUniforms};
+use crate::render::{object, screen_quad, Camera};
 
 pub const F_WORLD_POS: &str = "f_world_pos";
 pub const F_WORLD_NORMAL: &str = "f_world_normal";
@@ -22,7 +23,7 @@ pub fn f_world_normal_def() -> shader::FragmentOutDef {
 
 /// Shader core transform for writing position/normal/color into separate
 /// buffers, so that they may be combined in a subsequent pass.
-pub fn scene_buffers_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+pub fn scene_buffers_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
     always_include_shadow_out: bool,
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {

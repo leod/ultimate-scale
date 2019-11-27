@@ -26,7 +26,7 @@ impl Resources {
         }
 
         info!("Creating plain render program");
-        let plain_program = pipeline::simple::plain_scene_core().build_program(facade)?;
+        let plain_program = pipeline::scene::model::scene_core().build_program(facade)?;
 
         Ok(Resources {
             object_buffers,
