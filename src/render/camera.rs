@@ -1,8 +1,11 @@
 use nalgebra as na;
 
 use glium::glutin::{self, VirtualKeyCode, WindowEvent};
+use glium::uniform;
+use glium::uniforms::UniformValue;
 
 use crate::input_state::InputState;
+use crate::render::shader::ToUniforms;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -57,6 +60,15 @@ impl Default for Camera {
         }
     }
 }
+
+to_uniforms_impl!(
+    Camera,
+    self => {
+        viewport: Vec4 => self.viewport.into(),
+        mat_projection: Mat4 => self.projection.into(),
+        mat_view: Mat4 => self.view.into(),
+    },
+);
 
 #[derive(Debug, Clone)]
 pub struct EditCameraView {

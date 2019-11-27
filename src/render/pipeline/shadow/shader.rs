@@ -1,10 +1,10 @@
 use glium::uniforms::UniformType;
 
-use crate::render::pipeline::{Context, InstanceParams};
-use crate::render::shader;
+use crate::render::pipeline::Context;
+use crate::render::shader::{self, ToUniforms};
 
 /// Shader core for rendering the depth map from the light source's perspective.
-pub fn depth_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+pub fn depth_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
     // Only write depth into the output, discard color output of original core
@@ -23,7 +23,7 @@ pub fn depth_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
 }
 
 /// Shader core for rendering the shadowed scene.
-pub fn render_shadowed_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+pub fn render_shadowed_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
     core: shader::Core<(Context, P), V>,
 ) -> shader::Core<(Context, P), V> {
     assert!(
@@ -60,8 +60,8 @@ pub fn render_shadowed_core_transform<P: InstanceParams, V: glium::vertex::Verte
         .with_defs(
             "
             float shadow_calculation(vec4 light_space_pos) {
-                // light_pos uniform is provided by Context.
-                vec3 light_dir = normalize(vec3(light_pos - v_world_pos.xyz));
+                // main_light_pos uniform is provided by Context.
+                vec3 light_dir = normalize(vec3(main_light_pos - v_world_pos.xyz));
 
                 vec3 proj_coords = light_space_pos.xyz / light_space_pos.w;
                 proj_coords = proj_coords * 0.5 + 0.5;

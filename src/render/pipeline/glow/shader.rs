@@ -5,8 +5,8 @@
 
 use glium::uniforms::UniformType;
 
-use crate::render::pipeline::InstanceParams;
-use crate::render::{screen_quad, shader};
+use crate::render::screen_quad;
+use crate::render::shader::{self, ToUniforms};
 
 pub const F_GLOW_COLOR: &str = "f_glow_color";
 
@@ -19,7 +19,7 @@ pub fn f_glow_color() -> shader::FragmentOutDef {
 
 /// Shader core transform for rendering color into a texture so that it can be
 /// blurred and composed for a glow effect later in the pipeline.
-pub fn glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+pub fn glow_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
     let fragment = core.fragment.with_out(f_glow_color(), "vec3(f_color)");
@@ -34,7 +34,7 @@ pub fn glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
 /// glowing objects will glow through non-glowing objects.
 ///
 /// TODO: Figure out if we can have glow be an uniform instead.
-pub fn no_glow_map_core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+pub fn no_glow_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
     let fragment = core

@@ -10,7 +10,8 @@ use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, level, BlipKind, Machine};
-use crate::render::pipeline::{wind, RenderLists};
+use crate::render::pipeline::scene::{model, wind};
+use crate::render::pipeline::RenderLists;
 use crate::render::{self, Camera, EditCameraView};
 
 #[derive(Debug, Clone)]
@@ -323,9 +324,9 @@ impl ExecView {
             }
 
             let color = render::machine::blip_color(blip.kind);
-            let instance = render::pipeline::Instance {
+            let instance = render::Instance {
                 object: render::Object::Cube,
-                params: render::pipeline::DefaultInstanceParams {
+                params: model::Params {
                     color: na::Vector4::new(color.x, color.y, color.z, 1.0),
                     transform: transform * na::Matrix4::new_scaling(size),
                     ..Default::default()

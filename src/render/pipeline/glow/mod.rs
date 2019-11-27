@@ -6,9 +6,8 @@ use glium::framebuffer::SimpleFrameBuffer;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Sampler, SamplerWrapFunction};
 use glium::{glutin, uniform, Surface};
 
-use crate::render::pipeline::{
-    CompositionPassComponent, Context, InstanceParams, RenderPass, ScenePassComponent,
-};
+use crate::render::pipeline::{CompositionPassComponent, Context, RenderPass, ScenePassComponent};
+use crate::render::shader::ToUniforms;
 use crate::render::{self, screen_quad, DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
@@ -43,7 +42,7 @@ impl RenderPass for Glow {
 }
 
 impl ScenePassComponent for Glow {
-    fn core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
         &self,
         core: render::shader::Core<(Context, P), V>,
     ) -> render::shader::Core<(Context, P), V> {
@@ -141,7 +140,7 @@ impl Glow {
         Ok(())
     }
 
-    pub fn composition_pass_uniforms(&self) -> impl glium::uniforms::Uniforms + '_ {
+    pub fn composition_pass_uniforms(&self) -> impl ToUniforms + '_ {
         uniform! {
             glow_texture: &self.glow_texture,
         }

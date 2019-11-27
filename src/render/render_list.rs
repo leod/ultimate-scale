@@ -1,13 +1,18 @@
-use crate::render::pipeline::instance::UniformsPair;
-use crate::render::pipeline::{Context, Instance, InstanceParams};
+use crate::render::shader::ToUniforms;
 use crate::render::{Object, Resources};
 
+#[derive(Clone, Debug)]
+pub struct Instance<T> {
+    pub object: Object,
+    pub params: T,
+}
+
 #[derive(Default, Clone)]
-pub struct RenderList<T: InstanceParams> {
+pub struct RenderList<T> {
     pub instances: Vec<Instance<T>>,
 }
 
-impl<T: InstanceParams> RenderList<T> {
+impl<T: Clone> RenderList<T> {
     pub fn new() -> RenderList<T> {
         Self {
             instances: Vec::new(),
@@ -25,10 +30,16 @@ impl<T: InstanceParams> RenderList<T> {
         });
     }
 
-    pub fn render_with_program<S: glium::Surface>(
+    pub fn clear(&mut self) {
+        self.instances.clear();
+    }
+}
+
+impl<T: ToUniforms> RenderList<T> {
+    pub fn render<S: glium::Surface, C: ToUniforms>(
         &self,
         resources: &Resources,
-        context: &Context,
+        context: &C,
         params: &glium::DrawParameters,
         program: &glium::Program,
         target: &mut S,
@@ -45,21 +56,17 @@ impl<T: InstanceParams> RenderList<T> {
 
         for instance in &self.instances {
             let buffers = resources.get_object_buffers(instance.object);
-            let uniforms = UniformsPair(context.uniforms(), instance.params.uniforms());
+            let uniforms = (&context, &instance.params);
 
             buffers.index_buffer.draw(
                 &buffers.vertex_buffer,
                 &program,
-                &uniforms,
+                &uniforms.to_uniforms(),
                 &params,
                 target,
             )?;
         }
 
         Ok(())
-    }
-
-    pub fn clear(&mut self) {
-        self.instances.clear();
     }
 }

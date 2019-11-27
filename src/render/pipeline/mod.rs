@@ -1,13 +1,11 @@
 pub mod deferred;
 pub mod fxaa;
 pub mod glow;
-pub mod instance;
 pub mod light;
-pub mod pass;
-pub mod render_list;
+pub mod render_pass;
+pub mod scene;
+pub mod shaders;
 pub mod shadow;
-pub mod simple;
-pub mod wind;
 
 use log::info;
 
@@ -16,18 +14,17 @@ use nalgebra as na;
 use glium::{uniform, Surface};
 
 use crate::config::ViewConfig;
-use crate::render::screen_quad::ScreenQuad;
+use crate::render::shader::ToUniforms;
 use crate::render::{self, object, screen_quad, shader, Camera, DrawError, Resources};
+use crate::render::{RenderList, ScreenQuad};
 
 use deferred::DeferredShading;
 use fxaa::FXAA;
 use glow::Glow;
 use shadow::ShadowMapping;
 
-pub use instance::{DefaultInstanceParams, Instance, InstanceParams, UniformsOption, UniformsPair};
 pub use light::Light;
-pub use pass::{CompositionPassComponent, RenderPass, ScenePassComponent};
-pub use render_list::RenderList;
+pub use render_pass::{CompositionPassComponent, RenderPass, ScenePassComponent};
 
 #[derive(Debug, Clone)]
 pub struct Context {
@@ -50,22 +47,34 @@ impl Default for Context {
     }
 }
 
+to_uniforms_impl!(
+    Context,
+    self => {
+        viewport: Vec4 => self.camera.viewport.into(),
+        mat_projection: Mat4 => self.camera.projection.into(),
+        mat_view: Mat4 => self.camera.view.into(),
+        main_light_pos: Vec3 => self.main_light_pos.coords.into(),
+        elapsed_time_secs: Float => self.elapsed_time_secs,
+        tick_progress: Float => self.tick_progress,
+    },
+);
+
 #[derive(Default, Clone)]
 pub struct RenderLists {
-    pub solid: RenderList<DefaultInstanceParams>,
-    pub wind: RenderList<wind::Params>,
-    pub solid_glow: RenderList<DefaultInstanceParams>,
+    pub solid: RenderList<scene::model::Params>,
+    pub wind: RenderList<scene::wind::Params>,
+    pub solid_glow: RenderList<scene::model::Params>,
 
     /// Transparent instances.
-    pub transparent: RenderList<DefaultInstanceParams>,
+    pub transparent: RenderList<scene::model::Params>,
 
     /// Non-shadowed instances.
-    pub plain: RenderList<DefaultInstanceParams>,
+    pub plain: RenderList<scene::model::Params>,
 
     pub lights: Vec<Light>,
 
     /// Screen-space stuff.
-    pub ortho: RenderList<DefaultInstanceParams>,
+    pub ortho: RenderList<scene::model::Params>,
 }
 
 impl RenderLists {
@@ -129,7 +138,7 @@ struct ScenePassSetup {
     glow: bool,
 }
 
-struct ScenePass<P: InstanceParams, V: glium::vertex::Vertex> {
+struct ScenePass<P: ToUniforms, V: glium::vertex::Vertex> {
     setup: ScenePassSetup,
 
     /// Currently just used as a phantom.
@@ -182,7 +191,7 @@ impl Components {
 
     fn create_scene_pass<
         F: glium::backend::Facade,
-        P: InstanceParams + Default,
+        P: ToUniforms + Clone + Default,
         V: glium::vertex::Vertex,
     >(
         &self,
@@ -191,7 +200,7 @@ impl Components {
         mut shader_core: shader::Core<(Context, P), V>,
     ) -> Result<ScenePass<P, V>, render::CreationError> {
         info!(
-            "Creating scene pass for InstanceParams={}, Vertex={}",
+            "Creating scene pass for P={}, V={}",
             std::any::type_name::<P>(),
             std::any::type_name::<V>(),
         );
@@ -214,7 +223,7 @@ impl Components {
         if let Some(deferred_shading) = self.deferred_shading.as_ref() {
             shader_core = ScenePassComponent::core_transform(deferred_shading, shader_core);
         } else {
-            shader_core = simple::diffuse_scene_core_transform(shader_core);
+            shader_core = shaders::diffuse_scene_core_transform(shader_core);
         }
 
         let program = shader_core.build_program(facade)?;
@@ -227,7 +236,7 @@ impl Components {
     }
 
     fn composition_core(&self, config: &Config) -> shader::Core<(), screen_quad::Vertex> {
-        let mut shader_core = simple::composition_core();
+        let mut shader_core = shaders::composition_core();
 
         if let Some(deferred_shading) = self.deferred_shading.as_ref() {
             shader_core = CompositionPassComponent::core_transform(deferred_shading, shader_core);
@@ -239,11 +248,11 @@ impl Components {
 
         if let Some(_) = config.hdr {
             // TODO: Use factor
-            shader_core = simple::hdr_composition_core_transform(shader_core);
+            shader_core = shaders::hdr_composition_core_transform(shader_core);
         }
 
         if let Some(gamma) = config.gamma_correction {
-            shader_core = simple::gamma_correction_composition_core_transform(shader_core, gamma);
+            shader_core = shaders::gamma_correction_composition_core_transform(shader_core, gamma);
         }
 
         shader_core
@@ -289,7 +298,7 @@ impl Components {
         textures
     }
 
-    fn scene_pass_to_surface<P: InstanceParams, V: glium::vertex::Vertex, S: glium::Surface>(
+    fn scene_pass_to_surface<P: ToUniforms, V: glium::vertex::Vertex, S: glium::Surface>(
         &self,
         resources: &Resources,
         context: &Context,
@@ -308,25 +317,23 @@ impl Components {
             ..Default::default()
         };
 
+        let shared_uniforms = (
+            context.clone(),
+            self.shadow_mapping
+                .as_ref()
+                .map(|c| c.scene_pass_uniforms(context)),
+        );
+
         // TODO: Instancing (lol)
         for instance in &render_list.instances {
             let buffers = resources.get_object_buffers(instance.object);
 
-            // TODO: Move `shared_uniforms` out of loop by having UniformsPair with refs
-            let shared_uniforms = UniformsPair(
-                context.uniforms(),
-                UniformsOption(
-                    self.shadow_mapping
-                        .as_ref()
-                        .map(|c| c.scene_pass_uniforms(context)),
-                ),
-            );
-            let uniforms = UniformsPair(shared_uniforms, instance.params.uniforms());
+            let uniforms = (&shared_uniforms, &instance.params);
 
             buffers.index_buffer.draw(
                 &buffers.vertex_buffer,
                 &pass.program,
-                &uniforms,
+                &uniforms.to_uniforms(),
                 &params,
                 target,
             )?;
@@ -335,7 +342,7 @@ impl Components {
         Ok(())
     }
 
-    fn scene_pass<F: glium::backend::Facade, P: InstanceParams, V: glium::vertex::Vertex>(
+    fn scene_pass<F: glium::backend::Facade, P: ToUniforms, V: glium::vertex::Vertex>(
         &self,
         facade: &F,
         resources: &Resources,
@@ -361,11 +368,11 @@ impl Components {
 pub struct Pipeline {
     components: Components,
 
-    scene_pass_solid: ScenePass<DefaultInstanceParams, object::Vertex>,
-    scene_pass_solid_glow: ScenePass<DefaultInstanceParams, object::Vertex>,
-    scene_pass_wind: ScenePass<wind::Params, object::Vertex>,
+    scene_pass_solid: ScenePass<scene::model::Params, object::Vertex>,
+    scene_pass_solid_glow: ScenePass<scene::model::Params, object::Vertex>,
+    scene_pass_wind: ScenePass<scene::wind::Params, object::Vertex>,
 
-    scene_pass_plain: ScenePass<DefaultInstanceParams, object::Vertex>,
+    scene_pass_plain: ScenePass<scene::model::Params, object::Vertex>,
 
     scene_color_texture: glium::texture::Texture2d,
     scene_depth_texture: glium::texture::DepthTexture2d,
@@ -393,7 +400,7 @@ impl Pipeline {
                 shadow: true,
                 glow: false,
             },
-            simple::plain_scene_core(),
+            scene::model::scene_core(),
         )?;
         let scene_pass_solid_glow = components.create_scene_pass(
             facade,
@@ -401,7 +408,7 @@ impl Pipeline {
                 shadow: true,
                 glow: true,
             },
-            simple::plain_scene_core(),
+            scene::model::scene_core(),
         )?;
         let scene_pass_wind = components.create_scene_pass(
             facade,
@@ -409,10 +416,10 @@ impl Pipeline {
                 shadow: false,
                 glow: true,
             },
-            wind::scene_core(),
+            scene::wind::scene_core(),
         )?;
 
-        let plain_core = simple::plain_scene_core();
+        let plain_core = scene::model::scene_core();
         let plain_program = plain_core
             .build_program(facade)
             .map_err(render::CreationError::from)?;
@@ -441,7 +448,7 @@ impl Pipeline {
             .map(|config| fxaa::FXAA::create(facade, config))
             .transpose()
             .map_err(CreationError::FXAA)?;
-        let copy_texture_program = simple::composition_core()
+        let copy_texture_program = shaders::composition_core()
             .build_program(facade)
             .map_err(render::CreationError::from)?;
 
@@ -579,19 +586,13 @@ impl Pipeline {
                 .as_ref()
                 .map(|c| c.composition_pass_uniforms());
 
-            let uniforms = UniformsPair(
-                color_uniform,
-                UniformsPair(
-                    UniformsOption(deferred_shading_uniforms),
-                    UniformsOption(glow_uniforms),
-                ),
-            );
+            let uniforms = (&color_uniform, &deferred_shading_uniforms, &glow_uniforms);
 
             target_buffer.draw(
                 &self.screen_quad.vertex_buffer,
                 &self.screen_quad.index_buffer,
                 &self.composition_program,
-                &uniforms,
+                &uniforms.to_uniforms(),
                 &Default::default(),
             )?;
         }
