@@ -210,7 +210,7 @@ impl Components {
                 shader_core = ScenePassComponent::core_transform(glow, shader_core);
             } else {
                 // Whoopsie there goes the abstraction, heh. All good though.
-                shader_core = glow::shader::no_glow_map_core_transform(shader_core);
+                shader_core = glow::shaders::no_glow_map_core_transform(shader_core);
             }
         }
 

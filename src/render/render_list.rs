@@ -13,12 +13,6 @@ pub struct RenderList<T> {
 }
 
 impl<T: Clone> RenderList<T> {
-    pub fn new() -> RenderList<T> {
-        Self {
-            instances: Vec::new(),
-        }
-    }
-
     pub fn add_instance(&mut self, instance: &Instance<T>) {
         self.instances.push(instance.clone());
     }
