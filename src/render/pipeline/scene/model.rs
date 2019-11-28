@@ -28,23 +28,22 @@ to_uniforms_impl!(
 );
 
 pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
-    shader::Core {
-        vertex: shader::VertexCore {
-            out_defs: vec![shader::defs::v_world_normal(), shader::defs::v_world_pos()],
-            out_exprs: shader_out_exprs! {
-                // TODO: Precompute inverse of mat_model if we ever have lots of vertices
-                shader::defs::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * normal)",
-                shader::defs::V_WORLD_POS => "mat_model * vec4(position, 1.0)",
-                shader::defs::V_POSITION => "mat_projection * mat_view * v_world_pos",
-            },
-            ..Default::default()
-        },
-        fragment: shader::FragmentCore {
-            out_defs: vec![shader::defs::f_color()],
-            out_exprs: shader_out_exprs! {
-                shader::defs::F_COLOR => "color",
-            },
-            ..Default::default()
-        },
-    }
+    let vertex = shader::VertexCore::empty()
+        .with_out(
+            // TODO: Precompute inverse of mat_model if we ever have lots of vertices
+            shader::defs::v_world_normal(),
+            "normalize(transpose(inverse(mat3(mat_model))) * normal)",
+        )
+        .with_out(
+            shader::defs::v_world_pos(),
+            "mat_model * vec4(position, 1.0)",
+        )
+        .with_out_expr(
+            shader::defs::V_POSITION,
+            "mat_projection * mat_view * v_world_pos",
+        );
+
+    let fragment = shader::FragmentCore::default().with_out(shader::defs::f_color(), "color");
+
+    shader::Core { vertex, fragment }
 }

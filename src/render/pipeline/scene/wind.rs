@@ -57,20 +57,18 @@ fn v_color() -> shader::VertexOutDef {
 }
 
 pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
-    let vertex = shader::VertexCore {
-        out_defs: vec![
-            shader::defs::v_world_normal(),
-            shader::defs::v_world_pos(),
-            v_discard(),
-            v_color(),
-        ],
-        defs: "
+    let vertex = shader::VertexCore::empty()
+        .with_defs(
+            "
             const float PI = 3.141592;
             const float radius = 0.04;
             const float scale = 0.0105;
-        "
-        .to_string(),
-        body: "
+        ",
+        )
+        .with_out_def(v_discard())
+        .with_out_def(v_color())
+        .with_body(
+            "
             float angle = (position.x + 0.5) * PI
                 + tick_progress * PI / 2.0
                 + phase;
@@ -100,29 +98,31 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
                 v_color = stripe_color;
             else
                 v_color = color;
-        "
-        .to_string(),
-        out_exprs: shader_out_exprs! {
-            shader::defs::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * rot_normal)",
-            shader::defs::V_WORLD_POS => "mat_model * vec4(scaled_pos, 1.0)",
-            shader::defs::V_POSITION => "mat_projection * mat_view * v_world_pos",
-        },
-        ..Default::default()
-    };
+        ",
+        )
+        .with_out(
+            shader::defs::v_world_normal(),
+            "normalize(transpose(inverse(mat3(mat_model))) * rot_normal)",
+        )
+        .with_out(
+            shader::defs::v_world_pos(),
+            "mat_model * vec4(scaled_pos, 1.0)",
+        )
+        .with_out_expr(
+            shader::defs::V_POSITION,
+            "mat_projection * mat_view * v_world_pos",
+        );
 
-    let fragment = shader::FragmentCore {
-        in_defs: vec![v_discard(), v_color()],
-        out_defs: vec![shader::defs::f_color()],
-        body: "
+    let fragment = shader::FragmentCore::empty()
+        .with_in_def(v_discard())
+        .with_in_def(v_color())
+        .with_body(
+            "
             if (v_discard >= 0.5)
                 discard;
-        "
-        .to_string(),
-        out_exprs: shader_out_exprs! {
-            shader::defs::F_COLOR => "v_color",
-        },
-        ..Default::default()
-    };
+        ",
+        )
+        .with_out(shader::defs::f_color(), "v_color");
 
     shader::Core { vertex, fragment }
 }

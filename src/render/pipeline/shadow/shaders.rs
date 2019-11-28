@@ -8,13 +8,8 @@ pub fn depth_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
     core: shader::Core<P, V>,
 ) -> shader::Core<P, V> {
     // Only write depth into the output, discard color output of original core
-    let fragment = shader::FragmentCore {
-        out_defs: vec![shader::defs::f_fragment_depth()],
-        out_exprs: shader_out_exprs! {
-            shader::defs::F_FRAGMENT_DEPTH => "gl_FragCoord.z",
-        },
-        ..Default::default()
-    };
+    let fragment = shader::FragmentCore::default()
+        .with_out(shader::defs::f_fragment_depth(), "gl_FragCoord.z");
 
     shader::Core {
         vertex: core.vertex,
@@ -43,7 +38,7 @@ pub fn render_shadowed_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
 
     let vertex = core
         .vertex
-        .with_extra_uniform(("mat_light_view_projection".into(), UniformType::FloatMat4))
+        .with_extra_uniform("mat_light_view_projection", UniformType::FloatMat4)
         .with_out(
             v_light_space_pos.clone(),
             // Bias shadow coord a bit in the direction of the normal --
@@ -53,7 +48,7 @@ pub fn render_shadowed_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
 
     let fragment = core
         .fragment
-        .with_extra_uniform(("shadow_map".into(), UniformType::Sampler2d))
+        .with_extra_uniform("shadow_map", UniformType::Sampler2d)
         .with_in_def(shader::defs::v_world_pos())
         .with_in_def(shader::defs::v_world_normal())
         .with_in_def(v_light_space_pos)

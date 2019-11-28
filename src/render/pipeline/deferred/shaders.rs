@@ -75,13 +75,11 @@ pub fn scene_buffers_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
 }
 
 fn light_fragment_core(have_shadows: bool) -> shader::FragmentCore<(Camera, Light)> {
-    let mut fragment = shader::FragmentCore {
-        extra_uniforms: vec![
-            ("position_texture".into(), UniformType::Sampler2d),
-            ("normal_texture".into(), UniformType::Sampler2d),
-        ],
-        out_defs: vec![shader::defs::f_color()],
-        body: "
+    let mut fragment = shader::FragmentCore::empty()
+        .with_extra_uniform("position_texture", UniformType::Sampler2d)
+        .with_extra_uniform("normal_texture", UniformType::Sampler2d)
+        .with_body(
+            "
             vec2 tex_coord = gl_FragCoord.xy / viewport.zw;
 
             vec4 position = texture(position_texture, tex_coord);
@@ -103,17 +101,13 @@ fn light_fragment_core(have_shadows: bool) -> shader::FragmentCore<(Camera, Ligh
             diffuse *= attenuation;
 
             float radiance = diffuse;
-        "
-        .into(),
-        out_exprs: shader_out_exprs! {
-            shader::defs::F_COLOR => "vec4(light_color * radiance, 1.0)",
-        },
-        ..Default::default()
-    };
+        ",
+        )
+        .with_out(shader::defs::f_color(), "vec4(light_color * radiance, 1.0)");
 
     if have_shadows {
         fragment = fragment
-            .with_extra_uniform(("shadow_texture".into(), UniformType::Sampler2d))
+            .with_extra_uniform("shadow_texture", UniformType::Sampler2d)
             .with_body(
                 "
                 if (light_is_main) {
@@ -131,12 +125,7 @@ fn light_fragment_core(have_shadows: bool) -> shader::FragmentCore<(Camera, Ligh
 pub fn light_screen_quad_core(
     have_shadows: bool,
 ) -> shader::Core<(Camera, Light), screen_quad::Vertex> {
-    let vertex = shader::VertexCore {
-        out_exprs: shader_out_exprs! {
-            shader::defs::V_POSITION => "position",
-        },
-        ..Default::default()
-    };
+    let vertex = shader::VertexCore::default().with_out_expr(shader::defs::V_POSITION, "position");
 
     shader::Core {
         vertex,
@@ -145,16 +134,14 @@ pub fn light_screen_quad_core(
 }
 
 pub fn light_object_core(have_shadows: bool) -> shader::Core<(Camera, Light), object::Vertex> {
-    let vertex = shader::VertexCore {
-        out_exprs: shader_out_exprs! {
-            shader::defs::V_POSITION => "
-                mat_projection
-                * mat_view
-                * (vec4(position * light_radius, 1.0) + vec4(light_position, 0))
-            ",
-        },
-        ..Default::default()
-    };
+    let vertex = shader::VertexCore::default().with_out_expr(
+        shader::defs::V_POSITION,
+        "
+            mat_projection
+            * mat_view
+            * (vec4(position * light_radius, 1.0) + vec4(light_position, 0))
+        ",
+    );
 
     shader::Core {
         vertex,
@@ -180,7 +167,7 @@ pub fn composition_core_transform(
 
     let fragment = core
         .fragment
-        .with_extra_uniform(("light_texture".into(), UniformType::Sampler2d))
+        .with_extra_uniform("light_texture", UniformType::Sampler2d)
         .with_out_expr(
             shader::defs::F_COLOR,
             &format!("f_color * vec4({} + {}, 1.0)", light_expr, ambient_expr),

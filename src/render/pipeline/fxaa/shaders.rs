@@ -300,14 +300,9 @@ const BODY_FINISH: &str = "
 ";
 
 pub fn postprocessing_core(exploration_offsets: &[f32]) -> shader::Core<(), screen_quad::Vertex> {
-    let vertex = shader::VertexCore {
-        out_defs: vec![shader::defs::v_tex_coord()],
-        out_exprs: shader_out_exprs! {
-            shader::defs::V_TEX_COORD => "tex_coord",
-            shader::defs::V_POSITION => "position",
-        },
-        ..Default::default()
-    };
+    let vertex = shader::VertexCore::empty()
+        .with_out(shader::defs::v_tex_coord(), "tex_coord")
+        .with_out_expr(shader::defs::V_POSITION, "position");
 
     if exploration_offsets.len() < 3 {
         panic!("exploration_offsets must contain at least three members");
@@ -331,17 +326,15 @@ pub fn postprocessing_core(exploration_offsets: &[f32]) -> shader::Core<(), scre
 
     body += &BODY_FINISH;
 
-    let fragment = shader::FragmentCore {
-        extra_uniforms: vec![("input_texture".into(), UniformType::Sampler2d)],
-        defs: DEFS.into(),
-        in_defs: vec![shader::defs::v_tex_coord()],
-        out_defs: vec![shader::defs::f_color()],
-        body,
-        out_exprs: shader_out_exprs! {
-            shader::defs::F_COLOR => "vec4(texture(input_texture, final_tex_coord).rgb, 1.0)",
-        },
-        ..Default::default()
-    };
+    let fragment = shader::FragmentCore::empty()
+        .with_extra_uniform("input_texture", UniformType::Sampler2d)
+        .with_defs(DEFS)
+        .with_in_def(shader::defs::v_tex_coord())
+        .with_body(&body)
+        .with_out(
+            shader::defs::f_color(),
+            "vec4(texture(input_texture, final_tex_coord).rgb, 1.0)",
+        );
 
     shader::Core { vertex, fragment }
 }

@@ -49,14 +49,9 @@ pub fn no_glow_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
 
 /// Shader core for blurring the glow texture.
 pub fn blur_core() -> shader::Core<(), screen_quad::Vertex> {
-    let vertex = shader::VertexCore {
-        out_defs: vec![shader::defs::v_tex_coord()],
-        out_exprs: shader_out_exprs! {
-            shader::defs::V_TEX_COORD => "tex_coord",
-            shader::defs::V_POSITION => "position",
-        },
-        ..Default::default()
-    };
+    let vertex = shader::VertexCore::empty()
+        .with_out(shader::defs::v_tex_coord(), "tex_coord")
+        .with_out_expr(shader::defs::V_POSITION, "position");
 
     let defs = "
 		float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
@@ -101,20 +96,13 @@ pub fn blur_core() -> shader::Core<(), screen_quad::Vertex> {
         }
     ";
 
-    let fragment = shader::FragmentCore {
-        extra_uniforms: vec![
-            ("horizontal".into(), UniformType::Bool),
-            ("glow_texture".into(), UniformType::Sampler2d),
-        ],
-        in_defs: vec![shader::defs::v_tex_coord()],
-        out_defs: vec![shader::defs::f_color()],
-        defs: defs.into(),
-        body: body.into(),
-        out_exprs: shader_out_exprs! {
-            shader::defs::F_COLOR => "vec4(blur_result, 1.0)",
-        },
-        ..Default::default()
-    };
+    let fragment = shader::FragmentCore::empty()
+        .with_extra_uniform("horizontal", UniformType::Bool)
+        .with_extra_uniform("glow_texture", UniformType::Sampler2d)
+        .with_in_def(shader::defs::v_tex_coord())
+        .with_defs(defs)
+        .with_body(body)
+        .with_out(shader::defs::f_color(), "vec4(blur_result, 1.0)");
 
     shader::Core { vertex, fragment }
 }
@@ -134,7 +122,7 @@ pub fn composition_core_transform(
 
     let fragment = core
         .fragment
-        .with_extra_uniform(("glow_texture".into(), UniformType::Sampler2d))
+        .with_extra_uniform("glow_texture".into(), UniformType::Sampler2d)
         .with_out_expr(
             shader::defs::F_COLOR,
             "f_color + vec4(texture(glow_texture, v_tex_coord).rgb, 0.0)",
