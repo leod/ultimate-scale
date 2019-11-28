@@ -10,9 +10,8 @@ use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, level, BlipKind, Machine};
-use crate::render::pipeline::scene::{model, wind};
 use crate::render::pipeline::RenderLists;
-use crate::render::{self, Camera, EditCameraView};
+use crate::render::{self, scene, Camera, EditCameraView};
 
 #[derive(Debug, Clone)]
 pub struct Config {}
@@ -187,7 +186,7 @@ impl ExecView {
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
             out.wind.add(
                 render::Object::TessellatedCylinder,
-                &wind::Params {
+                &scene::wind::Params {
                     transform,
                     color,
                     stripe_color,
@@ -326,7 +325,7 @@ impl ExecView {
             let color = render::machine::blip_color(blip.kind);
             let instance = render::Instance {
                 object: render::Object::Cube,
-                params: model::Params {
+                params: scene::model::Params {
                     color: na::Vector4::new(color.x, color.y, color.z, 1.0),
                     transform: transform * na::Matrix4::new_scaling(size),
                     ..Default::default()

@@ -139,7 +139,7 @@ impl Game {
             }
         };
 
-        let render_context = render::pipeline::Context {
+        let render_context = render::Context {
             camera: self.camera.clone(),
             elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
             tick_progress: self
@@ -186,7 +186,7 @@ impl Game {
             view: na::Matrix4::identity(),
             ..self.camera.clone()
         };
-        let ortho_render_context = render::pipeline::Context {
+        let ortho_render_context = render::Context {
             camera: ortho_camera,
             ..render_context
         };

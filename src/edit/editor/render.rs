@@ -4,9 +4,8 @@ use crate::edit::{Editor, Mode, Piece};
 use crate::exec::TickTime;
 use crate::machine::grid;
 use crate::machine::{Block, PlacedBlock};
-use crate::render;
-use crate::render::pipeline::scene::model;
 use crate::render::pipeline::RenderLists;
+use crate::render::{self, scene};
 
 pub const GRID_OFFSET_Z: f32 = 0.01;
 pub const GRID_OFFSET_2_Z: f32 = 0.02;
@@ -79,7 +78,7 @@ impl Editor {
                         ));
                 out.ortho.add(
                     render::Object::Quad,
-                    &model::Params {
+                    &scene::model::Params {
                         transform: rect_transform,
                         color: na::Vector4::new(0.3, 0.3, 0.9, 0.3),
                         ..Default::default()

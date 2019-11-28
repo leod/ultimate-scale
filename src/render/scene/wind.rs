@@ -1,7 +1,6 @@
 use nalgebra as na;
 
-use crate::render::pipeline::Context;
-use crate::render::{object, shader};
+use crate::render::{object, shader, Context};
 
 #[derive(Debug, Clone)]
 pub struct Params {
