@@ -140,24 +140,6 @@ impl ExecView {
 
         self.render_blocks(time, out);
         self.render_blips(time, out);
-
-        // Draw a box around the picked block position. This turned out to be a
-        // bit annoying during actual execution, so I've disabled it for now.
-        /*if let Some(mouse_block_pos) = self.mouse_block_pos {
-            assert!(self.exec.machine().is_valid_pos(&mouse_block_pos));
-
-            let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
-
-            machine::render::render_cuboid_wireframe(
-                &machine::render::Cuboid {
-                    center: mouse_block_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
-                    size: na::Vector3::new(1.0, 1.0, 1.0),
-                },
-                0.015,
-                &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                &mut out.plain,
-            );
-        }*/
     }
 
     fn render_wind(
@@ -245,25 +227,6 @@ impl ExecView {
     }
 
     fn blip_spawn_size_animation(t: f32) -> f32 {
-        /*if t < 0.75 {
-            0.0
-        } else {
-            (t - 0.75) * 4.0
-        }*/
-
-        // Periodic cubic spline interpolation of these points:
-        //  0 0
-        //  0.75 1.1
-        //  1 1
-        //
-        // Using this tool:
-        //     https://tools.timodenk.com/cubic-spline-interpolation
-        /*if t <= 0.75 {
-            -4.9778 * t.powi(3) + 5.6 * t.powi(2) + 0.06667 * t
-        } else {
-            14.933 * t.powi(3) - 39.2 * t.powi(2) + 33.667 * t - 8.4
-        }*/
-
         // Natural cubic spline interpolation of these points:
         //  0 0
         //  0.4 0.3
@@ -340,7 +303,6 @@ impl ExecView {
             );
 
             out.solid_glow.add_instance(&instance);
-            //out.solid.add_instance(&instance);
 
             out.lights.push(Light {
                 position: pos,
