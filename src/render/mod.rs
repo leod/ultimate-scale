@@ -4,7 +4,6 @@ pub mod camera;
 pub mod error;
 pub mod fxaa;
 pub mod instancing;
-pub mod machine;
 pub mod object;
 pub mod pipeline;
 pub mod render_list;

@@ -12,7 +12,7 @@ use crate::edit::Editor;
 use crate::exec::play::{self, Play};
 use crate::exec::{Exec, ExecView, LevelStatus};
 use crate::input_state::InputState;
-use crate::machine::{level, Block, Machine};
+use crate::machine::{self, level, Block, Machine};
 use crate::util::stats;
 
 use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
@@ -493,7 +493,7 @@ impl Game {
 
             match input {
                 Some(level::Input::Blip(kind)) => {
-                    let color: [f32; 3] = render::machine::blip_color(kind).into();
+                    let color: [f32; 3] = machine::render::blip_color(kind).into();
                     let cursor_pos = ui.cursor_screen_pos();
 
                     let border_a = [cursor_pos[0] - border_margin, cursor_pos[1] - border_margin];

@@ -1,5 +1,6 @@
 pub mod grid;
 pub mod level;
+pub mod render;
 
 use std::fmt;
 
