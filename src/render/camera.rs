@@ -48,17 +48,7 @@ pub struct Camera {
     pub view: na::Matrix4<f32>,
 }
 
-impl Default for Camera {
-    fn default() -> Self {
-        Camera {
-            viewport: na::Vector4::zeros(),
-            projection: na::Matrix4::identity(),
-            view: na::Matrix4::zeros(),
-        }
-    }
-}
-
-impl_to_uniforms!(
+impl_uniform_input!(
     Camera,
     self => {
         viewport: Vec4 => self.viewport.into(),

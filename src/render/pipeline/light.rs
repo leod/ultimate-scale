@@ -9,7 +9,7 @@ pub struct Light {
     pub radius: f32,
 }
 
-impl_to_uniforms!(
+impl_uniform_input!(
     Light,
     self => {
         light_position: Vec3 => self.position.coords.into(),
