@@ -125,15 +125,15 @@ impl ShadowMapping {
         render_lists.solid.render(
             resources,
             &light_context,
-            &Default::default(),
             &self.shadow_map_program,
+            &Default::default(),
             &mut shadow_target,
         )?;
         render_lists.solid_glow.render(
             resources,
             &light_context,
-            &Default::default(),
             &self.shadow_map_program,
+            &Default::default(),
             &mut shadow_target,
         )?;
 

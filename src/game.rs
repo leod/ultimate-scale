@@ -193,8 +193,8 @@ impl Game {
         self.render_lists.ortho.render(
             &self.resources,
             &ortho_render_context,
-            &ortho_parameters,
             &self.resources.plain_program,
+            &ortho_parameters,
             target,
         )?;
 

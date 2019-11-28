@@ -24,9 +24,9 @@ pub trait ToUniforms {
 }
 
 pub trait ToVertex {
-    type V: glium::vertex::Vertex;
+    type Vertex: glium::vertex::Vertex;
 
-    fn to_vertex(&self) -> Self::V;
+    fn to_vertex(&self) -> Self::Vertex;
 }
 
 pub trait UniformInput: ToUniforms {
@@ -117,10 +117,10 @@ macro_rules! impl_to_vertex {
         implement_vertex!(MyVertex, $($field,)*);
 
         impl $crate::render::shader::ToVertex for $ty {
-            type V = MyVertex;
+            type Vertex = MyVertex;
 
-            fn to_vertex(&$this) -> Self::V {
-                Self::V {
+            fn to_vertex(&$this) -> Self::Vertex {
+                Self::Vertex {
                     $(
                         $field: $value,
                     )*
