@@ -472,16 +472,19 @@ pub fn render_block(
                         1.0
                     };
 
-                let scaling =
-                    na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(size, size, size));
+                let cube_transform = translation * transform;
+                let scaling = na::Vector3::new(size, size, size);
+                    
                 out.solid.add(
                     Object::Cube,
                     &model::Params {
-                        transform: translation * transform * scaling,
+                        transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                         color,
                         ..Default::default()
                     },
                 );
+
+                render_outline(&cube_transform, &scaling, alpha, out);
             }
         }
         Block::PipeMergeXY => {
