@@ -474,7 +474,7 @@ pub fn render_block(
 
                 let cube_transform = translation * transform;
                 let scaling = na::Vector3::new(size, size, size);
-                    
+
                 out.solid.add(
                     Object::Cube,
                     &model::Params {

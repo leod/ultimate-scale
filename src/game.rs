@@ -13,6 +13,7 @@ use crate::exec::play::{self, Play};
 use crate::exec::{Exec, ExecView, LevelStatus};
 use crate::input_state::InputState;
 use crate::machine::{level, Block, Machine};
+use crate::util::stats;
 
 use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
 use crate::render::pipeline::{fxaa, RenderLists};
@@ -39,9 +40,11 @@ pub struct Game {
     inputs_outputs_example: Option<(level::InputsOutputs, Option<InputsOutputsProgress>)>,
 
     elapsed_time: Duration,
-    fps: f32,
+    fps: stats::Variable,
 
     show_config_ui: bool,
+    show_debug_ui: bool,
+
     recreate_render_pipeline: bool,
 }
 
@@ -92,8 +95,9 @@ impl Game {
             exec: None,
             inputs_outputs_example,
             elapsed_time: Default::default(),
-            fps: 0.0,
+            fps: stats::Variable::new(Duration::from_secs(1)),
             show_config_ui: false,
+            show_debug_ui: false,
             recreate_render_pipeline: false,
         })
     }
@@ -204,7 +208,8 @@ impl Game {
     pub fn update(&mut self, dt: Duration, input_state: &InputState) {
         self.elapsed_time += dt;
         let dt_secs = dt.as_fractional_secs() as f32;
-        self.fps = 1.0 / dt_secs;
+
+        self.fps.record(1.0 / dt_secs);
 
         // Update play status
         let play_status = self
@@ -347,6 +352,21 @@ impl Game {
                     if ui.button(im_str!("Apply"), [80.0, 20.0]) {
                         self.recreate_render_pipeline = true;
                     }
+                });
+        }
+
+        if self.show_debug_ui {
+            imgui::Window::new(im_str!("Debug"))
+                .horizontal_scrollbar(true)
+                .position([window_size.x, 300.0], imgui::Condition::FirstUseEver)
+                .position_pivot([1.0, 0.0])
+                .always_auto_resize(true)
+                .bg_alpha(0.8)
+                .build(&ui, || {
+                    ui.text(&ImString::new(format!(
+                        "FPS: {:.1}",
+                        self.fps.recent_average()
+                    )));
                 });
         }
 
@@ -518,9 +538,13 @@ impl Game {
     pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {
         if let glutin::WindowEvent::KeyboardInput { input, .. } = event {
             if input.state == glutin::ElementState::Pressed
-                && input.virtual_keycode == Some(glutin::VirtualKeyCode::P)
+                && input.virtual_keycode == Some(glutin::VirtualKeyCode::F5)
             {
                 self.show_config_ui = !self.show_config_ui;
+            } else if input.state == glutin::ElementState::Pressed
+                && input.virtual_keycode == Some(glutin::VirtualKeyCode::F6)
+            {
+                self.show_debug_ui = !self.show_debug_ui;
             }
         }
 
