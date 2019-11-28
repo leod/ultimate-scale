@@ -325,11 +325,11 @@ impl<
     }
 }
 
-impl<
-        P: ToUniforms + Clone + Default,
-        I: ToUniforms + Clone + Default,
-        V: glium::vertex::Vertex,
-    > Core<P, I, V>
+impl<P, I, V> Core<P, I, V>
+where
+    P: ToUniforms + Clone + Default,
+    I: ToUniforms + Clone + Default,
+    V: glium::vertex::Vertex,
 {
     pub fn build_program<F: glium::backend::Facade>(
         &self,
@@ -339,8 +339,11 @@ impl<
     }
 }
 
-impl<P: ToUniforms + Default, I: ToUniforms + Clone + Default, V: glium::vertex::Vertex>
-    LinkedCore<P, I, V>
+impl<P, I, V> LinkedCore<P, I, V>
+where
+    P: ToUniforms + Default,
+    I: ToUniforms + Clone + Default,
+    V: glium::vertex::Vertex,
 {
     pub fn build_program<F: glium::backend::Facade>(
         &self,
@@ -502,8 +505,11 @@ fn compile_vertex_attributes<V: glium::vertex::Vertex>() -> String {
     compile_variable_defs("in", attributes.iter().cloned())
 }
 
-impl<P: ToUniforms + Default, I: ToUniforms + Default, V: glium::vertex::Vertex>
-    VertexCore<P, I, V>
+impl<P, I, V> VertexCore<P, I, V>
+where
+    P: ToUniforms + Default,
+    I: ToUniforms + Default,
+    V: glium::vertex::Vertex,
 {
     pub fn compile(&self) -> String {
         let mut s = String::new();
@@ -534,7 +540,10 @@ impl<P: ToUniforms + Default, I: ToUniforms + Default, V: glium::vertex::Vertex>
     }
 }
 
-impl<P: ToUniforms + Default> FragmentCore<P> {
+impl<P> FragmentCore<P>
+where
+    P: ToUniforms + Default,
+{
     pub fn compile(&self) -> String {
         let mut s = String::new();
 
