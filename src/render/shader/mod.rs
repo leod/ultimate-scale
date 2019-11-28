@@ -12,7 +12,7 @@ use glsl::visitor::Host;
 use glium::uniforms::{UniformType, UniformValue, Uniforms};
 use glium::vertex::AttributeType;
 
-pub use input::ToUniforms;
+pub use input::{ToUniforms, ToVertex};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VertexOutQualifier {

@@ -19,7 +19,7 @@ impl Default for Params {
     }
 }
 
-to_uniforms_impl!(
+instance_input_impl!(
     Params,
     self => {
         mat_model: Mat4 => self.transform.into(),
