@@ -439,6 +439,46 @@ pub fn render_outline(
     }
 }
 
+pub fn render_pulsator(
+    tick_time: &TickTime,
+    wind_anim_state: &Option<WindAnimState>,
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    color: &na::Vector4<f32>,
+    out: &mut RenderLists,
+) {
+    let size = 2.5
+        * PIPE_THICKNESS
+        * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
+            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0
+            {
+                1.0 + 0.08
+                    * (tick_time.tick_progress() * std::f32::consts::PI)
+                        .sin()
+                        .powf(2.0)
+            } else {
+                1.0
+            }
+        } else {
+            1.0
+        };
+
+    let translation = na::Matrix4::new_translation(&center.coords);
+    let cube_transform = translation * transform;
+    let scaling = na::Vector3::new(size, size, size);
+
+    out.solid.add(
+        Object::Cube,
+        &model::Params {
+            transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+            color: *color,
+            ..Default::default()
+        },
+    );
+
+    render_outline(&cube_transform, &scaling, color.w, out);
+}
+
 pub fn render_block(
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
@@ -459,38 +499,18 @@ pub fn render_block(
 
             // Pulsator to hide our shame of wind direction change
             if dir_a.0 != dir_b.0 {
-                let size = 2.5
-                    * PIPE_THICKNESS
-                    * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
-                        if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0
-                        {
-                            1.0 + 0.05
-                                * (tick_time.tick_progress() * std::f32::consts::PI)
-                                    .sin()
-                                    .powf(2.0)
-                        } else {
-                            1.0
-                        }
-                    } else {
-                        1.0
-                    };
-
-                let cube_transform = translation * transform;
-                let scaling = na::Vector3::new(size, size, size);
-
-                out.solid.add(
-                    Object::Cube,
-                    &model::Params {
-                        transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
-                        color,
-                        ..Default::default()
-                    },
+                render_pulsator(
+                    tick_time,
+                    wind_anim_state,
+                    center,
+                    transform,
+                    &color,
+                    out,
                 );
-
-                render_outline(&cube_transform, &scaling, alpha, out);
             }
         }
         Block::PipeMergeXY => {
+            let color = block_color(&pipe_color(), alpha);
             let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
                 PIPE_THICKNESS,
                 1.0,
@@ -501,20 +521,29 @@ pub fn render_block(
                 Object::Cube,
                 &model::Params {
                     transform: translation * transform * scaling,
-                    color: block_color(&pipe_color(), alpha),
+                    color,
                     ..Default::default()
                 },
             );
 
-            let transform = transform
+            let rot_transform = transform
                 * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
             out.solid.add(
                 Object::Cube,
                 &model::Params {
-                    transform: translation * transform * scaling,
-                    color: block_color(&pipe_color(), alpha),
+                    transform: translation * rot_transform * scaling,
+                    color,
                     ..Default::default()
                 },
+            );
+
+            render_pulsator(
+                tick_time,
+                wind_anim_state,
+                center,
+                transform,
+                &color,
+                out,
             );
         }
         Block::FunnelXY { flow_dir } => {
