@@ -12,7 +12,7 @@ use nalgebra as na;
 use glium::{uniform, Surface};
 
 use crate::render::pipeline::{self, Context, RenderLists, RenderPass, ScenePassComponent};
-use crate::render::shader::ToUniforms;
+use crate::render::shader::{self, ToUniforms};
 use crate::render::{self, Camera, DrawError, Resources};
 
 pub use crate::render::CreationError;
@@ -70,7 +70,7 @@ impl ShadowMapping {
         info!("Creating shadow map program");
         let shadow_map_program = shaders::depth_map_core_transform(
             pipeline::scene::model::scene_core(),
-        ).build_program(facade)?;
+        ).build_program(facade, shader::InstanceMode::Uniforms)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
             facade,

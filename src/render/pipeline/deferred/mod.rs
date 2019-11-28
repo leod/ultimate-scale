@@ -14,7 +14,7 @@ use glium::{glutin, uniform, Surface};
 use crate::render::pipeline::{
     CompositionPassComponent, Context, Light, RenderPass, ScenePassComponent,
 };
-use crate::render::shader::ToUniforms;
+use crate::render::shader::{self, ToUniforms};
 use crate::render::{self, screen_quad, Camera, DrawError, Object, Resources, ScreenQuad};
 
 pub use crate::render::CreationError;
@@ -106,9 +106,11 @@ impl DeferredShading {
 
         info!("Creating deferred light programs");
         let light_screen_quad_core = shaders::light_screen_quad_core(have_shadows);
-        let light_screen_quad_program = light_screen_quad_core.build_program(facade)?;
+        let light_screen_quad_program =
+            light_screen_quad_core.build_program(facade, shader::InstanceMode::Uniforms)?;
         let light_object_core = shaders::light_object_core(have_shadows);
-        let light_object_program = light_object_core.build_program(facade)?;
+        let light_object_program =
+            light_object_core.build_program(facade, shader::InstanceMode::Uniforms)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;

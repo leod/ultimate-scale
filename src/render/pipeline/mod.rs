@@ -215,7 +215,7 @@ impl Components {
             shader_core = shaders::diffuse_scene_core_transform(shader_core);
         }
 
-        let program = shader_core.build_program(facade)?;
+        let program = shader_core.build_program(facade, shader::InstanceMode::Uniforms)?;
 
         Ok(ScenePass {
             setup,
@@ -420,7 +420,7 @@ impl Pipeline {
 
         let plain_core = scene::model::scene_core();
         let plain_program = plain_core
-            .build_program(facade)
+            .build_program(facade, shader::InstanceMode::Uniforms)
             .map_err(render::CreationError::from)?;
         let scene_pass_plain = ScenePass {
             setup: ScenePassSetup {
@@ -437,7 +437,7 @@ impl Pipeline {
 
         let composition_core = components.composition_core(config);
         let composition_program = composition_core
-            .build_program(facade)
+            .build_program(facade, shader::InstanceMode::Uniforms)
             .map_err(render::CreationError::from)?;
         let composition_texture = Self::create_color_texture(facade, rounded_size)?;
 
@@ -448,7 +448,7 @@ impl Pipeline {
             .transpose()
             .map_err(CreationError::FXAA)?;
         let copy_texture_program = shaders::composition_core()
-            .build_program(facade)
+            .build_program(facade, shader::InstanceMode::Uniforms)
             .map_err(render::CreationError::from)?;
 
         info!("Creating screen quad");
