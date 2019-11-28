@@ -450,8 +450,7 @@ pub fn render_pulsator(
     let size = 2.5
         * PIPE_THICKNESS
         * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
-            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0
-            {
+            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
                 1.0 + 0.08
                     * (tick_time.tick_progress() * std::f32::consts::PI)
                         .sin()
@@ -499,14 +498,7 @@ pub fn render_block(
 
             // Pulsator to hide our shame of wind direction change
             if dir_a.0 != dir_b.0 {
-                render_pulsator(
-                    tick_time,
-                    wind_anim_state,
-                    center,
-                    transform,
-                    &color,
-                    out,
-                );
+                render_pulsator(tick_time, wind_anim_state, center, transform, &color, out);
             }
         }
         Block::PipeMergeXY => {
@@ -537,14 +529,7 @@ pub fn render_block(
                 },
             );
 
-            render_pulsator(
-                tick_time,
-                wind_anim_state,
-                center,
-                transform,
-                &color,
-                out,
-            );
+            render_pulsator(tick_time, wind_anim_state, center, transform, &color, out);
         }
         Block::FunnelXY { flow_dir } => {
             let (pitch, yaw) = flow_dir.invert().to_pitch_yaw_x();
