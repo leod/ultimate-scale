@@ -9,14 +9,13 @@ use glium::glutin;
 
 use crate::config::{self, Config};
 use crate::edit::Editor;
+use crate::edit_camera_view::{EditCameraView, EditCameraViewInput};
 use crate::exec::play::{self, Play};
 use crate::exec::{Exec, ExecView, LevelStatus};
 use crate::input_state::InputState;
 use crate::machine::{self, level, Block, Machine};
+use crate::render::{self, fxaa, resources, Camera, Light, RenderLists, Resources};
 use crate::util::stats;
-
-use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
-use crate::render::{self, fxaa, resources, Light, RenderLists, Resources};
 
 pub struct Game {
     config: Config,
