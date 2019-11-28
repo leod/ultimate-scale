@@ -7,7 +7,7 @@ use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Sampler, Sample
 use glium::{glutin, uniform, Surface};
 
 use crate::render::pipeline::{CompositionPassComponent, Context, RenderPass, ScenePassComponent};
-use crate::render::shader::ToUniforms;
+use crate::render::shader::{self, ToUniforms};
 use crate::render::{self, screen_quad, DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
@@ -74,7 +74,8 @@ impl Glow {
         let glow_texture_back = Self::create_texture(facade, rounded_size)?;
 
         info!("Creating blur program");
-        let blur_program = shaders::blur_core().build_program(facade)?;
+        let blur_program =
+            shaders::blur_core().build_program(facade, shader::InstanceMode::Uniforms)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;

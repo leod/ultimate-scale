@@ -5,7 +5,7 @@ use log::info;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Sampler, SamplerWrapFunction};
 use glium::{uniform, Program, Surface, Texture2d};
 
-use crate::render::{DrawError, ScreenQuad};
+use crate::render::{shader, DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
 
@@ -52,7 +52,7 @@ impl FXAA {
         info!("Creating FXAA program");
         let core = shaders::postprocessing_core(config.quality.exploration_offsets());
 
-        let program = core.build_program(facade)?;
+        let program = core.build_program(facade, shader::InstanceMode::Uniforms)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;

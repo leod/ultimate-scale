@@ -3,7 +3,7 @@ use log::info;
 use num_traits::ToPrimitive;
 
 use crate::render::object::{Object, ObjectBuffers};
-use crate::render::pipeline;
+use crate::render::{pipeline, shader};
 
 pub use crate::render::CreationError;
 
@@ -26,7 +26,8 @@ impl Resources {
         }
 
         info!("Creating plain render program");
-        let plain_program = pipeline::scene::model::scene_core().build_program(facade)?;
+        let plain_program = pipeline::scene::model::scene_core()
+            .build_program(facade, shader::InstanceMode::Uniforms)?;
 
         Ok(Resources {
             object_buffers,
