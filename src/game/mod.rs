@@ -190,7 +190,6 @@ impl Game {
             ..render_context
         };
         let ortho_parameters = glium::DrawParameters {
-            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             blend: glium::draw_parameters::Blend::alpha_blending(),
             ..Default::default()
         };
