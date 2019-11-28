@@ -47,7 +47,7 @@ impl Default for Context {
     }
 }
 
-to_uniforms_impl!(
+impl_to_uniforms!(
     Context,
     self => {
         viewport: Vec4 => self.camera.viewport.into(),
@@ -138,12 +138,12 @@ struct ScenePassSetup {
     glow: bool,
 }
 
-struct ScenePass<P: ToUniforms, V: glium::vertex::Vertex> {
+struct ScenePass<I: ToUniforms, V: glium::vertex::Vertex> {
     setup: ScenePassSetup,
 
     /// Currently just used as a phantom.
     #[allow(dead_code)]
-    shader_core: shader::Core<(Context, P), V>,
+    shader_core: shader::Core<Context, I, V>,
 
     program: glium::Program,
 }
@@ -191,17 +191,17 @@ impl Components {
 
     fn create_scene_pass<
         F: glium::backend::Facade,
-        P: ToUniforms + Clone + Default,
+        I: ToUniforms + Clone + Default,
         V: glium::vertex::Vertex,
     >(
         &self,
         facade: &F,
         setup: ScenePassSetup,
-        mut shader_core: shader::Core<(Context, P), V>,
-    ) -> Result<ScenePass<P, V>, render::CreationError> {
+        mut shader_core: shader::Core<Context, I, V>,
+    ) -> Result<ScenePass<I, V>, render::CreationError> {
         info!(
-            "Creating scene pass for P={}, V={}",
-            std::any::type_name::<P>(),
+            "Creating scene pass for I={}, V={}",
+            std::any::type_name::<I>(),
             std::any::type_name::<V>(),
         );
 
@@ -235,7 +235,7 @@ impl Components {
         })
     }
 
-    fn composition_core(&self, config: &Config) -> shader::Core<(), screen_quad::Vertex> {
+    fn composition_core(&self, config: &Config) -> shader::Core<(), (), screen_quad::Vertex> {
         let mut shader_core = shaders::composition_core();
 
         if let Some(deferred_shading) = self.deferred_shading.as_ref() {
@@ -298,12 +298,12 @@ impl Components {
         textures
     }
 
-    fn scene_pass_to_surface<P: ToUniforms, V: glium::vertex::Vertex, S: glium::Surface>(
+    fn scene_pass_to_surface<I: ToUniforms, V: glium::vertex::Vertex, S: glium::Surface>(
         &self,
         resources: &Resources,
         context: &Context,
-        pass: &ScenePass<P, V>,
-        render_list: &RenderList<P>,
+        pass: &ScenePass<I, V>,
+        render_list: &RenderList<I>,
         target: &mut S,
     ) -> Result<(), DrawError> {
         let params = glium::DrawParameters {
@@ -342,13 +342,13 @@ impl Components {
         Ok(())
     }
 
-    fn scene_pass<F: glium::backend::Facade, P: ToUniforms, V: glium::vertex::Vertex>(
+    fn scene_pass<F: glium::backend::Facade, I: ToUniforms, V: glium::vertex::Vertex>(
         &self,
         facade: &F,
         resources: &Resources,
         context: &Context,
-        pass: &ScenePass<P, V>,
-        render_list: &RenderList<P>,
+        pass: &ScenePass<I, V>,
+        render_list: &RenderList<I>,
         color_texture: &glium::texture::Texture2d,
         depth_texture: &glium::texture::DepthTexture2d,
     ) -> Result<(), DrawError> {

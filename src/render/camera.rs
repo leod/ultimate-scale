@@ -58,7 +58,7 @@ impl Default for Camera {
     }
 }
 
-to_uniforms_impl!(
+impl_to_uniforms!(
     Camera,
     self => {
         viewport: Vec4 => self.viewport.into(),

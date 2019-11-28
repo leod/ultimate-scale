@@ -1,16 +1,15 @@
 use crate::render::pipeline::Context;
-use crate::render::shader::{self, ToUniforms};
-use crate::render::{screen_quad, DrawError};
+use crate::render::{screen_quad, shader, DrawError};
 
 pub trait RenderPass {
     fn clear_buffers<F: glium::backend::Facade>(&self, facade: &F) -> Result<(), DrawError>;
 }
 
 pub trait ScenePassComponent {
-    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
+    fn core_transform<I, V>(
         &self,
-        core: shader::Core<(Context, P), V>,
-    ) -> shader::Core<(Context, P), V>;
+        core: shader::Core<Context, I, V>,
+    ) -> shader::Core<Context, I, V>;
 
     fn output_textures(&self) -> Vec<(&'static str, &glium::texture::Texture2d)> {
         Vec::new()
@@ -32,8 +31,8 @@ pub trait ScenePassComponent {
 pub trait CompositionPassComponent {
     fn core_transform(
         &self,
-        core: shader::Core<(), screen_quad::Vertex>,
-    ) -> shader::Core<(), screen_quad::Vertex>;
+        core: shader::Core<(), (), screen_quad::Vertex>,
+    ) -> shader::Core<(), (), screen_quad::Vertex>;
 
     // Due to the same reason as described in `ScenePassComponent`, the uniforms
     // are returned in pass-specific methods.

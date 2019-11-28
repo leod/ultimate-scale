@@ -52,10 +52,10 @@ impl ScenePassComponent for ShadowMapping {
     ///
     /// Note that the transformed shader will require additional uniforms,
     /// which are given by `ShadowMapping::scene_pass_uniforms`.
-    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
+    fn core_transform<P, V>(
         &self,
-        core: render::shader::Core<(Context, P), V>,
-    ) -> render::shader::Core<(Context, P), V> {
+        core: render::shader::Core<Context, P, V>,
+    ) -> render::shader::Core<Context, P, V> {
         shaders::render_shadowed_core_transform(core)
     }
 }

@@ -42,10 +42,10 @@ impl RenderPass for Glow {
 }
 
 impl ScenePassComponent for Glow {
-    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
+    fn core_transform<P, V>(
         &self,
-        core: render::shader::Core<(Context, P), V>,
-    ) -> render::shader::Core<(Context, P), V> {
+        core: render::shader::Core<Context, P, V>,
+    ) -> render::shader::Core<Context, P, V> {
         shaders::glow_map_core_transform(core)
     }
 
@@ -57,8 +57,8 @@ impl ScenePassComponent for Glow {
 impl CompositionPassComponent for Glow {
     fn core_transform(
         &self,
-        core: render::shader::Core<(), screen_quad::Vertex>,
-    ) -> render::shader::Core<(), screen_quad::Vertex> {
+        core: render::shader::Core<(), (), screen_quad::Vertex>,
+    ) -> render::shader::Core<(), (), screen_quad::Vertex> {
         shaders::composition_core_transform(core)
     }
 }
