@@ -273,6 +273,10 @@ fn does_core_use_variable(
         body.visit(&mut visitor);
     }
 
+    if let Ok(mut defs) = glsl::syntax::TranslationUnit::parse(defs) {
+        defs.visit(&mut visitor);
+    }
+
     visitor.is_used
 }
 
