@@ -14,7 +14,7 @@ use glium::{glutin, uniform, Surface};
 use crate::render::pipeline::{
     CompositionPassComponent, Context, Light, RenderPass, ScenePassComponent,
 };
-use crate::render::shader::ToUniforms;
+use crate::render::shader::{self, ToUniforms};
 use crate::render::{self, screen_quad, Camera, DrawError, Object, Resources, ScreenQuad};
 
 pub use crate::render::CreationError;
@@ -53,10 +53,10 @@ impl RenderPass for DeferredShading {
 }
 
 impl ScenePassComponent for DeferredShading {
-    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
+    fn core_transform<P, V>(
         &self,
-        core: render::shader::Core<(Context, P), V>,
-    ) -> render::shader::Core<(Context, P), V> {
+        core: render::shader::Core<Context, P, V>,
+    ) -> render::shader::Core<Context, P, V> {
         // Write scene to separate buffers
         shaders::scene_buffers_core_transform(self.shadow_texture.is_some(), core)
     }
@@ -78,8 +78,8 @@ impl ScenePassComponent for DeferredShading {
 impl CompositionPassComponent for DeferredShading {
     fn core_transform(
         &self,
-        core: render::shader::Core<(), screen_quad::Vertex>,
-    ) -> render::shader::Core<(), screen_quad::Vertex> {
+        core: render::shader::Core<(), (), screen_quad::Vertex>,
+    ) -> render::shader::Core<(), (), screen_quad::Vertex> {
         shaders::composition_core_transform(core)
     }
 }
@@ -106,9 +106,11 @@ impl DeferredShading {
 
         info!("Creating deferred light programs");
         let light_screen_quad_core = shaders::light_screen_quad_core(have_shadows);
-        let light_screen_quad_program = light_screen_quad_core.build_program(facade)?;
+        let light_screen_quad_program =
+            light_screen_quad_core.build_program(facade, shader::InstancingMode::Uniforms)?;
         let light_object_core = shaders::light_object_core(have_shadows);
-        let light_object_program = light_object_core.build_program(facade)?;
+        let light_object_program =
+            light_object_core.build_program(facade, shader::InstancingMode::Uniforms)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;

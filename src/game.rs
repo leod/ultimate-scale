@@ -190,11 +190,11 @@ impl Game {
             blend: glium::draw_parameters::Blend::alpha_blending(),
             ..Default::default()
         };
-        self.render_lists.ortho.render(
+        self.render_lists.ortho.draw(
             &self.resources,
             &ortho_render_context,
-            &ortho_parameters,
             &self.resources.plain_program,
+            &ortho_parameters,
             target,
         )?;
 

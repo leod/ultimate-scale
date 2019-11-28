@@ -1,11 +1,8 @@
 use glium::uniforms::UniformType;
 
-use crate::render::screen_quad;
-use crate::render::shader::{self, ToUniforms};
+use crate::render::{screen_quad, shader};
 
-pub fn diffuse_scene_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
-    core: shader::Core<P, V>,
-) -> shader::Core<P, V> {
+pub fn diffuse_scene_core_transform<P, I, V>(core: shader::Core<P, I, V>) -> shader::Core<P, I, V> {
     let color_expr = if core.fragment.has_out(shader::defs::F_SHADOW) {
         "vec4((0.3 + f_shadow * diffuse) * f_color.rgb, f_color.a)"
     } else {
@@ -36,7 +33,7 @@ pub fn diffuse_scene_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
     }
 }
 
-pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
+pub fn composition_core() -> shader::Core<(), (), screen_quad::Vertex> {
     let vertex = shader::VertexCore::empty()
         .with_out(shader::defs::v_tex_coord(), "tex_coord")
         .with_out_expr(shader::defs::V_POSITION, "position");
@@ -53,8 +50,8 @@ pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
 }
 
 pub fn hdr_composition_core_transform(
-    core: shader::Core<(), screen_quad::Vertex>,
-) -> shader::Core<(), screen_quad::Vertex> {
+    core: shader::Core<(), (), screen_quad::Vertex>,
+) -> shader::Core<(), (), screen_quad::Vertex> {
     assert!(
         core.fragment.has_out(shader::defs::F_COLOR),
         "FragmentCore needs F_COLOR output for HDR composition pass"
@@ -75,9 +72,9 @@ pub fn hdr_composition_core_transform(
 }
 
 pub fn gamma_correction_composition_core_transform(
-    core: shader::Core<(), screen_quad::Vertex>,
+    core: shader::Core<(), (), screen_quad::Vertex>,
     gamma: f32,
-) -> shader::Core<(), screen_quad::Vertex> {
+) -> shader::Core<(), (), screen_quad::Vertex> {
     assert!(
         core.fragment.has_out(shader::defs::F_COLOR),
         "FragmentCore needs F_COLOR output for gamma correction composition pass"

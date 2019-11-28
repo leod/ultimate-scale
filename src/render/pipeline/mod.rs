@@ -14,9 +14,9 @@ use nalgebra as na;
 use glium::{uniform, Surface};
 
 use crate::config::ViewConfig;
-use crate::render::shader::ToUniforms;
+use crate::render::shader::{ToUniforms, ToVertex, UniformInput};
 use crate::render::{self, object, screen_quad, shader, Camera, DrawError, Resources};
-use crate::render::{RenderList, ScreenQuad};
+use crate::render::{Instancing, RenderList, ScreenQuad};
 
 use deferred::DeferredShading;
 use fxaa::FXAA;
@@ -35,19 +35,7 @@ pub struct Context {
     pub main_light_center: na::Point3<f32>,
 }
 
-impl Default for Context {
-    fn default() -> Self {
-        Self {
-            camera: Default::default(),
-            elapsed_time_secs: 0.0,
-            tick_progress: 0.0,
-            main_light_pos: na::Point3::origin(),
-            main_light_center: na::Point3::origin(),
-        }
-    }
-}
-
-to_uniforms_impl!(
+impl_uniform_input!(
     Context,
     self => {
         viewport: Vec4 => self.camera.viewport.into(),
@@ -138,14 +126,16 @@ struct ScenePassSetup {
     glow: bool,
 }
 
-struct ScenePass<P: ToUniforms, V: glium::vertex::Vertex> {
+struct ScenePass<I: ToVertex, V> {
     setup: ScenePassSetup,
 
     /// Currently just used as a phantom.
     #[allow(dead_code)]
-    shader_core: shader::Core<(Context, P), V>,
+    shader_core: shader::Core<Context, I, V>,
 
     program: glium::Program,
+
+    instancing: Instancing<I>,
 }
 
 impl Components {
@@ -189,19 +179,20 @@ impl Components {
         })
     }
 
-    fn create_scene_pass<
-        F: glium::backend::Facade,
-        P: ToUniforms + Clone + Default,
-        V: glium::vertex::Vertex,
-    >(
+    fn create_scene_pass<F, I: ToVertex, V>(
         &self,
         facade: &F,
         setup: ScenePassSetup,
-        mut shader_core: shader::Core<(Context, P), V>,
-    ) -> Result<ScenePass<P, V>, render::CreationError> {
+        mut shader_core: shader::Core<Context, I, V>,
+    ) -> Result<ScenePass<I, V>, render::CreationError>
+    where
+        F: glium::backend::Facade,
+        I: UniformInput + Clone,
+        V: glium::vertex::Vertex,
+    {
         info!(
-            "Creating scene pass for P={}, V={}",
-            std::any::type_name::<P>(),
+            "Creating scene pass for I={}, V={}",
+            std::any::type_name::<I>(),
             std::any::type_name::<V>(),
         );
 
@@ -226,16 +217,19 @@ impl Components {
             shader_core = shaders::diffuse_scene_core_transform(shader_core);
         }
 
-        let program = shader_core.build_program(facade)?;
+        let program = shader_core.build_program(facade, shader::InstancingMode::Vertex)?;
+
+        let instancing = Instancing::create(facade)?;
 
         Ok(ScenePass {
             setup,
             shader_core,
             program,
+            instancing,
         })
     }
 
-    fn composition_core(&self, config: &Config) -> shader::Core<(), screen_quad::Vertex> {
+    fn composition_core(&self, config: &Config) -> shader::Core<(), (), screen_quad::Vertex> {
         let mut shader_core = shaders::composition_core();
 
         if let Some(deferred_shading) = self.deferred_shading.as_ref() {
@@ -298,14 +292,19 @@ impl Components {
         textures
     }
 
-    fn scene_pass_to_surface<P: ToUniforms, V: glium::vertex::Vertex, S: glium::Surface>(
+    fn scene_pass_to_surface<I, V, S>(
         &self,
         resources: &Resources,
         context: &Context,
-        pass: &ScenePass<P, V>,
-        render_list: &RenderList<P>,
+        pass: &ScenePass<I, V>,
+        _render_list: &RenderList<I>,
         target: &mut S,
-    ) -> Result<(), DrawError> {
+    ) -> Result<(), DrawError>
+    where
+        I: ToUniforms + ToVertex,
+        V: glium::vertex::Vertex,
+        S: glium::Surface,
+    {
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
@@ -317,14 +316,22 @@ impl Components {
             ..Default::default()
         };
 
-        let shared_uniforms = (
-            context.clone(),
+        let uniforms = (
+            context,
             self.shadow_mapping
                 .as_ref()
                 .map(|c| c.scene_pass_uniforms(context)),
         );
 
-        // TODO: Instancing (lol)
+        pass.instancing.draw(
+            resources,
+            &pass.program,
+            &uniforms.to_uniforms(),
+            &params,
+            target,
+        )?;
+
+        /*// TODO: Instancing (lol)
         for instance in &render_list.instances {
             let buffers = resources.get_object_buffers(instance.object);
 
@@ -337,21 +344,26 @@ impl Components {
                 &params,
                 target,
             )?;
-        }
+        }*/
 
         Ok(())
     }
 
-    fn scene_pass<F: glium::backend::Facade, P: ToUniforms, V: glium::vertex::Vertex>(
+    fn scene_pass<F, I, V>(
         &self,
         facade: &F,
         resources: &Resources,
         context: &Context,
-        pass: &ScenePass<P, V>,
-        render_list: &RenderList<P>,
+        pass: &ScenePass<I, V>,
+        render_list: &RenderList<I>,
         color_texture: &glium::texture::Texture2d,
         depth_texture: &glium::texture::DepthTexture2d,
-    ) -> Result<(), DrawError> {
+    ) -> Result<(), DrawError>
+    where
+        F: glium::backend::Facade,
+        I: ToUniforms + ToVertex,
+        V: glium::vertex::Vertex,
+    {
         let mut output_textures = self.scene_output_textures(&pass.setup);
         output_textures.push((shader::defs::F_COLOR, color_texture));
 
@@ -421,8 +433,9 @@ impl Pipeline {
 
         let plain_core = scene::model::scene_core();
         let plain_program = plain_core
-            .build_program(facade)
+            .build_program(facade, shader::InstancingMode::Vertex)
             .map_err(render::CreationError::from)?;
+        let plain_instancing = Instancing::create(facade)?;
         let scene_pass_plain = ScenePass {
             setup: ScenePassSetup {
                 shadow: false,
@@ -430,6 +443,7 @@ impl Pipeline {
             },
             shader_core: plain_core,
             program: plain_program,
+            instancing: plain_instancing,
         };
 
         let rounded_size: (u32, u32) = view_config.window_size.into();
@@ -438,7 +452,7 @@ impl Pipeline {
 
         let composition_core = components.composition_core(config);
         let composition_program = composition_core
-            .build_program(facade)
+            .build_program(facade, shader::InstancingMode::Uniforms)
             .map_err(render::CreationError::from)?;
         let composition_texture = Self::create_color_texture(facade, rounded_size)?;
 
@@ -449,7 +463,7 @@ impl Pipeline {
             .transpose()
             .map_err(CreationError::FXAA)?;
         let copy_texture_program = shaders::composition_core()
-            .build_program(facade)
+            .build_program(facade, shader::InstancingMode::Uniforms)
             .map_err(render::CreationError::from)?;
 
         info!("Creating screen quad");
@@ -474,7 +488,7 @@ impl Pipeline {
     }
 
     pub fn draw_frame<F: glium::backend::Facade, S: glium::Surface>(
-        &self,
+        &mut self,
         facade: &F,
         resources: &Resources,
         context: &Context,
@@ -482,6 +496,24 @@ impl Pipeline {
         target: &mut S,
     ) -> Result<(), DrawError> {
         profile!("pipeline");
+
+        // Send instance data to GPU
+        {
+            profile!("send_data");
+
+            self.scene_pass_solid
+                .instancing
+                .update(facade, &render_lists.solid.instances)?;
+            self.scene_pass_solid_glow
+                .instancing
+                .update(facade, &render_lists.solid_glow.instances)?;
+            self.scene_pass_plain
+                .instancing
+                .update(facade, &render_lists.plain.instances)?;
+            self.scene_pass_wind
+                .instancing
+                .update(facade, &render_lists.wind.instances)?;
+        }
 
         // Clear buffers
         {
@@ -501,7 +533,13 @@ impl Pipeline {
         if let Some(shadow_mapping) = self.components.shadow_mapping.as_ref() {
             profile!("shadow_pass");
 
-            shadow_mapping.shadow_pass(facade, resources, context, render_lists)?;
+            shadow_mapping.shadow_pass(
+                facade,
+                resources,
+                context,
+                &self.scene_pass_solid.instancing,
+                &self.scene_pass_solid_glow.instancing,
+            )?;
         }
 
         // Render scene into buffers
