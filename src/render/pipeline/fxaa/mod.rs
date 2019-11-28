@@ -1,4 +1,4 @@
-mod shader;
+mod shaders;
 
 use log::info;
 
@@ -19,9 +19,9 @@ pub enum Quality {
 impl Quality {
     pub fn exploration_offsets(&self) -> &[f32] {
         match self {
-            Quality::Low => shader::EXPLORATION_OFFSETS_LOW,
-            Quality::Medium => shader::EXPLORATION_OFFSETS_MEDIUM,
-            Quality::High => shader::EXPLORATION_OFFSETS_HIGH,
+            Quality::Low => shaders::EXPLORATION_OFFSETS_LOW,
+            Quality::Medium => shaders::EXPLORATION_OFFSETS_MEDIUM,
+            Quality::High => shaders::EXPLORATION_OFFSETS_HIGH,
         }
     }
 }
@@ -50,7 +50,7 @@ impl FXAA {
         config: &Config,
     ) -> Result<Self, CreationError> {
         info!("Creating FXAA program");
-        let core = shader::postprocessing_core(config.quality.exploration_offsets());
+        let core = shaders::postprocessing_core(config.quality.exploration_offsets());
 
         let program = core.build_program(facade)?;
 

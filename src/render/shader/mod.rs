@@ -1,68 +1,18 @@
+#[macro_use]
+pub mod input;
+pub mod defs;
+
+use log::info;
+
 use std::marker::PhantomData;
+
+use glsl::parser::Parse;
+use glsl::visitor::Host;
 
 use glium::uniforms::{UniformType, UniformValue, Uniforms};
 use glium::vertex::AttributeType;
 
-use crate::render::pipeline::InstanceParams;
-
-pub const V_WORLD_NORMAL: &str = "v_world_normal";
-pub const V_WORLD_POS: &str = "v_world_pos";
-pub const V_COLOR: &str = "v_color";
-pub const V_TEX_COORD: &str = "v_tex_coord";
-pub const V_POSITION: &str = "gl_Position";
-
-pub const F_COLOR: &str = "f_color";
-pub const F_FRAGMENT_DEPTH: &str = "f_fragment_depth";
-pub const F_SHADOW: &str = "f_shadow";
-
-pub fn v_world_normal_def() -> VertexOutDef {
-    (
-        (V_WORLD_NORMAL.into(), UniformType::FloatVec3),
-        VertexOutQualifier::Smooth,
-    )
-}
-
-pub fn v_world_pos_def() -> VertexOutDef {
-    (
-        (V_WORLD_POS.into(), UniformType::FloatVec4),
-        VertexOutQualifier::Smooth,
-    )
-}
-
-pub fn v_color_def() -> VertexOutDef {
-    (
-        (V_COLOR.into(), UniformType::FloatVec3),
-        VertexOutQualifier::Smooth,
-    )
-}
-
-pub fn v_tex_coord_def() -> VertexOutDef {
-    (
-        (V_TEX_COORD.into(), UniformType::FloatVec2),
-        VertexOutQualifier::Smooth,
-    )
-}
-
-pub fn f_color_def() -> FragmentOutDef {
-    (
-        (F_COLOR.into(), UniformType::FloatVec4),
-        FragmentOutQualifier::Yield,
-    )
-}
-
-pub fn f_fragment_depth_def() -> FragmentOutDef {
-    (
-        (F_FRAGMENT_DEPTH.into(), UniformType::Float),
-        FragmentOutQualifier::Yield,
-    )
-}
-
-pub fn f_shadow_def() -> FragmentOutDef {
-    (
-        (F_SHADOW.into(), UniformType::Float),
-        FragmentOutQualifier::Local,
-    )
-}
+pub use input::ToUniforms;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VertexOutQualifier {
@@ -85,7 +35,7 @@ pub type VertexOutDef = (VariableDef, VertexOutQualifier);
 pub type FragmentOutDef = (VariableDef, FragmentOutQualifier);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VertexCore<P: InstanceParams, V: glium::vertex::Vertex> {
+pub struct VertexCore<P: ToUniforms, V: glium::vertex::Vertex> {
     pub extra_uniforms: Vec<VariableDef>,
     pub out_defs: Vec<VertexOutDef>,
     pub defs: GLSL,
@@ -95,7 +45,7 @@ pub struct VertexCore<P: InstanceParams, V: glium::vertex::Vertex> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FragmentCore<P: InstanceParams> {
+pub struct FragmentCore<P: ToUniforms> {
     pub extra_uniforms: Vec<VariableDef>,
     pub in_defs: Vec<VertexOutDef>,
     pub out_defs: Vec<FragmentOutDef>,
@@ -106,36 +56,18 @@ pub struct FragmentCore<P: InstanceParams> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Core<P: InstanceParams, V: glium::vertex::Vertex> {
+pub struct Core<P: ToUniforms, V: glium::vertex::Vertex> {
     pub vertex: VertexCore<P, V>,
     pub fragment: FragmentCore<P>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LinkedCore<P: InstanceParams, V: glium::vertex::Vertex> {
+pub struct LinkedCore<P: ToUniforms, V: glium::vertex::Vertex> {
     pub vertex: VertexCore<P, V>,
     pub fragment: FragmentCore<P>,
 }
 
-#[macro_export]
-macro_rules! shader_out_exprs {
-    { $($variable:expr => $expr:literal),*, } => {
-        vec![
-            $(
-                ($variable.to_string(), $expr.to_string()),
-            )*
-        ]
-    };
-    { $($variable:expr, $type:expr => $expr:literal),*, } => {
-        vec![
-            $(
-                ($variable.to_string(), $type, $expr.to_string()),
-            )*
-        ]
-    };
-}
-
-impl<P: InstanceParams, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
+impl<P: ToUniforms, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
     fn default() -> Self {
         Self {
             extra_uniforms: Vec::new(),
@@ -148,7 +80,7 @@ impl<P: InstanceParams, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
     }
 }
 
-impl<P: InstanceParams> Default for FragmentCore<P> {
+impl<P: ToUniforms> Default for FragmentCore<P> {
     fn default() -> Self {
         Self {
             extra_uniforms: Vec::new(),
@@ -162,7 +94,11 @@ impl<P: InstanceParams> Default for FragmentCore<P> {
     }
 }
 
-impl<P: InstanceParams, V: glium::vertex::Vertex> VertexCore<P, V> {
+impl<P: ToUniforms, V: glium::vertex::Vertex> VertexCore<P, V> {
+    pub fn empty() -> Self {
+        Default::default()
+    }
+
     pub fn has_out(&self, name: &str) -> bool {
         self.out_defs
             .iter()
@@ -178,9 +114,9 @@ impl<P: InstanceParams, V: glium::vertex::Vertex> VertexCore<P, V> {
             .map(|(_n, expr)| expr)
     }
 
-    pub fn with_extra_uniform(mut self, def: VariableDef) -> Self {
+    pub fn with_extra_uniform(mut self, name: &str, t: UniformType) -> Self {
         // TODO: Check for duplicates
-        self.extra_uniforms.push(def);
+        self.extra_uniforms.push((name.into(), t));
         self
     }
 
@@ -201,9 +137,23 @@ impl<P: InstanceParams, V: glium::vertex::Vertex> VertexCore<P, V> {
         self.out_defs.push(def);
         self
     }
+
+    pub fn with_out_expr(mut self, name: &str, expr: &str) -> Self {
+        self.out_exprs.push((name.into(), expr.into()));
+        self
+    }
+
+    pub fn with_out_def(mut self, def: VertexOutDef) -> Self {
+        self.out_defs.push(def);
+        self
+    }
 }
 
-impl<P: InstanceParams> FragmentCore<P> {
+impl<P: ToUniforms> FragmentCore<P> {
+    pub fn empty() -> Self {
+        Default::default()
+    }
+
     pub fn get_in_def(&self, name: &str) -> Option<&VertexOutDef> {
         self.in_defs.iter().find(|((n, _t), _q)| n == name)
     }
@@ -227,9 +177,9 @@ impl<P: InstanceParams> FragmentCore<P> {
             .map(|(_n, expr)| expr)
     }
 
-    pub fn with_extra_uniform(mut self, def: VariableDef) -> Self {
+    pub fn with_extra_uniform(mut self, name: &str, t: UniformType) -> Self {
         // TODO: Check for duplicates
-        self.extra_uniforms.push(def);
+        self.extra_uniforms.push((name.into(), t));
         self
     }
 
@@ -275,18 +225,102 @@ impl<P: InstanceParams> FragmentCore<P> {
     }
 }
 
-impl<P: InstanceParams, V: glium::vertex::Vertex> Core<P, V> {
-    pub fn link(&self) -> LinkedCore<P, V> {
-        // TODO: Convert unused vertex outputs to local
-        // TODO: Check non-duplicate inputs/outputs
-        LinkedCore {
-            vertex: self.vertex.clone(),
-            fragment: self.fragment.clone(),
+fn does_core_use_variable(
+    defs: &str,
+    body: &str,
+    out_exprs: &[(String, GLSL)],
+    var_name: &str,
+) -> bool {
+    struct Visitor<'a> {
+        var_name: &'a str,
+        is_used: bool,
+    }
+
+    impl<'a> glsl::visitor::Visitor for Visitor<'a> {
+        fn visit_identifier(
+            &mut self,
+            identifier: &mut glsl::syntax::Identifier,
+        ) -> glsl::visitor::Visit {
+            if identifier.as_str() == self.var_name {
+                self.is_used = true;
+            }
+
+            glsl::visitor::Visit::Children
         }
+    }
+
+    let mut visitor = Visitor {
+        var_name,
+        is_used: false,
+    };
+
+    for (out_name, out_expr) in out_exprs {
+        if out_name != var_name {
+            glsl::syntax::Expr::parse(out_expr)
+                .unwrap()
+                .visit(&mut visitor);
+        }
+    }
+
+    if let Ok(mut body) = glsl::syntax::Statement::parse(body) {
+        body.visit(&mut visitor);
+    }
+
+    visitor.is_used
+}
+
+impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
+    pub fn link(&self) -> LinkedCore<P, V> {
+        let mut fragment = self.fragment.clone();
+
+        // TODO: Remove unused inputs from fragment shader.
+
+        // Demote vertex shader outputs to local when not needed by fragment
+        // shader.
+        let mut vertex = self.vertex.clone();
+
+        for ((name, _), q) in vertex.out_defs.iter_mut() {
+            if !fragment.has_in(&name) {
+                *q = VertexOutQualifier::Local;
+            }
+        }
+
+        // Remove unused local vertex shader outputs.
+        //
+        // We take the transitive closure by looping, since removing one output
+        // may cause another output to become unused.
+        let mut changed = true;
+
+        while changed {
+            changed = false;
+
+            for ((out_name, _), q) in vertex.out_defs.clone().iter() {
+                if *q == VertexOutQualifier::Local {
+                    let is_used = does_core_use_variable(
+                        &vertex.defs,
+                        &vertex.body,
+                        &vertex.out_exprs,
+                        &out_name,
+                    );
+
+                    if !is_used {
+                        info!("Removing vertex output {}", out_name);
+
+                        vertex.out_defs.retain(|((name, _), _)| name != out_name);
+                        vertex.out_exprs.retain(|(name, _)| name != out_name);
+
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        // TODO: Check non-duplicate inputs/outputs
+        LinkedCore { vertex, fragment }
     }
 }
 
-impl<P: InstanceParams + Default, V: glium::vertex::Vertex> Core<P, V> {
+impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
     pub fn build_program<F: glium::backend::Facade>(
         &self,
         facade: &F,
@@ -295,7 +329,7 @@ impl<P: InstanceParams + Default, V: glium::vertex::Vertex> Core<P, V> {
     }
 }
 
-impl<P: InstanceParams + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
+impl<P: ToUniforms + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
     pub fn build_program<F: glium::backend::Facade>(
         &self,
         facade: &F,
@@ -409,12 +443,14 @@ fn compile_fragment_out_defs(defs: &[FragmentOutDef]) -> String {
         .join("")
 }
 
-fn compile_instance_params_uniforms<P: InstanceParams + Default>() -> String {
+fn compile_uniforms<P: ToUniforms + Default>() -> String {
     let mut uniforms = Vec::new();
 
-    P::default().uniforms().visit_values(|name, uniform_value| {
-        uniforms.push((name.to_string(), uniform_value_to_type(uniform_value)));
-    });
+    P::default()
+        .to_uniforms()
+        .visit_values(|name, uniform_value| {
+            uniforms.push((name.to_string(), uniform_value_to_type(uniform_value)));
+        });
 
     compile_variable_defs("uniform", uniforms.iter().cloned())
 }
@@ -454,13 +490,13 @@ fn compile_vertex_attributes<V: glium::vertex::Vertex>() -> String {
     compile_variable_defs("in", attributes.iter().cloned())
 }
 
-impl<P: InstanceParams + Default, V: glium::vertex::Vertex> VertexCore<P, V> {
+impl<P: ToUniforms + Default, V: glium::vertex::Vertex> VertexCore<P, V> {
     pub fn compile(&self) -> String {
         let mut s = String::new();
 
         s += "#version 330\n\n";
 
-        s += &compile_instance_params_uniforms::<P>();
+        s += &compile_uniforms::<P>();
         s += "\n";
         s += &compile_variable_defs("uniform", self.extra_uniforms.iter().cloned());
         s += "\n";
@@ -482,13 +518,13 @@ impl<P: InstanceParams + Default, V: glium::vertex::Vertex> VertexCore<P, V> {
     }
 }
 
-impl<P: InstanceParams + Default> FragmentCore<P> {
+impl<P: ToUniforms + Default> FragmentCore<P> {
     pub fn compile(&self) -> String {
         let mut s = String::new();
 
         s += "#version 330\n\n";
 
-        s += &compile_instance_params_uniforms::<P>();
+        s += &compile_uniforms::<P>();
         s += "\n";
         s += &compile_variable_defs("uniform", self.extra_uniforms.iter().cloned());
         s += "\n";

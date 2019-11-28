@@ -1,8 +1,6 @@
-use glium::uniform;
-
 use nalgebra as na;
 
-use crate::render::pipeline::{Context, InstanceParams};
+use crate::render::pipeline::Context;
 use crate::render::{object, shader};
 
 #[derive(Debug, Clone)]
@@ -13,7 +11,6 @@ pub struct Params {
     pub phase: f32,
     pub start: f32,
     pub end: f32,
-    pub bend: bool,
 }
 
 impl Default for Params {
@@ -25,30 +22,21 @@ impl Default for Params {
             phase: 0.0,
             start: 0.0,
             end: 0.0,
-            bend: false,
         }
     }
 }
 
-impl InstanceParams for Params {
-    type U = impl glium::uniforms::Uniforms;
-
-    fn uniforms(&self) -> Self::U {
-        let mat_model: [[f32; 4]; 4] = self.transform.into();
-        let color: [f32; 4] = self.color.into();
-        let stripe_color: [f32; 4] = self.stripe_color.into();
-
-        uniform! {
-            mat_model: mat_model,
-            color: color,
-            stripe_color: stripe_color,
-            phase: self.phase,
-            start: self.start,
-            end: self.end,
-            bend: self.bend,
-        }
-    }
-}
+to_uniforms_impl!(
+    Params,
+    self => {
+        mat_model: Mat4 => self.transform.into(),
+        color: Vec4 => self.color.into(),
+        stripe_color: Vec4 => self.stripe_color.into(),
+        phase: Float => self.phase,
+        start: Float => self.start,
+        end: Float => self.end,
+    },
+);
 
 const V_DISCARD: &str = "v_discard";
 
@@ -69,20 +57,18 @@ fn v_color() -> shader::VertexOutDef {
 }
 
 pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
-    let vertex = shader::VertexCore {
-        out_defs: vec![
-            shader::v_world_normal_def(),
-            shader::v_world_pos_def(),
-            v_discard(),
-            v_color(),
-        ],
-        defs: "
+    let vertex = shader::VertexCore::empty()
+        .with_defs(
+            "
             const float PI = 3.141592;
             const float radius = 0.04;
             const float scale = 0.0105;
-        "
-        .to_string(),
-        body: "
+        ",
+        )
+        .with_out_def(v_discard())
+        .with_out_def(v_color())
+        .with_body(
+            "
             float angle = (position.x + 0.5) * PI
                 + tick_progress * PI / 2.0
                 + phase;
@@ -112,29 +98,31 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
                 v_color = stripe_color;
             else
                 v_color = color;
-        "
-        .to_string(),
-        out_exprs: shader_out_exprs! {
-            shader::V_WORLD_NORMAL => "normalize(transpose(inverse(mat3(mat_model))) * rot_normal)",
-            shader::V_WORLD_POS => "mat_model * vec4(scaled_pos, 1.0)",
-            shader::V_POSITION => "mat_projection * mat_view * v_world_pos",
-        },
-        ..Default::default()
-    };
+        ",
+        )
+        .with_out(
+            shader::defs::v_world_normal(),
+            "normalize(transpose(inverse(mat3(mat_model))) * rot_normal)",
+        )
+        .with_out(
+            shader::defs::v_world_pos(),
+            "mat_model * vec4(scaled_pos, 1.0)",
+        )
+        .with_out_expr(
+            shader::defs::V_POSITION,
+            "mat_projection * mat_view * v_world_pos",
+        );
 
-    let fragment = shader::FragmentCore {
-        in_defs: vec![v_discard(), v_color()],
-        out_defs: vec![shader::f_color_def()],
-        body: "
+    let fragment = shader::FragmentCore::empty()
+        .with_in_def(v_discard())
+        .with_in_def(v_color())
+        .with_body(
+            "
             if (v_discard >= 0.5)
                 discard;
-        "
-        .to_string(),
-        out_exprs: shader_out_exprs! {
-            shader::F_COLOR => "v_color",
-        },
-        ..Default::default()
-    };
+        ",
+        )
+        .with_out(shader::defs::f_color(), "v_color");
 
     shader::Core { vertex, fragment }
 }

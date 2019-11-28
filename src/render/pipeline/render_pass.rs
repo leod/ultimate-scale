@@ -1,12 +1,13 @@
-use crate::render::pipeline::{Context, InstanceParams};
-use crate::render::{screen_quad, shader, DrawError};
+use crate::render::pipeline::Context;
+use crate::render::shader::{self, ToUniforms};
+use crate::render::{screen_quad, DrawError};
 
 pub trait RenderPass {
     fn clear_buffers<F: glium::backend::Facade>(&self, facade: &F) -> Result<(), DrawError>;
 }
 
 pub trait ScenePassComponent {
-    fn core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
         &self,
         core: shader::Core<(Context, P), V>,
     ) -> shader::Core<(Context, P), V>;
@@ -19,7 +20,7 @@ pub trait ScenePassComponent {
     // need to be passed into the transformed shaders for the pass to work.
     // Unfortunately, that is not easily possible, since glium's `uniform!`
     // macro returns a long nested type. We could use "impl trait in trait"
-    // again (as in `InstanceParams`), but this is blocked by the fact that,
+    // again (as in `ToUniforms`), but this is blocked by the fact that,
     // for texture uniforms, the returned type borrows `self`, so it is
     // actually a generic type!
     //
