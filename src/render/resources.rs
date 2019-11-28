@@ -1,6 +1,6 @@
 use log::info;
 
-use num_traits::ToPrimitive;
+use num_traits::{FromPrimitive, ToPrimitive};
 
 use crate::render::object::{Object, ObjectBuffers};
 use crate::render::{pipeline, shader};
@@ -18,9 +18,9 @@ impl Resources {
         // since we need to check for errors in creating buffers
         let mut object_buffers = Vec::new();
 
-        for i in 0..Object::NumTypes as u32 {
+        for i in 0..Object::NumTypes as usize {
             // Safe to unwrap here, since we iterate within the range
-            let object: Object = num_traits::FromPrimitive::from_u32(i).unwrap();
+            let object: Object = FromPrimitive::from_usize(i).unwrap();
 
             object_buffers.push(object.create_buffers(facade)?);
         }

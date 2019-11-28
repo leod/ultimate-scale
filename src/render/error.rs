@@ -41,6 +41,7 @@ impl From<std::io::Error> for CreationError {
 pub enum DrawError {
     Draw(glium::DrawError),
     FramebufferValidation(glium::framebuffer::ValidationError),
+    InstancingNotSupported,
 }
 
 impl From<glium::DrawError> for DrawError {

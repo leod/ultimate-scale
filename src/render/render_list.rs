@@ -34,8 +34,8 @@ impl<T: ToUniforms> RenderList<T> {
         &self,
         resources: &Resources,
         context: &C,
-        params: &glium::DrawParameters,
         program: &glium::Program,
+        params: &glium::DrawParameters,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
         let params = glium::DrawParameters {
