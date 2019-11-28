@@ -14,6 +14,7 @@ use glium::vertex::AttributeType;
 
 pub use input::{ToUniforms, ToVertex, UniformInput};
 
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VertexOutQualifier {
     Flat,

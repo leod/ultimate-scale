@@ -18,7 +18,6 @@
 - Render block inputs
 - Check if it's okay to rely on `glutin::dpi::LogicalSize` for texture sizes
 - Unify glow on / glow off calls
-- Move things out of pipeline mod wherever possible
 
 ## Gameplay
 - Campaign mode

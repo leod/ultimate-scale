@@ -31,7 +31,6 @@ impl Default for Config {
 }
 
 pub struct ShadowMapping {
-    config: Config,
     shadow_map_program: glium::Program,
     shadow_texture: glium::texture::DepthTexture2d,
 }
@@ -81,7 +80,6 @@ impl ShadowMapping {
         info!("Shadow mapping initialized");
 
         Ok(ShadowMapping {
-            config: config.clone(),
             shadow_map_program,
             shadow_texture,
         })

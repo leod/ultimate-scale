@@ -110,16 +110,9 @@ impl Editor {
     }
 
     pub fn switch_to_place_block_mode(&mut self, block: Block) {
-        let placed_block = PlacedBlock { block };
-
-        let piece = match &self.mode {
-            Mode::PlacePiece { piece, .. } => {
-                // TODO: Maintain current rotation when switching to a
-                // different block to place.
-                Piece::new_origin_block(placed_block)
-            }
-            _ => Piece::new_origin_block(placed_block),
-        };
+        // TODO: Maintain current rotation when switching to a different block
+        // to place.
+        let piece = Piece::new_origin_block(PlacedBlock { block });
 
         self.mode = Mode::PlacePiece {
             piece,

@@ -27,8 +27,6 @@ const LIGHT_MIN_THRESHOLD: f32 = 0.02;
 const NUM_TEXTURES: usize = 2;
 
 pub struct DeferredShading {
-    config: Config,
-
     scene_textures: [glium::texture::Texture2d; NUM_TEXTURES],
     shadow_texture: Option<glium::texture::Texture2d>,
 
@@ -87,7 +85,7 @@ impl CompositionPassComponent for DeferredShading {
 impl DeferredShading {
     pub fn create<F: glium::backend::Facade>(
         facade: &F,
-        config: &Config,
+        _config: &Config,
         have_shadows: bool,
         window_size: glutin::dpi::LogicalSize,
     ) -> Result<DeferredShading, CreationError> {
@@ -118,7 +116,6 @@ impl DeferredShading {
         info!("Deferred shading initialized");
 
         Ok(DeferredShading {
-            config: config.clone(),
             scene_textures,
             shadow_texture,
             light_texture,
