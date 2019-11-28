@@ -1,4 +1,5 @@
 pub mod anim;
+pub mod level_progress;
 pub mod play;
 pub mod view;
 
