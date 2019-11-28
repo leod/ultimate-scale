@@ -16,9 +16,8 @@ use crate::machine::{level, Block, Machine};
 use crate::util::stats;
 
 use crate::render::camera::{Camera, EditCameraView, EditCameraViewInput};
-use crate::render::pipeline::{fxaa, RenderLists};
-use crate::render::Resources;
-use crate::render::{self, resources};
+use crate::render::pipeline::RenderLists;
+use crate::render::{self, fxaa, resources, Resources};
 
 pub struct Game {
     config: Config,
