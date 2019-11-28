@@ -115,7 +115,7 @@ where
         let buffers = vec![Buffer::create(facade)?];
 
         let mut buckets = Vec::new();
-        for i in 0..Object::NumTypes as usize {
+        for _ in 0..Object::NumTypes as usize {
             buckets.push(Vec::new());
         }
 

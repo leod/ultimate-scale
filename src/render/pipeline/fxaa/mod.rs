@@ -52,7 +52,7 @@ impl FXAA {
         info!("Creating FXAA program");
         let core = shaders::postprocessing_core(config.quality.exploration_offsets());
 
-        let program = core.build_program(facade, shader::InstanceMode::Uniforms)?;
+        let program = core.build_program(facade, shader::InstancingMode::Uniforms)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;

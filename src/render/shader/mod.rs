@@ -68,7 +68,7 @@ pub struct LinkedCore<P, I, V> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum InstanceMode {
+pub enum InstancingMode {
     Uniforms,
     Vertex,
 }
@@ -339,7 +339,7 @@ where
     pub fn build_program<F: glium::backend::Facade>(
         &self,
         facade: &F,
-        mode: InstanceMode,
+        mode: InstancingMode,
     ) -> Result<glium::Program, glium::program::ProgramCreationError> {
         self.link().build_program(facade, mode)
     }
@@ -354,7 +354,7 @@ where
     pub fn build_program<F: glium::backend::Facade>(
         &self,
         facade: &F,
-        mode: InstanceMode,
+        mode: InstancingMode,
     ) -> Result<glium::Program, glium::program::ProgramCreationError> {
         let vertex = self.vertex.compile(mode);
         let fragment = self.fragment.compile();
@@ -453,12 +453,12 @@ fn compile_uniforms<P: UniformInput>() -> String {
     compile_variable_defs("uniform", uniforms.iter().cloned())
 }
 
-fn compile_instance_input<P: UniformInput>(mode: InstanceMode) -> String {
+fn compile_instance_input<P: UniformInput>(mode: InstancingMode) -> String {
     let uniforms = P::uniform_input_defs();
 
     match mode {
-        InstanceMode::Uniforms => compile_variable_defs("uniform", uniforms.iter().cloned()),
-        InstanceMode::Vertex => compile_variable_defs("in", uniforms.iter().cloned()),
+        InstancingMode::Uniforms => compile_variable_defs("uniform", uniforms.iter().cloned()),
+        InstancingMode::Vertex => compile_variable_defs("in", uniforms.iter().cloned()),
     }
 }
 
@@ -503,7 +503,7 @@ where
     I: UniformInput,
     V: glium::vertex::Vertex,
 {
-    pub fn compile(&self, mode: InstanceMode) -> String {
+    pub fn compile(&self, mode: InstancingMode) -> String {
         let mut s = String::new();
 
         s += "#version 330\n\n";
