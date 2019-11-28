@@ -1,6 +1,5 @@
 # TODO
 ## Movement
-- Turn faster on shift
 - Shame pulsator for crossing
 
 ## Editor
