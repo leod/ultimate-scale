@@ -4,8 +4,7 @@ use crate::edit::{Editor, Mode, Piece};
 use crate::exec::TickTime;
 use crate::machine::grid;
 use crate::machine::{Block, PlacedBlock};
-use crate::render::pipeline::RenderLists;
-use crate::render::{self, scene};
+use crate::render::{self, scene, RenderLists};
 
 pub const GRID_OFFSET_Z: f32 = 0.01;
 pub const GRID_OFFSET_2_Z: f32 = 0.02;

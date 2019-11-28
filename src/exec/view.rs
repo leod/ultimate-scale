@@ -10,8 +10,7 @@ use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, level, BlipKind, Machine};
-use crate::render::pipeline::RenderLists;
-use crate::render::{self, scene, Camera, EditCameraView};
+use crate::render::{self, scene, Camera, EditCameraView, Light, RenderLists};
 
 #[derive(Debug, Clone)]
 pub struct Config {}
@@ -342,7 +341,7 @@ impl ExecView {
             out.solid_glow.add_instance(&instance);
             //out.solid.add_instance(&instance);
 
-            out.lights.push(render::pipeline::Light {
+            out.lights.push(Light {
                 position: pos,
                 attenuation: na::Vector3::new(1.0, 6.0, 30.0),
                 color: 20.0 * render::machine::blip_color(blip.kind),
