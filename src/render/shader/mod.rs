@@ -269,11 +269,16 @@ fn does_core_use_variable(
         }
     }
 
-    if let Ok(mut body) = glsl::syntax::Statement::parse(body) {
+    if !body.is_empty() {
+        // Putting braces around allows parsing compound statements.
+        let body = "{".to_owned() + body + "}";
+
+        let mut body = glsl::syntax::Statement::parse(body).unwrap();
         body.visit(&mut visitor);
     }
 
-    if let Ok(mut defs) = glsl::syntax::TranslationUnit::parse(defs) {
+    if !defs.is_empty() {
+        let mut defs = glsl::syntax::TranslationUnit::parse(defs).unwrap();
         defs.visit(&mut visitor);
     }
 
@@ -289,14 +294,35 @@ where
     pub fn link(&self) -> LinkedCore<P, I, V> {
         let mut fragment = self.fragment.clone();
 
-        // TODO: Remove unused inputs from fragment shader.
+        // Remove unused inputs from fragment shader.
+        fragment.in_defs = fragment
+            .in_defs
+            .iter()
+            .filter(|((in_name, _), _q)| {
+                let r = does_core_use_variable(
+                    &fragment.defs,
+                    &fragment.body,
+                    &fragment.out_exprs,
+                    &in_name,
+                );
+
+                if !r {
+                    info!("Removing fragment input {}", in_name);
+                }
+
+                r
+            })
+            .cloned()
+            .collect();
 
         // Demote vertex shader outputs to local when not needed by fragment
         // shader.
         let mut vertex = self.vertex.clone();
 
-        for ((name, _), q) in vertex.out_defs.iter_mut() {
-            if !fragment.has_in(&name) {
+        for ((out_name, _), q) in vertex.out_defs.iter_mut() {
+            if !fragment.has_in(&out_name) {
+                info!("Demoting vertex output {} to local", out_name);
+
                 *q = VertexOutQualifier::Local;
             }
         }
