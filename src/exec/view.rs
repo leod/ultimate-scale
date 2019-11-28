@@ -9,7 +9,7 @@ use crate::exec::anim::{WindAnimState, WindDeadend, WindLife};
 use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
-use crate::machine::{grid, level, BlipKind, Machine};
+use crate::machine::{self, grid, level, BlipKind, Machine};
 use crate::render::{self, scene, Camera, EditCameraView, Light, RenderLists};
 
 #[derive(Debug, Clone)]
@@ -129,7 +129,7 @@ impl ExecView {
     pub fn render(&mut self, time: &TickTime, out: &mut RenderLists) {
         profile!("exec_view");
 
-        render::machine::render_machine(
+        machine::render::render_machine(
             &self.exec.machine(),
             time,
             Some(&self.exec),
@@ -147,8 +147,8 @@ impl ExecView {
 
             let mouse_block_pos_float: na::Point3<f32> = na::convert(mouse_block_pos);
 
-            render::machine::render_cuboid_wireframe(
-                &render::machine::Cuboid {
+            machine::render::render_cuboid_wireframe(
+                &machine::render::Cuboid {
                     center: mouse_block_pos_float + na::Vector3::new(0.5, 0.5, 0.51),
                     size: na::Vector3::new(1.0, 1.0, 1.0),
                 },
@@ -167,7 +167,7 @@ impl ExecView {
         out_t: f32,
         out: &mut RenderLists,
     ) {
-        let block_center = render::machine::block_center(block_pos);
+        let block_center = machine::render::block_center(block_pos);
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
 
         // The cylinder object points in the direction of the x axis
@@ -176,10 +176,10 @@ impl ExecView {
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
 
-        let color = render::machine::wind_source_color();
+        let color = machine::render::wind_source_color();
         let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
 
-        let stripe_color = render::machine::wind_stripe_color();
+        let stripe_color = machine::render::wind_stripe_color();
         let stripe_color = na::Vector4::new(stripe_color.x, stripe_color.y, stripe_color.z, 1.0);
 
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
@@ -282,7 +282,7 @@ impl ExecView {
 
     fn render_blips(&self, time: &TickTime, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
-            let center = render::machine::block_center(&blip.pos);
+            let center = machine::render::block_center(&blip.pos);
 
             let size = 0.25
                 * match blip.status {
@@ -304,7 +304,7 @@ impl ExecView {
             // Interpolate blip position if it is moving
             let pos = if let Some(old_move_dir) = blip.old_move_dir {
                 let old_pos = blip.pos - old_move_dir.to_vector();
-                let old_center = render::machine::block_center(&old_pos);
+                let old_center = machine::render::block_center(&old_pos);
                 old_center + time.tick_progress() * (center - old_center)
             } else {
                 center
@@ -321,7 +321,7 @@ impl ExecView {
                 transform = transform * rot.to_homogeneous();
             }
 
-            let color = render::machine::blip_color(blip.kind);
+            let color = machine::render::blip_color(blip.kind);
             let instance = render::Instance {
                 object: render::Object::Cube,
                 params: scene::model::Params {
@@ -331,7 +331,7 @@ impl ExecView {
                 },
             };
 
-            render::machine::render_outline(
+            machine::render::render_outline(
                 &transform,
                 &na::Vector3::new(size, size, size),
                 0.0,
@@ -344,7 +344,7 @@ impl ExecView {
             out.lights.push(Light {
                 position: pos,
                 attenuation: na::Vector3::new(1.0, 6.0, 30.0),
-                color: 20.0 * render::machine::blip_color(blip.kind),
+                color: 20.0 * machine::render::blip_color(blip.kind),
                 ..Default::default()
             });
         }
