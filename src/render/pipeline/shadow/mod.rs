@@ -3,7 +3,7 @@
 //! Heavily inspired by:
 //! https://github.com/glium/glium/blob/master/examples/shadow_mapping.rs
 
-mod shader;
+mod shaders;
 
 use log::info;
 
@@ -11,9 +11,8 @@ use nalgebra as na;
 
 use glium::{uniform, Surface};
 
-use crate::render::pipeline::{
-    self, Context, InstanceParams, RenderLists, RenderPass, ScenePassComponent,
-};
+use crate::render::pipeline::{self, Context, RenderLists, RenderPass, ScenePassComponent};
+use crate::render::shader::ToUniforms;
 use crate::render::{self, Camera, DrawError, Resources};
 
 pub use crate::render::CreationError;
@@ -53,11 +52,11 @@ impl ScenePassComponent for ShadowMapping {
     ///
     /// Note that the transformed shader will require additional uniforms,
     /// which are given by `ShadowMapping::scene_pass_uniforms`.
-    fn core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
         &self,
         core: render::shader::Core<(Context, P), V>,
     ) -> render::shader::Core<(Context, P), V> {
-        shader::render_shadowed_core_transform(core)
+        shaders::render_shadowed_core_transform(core)
     }
 }
 
@@ -69,8 +68,8 @@ impl ShadowMapping {
     ) -> Result<ShadowMapping, CreationError> {
         // Shader for creating the shadow map from light source's perspective
         info!("Creating shadow map program");
-        let shadow_map_program = shader::depth_map_core_transform(
-            pipeline::simple::plain_scene_core(),
+        let shadow_map_program = shaders::depth_map_core_transform(
+            pipeline::scene::model::scene_core(),
         ).build_program(facade)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
@@ -123,14 +122,14 @@ impl ShadowMapping {
 
         let light_context = Context { camera, ..*context };
 
-        render_lists.solid.render_with_program(
+        render_lists.solid.render(
             resources,
             &light_context,
             &Default::default(),
             &self.shadow_map_program,
             &mut shadow_target,
         )?;
-        render_lists.solid_glow.render_with_program(
+        render_lists.solid_glow.render(
             resources,
             &light_context,
             &Default::default(),
@@ -142,7 +141,7 @@ impl ShadowMapping {
     }
 
     /// Returns uniforms for binding the shadow map during scene pass.
-    pub fn scene_pass_uniforms(&self, context: &Context) -> impl glium::uniforms::Uniforms + '_ {
+    pub fn scene_pass_uniforms(&self, context: &Context) -> impl ToUniforms + '_ {
         let light_projection = self.light_projection();
         let light_view = self.light_view(context);
         let mat_light_view_projection: [[f32; 4]; 4] = (light_projection * light_view).into();

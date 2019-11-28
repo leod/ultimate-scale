@@ -5,6 +5,7 @@ use crate::exec::TickTime;
 use crate::machine::grid;
 use crate::machine::{Block, PlacedBlock};
 use crate::render;
+use crate::render::pipeline::scene::model;
 use crate::render::pipeline::RenderLists;
 
 pub const GRID_OFFSET_Z: f32 = 0.01;
@@ -78,7 +79,7 @@ impl Editor {
                         ));
                 out.ortho.add(
                     render::Object::Quad,
-                    &render::pipeline::DefaultInstanceParams {
+                    &model::Params {
                         transform: rect_transform,
                         color: na::Vector4::new(0.3, 0.3, 0.9, 0.3),
                         ..Default::default()

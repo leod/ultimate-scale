@@ -58,6 +58,15 @@ impl Default for Camera {
     }
 }
 
+to_uniforms_impl!(
+    Camera,
+    self => {
+        viewport: Vec4 => self.viewport.into(),
+        mat_projection: Mat4 => self.projection.into(),
+        mat_view: Mat4 => self.view.into(),
+    },
+);
+
 #[derive(Debug, Clone)]
 pub struct EditCameraView {
     target: na::Point3<f32>,

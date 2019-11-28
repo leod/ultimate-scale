@@ -1,4 +1,4 @@
-pub mod shader;
+pub mod shaders;
 
 use log::info;
 
@@ -6,9 +6,8 @@ use glium::framebuffer::SimpleFrameBuffer;
 use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Sampler, SamplerWrapFunction};
 use glium::{glutin, uniform, Surface};
 
-use crate::render::pipeline::{
-    CompositionPassComponent, Context, InstanceParams, RenderPass, ScenePassComponent,
-};
+use crate::render::pipeline::{CompositionPassComponent, Context, RenderPass, ScenePassComponent};
+use crate::render::shader::ToUniforms;
 use crate::render::{self, screen_quad, DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
@@ -43,11 +42,11 @@ impl RenderPass for Glow {
 }
 
 impl ScenePassComponent for Glow {
-    fn core_transform<P: InstanceParams, V: glium::vertex::Vertex>(
+    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
         &self,
         core: render::shader::Core<(Context, P), V>,
     ) -> render::shader::Core<(Context, P), V> {
-        shader::glow_map_core_transform(core)
+        shaders::glow_map_core_transform(core)
     }
 
     fn output_textures(&self) -> Vec<(&'static str, &glium::texture::Texture2d)> {
@@ -60,7 +59,7 @@ impl CompositionPassComponent for Glow {
         &self,
         core: render::shader::Core<(), screen_quad::Vertex>,
     ) -> render::shader::Core<(), screen_quad::Vertex> {
-        shader::composition_core_transform(core)
+        shaders::composition_core_transform(core)
     }
 }
 
@@ -75,7 +74,7 @@ impl Glow {
         let glow_texture_back = Self::create_texture(facade, rounded_size)?;
 
         info!("Creating blur program");
-        let blur_program = shader::blur_core().build_program(facade)?;
+        let blur_program = shaders::blur_core().build_program(facade)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
@@ -141,7 +140,7 @@ impl Glow {
         Ok(())
     }
 
-    pub fn composition_pass_uniforms(&self) -> impl glium::uniforms::Uniforms + '_ {
+    pub fn composition_pass_uniforms(&self) -> impl ToUniforms + '_ {
         uniform! {
             glow_texture: &self.glow_texture,
         }
