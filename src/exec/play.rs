@@ -15,7 +15,7 @@ pub const TICKS_PER_SEC_CHOICES: &[&str] = &[
     "0.25", "0.5", "1", "2", "4", "8", "16", "32", "64", "128", "256", "512",
 ];
 
-pub const MAX_TICKS_PER_UPDATE: usize = 100;
+pub const MAX_TICKS_PER_UPDATE: usize = 1024;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -107,13 +107,6 @@ impl Status {
         self.time().tick_progress()
     }
 
-    pub fn is_playing(&self) -> bool {
-        match self {
-            Status::Playing { .. } => true,
-            _ => false,
-        }
-    }
-
     pub fn is_paused(&self) -> bool {
         match self {
             Status::Paused { .. } => true,
@@ -178,7 +171,7 @@ impl Play {
                 new_time.next_tick_timer += dt;
 
                 let num_ticks_since_last_update = new_time.next_tick_timer.trigger_n();
-                new_time.num_ticks_passed += num_ticks_since_last_update;
+                new_time.num_ticks_passed += num_ticks_since_last_update.min(MAX_TICKS_PER_UPDATE);
 
                 Some(Status::Playing {
                     num_ticks_since_last_update,

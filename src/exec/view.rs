@@ -23,19 +23,15 @@ impl Default for Config {
 }
 
 pub struct ExecView {
-    config: Config,
     exec: Exec,
 
-    mouse_window_pos: na::Point2<f32>,
     mouse_block_pos: Option<grid::Point3>,
 }
 
 impl ExecView {
-    pub fn new(config: &Config, machine: Machine) -> ExecView {
+    pub fn new(_config: &Config, machine: Machine) -> ExecView {
         ExecView {
-            config: config.clone(),
             exec: Exec::new(machine, &mut rand::thread_rng()),
-            mouse_window_pos: na::Point2::origin(),
             mouse_block_pos: None,
         }
     }
