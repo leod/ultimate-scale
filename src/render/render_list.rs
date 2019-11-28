@@ -38,16 +38,6 @@ impl<T: ToUniforms> RenderList<T> {
         params: &glium::DrawParameters,
         target: &mut S,
     ) -> Result<(), glium::DrawError> {
-        let params = glium::DrawParameters {
-            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
-            depth: glium::Depth {
-                test: glium::DepthTest::IfLessOrEqual,
-                write: true,
-                ..Default::default()
-            },
-            ..params.clone()
-        };
-
         for instance in &self.instances {
             let buffers = resources.get_object_buffers(instance.object);
             let uniforms = (&context, &instance.params);
