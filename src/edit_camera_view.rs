@@ -20,6 +20,7 @@ pub struct Config {
     pub fast_move_multiplier: f32,
 
     pub rotate_degrees_per_sec: f32,
+    pub fast_rotate_multiplier: f32,
 }
 
 impl Default for Config {
@@ -37,6 +38,7 @@ impl Default for Config {
             move_units_per_sec: 4.0,
             fast_move_multiplier: 4.0,
             rotate_degrees_per_sec: 90.0,
+            fast_rotate_multiplier: 2.0,
         }
     }
 }
@@ -51,8 +53,8 @@ pub struct EditCameraView {
 }
 
 impl EditCameraView {
-    pub fn new() -> EditCameraView {
-        EditCameraView {
+    pub fn new() -> Self {
+        Self {
             target: na::Point3::new(5.0, 5.0, 0.0),
             min_distance: 3.0,
             height: 10.0,
@@ -110,6 +112,15 @@ impl EditCameraViewInput {
             }
     }
 
+    fn rotate_speed_per_sec(&self, input_state: &InputState) -> f32 {
+        self.config.rotate_degrees_per_sec
+            * if input_state.is_key_pressed(self.config.fast_move_key) {
+                self.config.fast_rotate_multiplier
+            } else {
+                1.0
+            }
+    }
+
     pub fn update(&mut self, dt_secs: f32, input_state: &InputState, camera: &mut EditCameraView) {
         let move_speed = dt_secs * self.move_speed_per_sec(input_state);
         let mut translation = na::Vector3::zeros();
@@ -148,13 +159,13 @@ impl EditCameraViewInput {
 
         camera.target += rotation_z.transform_vector(&translation);
 
-        let rotation_speed = dt_secs * self.config.rotate_degrees_per_sec.to_radians();
+        let rotate_speed = dt_secs * self.rotate_speed_per_sec(input_state).to_radians();
 
         if input_state.is_key_pressed(self.config.rotate_cw_key) {
-            camera.yaw_radians -= rotation_speed;
+            camera.yaw_radians -= rotate_speed;
         }
         if input_state.is_key_pressed(self.config.rotate_ccw_key) {
-            camera.yaw_radians += rotation_speed;
+            camera.yaw_radians += rotate_speed;
         }
     }
 
