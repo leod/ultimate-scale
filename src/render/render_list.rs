@@ -30,7 +30,7 @@ impl<T: Clone> RenderList<T> {
 }
 
 impl<T: ToUniforms> RenderList<T> {
-    pub fn render<S: glium::Surface, C: ToUniforms>(
+    pub fn draw<S: glium::Surface, C: ToUniforms>(
         &self,
         resources: &Resources,
         context: &C,

@@ -11,9 +11,9 @@ use nalgebra as na;
 
 use glium::{uniform, Surface};
 
-use crate::render::pipeline::{self, Context, RenderLists, RenderPass, ScenePassComponent};
+use crate::render::pipeline::{self, scene, Context, RenderLists, RenderPass, ScenePassComponent};
 use crate::render::shader::{self, ToUniforms};
-use crate::render::{self, Camera, DrawError, Resources};
+use crate::render::{self, Camera, DrawError, Instancing, Resources};
 
 pub use crate::render::CreationError;
 
@@ -70,7 +70,7 @@ impl ShadowMapping {
         info!("Creating shadow map program");
         let shadow_map_program = shaders::depth_map_core_transform(
             pipeline::scene::model::scene_core(),
-        ).build_program(facade, shader::InstanceMode::Uniforms)?;
+        ).build_program(facade, shader::InstanceMode::Vertex)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
             facade,
@@ -106,7 +106,8 @@ impl ShadowMapping {
         facade: &F,
         resources: &Resources,
         context: &Context,
-        render_lists: &RenderLists,
+        instancing: &Instancing<scene::model::Params>,
+        instancing_glow: &Instancing<scene::model::Params>,
     ) -> Result<(), DrawError> {
         let mut shadow_target =
             glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)?;
@@ -122,18 +123,28 @@ impl ShadowMapping {
 
         let light_context = Context { camera, ..*context };
 
-        render_lists.solid.render(
+        let params = glium::DrawParameters {
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            depth: glium::Depth {
+                test: glium::DepthTest::IfLessOrEqual,
+                write: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        instancing.draw(
             resources,
-            &light_context,
             &self.shadow_map_program,
-            &Default::default(),
+            &light_context.to_uniforms(),
+            &params,
             &mut shadow_target,
         )?;
-        render_lists.solid_glow.render(
+        instancing_glow.draw(
             resources,
-            &light_context,
             &self.shadow_map_program,
-            &Default::default(),
+            &light_context.to_uniforms(),
+            &params,
             &mut shadow_target,
         )?;
 
