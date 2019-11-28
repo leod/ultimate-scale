@@ -12,7 +12,7 @@ pub mod scene;
 pub mod screen_quad;
 pub mod stage;
 
-pub use camera::{Camera, EditCameraView};
+pub use camera::Camera;
 pub use error::{CreationError, DrawError};
 pub use instancing::Instancing;
 pub use object::Object;

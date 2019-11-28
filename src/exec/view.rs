@@ -5,12 +5,13 @@ use nalgebra as na;
 use glium::glutin::{self, WindowEvent};
 
 use crate::edit::pick;
+use crate::edit_camera_view::EditCameraView;
 use crate::exec::anim::{WindAnimState, WindDeadend, WindLife};
 use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{self, grid, level, BlipKind, Machine};
-use crate::render::{self, scene, Camera, EditCameraView, Light, RenderLists};
+use crate::render::{self, scene, Camera, Light, RenderLists};
 
 #[derive(Debug, Clone)]
 pub struct Config {}

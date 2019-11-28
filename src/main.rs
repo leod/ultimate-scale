@@ -2,6 +2,7 @@
 mod util;
 mod config;
 mod edit;
+mod edit_camera_view;
 mod exec;
 mod game;
 mod input_state;

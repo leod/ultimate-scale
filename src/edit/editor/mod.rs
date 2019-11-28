@@ -13,10 +13,11 @@ use nalgebra as na;
 
 use glium::glutin::{self, MouseButton, WindowEvent};
 
+use crate::edit_camera_view::EditCameraView;
 use crate::input_state::InputState;
 use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
-use crate::render::{Camera, EditCameraView};
+use crate::render::Camera;
 
 use crate::edit::config::ModifiedKey;
 use crate::edit::{pick, Config, Edit, Mode, Piece};
