@@ -326,7 +326,6 @@ where
             }
         }
 
-        // TODO: Check non-duplicate inputs/outputs
         LinkedCore { vertex, fragment }
     }
 }
