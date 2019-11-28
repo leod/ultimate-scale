@@ -5,8 +5,7 @@
 
 use glium::uniforms::UniformType;
 
-use crate::render::screen_quad;
-use crate::render::shader::{self, ToUniforms};
+use crate::render::{screen_quad, shader};
 
 pub const F_GLOW_COLOR: &str = "f_glow_color";
 
@@ -19,9 +18,7 @@ pub fn f_glow_color() -> shader::FragmentOutDef {
 
 /// Shader core transform for rendering color into a texture so that it can be
 /// blurred and composed for a glow effect later in the pipeline.
-pub fn glow_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
-    core: shader::Core<P, V>,
-) -> shader::Core<P, V> {
+pub fn glow_map_core_transform<P, I, V>(core: shader::Core<P, I, V>) -> shader::Core<P, I, V> {
     let fragment = core.fragment.with_out(f_glow_color(), "vec3(f_color)");
 
     shader::Core {
@@ -34,9 +31,7 @@ pub fn glow_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
 /// glowing objects will glow through non-glowing objects.
 ///
 /// TODO: Figure out if we can have glow be an uniform instead.
-pub fn no_glow_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
-    core: shader::Core<P, V>,
-) -> shader::Core<P, V> {
+pub fn no_glow_map_core_transform<P, I, V>(core: shader::Core<P, I, V>) -> shader::Core<P, I, V> {
     let fragment = core
         .fragment
         .with_out(f_glow_color(), "vec3(0.0, 0.0, 0.0)");
@@ -48,7 +43,7 @@ pub fn no_glow_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
 }
 
 /// Shader core for blurring the glow texture.
-pub fn blur_core() -> shader::Core<(), screen_quad::Vertex> {
+pub fn blur_core() -> shader::Core<(), (), screen_quad::Vertex> {
     let vertex = shader::VertexCore::empty()
         .with_out(shader::defs::v_tex_coord(), "tex_coord")
         .with_out_expr(shader::defs::V_POSITION, "position");
@@ -109,8 +104,8 @@ pub fn blur_core() -> shader::Core<(), screen_quad::Vertex> {
 
 /// Shader core for composing the glow texture with the scene texture.
 pub fn composition_core_transform(
-    core: shader::Core<(), screen_quad::Vertex>,
-) -> shader::Core<(), screen_quad::Vertex> {
+    core: shader::Core<(), (), screen_quad::Vertex>,
+) -> shader::Core<(), (), screen_quad::Vertex> {
     assert!(
         core.fragment.has_in(shader::defs::V_TEX_COORD),
         "FragmentCore needs V_TEX_COORD input for glow composition pass"

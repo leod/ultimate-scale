@@ -19,7 +19,7 @@ impl Default for Params {
     }
 }
 
-instance_input_impl!(
+impl_to_uniforms_and_to_vertex!(
     Params,
     self => {
         mat_model: Mat4 => self.transform.into(),
@@ -27,7 +27,7 @@ instance_input_impl!(
     },
 );
 
-pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
+pub fn scene_core() -> shader::Core<Context, Params, object::Vertex> {
     let vertex = shader::VertexCore::empty()
         .with_out(
             // TODO: Precompute inverse of mat_model if we ever have lots of vertices
@@ -38,12 +38,15 @@ pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
             shader::defs::v_world_pos(),
             "mat_model * vec4(position, 1.0)",
         )
+        .with_out(shader::defs::v_color(), "color")
         .with_out_expr(
             shader::defs::V_POSITION,
             "mat_projection * mat_view * v_world_pos",
         );
 
-    let fragment = shader::FragmentCore::default().with_out(shader::defs::f_color(), "color");
+    let fragment = shader::FragmentCore::default()
+        .with_in_def(shader::defs::v_color())
+        .with_out(shader::defs::f_color(), "v_color");
 
     shader::Core { vertex, fragment }
 }

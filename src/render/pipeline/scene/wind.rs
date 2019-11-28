@@ -26,7 +26,7 @@ impl Default for Params {
     }
 }
 
-to_uniforms_impl!(
+impl_to_uniforms_and_to_vertex!(
     Params,
     self => {
         mat_model: Mat4 => self.transform.into(),
@@ -56,7 +56,7 @@ fn v_color() -> shader::VertexOutDef {
     )
 }
 
-pub fn scene_core() -> shader::Core<(Context, Params), object::Vertex> {
+pub fn scene_core() -> shader::Core<Context, Params, object::Vertex> {
     let vertex = shader::VertexCore::empty()
         .with_defs(
             "

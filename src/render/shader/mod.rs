@@ -35,17 +35,17 @@ pub type VertexOutDef = (VariableDef, VertexOutQualifier);
 pub type FragmentOutDef = (VariableDef, FragmentOutQualifier);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VertexCore<P: ToUniforms, V: glium::vertex::Vertex> {
+pub struct VertexCore<P, I, V> {
     pub extra_uniforms: Vec<VariableDef>,
     pub out_defs: Vec<VertexOutDef>,
     pub defs: GLSL,
     pub body: GLSL,
     pub out_exprs: Vec<(VariableName, GLSL)>,
-    pub phantom: PhantomData<(P, V)>,
+    pub phantom: PhantomData<(P, I, V)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FragmentCore<P: ToUniforms> {
+pub struct FragmentCore<P> {
     pub extra_uniforms: Vec<VariableDef>,
     pub in_defs: Vec<VertexOutDef>,
     pub out_defs: Vec<FragmentOutDef>,
@@ -56,18 +56,18 @@ pub struct FragmentCore<P: ToUniforms> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Core<P: ToUniforms, V: glium::vertex::Vertex> {
-    pub vertex: VertexCore<P, V>,
+pub struct Core<P, I, V> {
+    pub vertex: VertexCore<P, I, V>,
     pub fragment: FragmentCore<P>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LinkedCore<P: ToUniforms, V: glium::vertex::Vertex> {
-    pub vertex: VertexCore<P, V>,
+pub struct LinkedCore<P, I, V> {
+    pub vertex: VertexCore<P, I, V>,
     pub fragment: FragmentCore<P>,
 }
 
-impl<P: ToUniforms, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
+impl<P, I, V> Default for VertexCore<P, I, V> {
     fn default() -> Self {
         Self {
             extra_uniforms: Vec::new(),
@@ -80,7 +80,7 @@ impl<P: ToUniforms, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
     }
 }
 
-impl<P: ToUniforms> Default for FragmentCore<P> {
+impl<P> Default for FragmentCore<P> {
     fn default() -> Self {
         Self {
             extra_uniforms: Vec::new(),
@@ -94,7 +94,7 @@ impl<P: ToUniforms> Default for FragmentCore<P> {
     }
 }
 
-impl<P: ToUniforms, V: glium::vertex::Vertex> VertexCore<P, V> {
+impl<P, I, V> VertexCore<P, I, V> {
     pub fn empty() -> Self {
         Default::default()
     }
@@ -149,7 +149,7 @@ impl<P: ToUniforms, V: glium::vertex::Vertex> VertexCore<P, V> {
     }
 }
 
-impl<P: ToUniforms> FragmentCore<P> {
+impl<P> FragmentCore<P> {
     pub fn empty() -> Self {
         Default::default()
     }
@@ -269,8 +269,13 @@ fn does_core_use_variable(
     visitor.is_used
 }
 
-impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
-    pub fn link(&self) -> LinkedCore<P, V> {
+impl<
+        P: ToUniforms + Clone + Default,
+        I: ToUniforms + Clone + Default,
+        V: glium::vertex::Vertex,
+    > Core<P, I, V>
+{
+    pub fn link(&self) -> LinkedCore<P, I, V> {
         let mut fragment = self.fragment.clone();
 
         // TODO: Remove unused inputs from fragment shader.
@@ -320,7 +325,12 @@ impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
     }
 }
 
-impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
+impl<
+        P: ToUniforms + Clone + Default,
+        I: ToUniforms + Clone + Default,
+        V: glium::vertex::Vertex,
+    > Core<P, I, V>
+{
     pub fn build_program<F: glium::backend::Facade>(
         &self,
         facade: &F,
@@ -329,7 +339,9 @@ impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
     }
 }
 
-impl<P: ToUniforms + Default, V: glium::vertex::Vertex> LinkedCore<P, V> {
+impl<P: ToUniforms + Default, I: ToUniforms + Clone + Default, V: glium::vertex::Vertex>
+    LinkedCore<P, I, V>
+{
     pub fn build_program<F: glium::backend::Facade>(
         &self,
         facade: &F,
@@ -490,13 +502,17 @@ fn compile_vertex_attributes<V: glium::vertex::Vertex>() -> String {
     compile_variable_defs("in", attributes.iter().cloned())
 }
 
-impl<P: ToUniforms + Default, V: glium::vertex::Vertex> VertexCore<P, V> {
+impl<P: ToUniforms + Default, I: ToUniforms + Default, V: glium::vertex::Vertex>
+    VertexCore<P, I, V>
+{
     pub fn compile(&self) -> String {
         let mut s = String::new();
 
         s += "#version 330\n\n";
 
         s += &compile_uniforms::<P>();
+        s += "\n";
+        s += &compile_uniforms::<I>();
         s += "\n";
         s += &compile_variable_defs("uniform", self.extra_uniforms.iter().cloned());
         s += "\n";

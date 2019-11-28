@@ -30,7 +30,7 @@ pub fn v_world_pos() -> VertexOutDef {
 
 pub fn v_color() -> VertexOutDef {
     (
-        (V_COLOR.into(), UniformType::FloatVec3),
+        (V_COLOR.into(), UniformType::FloatVec4),
         VertexOutQualifier::Smooth,
     )
 }

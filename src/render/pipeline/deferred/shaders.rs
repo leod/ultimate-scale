@@ -1,8 +1,7 @@
 use glium::uniforms::UniformType;
 
 use crate::render::pipeline::Light;
-use crate::render::shader::{self, ToUniforms};
-use crate::render::{object, screen_quad, Camera};
+use crate::render::{object, screen_quad, shader, Camera};
 
 pub const F_WORLD_POS: &str = "f_world_pos";
 pub const F_WORLD_NORMAL: &str = "f_world_normal";
@@ -23,10 +22,10 @@ pub fn f_world_normal() -> shader::FragmentOutDef {
 
 /// Shader core transform for writing position/normal/color into separate
 /// buffers, so that they may be combined in a subsequent pass.
-pub fn scene_buffers_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
+pub fn scene_buffers_core_transform<P, I, V>(
     always_include_shadow_out: bool,
-    core: shader::Core<P, V>,
-) -> shader::Core<P, V> {
+    core: shader::Core<P, I, V>,
+) -> shader::Core<P, I, V> {
     assert!(
         core.vertex.has_out(shader::defs::V_WORLD_POS),
         "VertexCore needs V_WORLD_POS output for deferred shading scene pass"
@@ -124,7 +123,7 @@ fn light_fragment_core(have_shadows: bool) -> shader::FragmentCore<(Camera, Ligh
 /// from the scene pass.
 pub fn light_screen_quad_core(
     have_shadows: bool,
-) -> shader::Core<(Camera, Light), screen_quad::Vertex> {
+) -> shader::Core<(Camera, Light), (), screen_quad::Vertex> {
     let vertex = shader::VertexCore::default().with_out_expr(shader::defs::V_POSITION, "position");
 
     shader::Core {
@@ -133,7 +132,7 @@ pub fn light_screen_quad_core(
     }
 }
 
-pub fn light_object_core(have_shadows: bool) -> shader::Core<(Camera, Light), object::Vertex> {
+pub fn light_object_core(have_shadows: bool) -> shader::Core<(Camera, Light), (), object::Vertex> {
     let vertex = shader::VertexCore::default().with_out_expr(
         shader::defs::V_POSITION,
         "
@@ -151,8 +150,8 @@ pub fn light_object_core(have_shadows: bool) -> shader::Core<(Camera, Light), ob
 
 /// Composition shader core transform for composing our buffers.
 pub fn composition_core_transform(
-    core: shader::Core<(), screen_quad::Vertex>,
-) -> shader::Core<(), screen_quad::Vertex> {
+    core: shader::Core<(), (), screen_quad::Vertex>,
+) -> shader::Core<(), (), screen_quad::Vertex> {
     assert!(
         core.fragment.has_in(shader::defs::V_TEX_COORD),
         "FragmentCore needs V_TEX_COORD input for deferred shading composition pass"

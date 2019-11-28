@@ -27,8 +27,6 @@ pub trait ToVertex {
     fn to_vertex(&self) -> Self::V;
 }
 
-pub trait InstanceInput: ToUniforms + ToVertex {}
-
 // The following type aliases have the same name as variants in glium's
 // `UniformValue`. This allows us to use the same macro parameters foor
 // implementing both `ToUniforms` and `ToVertex`. Yeah, it's hacky though.
@@ -39,7 +37,7 @@ pub type Vec4 = [f32; 4];
 pub type Mat4 = [[f32; 4]; 4];
 
 #[macro_export]
-macro_rules! to_uniforms_impl {
+macro_rules! impl_to_uniforms {
     ($ty:ident, $this:ident => { $( $field:ident: $variant:ident => $value:expr, )* } $(,)? ) => {
         impl $crate::render::shader::ToUniforms for $ty {
             fn visit_values<'a, F>(&'a $this, mut output: F)
@@ -55,7 +53,7 @@ macro_rules! to_uniforms_impl {
 }
 
 #[macro_export]
-macro_rules! to_vertex_impl {
+macro_rules! impl_to_vertex {
     ($ty:ident, $this:ident => { $( $field:ident: $variant:ident => $value:expr, )* } $(,)? ) => {
         #[derive(Copy, Clone, Debug)]
         pub struct MyVertex {
@@ -82,10 +80,10 @@ macro_rules! to_vertex_impl {
 }
 
 #[macro_export]
-macro_rules! instance_input_impl {
+macro_rules! impl_to_uniforms_and_to_vertex {
     ($ty:ident, $this:ident => { $( $field:ident: $type:ident => $value:expr, )* } $(,)? ) => {
-        to_uniforms_impl!($ty, $this => { $($field: $type => $value, )* });
-        to_vertex_impl!($ty, $this => { $($field: $type => $value, )* });
+        impl_to_uniforms!($ty, $this => { $($field: $type => $value, )* });
+        impl_to_vertex!($ty, $this => { $($field: $type => $value, )* });
     }
 }
 

@@ -53,10 +53,10 @@ impl RenderPass for DeferredShading {
 }
 
 impl ScenePassComponent for DeferredShading {
-    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
+    fn core_transform<P, V>(
         &self,
-        core: render::shader::Core<(Context, P), V>,
-    ) -> render::shader::Core<(Context, P), V> {
+        core: render::shader::Core<Context, P, V>,
+    ) -> render::shader::Core<Context, P, V> {
         // Write scene to separate buffers
         shaders::scene_buffers_core_transform(self.shadow_texture.is_some(), core)
     }
@@ -78,8 +78,8 @@ impl ScenePassComponent for DeferredShading {
 impl CompositionPassComponent for DeferredShading {
     fn core_transform(
         &self,
-        core: render::shader::Core<(), screen_quad::Vertex>,
-    ) -> render::shader::Core<(), screen_quad::Vertex> {
+        core: render::shader::Core<(), (), screen_quad::Vertex>,
+    ) -> render::shader::Core<(), (), screen_quad::Vertex> {
         shaders::composition_core_transform(core)
     }
 }
