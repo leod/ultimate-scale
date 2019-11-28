@@ -39,9 +39,16 @@ impl From<std::io::Error> for CreationError {
 
 #[derive(Debug)]
 pub enum DrawError {
+    Creation(CreationError),
     Draw(glium::DrawError),
     FramebufferValidation(glium::framebuffer::ValidationError),
     InstancingNotSupported,
+}
+
+impl From<CreationError> for DrawError {
+    fn from(err: CreationError) -> DrawError {
+        DrawError::Creation(err)
+    }
 }
 
 impl From<glium::DrawError> for DrawError {

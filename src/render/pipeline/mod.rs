@@ -297,7 +297,7 @@ impl Components {
         resources: &Resources,
         context: &Context,
         pass: &ScenePass<I, V>,
-        render_list: &RenderList<I>,
+        _render_list: &RenderList<I>,
         target: &mut S,
     ) -> Result<(), DrawError>
     where
@@ -503,16 +503,16 @@ impl Pipeline {
 
             self.scene_pass_solid
                 .instancing
-                .update(&render_lists.solid.instances);
+                .update(facade, &render_lists.solid.instances)?;
             self.scene_pass_solid_glow
                 .instancing
-                .update(&render_lists.solid_glow.instances);
+                .update(facade, &render_lists.solid_glow.instances)?;
             self.scene_pass_plain
                 .instancing
-                .update(&render_lists.plain.instances);
+                .update(facade, &render_lists.plain.instances)?;
             self.scene_pass_wind
                 .instancing
-                .update(&render_lists.wind.instances);
+                .update(facade, &render_lists.wind.instances)?;
         }
 
         // Clear buffers
