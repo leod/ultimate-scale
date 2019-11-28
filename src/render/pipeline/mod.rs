@@ -3,20 +3,17 @@ pub mod fxaa;
 pub mod glow;
 pub mod light;
 pub mod render_pass;
-pub mod scene;
 pub mod shaders;
 pub mod shadow;
 
 use log::info;
 
-use nalgebra as na;
-
 use glium::{uniform, Surface};
 
 use crate::config::ViewConfig;
 use crate::render::shader::{ToUniforms, ToVertex, UniformInput};
-use crate::render::{self, object, screen_quad, shader, Camera, DrawError, Resources};
-use crate::render::{Instancing, RenderList, ScreenQuad};
+use crate::render::{self, object, scene, screen_quad, shader, DrawError, Resources};
+use crate::render::{Context, Instancing, RenderList, ScreenQuad};
 
 use deferred::DeferredShading;
 use fxaa::FXAA;
@@ -25,27 +22,6 @@ use shadow::ShadowMapping;
 
 pub use light::Light;
 pub use render_pass::{CompositionPassComponent, RenderPass, ScenePassComponent};
-
-#[derive(Debug, Clone)]
-pub struct Context {
-    pub camera: Camera,
-    pub elapsed_time_secs: f32,
-    pub tick_progress: f32,
-    pub main_light_pos: na::Point3<f32>,
-    pub main_light_center: na::Point3<f32>,
-}
-
-impl_uniform_input!(
-    Context,
-    self => {
-        viewport: Vec4 => self.camera.viewport.into(),
-        mat_projection: Mat4 => self.camera.projection.into(),
-        mat_view: Mat4 => self.camera.view.into(),
-        main_light_pos: Vec3 => self.main_light_pos.coords.into(),
-        elapsed_time_secs: Float => self.elapsed_time_secs,
-        tick_progress: Float => self.tick_progress,
-    },
-);
 
 #[derive(Default, Clone)]
 pub struct RenderLists {
@@ -331,21 +307,6 @@ impl Components {
             target,
         )?;
 
-        /*// TODO: Instancing (lol)
-        for instance in &render_list.instances {
-            let buffers = resources.get_object_buffers(instance.object);
-
-            let uniforms = (&shared_uniforms, &instance.params);
-
-            buffers.index_buffer.draw(
-                &buffers.vertex_buffer,
-                &pass.program,
-                &uniforms.to_uniforms(),
-                &params,
-                target,
-            )?;
-        }*/
-
         Ok(())
     }
 
@@ -564,15 +525,6 @@ impl Pipeline {
                 &self.scene_color_texture,
                 &self.scene_depth_texture,
             )?;
-            /*self.components.scene_pass(
-                facade,
-                resources,
-                context,
-                &self.scene_pass_plain,
-                &render_lists.plain,
-                &self.scene_color_texture,
-                &self.scene_depth_texture,
-            )?;*/
             self.components.scene_pass(
                 facade,
                 resources,
