@@ -360,22 +360,6 @@ impl Play {
                 }
 
                 ui.set_window_font_scale(1.0);
-
-                // Pick speed directly:
-                /*for (index, &ticks_per_sec) in TICKS_PER_SEC_CHOICES.iter().enumerate() {
-                    if index == 4 {
-                        ui.dummy([58.0, 0.0]);
-                    }
-                    ui.same_line(0.0);
-
-                    let text = ImString::new(format!("{}x", ticks_per_sec));
-                    let selectable = imgui::Selectable::new(&text)
-                        .selected(self.ticks_per_sec_index == index)
-                        .size([35.0, 0.0]);
-                    if selectable.build(ui) {
-                        self.ticks_per_sec_index = index;
-                    }
-                }*/
             });
     }
 }
