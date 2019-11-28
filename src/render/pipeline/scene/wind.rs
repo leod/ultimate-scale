@@ -26,7 +26,7 @@ impl Default for Params {
     }
 }
 
-impl_to_uniforms_and_to_vertex!(
+impl_uniform_input_and_to_vertex!(
     Params,
     self => {
         mat_model: Mat4 => self.transform.into(),

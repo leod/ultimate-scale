@@ -14,7 +14,7 @@ use nalgebra as na;
 use glium::{uniform, Surface};
 
 use crate::config::ViewConfig;
-use crate::render::shader::ToUniforms;
+use crate::render::shader::{ToUniforms, UniformInput};
 use crate::render::{self, object, screen_quad, shader, Camera, DrawError, Resources};
 use crate::render::{RenderList, ScreenQuad};
 
@@ -35,19 +35,7 @@ pub struct Context {
     pub main_light_center: na::Point3<f32>,
 }
 
-impl Default for Context {
-    fn default() -> Self {
-        Self {
-            camera: Default::default(),
-            elapsed_time_secs: 0.0,
-            tick_progress: 0.0,
-            main_light_pos: na::Point3::origin(),
-            main_light_center: na::Point3::origin(),
-        }
-    }
-}
-
-impl_to_uniforms!(
+impl_uniform_input!(
     Context,
     self => {
         viewport: Vec4 => self.camera.viewport.into(),
@@ -197,7 +185,7 @@ impl Components {
     ) -> Result<ScenePass<I, V>, render::CreationError>
     where
         F: glium::backend::Facade,
-        I: ToUniforms + Clone + Default,
+        I: UniformInput + Clone,
         V: glium::vertex::Vertex,
     {
         info!(

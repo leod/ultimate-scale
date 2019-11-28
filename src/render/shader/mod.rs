@@ -9,10 +9,10 @@ use std::marker::PhantomData;
 use glsl::parser::Parse;
 use glsl::visitor::Host;
 
-use glium::uniforms::{UniformType, UniformValue, Uniforms};
+use glium::uniforms::UniformType;
 use glium::vertex::AttributeType;
 
-pub use input::{ToUniforms, ToVertex};
+pub use input::{ToUniforms, ToVertex, UniformInput};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum VertexOutQualifier {
@@ -269,11 +269,11 @@ fn does_core_use_variable(
     visitor.is_used
 }
 
-impl<
-        P: ToUniforms + Clone + Default,
-        I: ToUniforms + Clone + Default,
-        V: glium::vertex::Vertex,
-    > Core<P, I, V>
+impl<P, I, V> Core<P, I, V>
+where
+    P: UniformInput + Clone,
+    I: UniformInput + Clone,
+    V: glium::vertex::Vertex,
 {
     pub fn link(&self) -> LinkedCore<P, I, V> {
         let mut fragment = self.fragment.clone();
@@ -327,8 +327,8 @@ impl<
 
 impl<P, I, V> Core<P, I, V>
 where
-    P: ToUniforms + Clone + Default,
-    I: ToUniforms + Clone + Default,
+    P: UniformInput + Clone,
+    I: UniformInput + Clone,
     V: glium::vertex::Vertex,
 {
     pub fn build_program<F: glium::backend::Facade>(
@@ -341,8 +341,8 @@ where
 
 impl<P, I, V> LinkedCore<P, I, V>
 where
-    P: ToUniforms + Default,
-    I: ToUniforms + Clone + Default,
+    P: UniformInput,
+    I: UniformInput,
     V: glium::vertex::Vertex,
 {
     pub fn build_program<F: glium::backend::Facade>(
@@ -397,24 +397,6 @@ fn compile_uniform_type(t: UniformType) -> &'static str {
     }
 }
 
-fn uniform_value_to_type(v: UniformValue) -> UniformType {
-    match v {
-        UniformValue::Float(_) => UniformType::Float,
-        UniformValue::Vec2(_) => UniformType::FloatVec2,
-        UniformValue::Vec3(_) => UniformType::FloatVec3,
-        UniformValue::Vec4(_) => UniformType::FloatVec4,
-        UniformValue::Mat2(_) => UniformType::FloatMat2,
-        UniformValue::Mat3(_) => UniformType::FloatMat3,
-        UniformValue::Mat4(_) => UniformType::FloatMat4,
-        UniformValue::SignedInt(_) => UniformType::Int,
-        UniformValue::IntVec2(_) => UniformType::IntVec2,
-        UniformValue::IntVec3(_) => UniformType::IntVec3,
-        UniformValue::IntVec4(_) => UniformType::IntVec4,
-        UniformValue::Bool(_) => UniformType::Bool,
-        _ => unimplemented!("Given UniformValue not yet supported"),
-    }
-}
-
 fn compile_variable_def(prefix: &str, (name, t): &VariableDef) -> String {
     prefix.to_string() + " " + &compile_uniform_type(*t).to_string() + " " + name + ";\n"
 }
@@ -458,14 +440,8 @@ fn compile_fragment_out_defs(defs: &[FragmentOutDef]) -> String {
         .join("")
 }
 
-fn compile_uniforms<P: ToUniforms + Default>() -> String {
-    let mut uniforms = Vec::new();
-
-    P::default()
-        .to_uniforms()
-        .visit_values(|name, uniform_value| {
-            uniforms.push((name.to_string(), uniform_value_to_type(uniform_value)));
-        });
+fn compile_uniforms<P: UniformInput>() -> String {
+    let uniforms = P::uniform_input_defs();
 
     compile_variable_defs("uniform", uniforms.iter().cloned())
 }
@@ -507,8 +483,8 @@ fn compile_vertex_attributes<V: glium::vertex::Vertex>() -> String {
 
 impl<P, I, V> VertexCore<P, I, V>
 where
-    P: ToUniforms + Default,
-    I: ToUniforms + Default,
+    P: UniformInput,
+    I: UniformInput,
     V: glium::vertex::Vertex,
 {
     pub fn compile(&self) -> String {
@@ -542,7 +518,7 @@ where
 
 impl<P> FragmentCore<P>
 where
-    P: ToUniforms + Default,
+    P: UniformInput,
 {
     pub fn compile(&self) -> String {
         let mut s = String::new();
