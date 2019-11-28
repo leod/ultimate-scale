@@ -138,7 +138,7 @@ struct ScenePassSetup {
     glow: bool,
 }
 
-struct ScenePass<I: ToUniforms, V: glium::vertex::Vertex> {
+struct ScenePass<I, V> {
     setup: ScenePassSetup,
 
     /// Currently just used as a phantom.
@@ -189,16 +189,17 @@ impl Components {
         })
     }
 
-    fn create_scene_pass<
-        F: glium::backend::Facade,
-        I: ToUniforms + Clone + Default,
-        V: glium::vertex::Vertex,
-    >(
+    fn create_scene_pass<F, I, V>(
         &self,
         facade: &F,
         setup: ScenePassSetup,
         mut shader_core: shader::Core<Context, I, V>,
-    ) -> Result<ScenePass<I, V>, render::CreationError> {
+    ) -> Result<ScenePass<I, V>, render::CreationError>
+    where
+        F: glium::backend::Facade,
+        I: ToUniforms + Clone + Default,
+        V: glium::vertex::Vertex,
+    {
         info!(
             "Creating scene pass for I={}, V={}",
             std::any::type_name::<I>(),
@@ -298,14 +299,19 @@ impl Components {
         textures
     }
 
-    fn scene_pass_to_surface<I: ToUniforms, V: glium::vertex::Vertex, S: glium::Surface>(
+    fn scene_pass_to_surface<I, V, S>(
         &self,
         resources: &Resources,
         context: &Context,
         pass: &ScenePass<I, V>,
         render_list: &RenderList<I>,
         target: &mut S,
-    ) -> Result<(), DrawError> {
+    ) -> Result<(), DrawError>
+    where
+        I: ToUniforms,
+        V: glium::vertex::Vertex,
+        S: glium::Surface,
+    {
         let params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
@@ -351,7 +357,12 @@ impl Components {
         render_list: &RenderList<I>,
         color_texture: &glium::texture::Texture2d,
         depth_texture: &glium::texture::DepthTexture2d,
-    ) -> Result<(), DrawError> {
+    ) -> Result<(), DrawError>
+    where
+        F: glium::backend::Facade,
+        I: ToUniforms,
+        V: glium::vertex::Vertex,
+    {
         let mut output_textures = self.scene_output_textures(&pass.setup);
         output_textures.push((shader::defs::F_COLOR, color_texture));
 
