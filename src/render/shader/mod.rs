@@ -67,24 +67,6 @@ pub struct LinkedCore<P: ToUniforms, V: glium::vertex::Vertex> {
     pub fragment: FragmentCore<P>,
 }
 
-#[macro_export]
-macro_rules! shader_out_exprs {
-    { $($variable:expr => $expr:literal),*, } => {
-        vec![
-            $(
-                ($variable.to_string(), $expr.to_string()),
-            )*
-        ]
-    };
-    { $($variable:expr, $type:expr => $expr:literal),*, } => {
-        vec![
-            $(
-                ($variable.to_string(), $type, $expr.to_string()),
-            )*
-        ]
-    };
-}
-
 impl<P: ToUniforms, V: glium::vertex::Vertex> Default for VertexCore<P, V> {
     fn default() -> Self {
         Self {
@@ -113,6 +95,10 @@ impl<P: ToUniforms> Default for FragmentCore<P> {
 }
 
 impl<P: ToUniforms, V: glium::vertex::Vertex> VertexCore<P, V> {
+    pub fn empty() -> Self {
+        Default::default()
+    }
+
     pub fn has_out(&self, name: &str) -> bool {
         self.out_defs
             .iter()
@@ -128,9 +114,9 @@ impl<P: ToUniforms, V: glium::vertex::Vertex> VertexCore<P, V> {
             .map(|(_n, expr)| expr)
     }
 
-    pub fn with_extra_uniform(mut self, def: VariableDef) -> Self {
+    pub fn with_extra_uniform(mut self, name: &str, t: UniformType) -> Self {
         // TODO: Check for duplicates
-        self.extra_uniforms.push(def);
+        self.extra_uniforms.push((name.into(), t));
         self
     }
 
@@ -151,9 +137,23 @@ impl<P: ToUniforms, V: glium::vertex::Vertex> VertexCore<P, V> {
         self.out_defs.push(def);
         self
     }
+
+    pub fn with_out_expr(mut self, name: &str, expr: &str) -> Self {
+        self.out_exprs.push((name.into(), expr.into()));
+        self
+    }
+
+    pub fn with_out_def(mut self, def: VertexOutDef) -> Self {
+        self.out_defs.push(def);
+        self
+    }
 }
 
 impl<P: ToUniforms> FragmentCore<P> {
+    pub fn empty() -> Self {
+        Default::default()
+    }
+
     pub fn get_in_def(&self, name: &str) -> Option<&VertexOutDef> {
         self.in_defs.iter().find(|((n, _t), _q)| n == name)
     }
@@ -177,9 +177,9 @@ impl<P: ToUniforms> FragmentCore<P> {
             .map(|(_n, expr)| expr)
     }
 
-    pub fn with_extra_uniform(mut self, def: VariableDef) -> Self {
+    pub fn with_extra_uniform(mut self, name: &str, t: UniformType) -> Self {
         // TODO: Check for duplicates
-        self.extra_uniforms.push(def);
+        self.extra_uniforms.push((name.into(), t));
         self
     }
 
@@ -233,11 +233,14 @@ fn does_core_use_variable(
 ) -> bool {
     struct Visitor<'a> {
         var_name: &'a str,
-        is_used: bool
+        is_used: bool,
     }
 
     impl<'a> glsl::visitor::Visitor for Visitor<'a> {
-        fn visit_identifier(&mut self, identifier: &mut glsl::syntax::Identifier) -> glsl::visitor::Visit {
+        fn visit_identifier(
+            &mut self,
+            identifier: &mut glsl::syntax::Identifier,
+        ) -> glsl::visitor::Visit {
             if identifier.as_str() == self.var_name {
                 self.is_used = true;
             }
@@ -253,7 +256,9 @@ fn does_core_use_variable(
 
     for (out_name, out_expr) in out_exprs {
         if out_name != var_name {
-            glsl::syntax::Expr::parse(out_expr).unwrap().visit(&mut visitor);
+            glsl::syntax::Expr::parse(out_expr)
+                .unwrap()
+                .visit(&mut visitor);
         }
     }
 
@@ -275,7 +280,7 @@ impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
         let mut vertex = self.vertex.clone();
 
         for ((name, _), q) in vertex.out_defs.iter_mut() {
-            if !fragment.has_in(&name) && name != defs::V_POSITION {
+            if !fragment.has_in(&name) {
                 *q = VertexOutQualifier::Local;
             }
         }
@@ -295,7 +300,7 @@ impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
                         &vertex.defs,
                         &vertex.body,
                         &vertex.out_exprs,
-                        &out_name
+                        &out_name,
                     );
 
                     if !is_used {
@@ -311,10 +316,7 @@ impl<P: ToUniforms + Clone + Default, V: glium::vertex::Vertex> Core<P, V> {
         }
 
         // TODO: Check non-duplicate inputs/outputs
-        LinkedCore {
-            vertex,
-            fragment,
-        }
+        LinkedCore { vertex, fragment }
     }
 }
 

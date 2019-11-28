@@ -12,47 +12,42 @@ pub fn diffuse_scene_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
         "vec4((0.3 + diffuse) * f_color.rgb, f_color.a)"
     };
 
+    let fragment = core
+        .fragment
+        .with_in_def(shader::defs::v_world_normal())
+        .with_in_def(shader::defs::v_world_pos())
+        .with_body(
+            "
+            float ambient = 0.3;
+            float diffuse = max(
+                dot(
+                    normalize(v_world_normal),
+                    normalize(main_light_pos - v_world_pos.xyz)
+                ),
+                0.05
+            );
+        ",
+        )
+        .with_out_expr(shader::defs::F_COLOR, color_expr);
+
     shader::Core {
         vertex: core.vertex,
-        fragment: core
-            .fragment
-            .with_in_def(shader::defs::v_world_normal())
-            .with_in_def(shader::defs::v_world_pos())
-            .with_body(
-                "
-                float ambient = 0.3;
-                float diffuse = max(
-                    dot(
-                        normalize(v_world_normal),
-                        normalize(main_light_pos - v_world_pos.xyz)
-                    ),
-                    0.05
-                );
-            ",
-            )
-            .with_out_expr(shader::defs::F_COLOR, color_expr),
+        fragment,
     }
 }
 
 pub fn composition_core() -> shader::Core<(), screen_quad::Vertex> {
-    let vertex = shader::VertexCore {
-        out_defs: vec![shader::defs::v_tex_coord()],
-        out_exprs: shader_out_exprs! {
-            shader::defs::V_TEX_COORD => "tex_coord",
-            shader::defs::V_POSITION => "position",
-        },
-        ..Default::default()
-    };
+    let vertex = shader::VertexCore::empty()
+        .with_out(shader::defs::v_tex_coord(), "tex_coord")
+        .with_out_expr(shader::defs::V_POSITION, "position");
 
-    let fragment = shader::FragmentCore {
-        extra_uniforms: vec![("color_texture".into(), UniformType::Sampler2d)],
-        in_defs: vec![shader::defs::v_tex_coord()],
-        out_defs: vec![shader::defs::f_color()],
-        out_exprs: shader_out_exprs! {
-            shader::defs::F_COLOR => "vec4(texture(color_texture, v_tex_coord).rgb, 1.0)",
-        },
-        ..Default::default()
-    };
+    let fragment = shader::FragmentCore::empty()
+        .with_extra_uniform("color_texture", UniformType::Sampler2d)
+        .with_in_def(shader::defs::v_tex_coord())
+        .with_out(
+            shader::defs::f_color(),
+            "vec4(texture(color_texture, v_tex_coord).rgb, 1.0)",
+        );
 
     shader::Core { vertex, fragment }
 }
