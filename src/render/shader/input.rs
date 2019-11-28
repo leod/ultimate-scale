@@ -1,4 +1,6 @@
-use glium::uniforms::{AsUniformValue, EmptyUniforms, UniformValue, Uniforms, UniformsStorage};
+use glium::uniforms::{
+    AsUniformValue, EmptyUniforms, UniformType, UniformValue, Uniforms, UniformsStorage,
+};
 
 pub struct ToUniformsWrapper<'b, U: ?Sized>(&'b U);
 
@@ -21,19 +23,118 @@ pub trait ToUniforms {
     }
 }
 
+pub trait ToVertex {
+    type Vertex: glium::vertex::Vertex;
+
+    fn to_vertex(&self) -> Self::Vertex;
+}
+
+pub trait UniformInput: ToUniforms {
+    fn uniform_input_defs() -> Vec<(String, UniformType)>;
+}
+
+// The following type aliases have the same name as variants in glium's
+// `UniformValue`. This allows us to use the same macro parameters foor
+// implementing both `ToUniforms` and `ToVertex`. Yeah, it's hacky though.
+pub type Bool = bool;
+pub type Float = f32;
+pub type Vec2 = [f32; 2];
+pub type Vec3 = [f32; 3];
+pub type Vec4 = [f32; 4];
+pub type Mat2 = [[f32; 2]; 2];
+pub type Mat3 = [[f32; 3]; 3];
+pub type Mat4 = [[f32; 4]; 4];
+
+/// Dummy enum to ease mapping from UniformValue variants to UniformType.
+/// This is just a helper for the `impl_to_uniforms` macro.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UniformTypeDummy {
+    Bool,
+    Float,
+    Vec2,
+    Vec3,
+    Vec4,
+    Mat2,
+    Mat3,
+    Mat4,
+}
+
+impl UniformTypeDummy {
+    pub fn to_uniform_type(self) -> UniformType {
+        match self {
+            UniformTypeDummy::Bool => UniformType::Bool,
+            UniformTypeDummy::Float => UniformType::Float,
+            UniformTypeDummy::Vec2 => UniformType::FloatVec2,
+            UniformTypeDummy::Vec3 => UniformType::FloatVec3,
+            UniformTypeDummy::Vec4 => UniformType::FloatVec4,
+            UniformTypeDummy::Mat2 => UniformType::FloatMat2,
+            UniformTypeDummy::Mat3 => UniformType::FloatMat3,
+            UniformTypeDummy::Mat4 => UniformType::FloatMat4,
+        }
+    }
+}
+
 #[macro_export]
-macro_rules! to_uniforms_impl {
-    ($ty:ident , $this:ident => { $( $field:ident : $type:ident => $value:expr, )* } $(,)? ) => {
+macro_rules! impl_uniform_input {
+    ($ty:ident, $this:ident => { $( $field:ident: $variant:ident => $value:expr, )* } $(,)? ) => {
         impl $crate::render::shader::ToUniforms for $ty {
             fn visit_values<'a, F>(&'a $this, mut output: F)
             where
                 F: FnMut(&str, glium::uniforms::UniformValue<'a>),
             {
                 $(
-                    output(stringify!($field), glium::uniforms::UniformValue::$type($value));
+                    output(stringify!($field), glium::uniforms::UniformValue::$variant($value));
                 )*
             }
         }
+
+        impl $crate::render::shader::UniformInput for $ty {
+            fn uniform_input_defs() -> Vec<(String, glium::uniforms::UniformType)> {
+                vec![
+                    $(
+                        (
+                            stringify!($field).to_string(),
+                            $crate::render::shader::input::UniformTypeDummy::$variant.to_uniform_type()
+                        ),
+                    )*
+                ]
+            }
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! impl_to_vertex {
+    ($ty:ident, $this:ident => { $( $field:ident: $variant:ident => $value:expr, )* } $(,)? ) => {
+        #[derive(Copy, Clone, Debug)]
+        pub struct MyVertex {
+            $(
+                $field: $crate::render::shader::input::$variant,
+            )*
+        }
+
+        use glium::implement_vertex;
+        implement_vertex!(MyVertex, $($field,)*);
+
+        impl $crate::render::shader::ToVertex for $ty {
+            type Vertex = MyVertex;
+
+            fn to_vertex(&$this) -> Self::Vertex {
+                Self::Vertex {
+                    $(
+                        $field: $value,
+                    )*
+                }
+            }
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! impl_uniform_input_and_to_vertex {
+    ($ty:ident, $this:ident => { $( $field:ident: $type:ident => $value:expr, )* } $(,)? ) => {
+        impl_uniform_input!($ty, $this => { $($field: $type => $value, )* });
+        impl_to_vertex!($ty, $this => { $($field: $type => $value, )* });
     }
 }
 
@@ -117,5 +218,24 @@ impl<'n, T: AsUniformValue, R: Uniforms> ToUniforms for UniformsStorage<'n, T, R
         F: FnMut(&str, UniformValue<'a>),
     {
         Uniforms::visit_values(self, output);
+    }
+}
+
+impl UniformInput for () {
+    fn uniform_input_defs() -> Vec<(String, UniformType)> {
+        Vec::new()
+    }
+}
+
+impl<U1, U2> UniformInput for (U1, U2)
+where
+    U1: UniformInput,
+    U2: UniformInput,
+{
+    fn uniform_input_defs() -> Vec<(String, UniformType)> {
+        let mut result = U1::uniform_input_defs();
+        result.append(&mut U2::uniform_input_defs());
+
+        result
     }
 }

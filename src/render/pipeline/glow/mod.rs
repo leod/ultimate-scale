@@ -7,7 +7,7 @@ use glium::uniforms::{MagnifySamplerFilter, MinifySamplerFilter, Sampler, Sample
 use glium::{glutin, uniform, Surface};
 
 use crate::render::pipeline::{CompositionPassComponent, Context, RenderPass, ScenePassComponent};
-use crate::render::shader::ToUniforms;
+use crate::render::shader::{self, ToUniforms};
 use crate::render::{self, screen_quad, DrawError, ScreenQuad};
 
 pub use crate::render::CreationError;
@@ -42,10 +42,10 @@ impl RenderPass for Glow {
 }
 
 impl ScenePassComponent for Glow {
-    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
+    fn core_transform<P, V>(
         &self,
-        core: render::shader::Core<(Context, P), V>,
-    ) -> render::shader::Core<(Context, P), V> {
+        core: render::shader::Core<Context, P, V>,
+    ) -> render::shader::Core<Context, P, V> {
         shaders::glow_map_core_transform(core)
     }
 
@@ -57,8 +57,8 @@ impl ScenePassComponent for Glow {
 impl CompositionPassComponent for Glow {
     fn core_transform(
         &self,
-        core: render::shader::Core<(), screen_quad::Vertex>,
-    ) -> render::shader::Core<(), screen_quad::Vertex> {
+        core: render::shader::Core<(), (), screen_quad::Vertex>,
+    ) -> render::shader::Core<(), (), screen_quad::Vertex> {
         shaders::composition_core_transform(core)
     }
 }
@@ -74,7 +74,8 @@ impl Glow {
         let glow_texture_back = Self::create_texture(facade, rounded_size)?;
 
         info!("Creating blur program");
-        let blur_program = shaders::blur_core().build_program(facade)?;
+        let blur_program =
+            shaders::blur_core().build_program(facade, shader::InstancingMode::Uniforms)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;

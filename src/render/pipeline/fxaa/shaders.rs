@@ -299,7 +299,9 @@ const BODY_FINISH: &str = "
     }
 ";
 
-pub fn postprocessing_core(exploration_offsets: &[f32]) -> shader::Core<(), screen_quad::Vertex> {
+pub fn postprocessing_core(
+    exploration_offsets: &[f32],
+) -> shader::Core<(), (), screen_quad::Vertex> {
     let vertex = shader::VertexCore::empty()
         .with_out(shader::defs::v_tex_coord(), "tex_coord")
         .with_out_expr(shader::defs::V_POSITION, "position");

@@ -1,12 +1,10 @@
 use glium::uniforms::UniformType;
 
 use crate::render::pipeline::Context;
-use crate::render::shader::{self, ToUniforms};
+use crate::render::shader;
 
 /// Shader core for rendering the depth map from the light source's perspective.
-pub fn depth_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
-    core: shader::Core<P, V>,
-) -> shader::Core<P, V> {
+pub fn depth_map_core_transform<P, I, V>(core: shader::Core<P, I, V>) -> shader::Core<P, I, V> {
     // Only write depth into the output, discard color output of original core
     let fragment = shader::FragmentCore::default()
         .with_out(shader::defs::f_fragment_depth(), "gl_FragCoord.z");
@@ -18,9 +16,9 @@ pub fn depth_map_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
 }
 
 /// Shader core for rendering the shadowed scene.
-pub fn render_shadowed_core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
-    core: shader::Core<(Context, P), V>,
-) -> shader::Core<(Context, P), V> {
+pub fn render_shadowed_core_transform<I, V>(
+    core: shader::Core<Context, I, V>,
+) -> shader::Core<Context, I, V> {
     assert!(
         core.vertex.has_out(shader::defs::V_WORLD_POS),
         "VertexCore needs V_WORLD_POS output for shadow mapping"

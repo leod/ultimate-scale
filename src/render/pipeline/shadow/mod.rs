@@ -11,9 +11,9 @@ use nalgebra as na;
 
 use glium::{uniform, Surface};
 
-use crate::render::pipeline::{self, Context, RenderLists, RenderPass, ScenePassComponent};
-use crate::render::shader::ToUniforms;
-use crate::render::{self, Camera, DrawError, Resources};
+use crate::render::pipeline::{self, scene, Context, RenderPass, ScenePassComponent};
+use crate::render::shader::{self, ToUniforms};
+use crate::render::{self, Camera, DrawError, Instancing, Resources};
 
 pub use crate::render::CreationError;
 
@@ -52,10 +52,10 @@ impl ScenePassComponent for ShadowMapping {
     ///
     /// Note that the transformed shader will require additional uniforms,
     /// which are given by `ShadowMapping::scene_pass_uniforms`.
-    fn core_transform<P: ToUniforms, V: glium::vertex::Vertex>(
+    fn core_transform<P, V>(
         &self,
-        core: render::shader::Core<(Context, P), V>,
-    ) -> render::shader::Core<(Context, P), V> {
+        core: render::shader::Core<Context, P, V>,
+    ) -> render::shader::Core<Context, P, V> {
         shaders::render_shadowed_core_transform(core)
     }
 }
@@ -70,7 +70,7 @@ impl ShadowMapping {
         info!("Creating shadow map program");
         let shadow_map_program = shaders::depth_map_core_transform(
             pipeline::scene::model::scene_core(),
-        ).build_program(facade)?;
+        ).build_program(facade, shader::InstancingMode::Vertex)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
             facade,
@@ -106,7 +106,8 @@ impl ShadowMapping {
         facade: &F,
         resources: &Resources,
         context: &Context,
-        render_lists: &RenderLists,
+        instancing: &Instancing<scene::model::Params>,
+        instancing_glow: &Instancing<scene::model::Params>,
     ) -> Result<(), DrawError> {
         let mut shadow_target =
             glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &self.shadow_texture)?;
@@ -122,18 +123,28 @@ impl ShadowMapping {
 
         let light_context = Context { camera, ..*context };
 
-        render_lists.solid.render(
+        let params = glium::DrawParameters {
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            depth: glium::Depth {
+                test: glium::DepthTest::IfLessOrEqual,
+                write: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        instancing.draw(
             resources,
-            &light_context,
-            &Default::default(),
             &self.shadow_map_program,
+            &light_context.to_uniforms(),
+            &params,
             &mut shadow_target,
         )?;
-        render_lists.solid_glow.render(
+        instancing_glow.draw(
             resources,
-            &light_context,
-            &Default::default(),
             &self.shadow_map_program,
+            &light_context.to_uniforms(),
+            &params,
             &mut shadow_target,
         )?;
 
