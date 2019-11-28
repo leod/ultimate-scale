@@ -3,9 +3,8 @@ use nalgebra as na;
 use crate::machine::grid::{self, Dir3};
 use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
-use crate::render::pipeline::{Light, RenderLists};
 use crate::render::scene::model;
-use crate::render::{Object, RenderList};
+use crate::render::{Light, Object, RenderList, RenderLists};
 
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::{Exec, TickTime};
