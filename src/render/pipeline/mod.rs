@@ -1,10 +1,12 @@
 pub mod deferred;
-pub mod fxaa;
 pub mod glow;
 pub mod light;
 pub mod render_pass;
 pub mod shaders;
 pub mod shadow;
+
+pub use light::Light;
+pub use render_pass::{CompositionPassComponent, RenderPass, ScenePassComponent};
 
 use log::info;
 
@@ -12,16 +14,13 @@ use glium::{uniform, Surface};
 
 use crate::config::ViewConfig;
 use crate::render::shader::{ToUniforms, ToVertex, UniformInput};
+use crate::render::fxaa::{self, FXAA};
 use crate::render::{self, object, scene, screen_quad, shader, DrawError, Resources};
 use crate::render::{Context, Instancing, RenderList, ScreenQuad};
 
 use deferred::DeferredShading;
-use fxaa::FXAA;
 use glow::Glow;
 use shadow::ShadowMapping;
-
-pub use light::Light;
-pub use render_pass::{CompositionPassComponent, RenderPass, ScenePassComponent};
 
 #[derive(Default, Clone)]
 pub struct RenderLists {

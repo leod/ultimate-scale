@@ -10,6 +10,7 @@ pub mod render_list;
 pub mod resources;
 pub mod scene;
 pub mod screen_quad;
+pub mod fxaa;
 
 pub use camera::{Camera, EditCameraView};
 pub use error::{CreationError, DrawError};
