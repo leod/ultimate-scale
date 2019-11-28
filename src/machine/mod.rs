@@ -1,5 +1,6 @@
 pub mod grid;
 pub mod level;
+pub mod render;
 
 use std::fmt;
 
@@ -24,14 +25,6 @@ impl Default for BlipKind {
 }
 
 impl BlipKind {
-    pub fn name(self) -> &'static str {
-        match self {
-            BlipKind::A => "a",
-            BlipKind::B => "b",
-            BlipKind::C => "c",
-        }
-    }
-
     pub fn next(self) -> BlipKind {
         match self {
             BlipKind::A => BlipKind::B,
@@ -293,17 +286,6 @@ impl PlacedBlock {
         self.block.has_wind_hole_out(dir)
     }
 
-    pub fn wind_holes(&self) -> Vec<Dir3> {
-        // TODO: This could return an iterator to simplify optimizations
-        // (or we could use generators, but they don't seem to be stable yet).
-
-        Dir3::ALL
-            .iter()
-            .filter(|dir| self.has_wind_hole(**dir))
-            .copied()
-            .collect()
-    }
-
     pub fn wind_holes_in(&self) -> Vec<Dir3> {
         Dir3::ALL
             .iter()
@@ -440,10 +422,6 @@ impl Machine {
             .map(move |id| (id, &mut self.blocks.data[id].1))
     }
 
-    pub fn block_at_index(&self, index: BlockIndex) -> &(Point3, PlacedBlock) {
-        &self.blocks.data[index]
-    }
-
     pub fn block_pos_at_index(&self, index: BlockIndex) -> Point3 {
         self.blocks.data[index].0
     }
@@ -473,12 +451,6 @@ impl Machine {
         self.blocks.data.iter()
     }
 
-    pub fn iter_blocks_mut(
-        &mut self,
-    ) -> impl Iterator<Item = (BlockIndex, &mut (Point3, PlacedBlock))> {
-        self.blocks.data.iter_mut()
-    }
-
     pub fn gc(&mut self) {
         self.blocks.data.gc();
 
@@ -493,19 +465,6 @@ impl Machine {
 
     pub fn num_blocks(&self) -> usize {
         self.blocks.data.len()
-    }
-
-    pub fn iter_neighbors<'a>(
-        &'a self,
-        pos: &'a Point3,
-    ) -> impl Iterator<Item = (Dir3, BlockIndex)> + 'a {
-        Dir3::ALL.iter().filter_map(move |dir| {
-            self.blocks
-                .indices
-                .get(&(*pos + dir.to_vector()))
-                .and_then(|index| index.as_ref())
-                .map(|index| (*dir, *index))
-        })
     }
 }
 

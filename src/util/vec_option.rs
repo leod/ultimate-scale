@@ -65,6 +65,7 @@ impl<T> VecOption<T> {
         self.size
     }
 
+    #[allow(dead_code)]
     pub fn clear(&mut self) {
         self.data.clear();
         self.free.clear();

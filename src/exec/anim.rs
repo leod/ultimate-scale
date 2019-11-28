@@ -100,10 +100,6 @@ impl WindAnimState {
         }
     }
 
-    pub fn wind_in(&self, dir: Dir3) -> WindLife {
-        self.wind_in[dir.to_index()]
-    }
-
     pub fn wind_out(&self, dir: Dir3) -> WindLife {
         self.wind_out[dir.to_index()]
     }

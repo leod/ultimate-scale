@@ -3,9 +3,8 @@ use nalgebra as na;
 use crate::machine::grid::{self, Dir3};
 use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
-use crate::render::pipeline::scene::model;
-use crate::render::pipeline::{Light, RenderLists};
-use crate::render::{Object, RenderList};
+use crate::render::scene::model;
+use crate::render::{Light, Object, RenderList, RenderLists};
 
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::{Exec, TickTime};
@@ -33,10 +32,6 @@ pub fn wind_source_color() -> na::Vector3<f32> {
 
 pub fn wind_stripe_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(1.0, 0.325, 0.286))
-}
-
-pub fn blip_spawn_color() -> na::Vector3<f32> {
-    gamma_correct(&(na::Vector3::new(60.0, 179.0, 113.0) / 255.0))
 }
 
 pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
@@ -280,44 +275,50 @@ pub fn render_bridge(bridge: &Bridge, transform: &na::Matrix4<f32>, out: &mut Re
     render_outline(&output_transform, &scaling, bridge.color.w, out);
 }
 
-pub fn render_mill(
-    dir: Dir3,
-    center: &na::Point3<f32>,
-    transform: &na::Matrix4<f32>,
-    roll: f32,
-    color: &na::Vector4<f32>,
-    offset: f32,
-    length: f32,
-    out: &mut RenderLists,
-) {
-    let translation = na::Matrix4::new_translation(&center.coords);
-    let dir_offset: na::Vector3<f32> = na::convert(dir.to_vector());
-    let (pitch, yaw) = dir.to_pitch_yaw_x();
+pub struct Mill {
+    pub center: na::Point3<f32>,
+    pub offset: f32,
+    pub length: f32,
+    pub color: na::Vector4<f32>,
+    pub dir: Dir3,
+    pub roll: f32,
+}
+
+pub fn render_mill(mill: &Mill, transform: &na::Matrix4<f32>, out: &mut RenderLists) {
+    let translation = na::Matrix4::new_translation(&mill.center.coords);
+    let dir_offset: na::Vector3<f32> = na::convert(mill.dir.to_vector());
+    let (pitch, yaw) = mill.dir.to_pitch_yaw_x();
     let cube_transform = translation
         * transform
-        * na::Matrix4::new_translation(&(dir_offset * (length * 0.5 + offset + BRIDGE_MARGIN)))
-        * na::Matrix4::from_euler_angles(roll, pitch, yaw);
-    let scaling = na::Vector3::new(length, MILL_THICKNESS, MILL_DEPTH);
+        * na::Matrix4::new_translation(
+            &(dir_offset * (mill.length * 0.5 + mill.offset + BRIDGE_MARGIN)),
+        )
+        * na::Matrix4::from_euler_angles(mill.roll, pitch, yaw);
+    let scaling = na::Vector3::new(mill.length, MILL_THICKNESS, MILL_DEPTH);
     out.solid.add(
         Object::Cube,
         &model::Params {
             transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
-            color: *color,
+            color: mill.color,
             ..Default::default()
         },
     );
     //render_outline(&cube_transform, &scaling, color.w, out);
 }
 
+pub struct WindMills {
+    pub center: na::Point3<f32>,
+    pub offset: f32,
+    pub length: f32,
+    pub color: na::Vector4<f32>,
+}
+
 pub fn render_wind_mills(
+    wind_mills: &WindMills,
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
     wind_anim_state: &Option<WindAnimState>,
-    center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
-    color: &na::Vector4<f32>,
-    offset: f32,
-    length: f32,
     out: &mut RenderLists,
 ) {
     for &dir in &Dir3::ALL {
@@ -332,7 +333,7 @@ pub fn render_wind_mills(
                 return 0.0;
             }
 
-            let wind_time_offset = offset + length;
+            let wind_time_offset = wind_mills.offset + wind_mills.length;
 
             std::f32::consts::PI / 2.0
                 * match anim.wind_out(dir) {
@@ -362,13 +363,15 @@ pub fn render_wind_mills(
 
         for &phase in &[0.0, 0.25] {
             render_mill(
-                dir,
-                center,
+                &Mill {
+                    center: wind_mills.center,
+                    offset: wind_mills.offset,
+                    length: wind_mills.length,
+                    color: wind_mills.color,
+                    dir,
+                    roll: roll + 2.0 * phase * std::f32::consts::PI,
+                },
                 transform,
-                roll + 2.0 * phase * std::f32::consts::PI,
-                color,
-                offset,
-                length,
                 out,
             );
         }
@@ -436,6 +439,45 @@ pub fn render_outline(
     }
 }
 
+pub fn render_pulsator(
+    tick_time: &TickTime,
+    wind_anim_state: &Option<WindAnimState>,
+    center: &na::Point3<f32>,
+    transform: &na::Matrix4<f32>,
+    color: &na::Vector4<f32>,
+    out: &mut RenderLists,
+) {
+    let size = 2.5
+        * PIPE_THICKNESS
+        * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
+            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
+                1.0 + 0.08
+                    * (tick_time.tick_progress() * std::f32::consts::PI)
+                        .sin()
+                        .powf(2.0)
+            } else {
+                1.0
+            }
+        } else {
+            1.0
+        };
+
+    let translation = na::Matrix4::new_translation(&center.coords);
+    let cube_transform = translation * transform;
+    let scaling = na::Vector3::new(size, size, size);
+
+    out.solid.add(
+        Object::Cube,
+        &model::Params {
+            transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+            color: *color,
+            ..Default::default()
+        },
+    );
+
+    render_outline(&cube_transform, &scaling, color.w, out);
+}
+
 pub fn render_block(
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
@@ -456,38 +498,11 @@ pub fn render_block(
 
             // Pulsator to hide our shame of wind direction change
             if dir_a.0 != dir_b.0 {
-                let size = 2.5
-                    * PIPE_THICKNESS
-                    * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
-                        if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0
-                        {
-                            1.0 + 0.05
-                                * (tick_time.tick_progress() * std::f32::consts::PI)
-                                    .sin()
-                                    .powf(2.0)
-                        } else {
-                            1.0
-                        }
-                    } else {
-                        1.0
-                    };
-
-                let cube_transform = translation * transform;
-                let scaling = na::Vector3::new(size, size, size);
-
-                out.solid.add(
-                    Object::Cube,
-                    &model::Params {
-                        transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
-                        color,
-                        ..Default::default()
-                    },
-                );
-
-                render_outline(&cube_transform, &scaling, alpha, out);
+                render_pulsator(tick_time, wind_anim_state, center, transform, &color, out);
             }
         }
         Block::PipeMergeXY => {
+            let color = block_color(&pipe_color(), alpha);
             let scaling = na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
                 PIPE_THICKNESS,
                 1.0,
@@ -498,21 +513,23 @@ pub fn render_block(
                 Object::Cube,
                 &model::Params {
                     transform: translation * transform * scaling,
-                    color: block_color(&pipe_color(), alpha),
+                    color,
                     ..Default::default()
                 },
             );
 
-            let transform = transform
+            let rot_transform = transform
                 * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
             out.solid.add(
                 Object::Cube,
                 &model::Params {
-                    transform: translation * transform * scaling,
-                    color: block_color(&pipe_color(), alpha),
+                    transform: translation * rot_transform * scaling,
+                    color,
                     ..Default::default()
                 },
             );
+
+            render_pulsator(tick_time, wind_anim_state, center, transform, &color, out);
         }
         Block::FunnelXY { flow_dir } => {
             let (pitch, yaw) = flow_dir.invert().to_pitch_yaw_x();
@@ -578,14 +595,16 @@ pub fn render_block(
             }
 
             render_wind_mills(
+                &WindMills {
+                    center: *center,
+                    offset: 0.3,
+                    length: 0.075,
+                    color: block_color(&wind_mill_color(), alpha),
+                },
                 placed_block,
                 tick_time,
                 wind_anim_state,
-                center,
                 transform,
-                &na::Vector4::new(1.0, 1.0, 1.0, alpha),
-                0.3,
-                0.075,
                 out,
             );
         }
@@ -729,14 +748,16 @@ pub fn render_block(
             );
 
             render_wind_mills(
+                &WindMills {
+                    center: *center,
+                    offset: 0.75 / 2.0,
+                    length: 0.075,
+                    color: block_color(&wind_mill_color(), alpha),
+                },
                 placed_block,
                 tick_time,
                 wind_anim_state,
-                center,
                 transform,
-                &block_color(&wind_mill_color(), alpha),
-                0.75 / 2.0,
-                0.075,
                 out,
             );
         }
@@ -840,12 +861,10 @@ pub fn render_block(
             let expected_kind =
                 if activated.is_none() || tick_time.tick_progress() < transition_time {
                     outputs.last().copied()
+                } else if outputs.len() > 1 {
+                    outputs.get(outputs.len() - 2).copied()
                 } else {
-                    if outputs.len() > 1 {
-                        outputs.get(outputs.len() - 2).copied()
-                    } else {
-                        None
-                    }
+                    None
                 };
 
             let completed = (tick_time.tick_progress() >= 0.45

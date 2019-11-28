@@ -15,7 +15,7 @@ pub const TICKS_PER_SEC_CHOICES: &[&str] = &[
     "0.25", "0.5", "1", "2", "4", "8", "16", "32", "64", "128", "256", "512",
 ];
 
-pub const MAX_TICKS_PER_UPDATE: usize = 100;
+pub const MAX_TICKS_PER_UPDATE: usize = 1024;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -107,13 +107,6 @@ impl Status {
         self.time().tick_progress()
     }
 
-    pub fn is_playing(&self) -> bool {
-        match self {
-            Status::Playing { .. } => true,
-            _ => false,
-        }
-    }
-
     pub fn is_paused(&self) -> bool {
         match self {
             Status::Paused { .. } => true,
@@ -178,7 +171,7 @@ impl Play {
                 new_time.next_tick_timer += dt;
 
                 let num_ticks_since_last_update = new_time.next_tick_timer.trigger_n();
-                new_time.num_ticks_passed += num_ticks_since_last_update;
+                new_time.num_ticks_passed += num_ticks_since_last_update.min(MAX_TICKS_PER_UPDATE);
 
                 Some(Status::Playing {
                     num_ticks_since_last_update,
@@ -360,22 +353,6 @@ impl Play {
                 }
 
                 ui.set_window_font_scale(1.0);
-
-                // Pick speed directly:
-                /*for (index, &ticks_per_sec) in TICKS_PER_SEC_CHOICES.iter().enumerate() {
-                    if index == 4 {
-                        ui.dummy([58.0, 0.0]);
-                    }
-                    ui.same_line(0.0);
-
-                    let text = ImString::new(format!("{}x", ticks_per_sec));
-                    let selectable = imgui::Selectable::new(&text)
-                        .selected(self.ticks_per_sec_index == index)
-                        .size([35.0, 0.0]);
-                    if selectable.build(ui) {
-                        self.ticks_per_sec_index = index;
-                    }
-                }*/
             });
     }
 }
