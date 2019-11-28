@@ -16,9 +16,7 @@
 
 ## Rendering
 - Render block inputs
-
 - Check if it's okay to rely on `glutin::dpi::LogicalSize` for texture sizes
-- Instanced rendering to reduce draw calls
 
 ## Gameplay
 - Campaign mode

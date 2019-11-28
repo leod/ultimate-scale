@@ -533,7 +533,13 @@ impl Pipeline {
         if let Some(shadow_mapping) = self.components.shadow_mapping.as_ref() {
             profile!("shadow_pass");
 
-            shadow_mapping.shadow_pass(facade, resources, context, render_lists)?;
+            shadow_mapping.shadow_pass(
+                facade,
+                resources,
+                context,
+                &self.scene_pass_solid.instancing,
+                &self.scene_pass_solid_glow.instancing,
+            )?;
         }
 
         // Render scene into buffers
