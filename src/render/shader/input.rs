@@ -21,19 +21,71 @@ pub trait ToUniforms {
     }
 }
 
+pub trait ToVertex {
+    type V: glium::vertex::Vertex;
+
+    fn to_vertex(&self) -> Self::V;
+}
+
+pub trait InstanceInput: ToUniforms + ToVertex {}
+
+// The following type aliases have the same name as variants in glium's
+// `UniformValue`. This allows us to use the same macro parameters foor
+// implementing both `ToUniforms` and `ToVertex`. Yeah, it's hacky though.
+pub type Bool = bool;
+pub type Float = f32;
+pub type Vec3 = [f32; 4];
+pub type Vec4 = [f32; 4];
+pub type Mat4 = [[f32; 4]; 4];
+
 #[macro_export]
 macro_rules! to_uniforms_impl {
-    ($ty:ident , $this:ident => { $( $field:ident : $type:ident => $value:expr, )* } $(,)? ) => {
+    ($ty:ident, $this:ident => { $( $field:ident: $variant:ident => $value:expr, )* } $(,)? ) => {
         impl $crate::render::shader::ToUniforms for $ty {
             fn visit_values<'a, F>(&'a $this, mut output: F)
             where
                 F: FnMut(&str, glium::uniforms::UniformValue<'a>),
             {
                 $(
-                    output(stringify!($field), glium::uniforms::UniformValue::$type($value));
+                    output(stringify!($field), glium::uniforms::UniformValue::$variant($value));
                 )*
             }
         }
+    }
+}
+
+#[macro_export]
+macro_rules! to_vertex_impl {
+    ($ty:ident, $this:ident => { $( $field:ident: $variant:ident => $value:expr, )* } $(,)? ) => {
+        #[derive(Copy, Clone, Debug)]
+        pub struct MyVertex {
+            $(
+                $field: $crate::render::shader::input::$variant,
+            )*
+        }
+
+        use glium::implement_vertex;
+        implement_vertex!(MyVertex, $($field,)*);
+
+        impl $crate::render::shader::ToVertex for $ty {
+            type V = MyVertex;
+
+            fn to_vertex(&$this) -> Self::V {
+                Self::V {
+                    $(
+                        $field: $value,
+                    )*
+                }
+            }
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! instance_input_impl {
+    ($ty:ident, $this:ident => { $( $field:ident: $type:ident => $value:expr, )* } $(,)? ) => {
+        to_uniforms_impl!($ty, $this => { $($field: $type => $value, )* });
+        to_vertex_impl!($ty, $this => { $($field: $type => $value, )* });
     }
 }
 
