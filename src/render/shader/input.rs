@@ -36,18 +36,27 @@ pub trait UniformInput: ToUniforms {
 // The following type aliases have the same name as variants in glium's
 // `UniformValue`. This allows us to use the same macro parameters foor
 // implementing both `ToUniforms` and `ToVertex`. Yeah, it's hacky though.
+#[allow(dead_code)]
 pub type Bool = bool;
+#[allow(dead_code)]
 pub type Float = f32;
+#[allow(dead_code)]
 pub type Vec2 = [f32; 2];
+#[allow(dead_code)]
 pub type Vec3 = [f32; 3];
+#[allow(dead_code)]
 pub type Vec4 = [f32; 4];
+#[allow(dead_code)]
 pub type Mat2 = [[f32; 2]; 2];
+#[allow(dead_code)]
 pub type Mat3 = [[f32; 3]; 3];
+#[allow(dead_code)]
 pub type Mat4 = [[f32; 4]; 4];
 
 /// Dummy enum to ease mapping from UniformValue variants to UniformType.
 /// This is just a helper for the `impl_to_uniforms` macro.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum UniformTypeDummy {
     Bool,
     Float,

@@ -13,10 +13,11 @@ use nalgebra as na;
 
 use glium::glutin::{self, MouseButton, WindowEvent};
 
+use crate::edit_camera_view::EditCameraView;
 use crate::input_state::InputState;
 use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
-use crate::render::{Camera, EditCameraView};
+use crate::render::Camera;
 
 use crate::edit::config::ModifiedKey;
 use crate::edit::{pick, Config, Edit, Mode, Piece};
@@ -109,16 +110,9 @@ impl Editor {
     }
 
     pub fn switch_to_place_block_mode(&mut self, block: Block) {
-        let placed_block = PlacedBlock { block };
-
-        let piece = match &self.mode {
-            Mode::PlacePiece { piece, .. } => {
-                // TODO: Maintain current rotation when switching to a
-                // different block to place.
-                Piece::new_origin_block(placed_block)
-            }
-            _ => Piece::new_origin_block(placed_block),
-        };
+        // TODO: Maintain current rotation when switching to a different block
+        // to place.
+        let piece = Piece::new_origin_block(PlacedBlock { block });
 
         self.mode = Mode::PlacePiece {
             piece,
@@ -196,10 +190,7 @@ impl Editor {
                 // Stop trying to go into drag and drop mode.
                 Mode::new_selection(selection)
             }
-            Mode::Select {
-                selection,
-                dragged_mouse_pos: _,
-            } if input_state.is_button_pressed(MouseButton::Right) => {
+            Mode::Select { selection, .. } if input_state.is_button_pressed(MouseButton::Right) => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
                     let edit = Edit::SetBlocks(maplit::hashmap! {
                         mouse_block_pos => None,
@@ -234,9 +225,8 @@ impl Editor {
             }
             Mode::RectSelect {
                 existing_selection,
-                new_selection: _,
                 start_pos,
-                end_pos: _,
+                ..
             } if input_state.is_button_pressed(MouseButton::Left) => {
                 // Update selection according to rectangle
                 let end_pos = input_state.mouse_window_pos();
@@ -244,7 +234,7 @@ impl Editor {
                     pick::pick_window_rect(&self.machine, camera, &start_pos, &end_pos);
 
                 Mode::RectSelect {
-                    existing_selection: existing_selection,
+                    existing_selection,
                     new_selection: new_selection.collect(),
                     start_pos,
                     end_pos: input_state.mouse_window_pos(),

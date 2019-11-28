@@ -2,9 +2,8 @@ use imgui::{im_str, ImString};
 
 use crate::edit::{Editor, Mode};
 
-const BUTTON_W: f32 = 140.0;
 const BUTTON_H: f32 = 20.0;
-const SMALL_BUTTON_W: f32 = 66.25;
+const BUTTON_W: f32 = 66.25;
 const BG_ALPHA: f32 = 0.8;
 
 impl Editor {
@@ -114,7 +113,7 @@ impl Editor {
     }
 
     fn ui_actions(&mut self, ui: &imgui::Ui) {
-        if ui.button(im_str!("Undo"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("Undo"), [BUTTON_W, BUTTON_H]) {
             self.action_undo();
         }
         if ui.is_item_hovered() {
@@ -124,7 +123,7 @@ impl Editor {
 
         ui.same_line(0.0);
 
-        if ui.button(im_str!("Redo"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("Redo"), [BUTTON_W, BUTTON_H]) {
             self.action_redo();
         }
         if ui.is_item_hovered() {
@@ -135,7 +134,7 @@ impl Editor {
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
 
-        if ui.button(im_str!("Copy"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("Copy"), [BUTTON_W, BUTTON_H]) {
             self.action_copy();
         }
         if ui.is_item_hovered() {
@@ -148,7 +147,7 @@ impl Editor {
 
         ui.same_line(0.0);
 
-        if ui.button(im_str!("Paste"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("Paste"), [BUTTON_W, BUTTON_H]) {
             self.action_paste();
         }
         if ui.is_item_hovered() {
@@ -159,7 +158,7 @@ impl Editor {
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
 
-        if ui.button(im_str!("Cut"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("Cut"), [BUTTON_W, BUTTON_H]) {
             self.action_cut();
         }
         if ui.is_item_hovered() {
@@ -172,7 +171,7 @@ impl Editor {
 
         ui.same_line(0.0);
 
-        if ui.button(im_str!("Delete"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("Delete"), [BUTTON_W, BUTTON_H]) {
             self.action_delete();
         }
         if ui.is_item_hovered() {
@@ -183,7 +182,7 @@ impl Editor {
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
 
-        if ui.button(im_str!("↻"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("↻"), [BUTTON_W, BUTTON_H]) {
             self.action_rotate_cw();
         }
         if ui.is_item_hovered() {
@@ -196,7 +195,7 @@ impl Editor {
 
         ui.same_line(0.0);
 
-        if ui.button(im_str!("↺"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("↺"), [BUTTON_W, BUTTON_H]) {
             self.action_rotate_ccw();
         }
         if ui.is_item_hovered() {
@@ -207,7 +206,7 @@ impl Editor {
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
 
-        if ui.button(im_str!("Mirror Y"), [SMALL_BUTTON_W, BUTTON_H]) {
+        if ui.button(im_str!("Mirror Y"), [BUTTON_W, BUTTON_H]) {
             self.action_mirror_y();
         }
         if ui.is_item_hovered() {

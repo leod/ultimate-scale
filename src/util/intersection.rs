@@ -31,6 +31,7 @@ pub fn ray_plane_intersection(ray: &Ray, plane: &Plane) -> Option<(f32, na::Vect
     Some((solution.x, na::Vector2::new(solution.y, solution.z)))
 }
 
+#[allow(dead_code)]
 pub fn ray_quad_intersection(ray: &Ray, plane: &Plane) -> Option<(f32, na::Vector2<f32>)> {
     let (ray_t, plane_pos) = ray_plane_intersection(ray, plane)?;
 

@@ -11,9 +11,9 @@ use nalgebra as na;
 
 use glium::{uniform, Surface};
 
-use crate::render::pipeline::{self, scene, Context, RenderPass, ScenePassComponent};
+use crate::render::pipeline::{Context, RenderPass, ScenePassComponent};
 use crate::render::shader::{self, ToUniforms};
-use crate::render::{self, Camera, DrawError, Instancing, Resources};
+use crate::render::{self, scene, Camera, DrawError, Instancing, Resources};
 
 pub use crate::render::CreationError;
 
@@ -31,7 +31,6 @@ impl Default for Config {
 }
 
 pub struct ShadowMapping {
-    config: Config,
     shadow_map_program: glium::Program,
     shadow_texture: glium::texture::DepthTexture2d,
 }
@@ -69,7 +68,7 @@ impl ShadowMapping {
         // Shader for creating the shadow map from light source's perspective
         info!("Creating shadow map program");
         let shadow_map_program = shaders::depth_map_core_transform(
-            pipeline::scene::model::scene_core(),
+            scene::model::scene_core(),
         ).build_program(facade, shader::InstancingMode::Vertex)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
@@ -81,7 +80,6 @@ impl ShadowMapping {
         info!("Shadow mapping initialized");
 
         Ok(ShadowMapping {
-            config: config.clone(),
             shadow_map_program,
             shadow_texture,
         })

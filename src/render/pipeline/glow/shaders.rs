@@ -117,7 +117,7 @@ pub fn composition_core_transform(
 
     let fragment = core
         .fragment
-        .with_extra_uniform("glow_texture".into(), UniformType::Sampler2d)
+        .with_extra_uniform("glow_texture", UniformType::Sampler2d)
         .with_out_expr(
             shader::defs::F_COLOR,
             "f_color + vec4(texture(glow_texture, v_tex_coord).rgb, 0.0)",

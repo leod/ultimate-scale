@@ -2,11 +2,9 @@ use nalgebra as na;
 
 use crate::edit::{Editor, Mode, Piece};
 use crate::exec::TickTime;
-use crate::machine::grid;
+use crate::machine::{self, grid};
 use crate::machine::{Block, PlacedBlock};
-use crate::render;
-use crate::render::pipeline::scene::model;
-use crate::render::pipeline::RenderLists;
+use crate::render::{self, scene, RenderLists};
 
 pub const GRID_OFFSET_Z: f32 = 0.01;
 pub const GRID_OFFSET_2_Z: f32 = 0.02;
@@ -16,8 +14,8 @@ impl Editor {
         profile!("editor");
 
         let grid_size: na::Vector3<f32> = na::convert(self.machine.size());
-        render::machine::render_cuboid_wireframe(
-            &render::machine::Cuboid {
+        machine::render::render_cuboid_wireframe(
+            &machine::render::Cuboid {
                 center: na::Point3::from(grid_size / 2.0) + na::Vector3::z() * GRID_OFFSET_2_Z,
                 size: grid_size,
             },
@@ -37,9 +35,9 @@ impl Editor {
             }
         };
 
-        render::machine::render_machine(&self.machine, &TickTime::zero(), None, filter, out);
+        machine::render::render_machine(&self.machine, &TickTime::zero(), None, filter, out);
 
-        render::machine::render_xy_grid(
+        machine::render::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + GRID_OFFSET_Z,
             &mut out.plain,
@@ -79,7 +77,7 @@ impl Editor {
                         ));
                 out.ortho.add(
                     render::Object::Quad,
-                    &model::Params {
+                    &scene::model::Params {
                         transform: rect_transform,
                         color: na::Vector4::new(0.3, 0.3, 0.9, 0.3),
                         ..Default::default()
@@ -134,10 +132,10 @@ impl Editor {
                                 block.mutate_dirs(|dir| dir.rotated_cw_xy());
                             }
                             let placed_block = PlacedBlock { block };
-                            let block_center = render::machine::block_center(&mouse_grid_pos);
+                            let block_center = machine::render::block_center(&mouse_grid_pos);
                             let block_transform =
-                                render::machine::placed_block_transform(&placed_block);
-                            render::machine::render_block(
+                                machine::render::placed_block_transform(&placed_block);
+                            machine::render::render_block(
                                 &placed_block,
                                 &TickTime::zero(),
                                 &None,
@@ -185,8 +183,8 @@ impl Editor {
 
             let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
 
-            render::machine::render_cuboid_wireframe(
-                &render::machine::Cuboid {
+            machine::render::render_cuboid_wireframe(
+                &machine::render::Cuboid {
                     center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_2_Z),
                     size: na::Vector3::new(1.0, 1.0, 1.0),
                 },
@@ -206,8 +204,8 @@ impl Editor {
     ) {
         let pos: na::Point3<f32> = na::convert(*pos);
 
-        render::machine::render_cuboid_wireframe(
-            &render::machine::Cuboid {
+        machine::render::render_cuboid_wireframe(
+            &machine::render::Cuboid {
                 // Slight z offset so that there is less overlap with e.g. the floor
                 center: pos + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_2_Z),
                 size: na::Vector3::new(1.0, 1.0, 1.0),
@@ -227,11 +225,11 @@ impl Editor {
         let mut any_pos_valid = false;
 
         for (pos, placed_block) in blocks {
-            let block_center = render::machine::block_center(&pos);
-            let block_transform = render::machine::placed_block_transform(&placed_block);
+            let block_center = machine::render::block_center(&pos);
+            let block_transform = machine::render::placed_block_transform(&placed_block);
 
             let mut out_hack = RenderLists::default();
-            render::machine::render_block(
+            machine::render::render_block(
                 &placed_block,
                 &TickTime::zero(),
                 &None,
@@ -284,8 +282,8 @@ impl Editor {
             let piece_pos: na::Point3<f32> = na::convert(*piece_pos);
             let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
             let wire_center = piece_pos + wire_size / 2.0;
-            render::machine::render_cuboid_wireframe(
-                &render::machine::Cuboid {
+            machine::render::render_cuboid_wireframe(
+                &machine::render::Cuboid {
                     center: wire_center + na::Vector3::z() * GRID_OFFSET_2_Z,
                     size: wire_size,
                 },

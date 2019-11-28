@@ -1,4 +1,5 @@
 pub mod anim;
+pub mod level_progress;
 pub mod play;
 pub mod view;
 
@@ -249,10 +250,7 @@ impl Exec {
                 // `update_block`.
             }
             Block::Input {
-                out_dir,
-                index: _,
-                activated,
-                ..
+                out_dir, activated, ..
             } => {
                 let _active = activated.map_or(false, |input| match input {
                     level::Input::Blip(_) => true,
@@ -749,9 +747,9 @@ impl Exec {
             }
             Block::Input {
                 out_dir,
-                index: _,
                 ref mut inputs,
                 ref mut activated,
+                ..
             } => {
                 // The last element of `inputs` is the next input.
                 if let Some(input) = inputs.last().copied() {

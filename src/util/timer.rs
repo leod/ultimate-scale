@@ -22,6 +22,7 @@ pub struct Timer {
     accum: Duration,
 }
 
+#[allow(dead_code)]
 impl Timer {
     pub fn new(period: Duration) -> Timer {
         Timer {

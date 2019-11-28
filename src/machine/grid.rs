@@ -4,48 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use nalgebra as na;
 
-pub type Vector2 = na::Vector2<isize>;
 pub type Vector3 = na::Vector3<isize>;
 pub type Point3 = na::Point3<isize>;
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
-pub enum Axis2 {
-    X,
-    Y,
-}
-
-impl Axis2 {
-    pub const NUM_INDICES: usize = 2;
-    pub const ALL: [Axis2; Self::NUM_INDICES] = [Axis2::X, Axis2::Y];
-
-    pub fn to_vector(self) -> Vector2 {
-        match self {
-            Axis2::X => Vector2::x(),
-            Axis2::Y => Vector2::y(),
-        }
-    }
-
-    pub fn to_index(self) -> usize {
-        match self {
-            Axis2::X => 0,
-            Axis2::Y => 1,
-        }
-    }
-
-    pub fn embed(self) -> Axis3 {
-        match self {
-            Axis2::X => Axis3::X,
-            Axis2::Y => Axis3::Y,
-        }
-    }
-
-    pub fn next(self) -> Axis2 {
-        match self {
-            Axis2::X => Axis2::Y,
-            Axis2::Y => Axis2::X,
-        }
-    }
-}
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum Axis3 {
@@ -56,6 +16,7 @@ pub enum Axis3 {
 
 impl Axis3 {
     pub const NUM_INDICES: usize = 3;
+    #[allow(dead_code)]
     pub const ALL: [Axis3; Self::NUM_INDICES] = [Axis3::X, Axis3::Y, Axis3::Z];
 
     pub fn to_vector(self) -> Vector3 {
@@ -91,10 +52,6 @@ impl Sign {
         }
     }
 
-    pub fn to_f32(self) -> f32 {
-        self.to_number() as f32
-    }
-
     pub fn invert(self) -> Sign {
         match self {
             Sign::Pos => Sign::Neg,
@@ -107,57 +64,6 @@ impl Sign {
             Sign::Pos => 0,
             Sign::Neg => 1,
         }
-    }
-}
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
-pub struct Dir2(pub Axis2, pub Sign);
-
-impl Dir2 {
-    pub const NUM_INDICES: usize = Axis2::NUM_INDICES * Sign::NUM_INDICES;
-
-    pub const X_POS: Dir2 = Dir2(Axis2::X, Sign::Pos);
-    pub const X_NEG: Dir2 = Dir2(Axis2::X, Sign::Neg);
-    pub const Y_POS: Dir2 = Dir2(Axis2::Y, Sign::Pos);
-    pub const Y_NEG: Dir2 = Dir2(Axis2::Y, Sign::Neg);
-
-    pub fn to_vector(self) -> Vector2 {
-        self.0.to_vector() * self.1.to_number()
-    }
-
-    pub fn invert(self) -> Dir2 {
-        Dir2(self.0, self.1.invert())
-    }
-
-    pub fn rotated_cw(self) -> Dir2 {
-        let sign = match self.0 {
-            Axis2::X => self.1.invert(),
-            Axis2::Y => self.1,
-        };
-
-        Dir2(self.0.next(), sign)
-    }
-
-    pub fn rotated_ccw(self) -> Dir2 {
-        let sign = match self.0 {
-            Axis2::X => self.1,
-            Axis2::Y => self.1.invert(),
-        };
-
-        Dir2(self.0.next(), sign)
-    }
-
-    pub fn to_radians(self) -> f32 {
-        let vector = self.to_vector();
-        (vector.y as f32).atan2(vector.x as f32)
-    }
-
-    pub fn to_index(self) -> usize {
-        self.0.to_index() * Sign::NUM_INDICES + self.1.to_index()
-    }
-
-    pub fn embed(self) -> Dir3 {
-        Dir3(self.0.embed(), self.1)
     }
 }
 
