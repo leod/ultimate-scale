@@ -217,7 +217,7 @@ impl Components {
             shader_core = shaders::diffuse_scene_core_transform(shader_core);
         }
 
-        let program = shader_core.build_program(facade, shader::InstanceMode::Vertex)?;
+        let program = shader_core.build_program(facade, shader::InstancingMode::Vertex)?;
 
         let instancing = Instancing::create(facade)?;
 
@@ -433,7 +433,7 @@ impl Pipeline {
 
         let plain_core = scene::model::scene_core();
         let plain_program = plain_core
-            .build_program(facade, shader::InstanceMode::Vertex)
+            .build_program(facade, shader::InstancingMode::Vertex)
             .map_err(render::CreationError::from)?;
         let plain_instancing = Instancing::create(facade)?;
         let scene_pass_plain = ScenePass {
@@ -452,7 +452,7 @@ impl Pipeline {
 
         let composition_core = components.composition_core(config);
         let composition_program = composition_core
-            .build_program(facade, shader::InstanceMode::Uniforms)
+            .build_program(facade, shader::InstancingMode::Uniforms)
             .map_err(render::CreationError::from)?;
         let composition_texture = Self::create_color_texture(facade, rounded_size)?;
 
@@ -463,7 +463,7 @@ impl Pipeline {
             .transpose()
             .map_err(CreationError::FXAA)?;
         let copy_texture_program = shaders::composition_core()
-            .build_program(facade, shader::InstanceMode::Uniforms)
+            .build_program(facade, shader::InstancingMode::Uniforms)
             .map_err(render::CreationError::from)?;
 
         info!("Creating screen quad");

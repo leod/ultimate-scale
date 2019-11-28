@@ -75,7 +75,7 @@ impl Glow {
 
         info!("Creating blur program");
         let blur_program =
-            shaders::blur_core().build_program(facade, shader::InstanceMode::Uniforms)?;
+            shaders::blur_core().build_program(facade, shader::InstancingMode::Uniforms)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;

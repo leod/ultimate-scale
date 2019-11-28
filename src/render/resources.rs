@@ -27,7 +27,7 @@ impl Resources {
 
         info!("Creating plain render program");
         let plain_program = pipeline::scene::model::scene_core()
-            .build_program(facade, shader::InstanceMode::Uniforms)?;
+            .build_program(facade, shader::InstancingMode::Uniforms)?;
 
         Ok(Resources {
             object_buffers,

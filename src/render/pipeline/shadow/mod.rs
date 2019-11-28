@@ -70,7 +70,7 @@ impl ShadowMapping {
         info!("Creating shadow map program");
         let shadow_map_program = shaders::depth_map_core_transform(
             pipeline::scene::model::scene_core(),
-        ).build_program(facade, shader::InstanceMode::Vertex)?;
+        ).build_program(facade, shader::InstancingMode::Vertex)?;
 
         let shadow_texture = glium::texture::DepthTexture2d::empty(
             facade,
