@@ -165,7 +165,7 @@ impl Game {
             display,
             &self.resources,
             &render_context,
-            &mut self.render_lists,
+            &self.render_lists,
             target,
         )?;
 
@@ -227,7 +227,7 @@ impl Game {
             }
             (true, Some(play_status)) => {
                 // Advance execution
-                self.exec.as_mut().map(|(s, exec)| {
+                if let Some((s, exec)) = self.exec.as_mut() {
                     *s = play_status;
 
                     if let play::Status::Playing {
@@ -245,7 +245,7 @@ impl Game {
                             }
                         }
                     }
-                });
+                }
             }
             _ => (),
         }

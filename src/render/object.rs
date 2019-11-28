@@ -224,11 +224,11 @@ impl Object {
                 let sector_step = 2.0 * std::f32::consts::PI / num_sectors as f32;
                 let stack_step = std::f32::consts::PI / num_stacks as f32;
 
-                for i in 0..num_stacks+1 {
+                for i in 0..=num_stacks {
                     // Phi goes from pi/2 (top) to -pi/2 (bottom)
                     let phi = std::f32::consts::PI / 2.0 - i as f32 * stack_step;
 
-                    for j in 0..num_sectors+1 {
+                    for j in 0..=num_sectors {
                         // Theta goes from 0 to 2*pi (around the sphere)
                         let theta = j as f32 * sector_step;
 
@@ -340,7 +340,7 @@ impl Object {
                 let m = 8;
 
                 // Add positions and normals
-                for i in 0..n+1 {
+                for i in 0..=n {
                     let x = i as f32 / n as f32 - 0.5;
 
                     // Add one x-slice of the cylinder
