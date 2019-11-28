@@ -278,7 +278,7 @@ impl ExecView {
                 let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
                 let angle = -time.tick_progress() * std::f32::consts::PI / 2.0;
                 let rot = na::Rotation3::new(delta.normalize() * angle);
-                transform = transform * rot.to_homogeneous();
+                transform *= rot.to_homogeneous();
             }
 
             let color = machine::render::blip_color(blip.kind);

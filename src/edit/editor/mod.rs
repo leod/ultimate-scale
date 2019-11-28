@@ -190,10 +190,7 @@ impl Editor {
                 // Stop trying to go into drag and drop mode.
                 Mode::new_selection(selection)
             }
-            Mode::Select {
-                selection,
-                dragged_mouse_pos: _,
-            } if input_state.is_button_pressed(MouseButton::Right) => {
+            Mode::Select { selection, .. } if input_state.is_button_pressed(MouseButton::Right) => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
                     let edit = Edit::SetBlocks(maplit::hashmap! {
                         mouse_block_pos => None,
@@ -228,9 +225,8 @@ impl Editor {
             }
             Mode::RectSelect {
                 existing_selection,
-                new_selection: _,
                 start_pos,
-                end_pos: _,
+                ..
             } if input_state.is_button_pressed(MouseButton::Left) => {
                 // Update selection according to rectangle
                 let end_pos = input_state.mouse_window_pos();
@@ -238,7 +234,7 @@ impl Editor {
                     pick::pick_window_rect(&self.machine, camera, &start_pos, &end_pos);
 
                 Mode::RectSelect {
-                    existing_selection: existing_selection,
+                    existing_selection,
                     new_selection: new_selection.collect(),
                     start_pos,
                     end_pos: input_state.mouse_window_pos(),
