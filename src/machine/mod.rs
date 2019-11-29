@@ -15,7 +15,6 @@ use level::Level;
 pub enum BlipKind {
     A,
     B,
-    C,
 }
 
 impl Default for BlipKind {
@@ -28,8 +27,7 @@ impl BlipKind {
     pub fn next(self) -> BlipKind {
         match self {
             BlipKind::A => BlipKind::B,
-            BlipKind::B => BlipKind::C,
-            BlipKind::C => BlipKind::A,
+            BlipKind::B => BlipKind::A,
         }
     }
 }
@@ -41,7 +39,6 @@ impl fmt::Display for BlipKind {
         f.write_str(match self {
             BlipKind::A => "green",
             BlipKind::B => "orange",
-            BlipKind::C => "blue",
         })
     }
 }
