@@ -720,7 +720,14 @@ impl Exec {
                 ref mut activated,
                 ..
             } => {
-                *activated = Some(blip.kind);
+                // TODO: Resolve possible race condition in blip
+                //       duplicator. If two blips of different
+                //       kind race into the duplicator, the output
+                //       kind depends on the order of blip
+                //       evaluation.
+                if kind == None || kind == Some(blip.kind) {
+                    *activated = Some(blip.kind);
+                }
 
                 // Let it live
                 false

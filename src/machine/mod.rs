@@ -146,7 +146,10 @@ impl Block {
             Block::Solid => "Solid".to_string(),
             Block::Input { .. } => "Input".to_string(),
             Block::Output { .. } => "Output".to_string(),
-            Block::DetectorBlipDuplicator { .. } => "Detector blip copier".to_string(),
+            Block::DetectorBlipDuplicator { kind: Some(_), .. } => {
+                "Picky detector blip copier".to_string()
+            }
+            Block::DetectorBlipDuplicator { kind: None, .. } => "Detector blip copier".to_string(),
         }
     }
 
