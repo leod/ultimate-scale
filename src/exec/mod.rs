@@ -21,9 +21,17 @@ pub struct BlipMovement {
     pub progress: usize,
 }
 
+/// Ways that blips can enter live.
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+pub enum BlipSpawnMode {
+    Ease,
+    Quick,
+    LiveToDie,
+}
+
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum BlipStatus {
-    Spawning,
+    Spawning(BlipSpawnMode),
     Existing,
     Dying,
 }
@@ -329,44 +337,65 @@ impl Exec {
 
                 *activated = None;
             }
+            Block::DetectorBlipDuplicator {
+                ref mut activated, ..
+            } => {
+                *activated = None;
+            }
             _ => (),
         }
     }
 
-    pub(in crate::exec) fn try_spawn_blip(
+    pub(super) fn try_spawn_blip(
         invert: bool,
+        mode: BlipSpawnMode,
         kind: BlipKind,
         pos: &Point3,
         block_ids: &Grid3<Option<BlockIndex>>,
         blip_state: &mut Vec<BlipState>,
         blips: &mut VecOption<Blip>,
-    ) -> bool {
+    ) -> Option<BlipIndex> {
         if let Some(Some(output_index)) = block_ids.get(&pos) {
             if let Some(blip_index) = blip_state[*output_index].blip_index {
                 if invert {
                     debug!("removing blip {} at {:?}", blip_index, pos);
-                    //blips.remove(blip_index);
-                    blips[blip_index].status = BlipStatus::Dying;
-                    blip_state[*output_index].blip_index = None;
-                }
+                    blips[blip_index].status =
+                        if let BlipStatus::Spawning(_) = blips[blip_index].status {
+                            BlipStatus::Spawning(BlipSpawnMode::LiveToDie)
+                        } else {
+                            BlipStatus::Dying
+                        };
+                    //blip_state[*output_index].blip_index = None;
 
-                false
+                    debug!("spawning dead blip at {:?}", pos);
+                    let blip = Blip {
+                        kind,
+                        pos: *pos,
+                        old_move_dir: None,
+                        moved: false,
+                        status: BlipStatus::Spawning(BlipSpawnMode::LiveToDie),
+                    };
+
+                    Some(blips.add(blip))
+                } else {
+                    None
+                }
             } else {
                 debug!("spawning blip at {:?}", pos);
-
                 let blip = Blip {
                     kind,
                     pos: *pos,
                     old_move_dir: None,
                     moved: true, // apply effects for entering block in next frame
-                    status: BlipStatus::Spawning,
+                    status: BlipStatus::Spawning(mode),
                 };
-                blip_state[*output_index].blip_index = Some(blips.add(blip));
+                let blip_index = Some(blips.add(blip));
+                blip_state[*output_index].blip_index = blip_index;
 
-                true
+                blip_index
             }
         } else {
-            false
+            None
         }
     }
 
@@ -381,7 +410,9 @@ impl Exec {
         let mut remove_indices = Vec::new();
 
         for (blip_index, blip) in blips.iter() {
-            if blip.status == BlipStatus::Dying {
+            if blip.status == BlipStatus::Dying
+                || blip.status == BlipStatus::Spawning(BlipSpawnMode::LiveToDie)
+            {
                 remove_indices.push(blip_index)
             }
         }
@@ -393,7 +424,7 @@ impl Exec {
         remove_indices.clear();
 
         for (blip_index, blip) in blips.iter_mut() {
-            if blip.status == BlipStatus::Spawning {
+            if let BlipStatus::Spawning(_) = blip.status {
                 blip.status = BlipStatus::Existing;
             }
 
@@ -447,7 +478,6 @@ impl Exec {
                 }
 
                 blips[remove_index].status = BlipStatus::Dying;
-                //blips.remove(remove_index);
             }
         }
     }
@@ -460,7 +490,8 @@ impl Exec {
             debug_assert_eq!(
                 block_indices[*block_pos],
                 Some(block_index),
-                "block with index {} in data has position {:?}, but index grid stores {:?} at that position",
+                "block with index {} in data has position {:?}, but index grid stores {:?} at that \
+                 position",
                 block_index,
                 block_pos,
                 block_indices[*block_pos],
@@ -475,7 +506,8 @@ impl Exec {
                 debug_assert_eq!(
                     blip_index_in_block,
                     Some(blip_index),
-                    "blip with index {} has position {:?}, which has block index {}, but blip state stores blip index {:?} at that position",
+                    "blip with index {} has position {:?}, which has block index {}, but blip \
+                     state stores blip index {:?} at that position",
                     blip_index,
                     blip.pos,
                     block_index,
@@ -683,6 +715,16 @@ impl Exec {
                 // Remove blip
                 true
             }
+            Block::DetectorBlipDuplicator {
+                kind,
+                ref mut activated,
+                ..
+            } => {
+                *activated = Some(blip.kind);
+
+                // Let it live
+                false
+            }
             _ => false,
         }
     }
@@ -706,8 +748,9 @@ impl Exec {
 
                 if num_spawns.map_or(true, |n| n > 0) {
                     let output_pos = *block_pos + out_dir.to_vector();
-                    let did_spawn = Self::try_spawn_blip(
+                    let blip_index = Self::try_spawn_blip(
                         false,
+                        BlipSpawnMode::Ease,
                         kind,
                         &output_pos,
                         block_ids,
@@ -715,7 +758,7 @@ impl Exec {
                         blips,
                     );
 
-                    if did_spawn {
+                    if blip_index.is_some() {
                         *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
                         *activated = Some(cur_tick);
                     }
@@ -729,6 +772,7 @@ impl Exec {
                 if let Some(kind) = activated {
                     Self::try_spawn_blip(
                         true,
+                        BlipSpawnMode::Ease,
                         kind,
                         &(*block_pos + out_dirs.0.to_vector()),
                         block_ids,
@@ -737,6 +781,7 @@ impl Exec {
                     );
                     Self::try_spawn_blip(
                         true,
+                        BlipSpawnMode::Ease,
                         kind,
                         &(*block_pos + out_dirs.1.to_vector()),
                         block_ids,
@@ -756,12 +801,14 @@ impl Exec {
                     let did_activate = match input {
                         Some(level::Input::Blip(kind)) => Self::try_spawn_blip(
                             false,
+                            BlipSpawnMode::Ease,
                             kind,
                             &(*block_pos + out_dir.to_vector()),
                             block_ids,
                             blip_state,
                             blips,
-                        ),
+                        )
+                        .is_some(),
                         None => true,
                     };
 
@@ -773,6 +820,25 @@ impl Exec {
                     }
                 } else {
                     *activated = None;
+                }
+            }
+            Block::DetectorBlipDuplicator {
+                out_dir, activated, ..
+            } => {
+                if let Some(kind) = activated {
+                    let blip_index = Self::try_spawn_blip(
+                        true,
+                        BlipSpawnMode::Quick,
+                        kind,
+                        &(*block_pos + out_dir.to_vector()),
+                        block_ids,
+                        blip_state,
+                        blips,
+                    );
+
+                    if let Some(blip_index) = blip_index {
+                        blips[blip_index].old_move_dir = Some(out_dir);
+                    }
                 }
             }
             _ => {}
@@ -793,8 +859,6 @@ impl Exec {
             {
                 // The last element of `outputs` is the next expected output.
                 // Note that the last element will be popped at the start of
-                // the next tick in `update_block`. This is delayed here so
-                // that visualization matches up better.
                 let expected = outputs.last().copied();
 
                 let (block_failed, block_completed) = match (expected, activated) {
@@ -807,6 +871,7 @@ impl Exec {
                 };
 
                 if block_failed {
+                    // Remember failure status for visualization.
                     *output_failed = true;
                 }
 

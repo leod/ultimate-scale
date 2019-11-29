@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use glium::glutin::VirtualKeyCode;
 
-use crate::machine::grid::Dir3;
+use crate::machine::grid::{Axis3, Dir3};
 use crate::machine::{BlipKind, Block};
 
 // TODO: Shift does not work for some reason, we don't get any key press events
@@ -188,6 +188,15 @@ impl Default for Config {
                     Block::Pipe(Dir3::Z_POS, Dir3::X_POS),
                 ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key6), Block::PipeMergeXY),
+                (
+                    ModifiedKey::ctrl(VirtualKeyCode::Key6),
+                    Block::DetectorBlipDuplicator {
+                        out_dir: Dir3::X_NEG,
+                        flow_axis: Axis3::Y,
+                        kind: Some(BlipKind::A),
+                        activated: None,
+                    },
+                ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
             ],
             layer_keys: vec![
