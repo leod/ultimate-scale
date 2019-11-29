@@ -37,8 +37,8 @@ impl fmt::Display for BlipKind {
         // TODO: These names are preliminary, should look into something that
         // avoids using colors.
         f.write_str(match self {
-            BlipKind::A => "green",
-            BlipKind::B => "orange",
+            BlipKind::A => "blue",
+            BlipKind::B => "green",
         })
     }
 }
