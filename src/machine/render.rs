@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::machine::grid::{self, Dir3};
+use crate::machine::grid::{self, Dir3, Sign};
 use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::scene::model;
@@ -901,6 +901,40 @@ pub fn render_block(
                     color: expected_next_color,
                     ..Default::default()
                 },
+            );
+        }
+        Block::DetectorBlipDuplicator {
+            out_dir,
+            flow_axis,
+            activated,
+            ..
+        } => {
+            let color = block_color(&pipe_color(), alpha);
+
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(flow_axis, Sign::Neg),
+                &color,
+                &mut out.solid,
+            );
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(flow_axis, Sign::Pos),
+                &color,
+                &mut out.solid,
+            );
+            render_half_pipe(center, transform, out_dir, &color, &mut out.solid);
+
+            render_cuboid_wireframe(
+                &Cuboid {
+                    center: *center,
+                    size: na::Vector3::new(0.7, 0.7, 0.7),
+                },
+                0.1,
+                &block_color(&funnel_in_color(), alpha),
+                &mut out.solid,
             );
         }
     }
