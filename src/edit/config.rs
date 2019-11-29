@@ -197,6 +197,15 @@ impl Default for Config {
                         activated: None,
                     },
                 ),
+                (
+                    ModifiedKey::ctrl(VirtualKeyCode::Key7),
+                    Block::DetectorBlipDuplicator {
+                        out_dir: Dir3::X_NEG,
+                        flow_axis: Axis3::Y,
+                        kind: None,
+                        activated: None,
+                    },
+                ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
             ],
             layer_keys: vec![

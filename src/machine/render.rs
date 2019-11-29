@@ -174,7 +174,7 @@ pub fn render_cuboid_wireframe_with_transform(
     for (start, end) in CUBOID_WIREFRAME_LINES.iter() {
         let start: na::Point3<f32> = na::convert(na::Point3::from_slice(start));
         let end: na::Point3<f32> = na::convert(na::Point3::from_slice(end));
-        let delta = (start - end).normalize();
+        //let delta = (start - end).normalize();
 
         render_line(
             &Line {
