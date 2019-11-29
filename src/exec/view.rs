@@ -7,7 +7,7 @@ use glium::glutin::{self, WindowEvent};
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
 use crate::exec::anim::{WindAnimState, WindDeadend, WindLife};
-use crate::exec::{BlipStatus, Exec, LevelStatus, TickTime};
+use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{self, grid, level, BlipKind, Machine};
@@ -97,6 +97,7 @@ impl ExecView {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
                     Exec::try_spawn_blip(
                         false,
+                        BlipSpawnMode::Ease,
                         BlipKind::A,
                         &mouse_block_pos,
                         &self.exec.machine.blocks.indices,
@@ -109,6 +110,7 @@ impl ExecView {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
                     Exec::try_spawn_blip(
                         false,
+                        BlipSpawnMode::Ease,
                         BlipKind::B,
                         &mouse_block_pos,
                         &self.exec.machine.blocks.indices,
@@ -246,12 +248,29 @@ impl ExecView {
 
             let size = 0.25
                 * match blip.status {
-                    BlipStatus::Spawning => {
+                    BlipStatus::Spawning(mode) => {
                         // Animate spawning the blip
-                        if time.tick_progress() >= 0.75 {
-                            Self::blip_spawn_size_animation((time.tick_progress() - 0.75) * 4.0)
-                        } else {
-                            0.0
+                        match mode {
+                            BlipSpawnMode::Ease => {
+                                if time.tick_progress() >= 0.75 {
+                                    Self::blip_spawn_size_animation(
+                                        (time.tick_progress() - 0.75) * 4.0,
+                                    )
+                                } else {
+                                    0.0
+                                }
+                            }
+                            BlipSpawnMode::Quick => {
+                                if time.tick_progress() < 0.5 {
+                                    Self::blip_spawn_size_animation(time.tick_progress() * 2.0)
+                                } else {
+                                    1.0
+                                }
+                            }
+                            BlipSpawnMode::LiveToDie => {
+                                // TODO
+                                1.0
+                            }
                         }
                     }
                     BlipStatus::Existing => 1.0,

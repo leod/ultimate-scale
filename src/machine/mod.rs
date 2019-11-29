@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::util::vec_option::VecOption;
 
-use grid::{Axis3, Dir3, Grid3, Point3, Vector3};
+use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
 use level::Level;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
@@ -105,6 +105,14 @@ pub enum Block {
         #[serde(skip)]
         failed: bool,
     },
+    DetectorBlipDuplicator {
+        out_dir: Dir3,
+        flow_axis: Axis3,
+        kind: Option<BlipKind>,
+
+        #[serde(skip)]
+        activated: Option<BlipKind>,
+    },
 }
 
 impl Block {
@@ -138,6 +146,10 @@ impl Block {
             Block::Solid => "Solid".to_string(),
             Block::Input { .. } => "Input".to_string(),
             Block::Output { .. } => "Output".to_string(),
+            Block::DetectorBlipDuplicator { kind: Some(_), .. } => {
+                "Picky detector blip copier".to_string()
+            }
+            Block::DetectorBlipDuplicator { kind: None, .. } => "Detector blip copier".to_string(),
         }
     }
 
@@ -168,6 +180,7 @@ impl Block {
             Block::Solid => "Eats blips.",
             Block::Input { .. } => "Input of the machine.",
             Block::Output { .. } => "Output of the machine.",
+            Block::DetectorBlipDuplicator { .. } => "TODO.",
         }
     }
 
@@ -183,6 +196,7 @@ impl Block {
         match self {
             Block::BlipSpawn { kind, .. } => Some(*kind),
             Block::BlipDuplicator { kind, .. } => *kind,
+            Block::DetectorBlipDuplicator { kind, .. } => *kind,
             _ => None,
         }
     }
@@ -191,6 +205,7 @@ impl Block {
         match self {
             Block::BlipSpawn { ref mut kind, .. } => *kind = new_kind,
             Block::BlipDuplicator { ref mut kind, .. } => *kind = Some(new_kind),
+            Block::DetectorBlipDuplicator { ref mut kind, .. } => *kind = Some(new_kind),
             _ => (),
         }
     }
@@ -213,6 +228,14 @@ impl Block {
             Block::Solid => (),
             Block::Input { out_dir, .. } => *out_dir = f(*out_dir),
             Block::Output { in_dir, .. } => *in_dir = f(*in_dir),
+            Block::DetectorBlipDuplicator {
+                out_dir, flow_axis, ..
+            } => {
+                *out_dir = f(*out_dir);
+
+                // Hack
+                *flow_axis = f(Dir3(*flow_axis, Sign::Pos)).0;
+            }
         }
     }
 
@@ -231,6 +254,9 @@ impl Block {
             Block::BlipWindSource { .. } => true,
             Block::Input { out_dir, .. } => dir == *out_dir,
             Block::Output { in_dir, .. } => dir == *in_dir,
+            Block::DetectorBlipDuplicator {
+                out_dir, flow_axis, ..
+            } => dir.0 == *flow_axis || dir == *out_dir,
         }
     }
 
@@ -238,6 +264,7 @@ impl Block {
         match self {
             Block::FunnelXY { flow_dir, .. } => dir == *flow_dir,
             Block::WindSource => false,
+            Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -259,6 +286,7 @@ impl Block {
         match self {
             Block::BlipDuplicator { out_dirs, .. } => dir != out_dirs.0 && dir != out_dirs.1,
             Block::BlipWindSource { button_dir, .. } => dir == *button_dir,
+            Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
             _ => self.has_wind_hole(dir),
         }
     }

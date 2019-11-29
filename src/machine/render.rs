@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use crate::machine::grid::{self, Dir3};
+use crate::machine::grid::{self, Dir3, Sign};
 use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
 use crate::render::scene::model;
@@ -174,11 +174,12 @@ pub fn render_cuboid_wireframe_with_transform(
     for (start, end) in CUBOID_WIREFRAME_LINES.iter() {
         let start: na::Point3<f32> = na::convert(na::Point3::from_slice(start));
         let end: na::Point3<f32> = na::convert(na::Point3::from_slice(end));
+        //let delta = (start - end).normalize();
 
         render_line(
             &Line {
-                start: start / 2.0,
-                end: end / 2.0,
+                start: start / 2.0, //+ thickness / 2.0 * delta,
+                end: end / 2.0,     //- thickness / 2.0 * delta,
                 roll: 0.0,
                 thickness,
                 color: *color,
@@ -901,6 +902,50 @@ pub fn render_block(
                     color: expected_next_color,
                     ..Default::default()
                 },
+            );
+        }
+        Block::DetectorBlipDuplicator {
+            out_dir,
+            flow_axis,
+            activated,
+            kind,
+            ..
+        } => {
+            let kind_color = match activated.or(kind) {
+                Some(kind) => blip_color(kind),
+                None => inactive_blip_duplicator_color(),
+            };
+            let pipe_color = block_color(&pipe_color(), alpha);
+
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(flow_axis, Sign::Neg),
+                &pipe_color,
+                &mut out.solid,
+            );
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(flow_axis, Sign::Pos),
+                &pipe_color,
+                &mut out.solid,
+            );
+            render_half_pipe(center, transform, out_dir, &pipe_color, &mut out.solid);
+
+            let render_list = if activated.is_some() {
+                &mut out.solid_glow
+            } else {
+                &mut out.solid
+            };
+            render_cuboid_wireframe(
+                &Cuboid {
+                    center: *center,
+                    size: na::Vector3::new(0.7, 0.7, 0.7),
+                },
+                0.1,
+                &block_color(&kind_color, alpha),
+                render_list,
             );
         }
     }
