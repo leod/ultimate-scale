@@ -38,7 +38,6 @@ pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
     gamma_correct(&match kind {
         BlipKind::A => na::Vector3::new(0.2, 0.2, 0.8),
         BlipKind::B => na::Vector3::new(0.0, 0.737, 0.361),
-        BlipKind::C => na::Vector3::new(0.098, 0.129, 0.694),
     })
 }
 
