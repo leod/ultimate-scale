@@ -235,11 +235,11 @@ impl ExecView {
         // Using this tool:
         //     https://tools.timodenk.com/cubic-spline-interpolation
         anim::cubic_spline(&[4.4034, 0.0, -4.5455e-2, 0.0])
-            .seq(
+            .switch(
                 0.4,
                 anim::cubic_spline(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]),
             )
-            .seq(
+            .switch(
                 0.8,
                 anim::cubic_spline(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
             )
@@ -260,7 +260,7 @@ impl ExecView {
                             let live = 1.0;
                             let die = Self::blip_spawn_anim()
                                 .backwards(1.0)
-                                .squeeze(1.0, 0.7..=1.0);
+                                .squeeze(1.0, 0.0..=0.3);
 
                             spawn.seq(0.5, live).seq(0.7, die)
                         }
