@@ -12,6 +12,7 @@ use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{self, grid, level, BlipKind, Machine};
 use crate::render::{self, scene, Camera, Light, RenderLists};
+use crate::util::anim;
 
 #[derive(Debug, Clone)]
 pub struct Config {}
@@ -246,39 +247,36 @@ impl ExecView {
         for (_index, blip) in self.exec.blips().iter() {
             let center = machine::render::block_center(&blip.pos);
 
-            let size = 0.25
-                * match blip.status {
-                    BlipStatus::Spawning(mode) => {
-                        // Animate spawning the blip
-                        match mode {
-                            BlipSpawnMode::Ease => {
-                                if time.tick_progress() >= 0.75 {
-                                    Self::blip_spawn_size_animation(
-                                        (time.tick_progress() - 0.75) * 4.0,
-                                    )
-                                } else {
-                                    0.0
-                                }
-                            }
-                            BlipSpawnMode::Quick => {
-                                if time.tick_progress() < 0.5 {
-                                    Self::blip_spawn_size_animation(time.tick_progress() * 2.0)
-                                } else {
-                                    1.0
-                                }
-                            }
-                            BlipSpawnMode::LiveToDie => {
-                                // TODO
-                                1.0
-                            }
+            let size_anim = |t| match blip.status {
+                BlipStatus::Spawning(mode) => {
+                    // Animate spawning the blip
+                    match mode {
+                        BlipSpawnMode::Ease => anim::squeeze(
+                            0.75..=1.0,
+                            0.0,
+                            anim::lift(Self::blip_spawn_size_animation),
+                        )
+                        .eval(t),
+                        BlipSpawnMode::Quick => anim::squeeze(
+                            0.0..=0.5,
+                            1.0,
+                            anim::lift(Self::blip_spawn_size_animation),
+                        )
+                        .eval(t),
+                        BlipSpawnMode::LiveToDie =>
+                        // TODO
+                        {
+                            anim::one().eval(t)
                         }
                     }
-                    BlipStatus::Existing => 1.0,
-                    BlipStatus::Dying => {
-                        // Animate killing the blip
-                        Self::blip_spawn_size_animation(1.0 - time.tick_progress())
-                    }
-                };
+                }
+                BlipStatus::Existing => anim::one().eval(t),
+                BlipStatus::Dying => {
+                    // Animate killing the blip
+                    anim::backwards(1.0, anim::lift(Self::blip_spawn_size_animation)).eval(t)
+                }
+            };
+            let size = (anim::lift(size_anim) * 0.25).eval(time.tick_progress());
 
             // Interpolate blip position if it is moving
             let pos = if let Some(old_move_dir) = blip.old_move_dir {
