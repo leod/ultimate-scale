@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use std::ops::{Add, Mul, RangeInclusive, Sub};
+use std::ops::{Add, Mul, Neg, RangeInclusive, Sub};
 
 use num_traits::{Float, FloatConst, Num, One, Zero};
 
@@ -416,5 +416,29 @@ where
 {
     fn eval(&self, t: T) -> V {
         self.0.eval(t) * self.1.eval(t)
+    }
+}
+
+impl<T, V, F> Neg for Anim<T, V, F>
+where
+    V: Neg,
+    F: Fun<T, V>,
+{
+    type Output = Anim<T, <V as Neg>::Output, NegClosure<T, V, F>>;
+
+    fn neg(self) -> Self::Output {
+        Anim::new(NegClosure(self))
+    }
+}
+
+pub struct NegClosure<T, V, F>(Anim<T, V, F>);
+
+impl<T, V, F> Fun<T, <V as Neg>::Output> for NegClosure<T, V, F>
+where
+    V: Neg,
+    F: Fun<T, V>,
+{
+    fn eval(&self, t: T) -> <V as Neg>::Output {
+        -self.0.eval(t)
     }
 }
