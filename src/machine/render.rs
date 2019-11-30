@@ -9,6 +9,8 @@ use crate::render::{Light, Object, RenderList, RenderLists};
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::{Exec, TickTime};
 
+use crate::util::anim;
+
 pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
@@ -789,12 +791,10 @@ pub fn render_block(
                 Some(level::Input::Blip(kind)) => Some(kind),
             };
 
-            let angle = std::f32::consts::PI / 4.0
-                + if is_wind_active {
-                    tick_time.tick_progress() * std::f32::consts::PI
-                } else {
-                    0.0
-                };
+            let angle_anim =
+                anim::cond(is_wind_active, anim::half_circle(), 0.0) + std::f32::consts::PI / 4.0;
+            let angle = angle_anim.eval(tick_time.tick_progress());
+
             let rotation = na::Matrix4::from_euler_angles(angle, 0.0, 0.0);
 
             let color = block_color(

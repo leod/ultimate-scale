@@ -251,21 +251,14 @@ impl ExecView {
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
                     match mode {
-                        BlipSpawnMode::Ease => anim::squeeze(
-                            0.75..=1.0,
-                            0.0,
-                            anim::lift(Self::blip_spawn_size_animation),
-                        )
-                        .eval(t),
-                        BlipSpawnMode::Quick => anim::squeeze(
-                            0.0..=0.5,
-                            1.0,
-                            anim::lift(Self::blip_spawn_size_animation),
-                        )
-                        .eval(t),
-                        BlipSpawnMode::LiveToDie =>
-                        // TODO
-                        {
+                        BlipSpawnMode::Ease => anim::func(Self::blip_spawn_size_animation)
+                            .squeeze(0.0, 0.75..=1.0)
+                            .eval(t),
+                        BlipSpawnMode::Quick => anim::func(Self::blip_spawn_size_animation)
+                            .squeeze(1.0, 0.0..=0.5)
+                            .eval(t),
+                        BlipSpawnMode::LiveToDie => {
+                            // TODO
                             anim::one().eval(t)
                         }
                     }
@@ -273,10 +266,12 @@ impl ExecView {
                 BlipStatus::Existing => anim::one().eval(t),
                 BlipStatus::Dying => {
                     // Animate killing the blip
-                    anim::backwards(1.0, anim::lift(Self::blip_spawn_size_animation)).eval(t)
+                    anim::func(Self::blip_spawn_size_animation)
+                        .backwards(1.0)
+                        .eval(t)
                 }
             };
-            let size = (anim::lift(size_anim) * 0.25).eval(time.tick_progress());
+            let size = (anim::func(size_anim) * 0.25).eval(time.tick_progress());
 
             // Interpolate blip position if it is moving
             let pos = if let Some(old_move_dir) = blip.old_move_dir {
