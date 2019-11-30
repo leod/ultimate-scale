@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use std::ops::{Add, Mul, RangeInclusive};
+use std::ops::{Add, Mul, RangeInclusive, Sub};
 
 use num_traits::{Float, FloatConst, Num, One, Zero};
 
@@ -105,6 +105,54 @@ where
     }
 }
 
+impl<T, V, W, F> Anim<T, V, F>
+where
+    T: Copy + Float + Mul<W, Output = W>,
+    V: Copy + Add<W, Output = V> + Sub<Output = W>,
+    F: Fun<T, V>,
+{
+    pub fn lerp<F2, A2>(self, other: A2) -> Anim<T, V, impl Fun<T, V>>
+    where
+        F2: Fun<T, V>,
+        A2: Into<Anim<T, V, F2>>,
+    {
+        let other = other.into();
+
+        Anim::from(move |t| {
+            let a = self.eval(t);
+            let b = other.eval(t);
+
+            let delta = b - a;
+
+            a + t * delta
+        })
+    }
+}
+
+impl<T, V, F> Anim<T, Option<V>, F>
+where
+    T: Copy,
+    F: Fun<T, Option<V>>,
+{
+    pub fn map_or<W, F1, F2, A1>(
+        self,
+        default: A1,
+        f: impl Fn(V) -> Anim<T, W, F2>,
+    ) -> Anim<T, W, impl Fun<T, W>>
+    where
+        F1: Fun<T, W>,
+        F2: Fun<T, W>,
+        A1: Into<Anim<T, W, F1>>,
+    {
+        let default = default.into();
+
+        Anim::from(move |t| {
+            self.eval(t)
+                .map_or_else(|| default.eval(t), |v| f(v).eval(t))
+        })
+    }
+}
+
 pub fn func<T, V>(f: impl Fn(T) -> V) -> Anim<T, V, impl Fun<T, V>> {
     From::from(f)
 }
@@ -180,6 +228,18 @@ where
     A2: Into<Anim<T, V, F2>>,
 {
     cond_t(move |_| cond, a1, a2)
+}
+
+pub fn lerp<T, V, W, F1, F2, A1, A2>(a: A1, b: A2) -> Anim<T, V, impl Fun<T, V>>
+where
+    T: Copy + Float + Mul<W, Output = W>,
+    V: Copy + Add<W, Output = V> + Sub<Output = W>,
+    F1: Fun<T, V>,
+    F2: Fun<T, V>,
+    A1: Into<Anim<T, V, F1>>,
+    A2: Into<Anim<T, V, F2>>,
+{
+    a.into().lerp(b.into())
 }
 
 pub fn cubic_spline<T>(w: &[T; 4]) -> Anim<T, T, impl Fun<T, T> + '_>

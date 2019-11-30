@@ -247,8 +247,6 @@ impl ExecView {
 
     fn render_blips(&self, time: &TickTime, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
-            let center = machine::render::block_center(&blip.pos);
-
             let size_anim = anim_match!(blip.status;
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
@@ -271,13 +269,14 @@ impl ExecView {
             let size = size_anim.eval(time.tick_progress());
 
             // Interpolate blip position if it is moving
-            let pos = if let Some(old_move_dir) = blip.old_move_dir {
+            let center = machine::render::block_center(&blip.pos);
+            let pos_anim = anim::constant(blip.old_move_dir).map_or(center, |old_move_dir| {
                 let old_pos = blip.pos - old_move_dir.to_vector();
                 let old_center = machine::render::block_center(&old_pos);
-                old_center + time.tick_progress() * (center - old_center)
-            } else {
-                center
-            };
+
+                anim::lerp(old_center, center)
+            });
+            let pos = pos_anim.eval(time.tick_progress());
 
             let mut transform = na::Matrix4::new_translation(&pos.coords);
 
