@@ -237,7 +237,7 @@ pub fn bridge_length_animation(
     min: f32,
     max: f32,
     activated: bool,
-) -> Anim<f32, f32, impl Fun<f32, f32>> {
+) -> Anim<impl Fun<T = f32, V = f32>> {
     anim::cond(activated, anim::half_circle().cos().abs(), 1.0).scale_min_max(min, max)
 }
 
@@ -447,13 +447,13 @@ pub fn render_pulsator(
         anim.num_alive_in() > 0 && anim.num_alive_out() > 0
     });
 
-    let size_anim = 2.5
-        * PIPE_THICKNESS
-        * anim::cond(
-            have_flow,
-            1.0 + 0.08 * anim::half_circle().sin().powi(2),
-            1.0,
-        );
+    let max_size = 2.5 * PIPE_THICKNESS;
+    let size_anim = anim::cond(
+        have_flow,
+        anim::half_circle().sin().powi(2) * 0.08f32 + 1.0,
+        1.0,
+    ) * max_size;
+
     let size = size_anim.eval(tick_time.tick_progress());
 
     let translation = na::Matrix4::new_translation(&center.coords);

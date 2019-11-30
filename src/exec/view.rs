@@ -225,7 +225,7 @@ impl ExecView {
         }
     }
 
-    fn blip_spawn_anim() -> Anim<f32, f32, impl Fun<f32, f32>> {
+    fn blip_spawn_anim() -> Anim<impl Fun<T = f32, V = f32>> {
         // Natural cubic spline interpolation of these points:
         //  0 0
         //  0.4 0.3
