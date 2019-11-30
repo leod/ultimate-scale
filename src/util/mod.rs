@@ -1,3 +1,4 @@
+pub mod anim;
 pub mod intersection;
 #[macro_use]
 pub mod profile;
