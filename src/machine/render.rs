@@ -328,38 +328,33 @@ pub fn render_wind_mills(
         }
 
         let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
-            let t = tick_time.tick_progress();
-
             if anim.out_deadend(dir).is_some() {
                 return 0.0;
             }
 
             let wind_time_offset = wind_mills.offset + wind_mills.length;
 
-            std::f32::consts::PI / 2.0
-                * match anim.wind_out(dir) {
-                    WindLife::None => 0.0,
-                    WindLife::Appearing => {
-                        // The wind will start moving inside of the block, so
-                        // delay mill rotation until the wind reaches the
-                        // outside.
-                        if t >= wind_time_offset {
-                            (t - wind_time_offset) / (1.0 - wind_time_offset)
-                        } else {
-                            0.0
-                        }
-                    }
-                    WindLife::Existing => t,
-                    WindLife::Disappearing => {
-                        // Stop mill rotation when wind reaches the inside of
-                        // the block.
-                        if t < wind_time_offset {
-                            t / wind_time_offset
-                        } else {
-                            0.0
-                        }
-                    }
-                }
+            // TODO: There is a problem with this animation in that it is
+            //       faster when wind is appearing/disappearing.
+            let roll_anim = anim_match!(anim.wind_out(dir);
+                WindLife::None => 0.0,
+                WindLife::Appearing => {
+                    // The wind will start moving inside of the block, so
+                    // delay mill rotation until the wind reaches the
+                    // outside.
+                    anim::quarter_circle().squeeze(0.0, wind_time_offset..=1.0)
+                },
+                WindLife::Existing => {
+                    anim::quarter_circle()
+                },
+                WindLife::Disappearing => {
+                    // Stop mill rotation when wind reaches the inside of
+                    // the block.
+                    anim::quarter_circle().squeeze(0.0, 0.0..=wind_time_offset)
+                },
+            );
+
+            roll_anim.eval(tick_time.tick_progress())
         });
 
         for &phase in &[0.0, 0.25] {
