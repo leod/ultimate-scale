@@ -12,6 +12,7 @@ use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{self, grid, level, BlipKind, Machine};
 use crate::render::{self, scene, Camera, Light, RenderLists};
+use crate::util::anim::{self, Anim, Fun};
 
 #[derive(Debug, Clone)]
 pub struct Config {}
@@ -224,7 +225,7 @@ impl ExecView {
         }
     }
 
-    fn blip_spawn_size_animation(t: f32) -> f32 {
+    fn blip_spawn_anim() -> Anim<impl Fun<T = f32, V = f32>> {
         // Natural cubic spline interpolation of these points:
         //  0 0
         //  0.4 0.3
@@ -233,72 +234,62 @@ impl ExecView {
         //
         // Using this tool:
         //     https://tools.timodenk.com/cubic-spline-interpolation
-        if t <= 0.4 {
-            4.4034 * t.powi(3) - 4.5455e-2 * t
-        } else if t <= 0.8 {
-            -1.2642e1 * t.powi(3) + 2.0455e1 * t.powi(2) - 8.1364 * t + 1.0909
-        } else {
-            1.6477e1 * t.powi(3) - 4.9432e1 * t.powi(2) + 4.7773e1 * t - 1.3818e1
-        }
+        anim::cubic_spline(&[4.4034, 0.0, -4.5455e-2, 0.0])
+            .seq(
+                0.4,
+                anim::cubic_spline(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]),
+            )
+            .seq(
+                0.8,
+                anim::cubic_spline(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
+            )
     }
 
     fn render_blips(&self, time: &TickTime, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
-            let center = machine::render::block_center(&blip.pos);
-
-            let size = 0.25
-                * match blip.status {
-                    BlipStatus::Spawning(mode) => {
-                        // Animate spawning the blip
-                        match mode {
-                            BlipSpawnMode::Ease => {
-                                if time.tick_progress() >= 0.75 {
-                                    Self::blip_spawn_size_animation(
-                                        (time.tick_progress() - 0.75) * 4.0,
-                                    )
-                                } else {
-                                    0.0
-                                }
-                            }
-                            BlipSpawnMode::Quick => {
-                                if time.tick_progress() < 0.5 {
-                                    Self::blip_spawn_size_animation(time.tick_progress() * 2.0)
-                                } else {
-                                    1.0
-                                }
-                            }
-                            BlipSpawnMode::LiveToDie => {
-                                // TODO
-                                1.0
-                            }
+            let size_anim = anim_match!(blip.status;
+                BlipStatus::Spawning(mode) => {
+                    // Animate spawning the blip
+                    anim_match!(mode;
+                        BlipSpawnMode::Ease => Self::blip_spawn_anim().squeeze(0.0, 0.75..=1.0),
+                        BlipSpawnMode::Quick => Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5),
+                        BlipSpawnMode::LiveToDie => {
+                            // TODO
+                            1.0
                         }
-                    }
-                    BlipStatus::Existing => 1.0,
-                    BlipStatus::Dying => {
-                        // Animate killing the blip
-                        Self::blip_spawn_size_animation(1.0 - time.tick_progress())
-                    }
-                };
+                    )
+                }
+                BlipStatus::Existing => 1.0,
+                BlipStatus::Dying => {
+                    // Animate killing the blip
+                    Self::blip_spawn_anim().backwards(1.0)
+                }
+            ) * 0.25;
 
-            // Interpolate blip position if it is moving
-            let pos = if let Some(old_move_dir) = blip.old_move_dir {
-                let old_pos = blip.pos - old_move_dir.to_vector();
-                let old_center = machine::render::block_center(&old_pos);
-                old_center + time.tick_progress() * (center - old_center)
-            } else {
-                center
-            };
+            let size = size_anim.eval(time.tick_progress());
 
-            let mut transform = na::Matrix4::new_translation(&pos.coords);
+            let center = machine::render::block_center(&blip.pos);
+            let pos_rot_anim = anim::constant(blip.old_move_dir).map_or(
+                (center, na::Matrix4::identity()),
+                |old_move_dir| {
+                    let old_pos = blip.pos - old_move_dir.to_vector();
 
-            // Rotate blip if it is moving
-            if let Some(old_move_dir) = blip.old_move_dir {
-                let old_pos = blip.pos - old_move_dir.to_vector();
-                let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                let angle = -time.tick_progress() * std::f32::consts::PI / 2.0;
-                let rot = na::Rotation3::new(delta.normalize() * angle);
-                transform *= rot.to_homogeneous();
-            }
+                    // Interpolate blip position if it is moving
+                    let old_center = machine::render::block_center(&old_pos);
+                    let pos = anim::lerp(old_center, center);
+
+                    // Rotate blip if it is moving
+                    let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
+                    let rot = (-anim::quarter_circle::<_, f32>()).map(move |angle| {
+                        na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
+                    });
+
+                    pos.zip(rot)
+                },
+            );
+
+            let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
+            let transform = na::Matrix4::new_translation(&pos.coords) * rot;
 
             let color = machine::render::blip_color(blip.kind);
             let instance = render::Instance {

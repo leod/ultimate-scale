@@ -9,6 +9,8 @@ use crate::render::{Light, Object, RenderList, RenderLists};
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::{Exec, TickTime};
 
+use crate::util::anim::{self, Anim, Fun};
+
 pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
@@ -231,13 +233,12 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList<model::
     }
 }
 
-pub fn bridge_length_animation(min: f32, max: f32, activated: bool, progress: f32) -> f32 {
-    min + (if activated && progress <= 1.0 {
-        let x = progress * std::f32::consts::PI;
-        x.cos().abs()
-    } else {
-        1.0
-    }) * (max - min)
+pub fn bridge_length_animation(
+    min: f32,
+    max: f32,
+    activated: bool,
+) -> Anim<impl Fun<T = f32, V = f32>> {
+    anim::cond(activated, anim::half_circle().cos().abs(), 1.0).scale_min_max(min, max)
 }
 
 pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
@@ -326,40 +327,37 @@ pub fn render_wind_mills(
             continue;
         }
 
-        let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
-            let t = tick_time.tick_progress();
-
-            if anim.out_deadend(dir).is_some() {
-                return 0.0;
-            }
-
+        let roll_anim = anim::constant(wind_anim_state.as_ref()).map_or(0.0, |state| {
             let wind_time_offset = wind_mills.offset + wind_mills.length;
 
-            std::f32::consts::PI / 2.0
-                * match anim.wind_out(dir) {
-                    WindLife::None => 0.0,
-                    WindLife::Appearing => {
-                        // The wind will start moving inside of the block, so
-                        // delay mill rotation until the wind reaches the
-                        // outside.
-                        if t >= wind_time_offset {
-                            (t - wind_time_offset) / (1.0 - wind_time_offset)
-                        } else {
-                            0.0
-                        }
-                    }
-                    WindLife::Existing => t,
-                    WindLife::Disappearing => {
-                        // Stop mill rotation when wind reaches the inside of
-                        // the block.
-                        if t < wind_time_offset {
-                            t / wind_time_offset
-                        } else {
-                            0.0
-                        }
-                    }
-                }
+            let angle = || anim::quarter_circle();
+
+            // TODO: There is a problem with this animation in that it is
+            //       faster when wind is appearing/disappearing.
+            let wind_anim = anim_match!(state.wind_out(dir);
+                WindLife::None => 0.0,
+                WindLife::Appearing => {
+                    // The wind will start moving inside of the block, so
+                    // delay mill rotation until the wind reaches the
+                    // outside.
+                    angle().squeeze(0.0, wind_time_offset..=1.0)
+                },
+                WindLife::Existing => {
+                    angle()
+                },
+                WindLife::Disappearing => {
+                    // Stop mill rotation when wind reaches the inside of
+                    // the block.
+                    angle().squeeze(0.0, 0.0..=wind_time_offset)
+                },
+            );
+
+            // Only show rotation when not running into a deadend in that
+            // direction.
+            anim::cond(state.out_deadend(dir).is_none(), wind_anim, 0.0)
         });
+
+        let roll = roll_anim.eval(tick_time.tick_progress());
 
         for &phase in &[0.0, 0.25] {
             render_mill(
@@ -447,20 +445,18 @@ pub fn render_pulsator(
     color: &na::Vector4<f32>,
     out: &mut RenderLists,
 ) {
-    let size = 2.5
-        * PIPE_THICKNESS
-        * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
-            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
-                1.0 + 0.08
-                    * (tick_time.tick_progress() * std::f32::consts::PI)
-                        .sin()
-                        .powf(2.0)
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
+    let have_flow = wind_anim_state.as_ref().map_or(false, |anim| {
+        anim.num_alive_in() > 0 && anim.num_alive_out() > 0
+    });
+
+    let max_size = 2.5 * PIPE_THICKNESS;
+    let size_anim = anim::cond(
+        have_flow,
+        anim::half_circle().sin().powi(2) * 0.08f32 + 1.0,
+        1.0,
+    ) * max_size;
+
+    let size = size_anim.eval(tick_time.tick_progress());
 
     let translation = na::Matrix4::new_translation(&center.coords);
     let cube_transform = translation * transform;
@@ -632,8 +628,8 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
-            let bridge_length =
-                bridge_length_animation(0.05, 0.6, activated.is_some(), tick_time.tick_progress());
+            let bridge_length = bridge_length_animation(0.05, 0.6, activated.is_some())
+                .eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
@@ -673,8 +669,8 @@ pub fn render_block(
             );
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_length =
-                bridge_length_animation(0.05, 0.4, activated.is_some(), tick_time.tick_progress());
+            let bridge_length = bridge_length_animation(0.05, 0.4, activated.is_some())
+                .eval(tick_time.tick_progress());
 
             for &dir in &[out_dirs.0, out_dirs.1] {
                 render_bridge(
@@ -789,12 +785,10 @@ pub fn render_block(
                 Some(level::Input::Blip(kind)) => Some(kind),
             };
 
-            let angle = std::f32::consts::PI / 4.0
-                + if is_wind_active {
-                    tick_time.tick_progress() * std::f32::consts::PI
-                } else {
-                    0.0
-                };
+            let angle_anim =
+                anim::cond(is_wind_active, anim::half_circle(), 0.0) + std::f32::consts::PI / 4.0;
+            let angle = angle_anim.eval(tick_time.tick_progress());
+
             let rotation = na::Matrix4::from_euler_angles(angle, 0.0, 0.0);
 
             let color = block_color(
@@ -814,12 +808,8 @@ pub fn render_block(
             );
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_length = bridge_length_animation(
-                0.05,
-                0.35,
-                active_blip_kind.is_some(),
-                tick_time.tick_progress(),
-            );
+            let bridge_length = bridge_length_animation(0.05, 0.35, active_blip_kind.is_some())
+                .eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
@@ -857,20 +847,26 @@ pub fn render_block(
             );
 
             // Foolish stuff to transition to the next expected color mid-tick
-            let transition_time = 0.6;
-            let expected_kind =
-                if activated.is_none() || tick_time.tick_progress() < transition_time {
-                    outputs.last().copied()
-                } else if outputs.len() > 1 {
-                    outputs.get(outputs.len() - 2).copied()
-                } else {
-                    None
-                };
+            let old_expected_kind = outputs.last().copied();
+            let next_expected_kind = if outputs.len() > 1 {
+                outputs.get(outputs.len() - 2).copied()
+            } else {
+                None
+            };
+            let kind_transition_time = 0.6;
+            let kind_transition_anim =
+                anim::constant(old_expected_kind).seq(kind_transition_time, next_expected_kind);
+            let expected_kind = anim::cond(activated.is_some(), kind_transition_anim, old_expected_kind)
+                .eval(tick_time.tick_progress());
 
-            let completed = (tick_time.tick_progress() >= 0.45
-                && outputs.len() == 1
-                && activated == outputs.last().copied())
-                || (outputs.is_empty() && wind_anim_state.is_some());
+            let newly_completed = outputs.len() == 1 && activated == outputs.last().copied();
+            let was_completed = outputs.is_empty() && wind_anim_state.is_some();
+            let newly_completed_anim = anim::constant(false).seq(0.45, newly_completed).eval(tick_time.tick_progress());
+            let completed = anim::cond(
+                was_completed,
+                true,
+                newly_completed_anim,
+            ).eval(tick_time.tick_progress()); 
 
             let status_color = output_status_color(failed, completed);
             let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));
