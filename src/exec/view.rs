@@ -268,28 +268,27 @@ impl ExecView {
 
             let size = size_anim.eval(time.tick_progress());
 
-            // Interpolate blip position if it is moving
             let center = machine::render::block_center(&blip.pos);
-            let pos_anim = anim::constant(blip.old_move_dir).map_or(center, |old_move_dir| {
-                let old_pos = blip.pos - old_move_dir.to_vector();
-                let old_center = machine::render::block_center(&old_pos);
-
-                anim::lerp(old_center, center)
-            });
-
-            // Rotate blip if it is moving
-            let rot_anim =
-                anim::constant(blip.old_move_dir).map_or(na::Matrix4::identity(), |old_move_dir| {
+            let pos_rot_anim = anim::constant(blip.old_move_dir).map_or(
+                (center, na::Matrix4::identity()),
+                |old_move_dir| {
                     let old_pos = blip.pos - old_move_dir.to_vector();
+
+                    // Interpolate blip position if it is moving
+                    let old_center = machine::render::block_center(&old_pos);
+                    let pos = anim::lerp(old_center, center);
+
+                    // Rotate blip if it is moving
                     let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-
-                    (-anim::quarter_circle::<_, f32>()).map(move |angle| {
+                    let rot = (-anim::quarter_circle::<_, f32>()).map(move |angle| {
                         na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
-                    })
-                });
+                    });
 
-            let pos = pos_anim.eval(time.tick_progress());
-            let rot = rot_anim.eval(time.tick_progress());
+                    pos.zip(rot)
+                },
+            );
+
+            let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
             let transform = na::Matrix4::new_translation(&pos.coords) * rot;
 
             let color = machine::render::blip_color(blip.kind);
