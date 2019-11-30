@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use std::ops::{Add, Mul, RangeInclusive};
 
-use num_traits::{Float, FloatConst};
+use num_traits::{Float, FloatConst, Num, One, Zero};
 
 pub trait Fun<T, V> {
     fn eval(&self, t: T) -> V;
@@ -11,8 +11,6 @@ pub struct Anim<T, V, F>(F, PhantomData<(T, V)>);
 
 impl<T, V, F> Anim<T, V, F>
 where
-    T: Float,
-    V: Float,
     F: Fun<T, V>,
 {
     pub fn new(f: F) -> Self {
@@ -23,24 +21,38 @@ where
         self.0.eval(t)
     }
 
-    pub fn backwards(self, end: T) -> Anim<T, V, impl Fun<T, V>> {
-        Anim::from(move |t| self.eval(end - t))
-    }
-
-    pub fn squeeze(self, default: V, range: RangeInclusive<T>) -> Anim<T, V, impl Fun<T, V>> {
-        Anim::from(move |t| {
-            if range.contains(&t) {
-                self.eval((t - *range.start()) * T::one() / (*range.end() - *range.start()))
-            } else {
-                default
-            }
-        })
-    }
-
     pub fn map<W: Float>(self, f: impl Fn(V) -> W) -> Anim<T, W, impl Fun<T, W>> {
         Anim::from(move |t| f(self.eval(t)))
     }
+}
 
+impl<T, V, F> Anim<T, V, F>
+where
+    T: Copy + Num,
+    V: Num,
+    F: Fun<T, V>,
+{
+    pub fn backwards(self, end: T) -> Anim<T, V, impl Fun<T, V>> {
+        Anim::from(move |t| self.eval(end - t))
+    }
+}
+
+impl<T, V, F> Anim<T, V, F>
+where
+    T: Num,
+    V: Copy + Num,
+    F: Fun<T, V>,
+{
+    pub fn scale_min_max(self, min: V, max: V) -> Anim<T, V, impl Fun<T, V>> {
+        self * (max - min) + min
+    }
+}
+
+impl<T, V, F> Anim<T, V, F>
+where
+    V: Float,
+    F: Fun<T, V>,
+{
     pub fn sin(self) -> Anim<T, V, impl Fun<T, V>> {
         self.map(Float::sin)
     }
@@ -53,24 +65,41 @@ where
         self.map(Float::abs)
     }
 
-    pub fn scale_min_max(self, min: V, max: V) -> Anim<T, V, impl Fun<T, V>> {
-        self * (max - min) + min
+    pub fn powf(self, e: V) -> Anim<T, V, impl Fun<T, V>> {
+        self.map(move |v| v.powf(e))
     }
 }
 
-pub fn func<T: Float, V: Float>(f: impl Fn(T) -> V) -> Anim<T, V, impl Fun<T, V>> {
+impl<T, V, F> Anim<T, V, F>
+where
+    T: Copy + Float,
+    V: Copy,
+    F: Fun<T, V>,
+{
+    pub fn squeeze(self, default: V, range: RangeInclusive<T>) -> Anim<T, V, impl Fun<T, V>> {
+        Anim::from(move |t| {
+            if range.contains(&t) {
+                self.eval((t - *range.start()) * T::one() / (*range.end() - *range.start()))
+            } else {
+                default
+            }
+        })
+    }
+}
+
+pub fn func<T, V>(f: impl Fn(T) -> V) -> Anim<T, V, impl Fun<T, V>> {
     From::from(f)
 }
 
-pub fn constant<T: Float, V: Float>(c: V) -> Anim<T, V, impl Fun<T, V>> {
+pub fn constant<T, V: Copy>(c: V) -> Anim<T, V, impl Fun<T, V>> {
     Anim::from(move |_| c)
 }
 
-pub fn one<T: Float, V: Float>() -> Anim<T, V, impl Fun<T, V>> {
+pub fn one<T, V: Copy + One>() -> Anim<T, V, impl Fun<T, V>> {
     constant(V::one())
 }
 
-pub fn zero<T: Float, V: Float>() -> Anim<T, V, impl Fun<T, V>> {
+pub fn zero<T, V: Copy + Zero>() -> Anim<T, V, impl Fun<T, V>> {
     constant(V::zero())
 }
 
@@ -108,8 +137,6 @@ where
 
 pub fn cond<T, V, F1, F2, A1, A2>(cond: bool, a1: A1, a2: A2) -> Anim<T, V, impl Fun<T, V>>
 where
-    T: Float,
-    V: Float,
     F1: Fun<T, V>,
     F2: Fun<T, V>,
     A1: Into<Anim<T, V, F1>>,
@@ -137,8 +164,6 @@ macro_rules! anim_match {
 
 impl<T, V, F> From<F> for Anim<T, V, WrapFn<T, V, F>>
 where
-    T: Float,
-    V: Float,
     F: Fn(T) -> V,
 {
     fn from(f: F) -> Self {
@@ -150,8 +175,6 @@ struct WrapFn<T, V, F: Fn(T) -> V>(F, PhantomData<(T, V)>);
 
 impl<T, V, F> Fun<T, V> for WrapFn<T, V, F>
 where
-    T: Float,
-    V: Float,
     F: Fn(T) -> V,
 {
     fn eval(&self, t: T) -> V {
@@ -161,8 +184,7 @@ where
 
 impl<T, V> From<V> for Anim<T, V, ConstantClosure<V>>
 where
-    T: Float,
-    V: Float,
+    V: Copy,
 {
     fn from(v: V) -> Self {
         Anim::new(ConstantClosure(v))
@@ -173,7 +195,7 @@ pub struct ConstantClosure<V>(V);
 
 impl<T, V> Fun<T, V> for ConstantClosure<V>
 where
-    V: Float,
+    V: Copy,
 {
     fn eval(&self, _: T) -> V {
         self.0
@@ -182,8 +204,7 @@ where
 
 impl<T, V, F> Add<V> for Anim<T, V, F>
 where
-    T: Float,
-    V: Float,
+    V: Copy + Num,
     F: Fun<T, V>,
 {
     type Output = Anim<T, V, AddConstantClosure<T, V, F>>;
@@ -197,8 +218,7 @@ pub struct AddConstantClosure<T, V, F>(Anim<T, V, F>, V);
 
 impl<T, V, F> Fun<T, V> for AddConstantClosure<T, V, F>
 where
-    T: Float,
-    V: Float,
+    V: Copy + Num,
     F: Fun<T, V>,
 {
     fn eval(&self, t: T) -> V {
@@ -208,8 +228,7 @@ where
 
 impl<T, V, F> Mul<V> for Anim<T, V, F>
 where
-    T: Float,
-    V: Float,
+    V: Copy + Num,
     F: Fun<T, V>,
 {
     type Output = Anim<T, V, MulConstantClosure<T, V, F>>;
@@ -223,8 +242,7 @@ pub struct MulConstantClosure<T, V, F>(Anim<T, V, F>, V);
 
 impl<T, V, F> Fun<T, V> for MulConstantClosure<T, V, F>
 where
-    T: Float,
-    V: Float,
+    V: Copy + Num,
     F: Fun<T, V>,
 {
     fn eval(&self, t: T) -> V {
@@ -234,8 +252,8 @@ where
 
 impl<T, V, F1, F2> Mul<Anim<T, V, F2>> for Anim<T, V, F1>
 where
-    T: Float,
-    V: Float,
+    T: Copy,
+    V: Copy + Num,
     F1: Fun<T, V>,
     F2: Fun<T, V>,
 {
@@ -250,8 +268,8 @@ pub struct MulClosure<T, V, F1, F2>(Anim<T, V, F1>, Anim<T, V, F2>);
 
 impl<T, V, F1, F2> Fun<T, V> for MulClosure<T, V, F1, F2>
 where
-    T: Float,
-    V: Float,
+    T: Copy,
+    V: Copy + Num,
     F1: Fun<T, V>,
     F2: Fun<T, V>,
 {
