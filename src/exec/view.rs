@@ -247,31 +247,29 @@ impl ExecView {
         for (_index, blip) in self.exec.blips().iter() {
             let center = machine::render::block_center(&blip.pos);
 
-            let size_anim = |t| match blip.status {
+            let size_anim = anim_match!(blip.status;
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
-                    match mode {
+                    anim_match!(mode;
                         BlipSpawnMode::Ease => anim::func(Self::blip_spawn_size_animation)
-                            .squeeze(0.0, 0.75..=1.0)
-                            .eval(t),
+                            .squeeze(0.0, 0.75..=1.0),
                         BlipSpawnMode::Quick => anim::func(Self::blip_spawn_size_animation)
-                            .squeeze(1.0, 0.0..=0.5)
-                            .eval(t),
+                            .squeeze(1.0, 0.0..=0.5),
                         BlipSpawnMode::LiveToDie => {
                             // TODO
-                            anim::one().eval(t)
+                            1.0
                         }
-                    }
+                    )
                 }
-                BlipStatus::Existing => anim::one().eval(t),
+                BlipStatus::Existing => 1.0,
                 BlipStatus::Dying => {
                     // Animate killing the blip
                     anim::func(Self::blip_spawn_size_animation)
                         .backwards(1.0)
-                        .eval(t)
                 }
-            };
-            let size = (anim::func(size_anim) * 0.25).eval(time.tick_progress());
+            ) * 0.25;
+
+            let size = size_anim.eval(time.tick_progress());
 
             // Interpolate blip position if it is moving
             let pos = if let Some(old_move_dir) = blip.old_move_dir {

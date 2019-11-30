@@ -98,6 +98,14 @@ where
     proportional(V::PI())
 }
 
+pub fn quarter_circle<T, V>() -> Anim<T, V, impl Fun<T, V>>
+where
+    T: Float,
+    V: Float + FloatConst + From<T>,
+{
+    proportional(V::PI() * (V::one() / (V::one() + V::one())))
+}
+
 pub fn cond<T, V, F1, F2, A1, A2>(cond: bool, a1: A1, a2: A2) -> Anim<T, V, impl Fun<T, V>>
 where
     T: Float,
@@ -111,6 +119,20 @@ where
     let a2 = a2.into();
 
     Anim::from(move |t| if cond { a1.eval(t) } else { a2.eval(t) })
+}
+
+#[macro_export]
+macro_rules! anim_match {
+    (
+        $expr:expr;
+        $($pat:pat => $value:expr $(,)?)*
+    ) => {
+        $crate::util::anim::func(|t| match $expr {
+            $(
+                $pat => ($crate::util::anim::Anim::from($value)).eval(t),
+            )*
+        })
+    }
 }
 
 impl<T, V, F> From<F> for Anim<T, V, WrapFn<T, V, F>>
