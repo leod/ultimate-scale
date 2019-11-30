@@ -10,6 +10,7 @@ pub trait Fun {
     fn eval(&self, t: Self::T) -> Self::V;
 }
 
+#[derive(Clone, Debug)]
 pub struct Anim<F>(F);
 
 impl<F> Anim<F>
@@ -278,7 +279,7 @@ macro_rules! anim_match {
         $expr:expr;
         $($pat:pat => $value:expr $(,)?)*
     ) => {
-        $crate::util::anim::func(|t| match $expr {
+        $crate::util::anim::func(move |t| match $expr {
             $(
                 $pat => ($crate::util::anim::Anim::from($value)).eval(t),
             )*
