@@ -36,6 +36,26 @@ where
             }
         })
     }
+
+    pub fn map<W: Float>(self, f: impl Fn(V) -> W) -> Anim<T, W, impl Fun<T, W>> {
+        Anim::from(move |t| f(self.eval(t)))
+    }
+
+    pub fn sin(self) -> Anim<T, V, impl Fun<T, V>> {
+        self.map(Float::sin)
+    }
+
+    pub fn cos(self) -> Anim<T, V, impl Fun<T, V>> {
+        self.map(Float::cos)
+    }
+
+    pub fn abs(self) -> Anim<T, V, impl Fun<T, V>> {
+        self.map(Float::abs)
+    }
+
+    pub fn scale_min_max(self, min: V, max: V) -> Anim<T, V, impl Fun<T, V>> {
+        self * (max - min) + min
+    }
 }
 
 pub fn func<T: Float, V: Float>(f: impl Fn(T) -> V) -> Anim<T, V, impl Fun<T, V>> {

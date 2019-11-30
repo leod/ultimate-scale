@@ -9,7 +9,7 @@ use crate::render::{Light, Object, RenderList, RenderLists};
 use crate::exec::anim::{WindAnimState, WindLife};
 use crate::exec::{Exec, TickTime};
 
-use crate::util::anim;
+use crate::util::anim::{self, Anim, Fun};
 
 pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
@@ -233,13 +233,12 @@ pub fn render_xy_grid(size: &grid::Vector3, z: f32, out: &mut RenderList<model::
     }
 }
 
-pub fn bridge_length_animation(min: f32, max: f32, activated: bool, progress: f32) -> f32 {
-    min + (if activated && progress <= 1.0 {
-        let x = progress * std::f32::consts::PI;
-        x.cos().abs()
-    } else {
-        1.0
-    }) * (max - min)
+pub fn bridge_length_animation(
+    min: f32,
+    max: f32,
+    activated: bool,
+) -> Anim<f32, f32, impl Fun<f32, f32>> {
+    anim::cond(activated, anim::half_circle().cos().abs(), 1.0).scale_min_max(min, max)
 }
 
 pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
@@ -634,8 +633,8 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
-            let bridge_length =
-                bridge_length_animation(0.05, 0.6, activated.is_some(), tick_time.tick_progress());
+            let bridge_length = bridge_length_animation(0.05, 0.6, activated.is_some())
+                .eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
@@ -675,8 +674,8 @@ pub fn render_block(
             );
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_length =
-                bridge_length_animation(0.05, 0.4, activated.is_some(), tick_time.tick_progress());
+            let bridge_length = bridge_length_animation(0.05, 0.4, activated.is_some())
+                .eval(tick_time.tick_progress());
 
             for &dir in &[out_dirs.0, out_dirs.1] {
                 render_bridge(
@@ -814,12 +813,8 @@ pub fn render_block(
             );
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_length = bridge_length_animation(
-                0.05,
-                0.35,
-                active_blip_kind.is_some(),
-                tick_time.tick_progress(),
-            );
+            let bridge_length = bridge_length_animation(0.05, 0.35, active_blip_kind.is_some())
+                .eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
