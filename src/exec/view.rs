@@ -260,9 +260,10 @@ impl ExecView {
                             let live = 1.0;
                             let die = Self::blip_spawn_anim()
                                 .backwards(1.0)
-                                .squeeze(1.0, 0.0..=0.3);
+                                .square_time()
+                                .squeeze(1.0, 0.0..=0.35);
 
-                            spawn.seq(0.5, live).seq(0.7, die)
+                            spawn.seq(0.5, live).seq(0.65, die)
                         }
                     )
                 }

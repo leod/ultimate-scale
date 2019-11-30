@@ -69,6 +69,16 @@ where
 impl<F> Anim<F>
 where
     F: Fun,
+    F::T: Copy + PartialOrd + Mul<Output = F::T>,
+{
+    pub fn square_time(self) -> Anim<impl Fun<T = F::T, V = F::V>> {
+        func(move |t| self.eval(t * t))
+    }
+}
+
+impl<F> Anim<F>
+where
+    F: Fun,
     F::T: Copy + PartialOrd + Add<Output = F::T> + Neg<Output = F::T>,
 {
     pub fn add_time(self, t_add: F::T) -> Anim<impl Fun<T = F::T, V = F::V>> {
