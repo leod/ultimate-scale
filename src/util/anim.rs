@@ -57,12 +57,31 @@ where
     F: Fun,
     F::T: Copy + PartialOrd,
 {
-    pub fn seq<G, A>(self, self_end: F::T, next: A) -> Anim<impl Fun<T = F::T, V = F::V>>
+    pub fn switch<G, A>(self, self_end: F::T, next: A) -> Anim<impl Fun<T = F::T, V = F::V>>
     where
         G: Fun<T = F::T, V = F::V>,
         A: Into<Anim<G>>,
     {
         cond_t(move |t| t <= self_end, self, next)
+    }
+}
+
+impl<F> Anim<F>
+where
+    F: Fun,
+    F::T: Copy + PartialOrd + Add<Output = F::T> + Neg<Output = F::T>,
+{
+    pub fn add_time(self, t_add: F::T) -> Anim<impl Fun<T = F::T, V = F::V>> {
+        func(move |t| self.eval(t + t_add))
+    }
+
+    pub fn seq<G, A>(self, self_end: F::T, next: A) -> Anim<impl Fun<T = F::T, V = F::V>>
+    where
+        G: Fun<T = F::T, V = F::V>,
+        A: Into<Anim<G>>,
+    {
+        let next = next.into();
+        cond_t(move |t| t <= self_end, self, next.add_time(-self_end))
     }
 }
 
