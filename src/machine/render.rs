@@ -327,35 +327,37 @@ pub fn render_wind_mills(
             continue;
         }
 
-        let roll = wind_anim_state.as_ref().map_or(0.0, |anim| {
-            if anim.out_deadend(dir).is_some() {
-                return 0.0;
-            }
-
+        let roll_anim = anim::constant(wind_anim_state.as_ref()).map_or(0.0, |state| {
             let wind_time_offset = wind_mills.offset + wind_mills.length;
+
+            let angle = || anim::quarter_circle();
 
             // TODO: There is a problem with this animation in that it is
             //       faster when wind is appearing/disappearing.
-            let roll_anim = anim_match!(anim.wind_out(dir);
+            let wind_anim = anim_match!(state.wind_out(dir);
                 WindLife::None => 0.0,
                 WindLife::Appearing => {
                     // The wind will start moving inside of the block, so
                     // delay mill rotation until the wind reaches the
                     // outside.
-                    anim::quarter_circle().squeeze(0.0, wind_time_offset..=1.0)
+                    angle().squeeze(0.0, wind_time_offset..=1.0)
                 },
                 WindLife::Existing => {
-                    anim::quarter_circle()
+                    angle()
                 },
                 WindLife::Disappearing => {
                     // Stop mill rotation when wind reaches the inside of
                     // the block.
-                    anim::quarter_circle().squeeze(0.0, 0.0..=wind_time_offset)
+                    angle().squeeze(0.0, 0.0..=wind_time_offset)
                 },
             );
 
-            roll_anim.eval(tick_time.tick_progress())
+            // Only show rotation when not running into a deadend in that
+            // direction.
+            anim::cond(state.out_deadend(dir).is_none(), wind_anim, 0.0)
         });
+
+        let roll = roll_anim.eval(tick_time.tick_progress());
 
         for &phase in &[0.0, 0.25] {
             render_mill(
