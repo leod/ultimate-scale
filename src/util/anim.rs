@@ -21,7 +21,7 @@ where
         self.0.eval(t)
     }
 
-    pub fn map<W: Float>(self, f: impl Fn(V) -> W) -> Anim<T, W, impl Fun<T, W>> {
+    pub fn map<W>(self, f: impl Fn(V) -> W) -> Anim<T, W, impl Fun<T, W>> {
         Anim::from(move |t| f(self.eval(t)))
     }
 }
@@ -67,6 +67,10 @@ where
 
     pub fn powf(self, e: V) -> Anim<T, V, impl Fun<T, V>> {
         self.map(move |v| v.powf(e))
+    }
+
+    pub fn powi(self, n: i32) -> Anim<T, V, impl Fun<T, V>> {
+        self.map(move |v| v.powi(n))
     }
 }
 
@@ -214,6 +218,17 @@ where
     }
 }
 
+impl<T, F> Add<Anim<T, f32, F>> for f32
+where
+    F: Fun<T, f32>,
+{
+    type Output = Anim<T, f32, AddConstantClosure<T, f32, F>>;
+
+    fn add(self, rhs: Anim<T, f32, F>) -> Self::Output {
+        Anim::new(AddConstantClosure(rhs, self))
+    }
+}
+
 pub struct AddConstantClosure<T, V, F>(Anim<T, V, F>, V);
 
 impl<T, V, F> Fun<T, V> for AddConstantClosure<T, V, F>
@@ -228,7 +243,7 @@ where
 
 impl<T, V, F> Mul<V> for Anim<T, V, F>
 where
-    V: Copy + Num,
+    V: Copy + Mul<Output = V>,
     F: Fun<T, V>,
 {
     type Output = Anim<T, V, MulConstantClosure<T, V, F>>;
@@ -238,11 +253,35 @@ where
     }
 }
 
+// Note: this general impl conflicts with orphaning rules.
+/*impl<T, V, F> Mul<Anim<T, V, F>> for V
+where
+    V: Copy + Mul<Output=V>,
+    F: Fun<T, V>,
+{
+    type Output = Anim<T, V, MulConstantClosure<T, V, F>>;
+
+    fn mul(self, rhs: Anim<T, V, F>) -> Self::Output {
+        Anim::new(MulConstantClosure(rhs, self))
+    }
+}*/
+
+impl<T, F> Mul<Anim<T, f32, F>> for f32
+where
+    F: Fun<T, f32>,
+{
+    type Output = Anim<T, f32, MulConstantClosure<T, f32, F>>;
+
+    fn mul(self, rhs: Anim<T, f32, F>) -> Self::Output {
+        Anim::new(MulConstantClosure(rhs, self))
+    }
+}
+
 pub struct MulConstantClosure<T, V, F>(Anim<T, V, F>, V);
 
 impl<T, V, F> Fun<T, V> for MulConstantClosure<T, V, F>
 where
-    V: Copy + Num,
+    V: Copy + Mul<Output = V>,
     F: Fun<T, V>,
 {
     fn eval(&self, t: T) -> V {

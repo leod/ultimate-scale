@@ -443,20 +443,18 @@ pub fn render_pulsator(
     color: &na::Vector4<f32>,
     out: &mut RenderLists,
 ) {
-    let size = 2.5
+    let have_flow = wind_anim_state.as_ref().map_or(false, |anim| {
+        anim.num_alive_in() > 0 && anim.num_alive_out() > 0
+    });
+
+    let size_anim = 2.5
         * PIPE_THICKNESS
-        * if let Some(wind_anim_state) = wind_anim_state.as_ref() {
-            if wind_anim_state.num_alive_in() > 0 && wind_anim_state.num_alive_out() > 0 {
-                1.0 + 0.08
-                    * (tick_time.tick_progress() * std::f32::consts::PI)
-                        .sin()
-                        .powf(2.0)
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
+        * anim::cond(
+            have_flow,
+            1.0 + 0.08 * anim::half_circle().sin().powi(2),
+            1.0,
+        );
+    let size = size_anim.eval(tick_time.tick_progress());
 
     let translation = na::Matrix4::new_translation(&center.coords);
     let cube_transform = translation * transform;
