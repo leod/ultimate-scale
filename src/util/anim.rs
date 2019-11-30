@@ -28,6 +28,22 @@ where
 
 impl<T, V, F> Anim<T, V, F>
 where
+    T: Copy,
+    F: Fun<T, V>,
+{
+    pub fn zip<W, F1, A1>(self, other: A1) -> Anim<T, (V, W), impl Fun<T, (V, W)>>
+    where
+        F1: Fun<T, W>,
+        A1: Into<Anim<T, W, F1>>,
+    {
+        let other = other.into();
+
+        Anim::from(move |t| (self.eval(t), other.eval(t)))
+    }
+}
+
+impl<T, V, F> Anim<T, V, F>
+where
     T: Copy + Num,
     V: Num,
     F: Fun<T, V>,
