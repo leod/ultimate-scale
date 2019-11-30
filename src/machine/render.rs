@@ -847,20 +847,26 @@ pub fn render_block(
             );
 
             // Foolish stuff to transition to the next expected color mid-tick
-            let transition_time = 0.6;
-            let expected_kind =
-                if activated.is_none() || tick_time.tick_progress() < transition_time {
-                    outputs.last().copied()
-                } else if outputs.len() > 1 {
-                    outputs.get(outputs.len() - 2).copied()
-                } else {
-                    None
-                };
+            let old_expected_kind = outputs.last().copied();
+            let next_expected_kind = if outputs.len() > 1 {
+                outputs.get(outputs.len() - 2).copied()
+            } else {
+                None
+            };
+            let kind_transition_time = 0.6;
+            let kind_transition_anim =
+                anim::constant(old_expected_kind).seq(kind_transition_time, next_expected_kind);
+            let expected_kind = anim::cond(activated.is_some(), kind_transition_anim, old_expected_kind)
+                .eval(tick_time.tick_progress());
 
-            let completed = (tick_time.tick_progress() >= 0.45
-                && outputs.len() == 1
-                && activated == outputs.last().copied())
-                || (outputs.is_empty() && wind_anim_state.is_some());
+            let newly_completed = outputs.len() == 1 && activated == outputs.last().copied();
+            let was_completed = outputs.is_empty() && wind_anim_state.is_some();
+            let newly_completed_anim = anim::constant(false).seq(0.45, newly_completed).eval(tick_time.tick_progress());
+            let completed = anim::cond(
+                was_completed,
+                true,
+                newly_completed_anim,
+            ).eval(tick_time.tick_progress()); 
 
             let status_color = output_status_color(failed, completed);
             let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));
