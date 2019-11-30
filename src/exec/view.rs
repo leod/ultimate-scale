@@ -276,18 +276,21 @@ impl ExecView {
 
                 anim::lerp(old_center, center)
             });
-            let pos = pos_anim.eval(time.tick_progress());
-
-            let mut transform = na::Matrix4::new_translation(&pos.coords);
 
             // Rotate blip if it is moving
-            if let Some(old_move_dir) = blip.old_move_dir {
-                let old_pos = blip.pos - old_move_dir.to_vector();
-                let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                let angle = -time.tick_progress() * std::f32::consts::PI / 2.0;
-                let rot = na::Rotation3::new(delta.normalize() * angle);
-                transform *= rot.to_homogeneous();
-            }
+            let rot_anim =
+                anim::constant(blip.old_move_dir).map_or(na::Matrix4::identity(), |old_move_dir| {
+                    let old_pos = blip.pos - old_move_dir.to_vector();
+                    let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
+
+                    (-anim::quarter_circle::<_, f32>()).map(move |angle| {
+                        na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
+                    })
+                });
+
+            let pos = pos_anim.eval(time.tick_progress());
+            let rot = rot_anim.eval(time.tick_progress());
+            let transform = na::Matrix4::new_translation(&pos.coords) * rot;
 
             let color = machine::render::blip_color(blip.kind);
             let instance = render::Instance {
