@@ -12,7 +12,7 @@ use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{self, grid, level, BlipKind, Machine};
 use crate::render::{self, scene, Camera, Light, RenderLists};
-use crate::util::anim;
+use crate::util::anim::{self, Anim, Fun};
 
 #[derive(Debug, Clone)]
 pub struct Config {}
@@ -225,7 +225,7 @@ impl ExecView {
         }
     }
 
-    fn blip_spawn_size_animation(t: f32) -> f32 {
+    fn blip_spawn_anim() -> Anim<f32, f32, impl Fun<f32, f32>> {
         // Natural cubic spline interpolation of these points:
         //  0 0
         //  0.4 0.3
@@ -234,13 +234,15 @@ impl ExecView {
         //
         // Using this tool:
         //     https://tools.timodenk.com/cubic-spline-interpolation
-        if t <= 0.4 {
-            4.4034 * t.powi(3) - 4.5455e-2 * t
-        } else if t <= 0.8 {
-            -1.2642e1 * t.powi(3) + 2.0455e1 * t.powi(2) - 8.1364 * t + 1.0909
-        } else {
-            1.6477e1 * t.powi(3) - 4.9432e1 * t.powi(2) + 4.7773e1 * t - 1.3818e1
-        }
+        anim::cubic_spline(&[4.4034, 0.0, -4.5455e-2, 0.0])
+            .seq(
+                0.4,
+                anim::cubic_spline(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]),
+            )
+            .seq(
+                0.8,
+                anim::cubic_spline(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
+            )
     }
 
     fn render_blips(&self, time: &TickTime, out: &mut RenderLists) {
@@ -251,10 +253,8 @@ impl ExecView {
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
                     anim_match!(mode;
-                        BlipSpawnMode::Ease => anim::func(Self::blip_spawn_size_animation)
-                            .squeeze(0.0, 0.75..=1.0),
-                        BlipSpawnMode::Quick => anim::func(Self::blip_spawn_size_animation)
-                            .squeeze(1.0, 0.0..=0.5),
+                        BlipSpawnMode::Ease => Self::blip_spawn_anim().squeeze(0.0, 0.75..=1.0),
+                        BlipSpawnMode::Quick => Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5),
                         BlipSpawnMode::LiveToDie => {
                             // TODO
                             1.0
@@ -264,8 +264,7 @@ impl ExecView {
                 BlipStatus::Existing => 1.0,
                 BlipStatus::Dying => {
                     // Animate killing the blip
-                    anim::func(Self::blip_spawn_size_animation)
-                        .backwards(1.0)
+                    Self::blip_spawn_anim().backwards(1.0)
                 }
             ) * 0.25;
 

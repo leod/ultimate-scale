@@ -39,6 +39,20 @@ where
 
 impl<T, V, F> Anim<T, V, F>
 where
+    T: Copy + PartialOrd,
+    F: Fun<T, V>,
+{
+    pub fn seq<F2, A2>(self, self_end: T, next: A2) -> Anim<T, V, impl Fun<T, V>>
+    where
+        F2: Fun<T, V>,
+        A2: Into<Anim<T, V, F2>>,
+    {
+        cond_t(move |t| t <= self_end, self, next)
+    }
+}
+
+impl<T, V, F> Anim<T, V, F>
+where
     T: Num,
     V: Copy + Num,
     F: Fun<T, V>,
@@ -139,8 +153,13 @@ where
     proportional(V::PI() * (V::one() / (V::one() + V::one())))
 }
 
-pub fn cond<T, V, F1, F2, A1, A2>(cond: bool, a1: A1, a2: A2) -> Anim<T, V, impl Fun<T, V>>
+pub fn cond_t<T, V, F1, F2, A1, A2>(
+    cond: impl Fn(T) -> bool,
+    a1: A1,
+    a2: A2,
+) -> Anim<T, V, impl Fun<T, V>>
 where
+    T: Copy,
     F1: Fun<T, V>,
     F2: Fun<T, V>,
     A1: Into<Anim<T, V, F1>>,
@@ -149,7 +168,30 @@ where
     let a1 = a1.into();
     let a2 = a2.into();
 
-    Anim::from(move |t| if cond { a1.eval(t) } else { a2.eval(t) })
+    Anim::from(move |t| if cond(t) { a1.eval(t) } else { a2.eval(t) })
+}
+
+pub fn cond<T, V, F1, F2, A1, A2>(cond: bool, a1: A1, a2: A2) -> Anim<T, V, impl Fun<T, V>>
+where
+    T: Copy,
+    F1: Fun<T, V>,
+    F2: Fun<T, V>,
+    A1: Into<Anim<T, V, F1>>,
+    A2: Into<Anim<T, V, F2>>,
+{
+    cond_t(move |_| cond, a1, a2)
+}
+
+pub fn cubic_spline<T>(w: &[T; 4]) -> Anim<T, T, impl Fun<T, T> + '_>
+where
+    T: Float,
+{
+    Anim::from(move |t| {
+        let t2 = t * t;
+        let t3 = t2 * t;
+
+        w[0] * t3 + w[1] * t2 + w[2] * t + w[3]
+    })
 }
 
 #[macro_export]
