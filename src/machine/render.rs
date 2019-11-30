@@ -856,17 +856,15 @@ pub fn render_block(
             let kind_transition_time = 0.6;
             let kind_transition_anim =
                 anim::constant(old_expected_kind).seq(kind_transition_time, next_expected_kind);
-            let expected_kind = anim::cond(activated.is_some(), kind_transition_anim, old_expected_kind)
-                .eval(tick_time.tick_progress());
+            let expected_kind =
+                anim::cond(activated.is_some(), kind_transition_anim, old_expected_kind)
+                    .eval(tick_time.tick_progress());
 
             let newly_completed = outputs.len() == 1 && activated == outputs.last().copied();
             let was_completed = outputs.is_empty() && wind_anim_state.is_some();
-            let newly_completed_anim = anim::constant(false).seq(0.45, newly_completed).eval(tick_time.tick_progress());
-            let completed = anim::cond(
-                was_completed,
-                true,
-                newly_completed_anim,
-            ).eval(tick_time.tick_progress()); 
+            let newly_completed_anim = anim::constant(false).seq(0.45, newly_completed);
+            let completed = anim::cond(was_completed, true, newly_completed_anim)
+                .eval(tick_time.tick_progress());
 
             let status_color = output_status_color(failed, completed);
             let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));

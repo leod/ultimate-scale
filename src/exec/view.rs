@@ -251,18 +251,25 @@ impl ExecView {
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
                     anim_match!(mode;
-                        BlipSpawnMode::Ease => Self::blip_spawn_anim().squeeze(0.0, 0.75..=1.0),
-                        BlipSpawnMode::Quick => Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5),
+                        BlipSpawnMode::Ease =>
+                            Self::blip_spawn_anim().squeeze(0.0, 0.75..=1.0),
+                        BlipSpawnMode::Quick =>
+                            Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5),
                         BlipSpawnMode::LiveToDie => {
-                            // TODO
-                            1.0
+                            let spawn = Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5);
+                            let live = 1.0;
+                            let die = Self::blip_spawn_anim()
+                                .backwards(1.0)
+                                .squeeze(1.0, 0.7..=1.0);
+
+                            spawn.seq(0.5, live).seq(0.7, die)
                         }
                     )
                 }
                 BlipStatus::Existing => 1.0,
                 BlipStatus::Dying => {
                     // Animate killing the blip
-                    Self::blip_spawn_anim().backwards(1.0)
+                    Self::blip_spawn_anim().backwards(1.0).squeeze(1.0, 0.5..=1.0)
                 }
             ) * 0.25;
 
