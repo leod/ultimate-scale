@@ -87,11 +87,11 @@ where
     }
 
     pub fn cos(self) -> Anim<impl Fun<T = F::T, V = F::V>> {
-        self.map(Float::sin)
+        self.map(Float::cos)
     }
 
     pub fn abs(self) -> Anim<impl Fun<T = F::T, V = F::V>> {
-        self.map(Float::sin)
+        self.map(Float::abs)
     }
 
     pub fn powf(self, e: F::V) -> Anim<impl Fun<T = F::T, V = F::V>> {
