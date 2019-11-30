@@ -126,7 +126,7 @@ where
 impl<W, F> Anim<F>
 where
     F: Fun,
-    F::T: Copy + Float + Mul<W, Output = W>,
+    F::T: Copy + Mul<W, Output = W>,
     F::V: Copy + Add<W, Output = F::V> + Sub<Output = W>,
 {
     pub fn lerp<G, A>(self, other: A) -> Anim<impl Fun<T = F::T, V = F::V>>
@@ -250,7 +250,7 @@ where
 
 pub fn lerp<T, V, W, F, G, A, B>(a: A, b: B) -> Anim<impl Fun<T = T, V = V>>
 where
-    T: Copy + Float + Mul<W, Output = W>,
+    T: Copy + Mul<W, Output = W>,
     V: Copy + Add<W, Output = V> + Sub<Output = W>,
     F: Fun<T = T, V = V>,
     G: Fun<T = T, V = V>,
