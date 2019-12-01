@@ -39,6 +39,7 @@ pub struct DeferredShading {
 
     screen_quad: ScreenQuad,
 
+    light_instances: Vec<Instance<Light>>,
     light_instancing: Instancing<Light>,
 }
 
@@ -129,6 +130,7 @@ impl DeferredShading {
             main_light_screen_quad_program,
             light_object_program,
             screen_quad,
+            light_instances: Vec::new(),
             light_instancing,
         })
     }
@@ -198,30 +200,32 @@ impl DeferredShading {
             }),
         );
 
-        let light_instances = lights
-            .iter()
-            .filter(|light| !light.is_main)
-            .map(|light| {
-                let i_max = light.color.x.max(light.color.y).max(light.color.z);
-                let radicand = light.attenuation.y.powi(2)
-                    - 4.0
-                        * light.attenuation.z
-                        * (light.attenuation.x - i_max * 1.0 / LIGHT_MIN_THRESHOLD);
-                let radius = (-light.attenuation.y + radicand.sqrt()) / (2.0 * light.attenuation.z);
+        self.light_instances.clear();
+        for light in lights {
+            if light.is_main {
+                continue;
+            }
 
-                let light = Light {
-                    radius,
-                    ..light.clone()
-                };
+            let i_max = light.color.x.max(light.color.y).max(light.color.z);
+            let radicand = light.attenuation.y.powi(2)
+                - 4.0
+                    * light.attenuation.z
+                    * (light.attenuation.x - i_max * 1.0 / LIGHT_MIN_THRESHOLD);
+            let radius = (-light.attenuation.y + radicand.sqrt()) / (2.0 * light.attenuation.z);
 
-                Instance {
-                    object: Object::Sphere,
-                    params: light,
-                }
-            })
-            .collect::<Vec<_>>();
+            let light = Light {
+                radius,
+                ..light.clone()
+            };
 
-        self.light_instancing.update(facade, &light_instances)?;
+            self.light_instances.push(Instance {
+                object: Object::Sphere,
+                params: light,
+            });
+        }
+
+        self.light_instancing
+            .update(facade, &self.light_instances)?;
 
         // Draw main light
         for light in lights.iter() {
