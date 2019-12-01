@@ -13,12 +13,8 @@ pub struct RenderList<T> {
 }
 
 impl<T: Clone> RenderList<T> {
-    pub fn add_instance(&mut self, instance: &Instance<T>) {
-        self.instances.push(instance.clone());
-    }
-
     pub fn add(&mut self, object: Object, params: &T) {
-        self.add_instance(&Instance {
+        self.instances.push(Instance {
             object,
             params: params.clone(),
         });
