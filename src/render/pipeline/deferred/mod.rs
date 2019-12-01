@@ -15,7 +15,9 @@ use crate::render::pipeline::{
     CompositionPassComponent, Context, Light, RenderPass, ScenePassComponent,
 };
 use crate::render::shader::{self, ToUniforms};
-use crate::render::{self, screen_quad, Camera, DrawError, Object, Resources, ScreenQuad};
+use crate::render::{
+    self, screen_quad, Camera, DrawError, Instance, Instancing, Object, Resources, ScreenQuad,
+};
 
 pub use crate::render::CreationError;
 
@@ -36,6 +38,8 @@ pub struct DeferredShading {
     light_object_program: glium::Program,
 
     screen_quad: ScreenQuad,
+
+    light_instancing: Instancing<Light>,
 }
 
 impl RenderPass for DeferredShading {
@@ -107,17 +111,14 @@ impl DeferredShading {
         let main_light_screen_quad_program =
             main_light_screen_quad_core.build_program(facade, shader::InstancingMode::Uniforms)?;
         let light_object_core = shaders::light_object_core();
-        println!(
-            "{}",
-            light_object_core
-                .vertex
-                .compile(shader::InstancingMode::Vertex)
-        );
         let light_object_program =
-            light_object_core.build_program(facade, shader::InstancingMode::Uniforms)?;
+            light_object_core.build_program(facade, shader::InstancingMode::Vertex)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
+
+        info!("Creating light buffers");
+        let light_instancing = Instancing::create(facade)?;
 
         info!("Deferred shading initialized");
 
@@ -128,6 +129,7 @@ impl DeferredShading {
             main_light_screen_quad_program,
             light_object_program,
             screen_quad,
+            light_instancing,
         })
     }
 
@@ -157,7 +159,7 @@ impl DeferredShading {
     }
 
     pub fn light_pass<F: glium::backend::Facade>(
-        &self,
+        &mut self,
         facade: &F,
         resources: &Resources,
         camera: &Camera,
@@ -196,8 +198,35 @@ impl DeferredShading {
             }),
         );
 
+        let light_instances = lights
+            .iter()
+            .filter(|light| !light.is_main)
+            .map(|light| {
+                let i_max = light.color.x.max(light.color.y).max(light.color.z);
+                let radicand = light.attenuation.y.powi(2)
+                    - 4.0
+                        * light.attenuation.z
+                        * (light.attenuation.x - i_max * 1.0 / LIGHT_MIN_THRESHOLD);
+                let radius = (-light.attenuation.y + radicand.sqrt()) / (2.0 * light.attenuation.z);
+
+                let light = Light {
+                    radius,
+                    ..light.clone()
+                };
+
+                Instance {
+                    object: Object::Sphere,
+                    params: light,
+                }
+            })
+            .collect::<Vec<_>>();
+
+        self.light_instancing.update(facade, &light_instances)?;
+
+        // Draw main light
         for light in lights.iter() {
             if light.is_main {
+                // Fragment shader uses viewport size, but we don't need view/projection
                 let no_camera = Camera {
                     view: na::Matrix4::identity(),
                     projection: na::Matrix4::identity(),
@@ -213,42 +242,29 @@ impl DeferredShading {
                     &uniforms.to_uniforms(),
                     &draw_params,
                 )?;
-            } else {
-                let i_max = light.color.x.max(light.color.y).max(light.color.z);
-                let radicand = light.attenuation.y.powi(2)
-                    - 4.0
-                        * light.attenuation.z
-                        * (light.attenuation.x - i_max * 1.0 / LIGHT_MIN_THRESHOLD);
-                let radius = (-light.attenuation.y + radicand.sqrt()) / (2.0 * light.attenuation.z);
-
-                let light = Light {
-                    radius,
-                    ..light.clone()
-                };
-
-                let uniforms = (&textures, &camera, light);
-
-                // With backface culling, there is a problem in that lights are
-                // not rendered when the camera moves within the sphere. With
-                // frontface culling this problem does not happen.
-                // (I think there's some other downside, but I'm not sure what
-                // it is exactly.)
-                let draw_params = glium::DrawParameters {
-                    backface_culling:
-                        glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
-                    ..draw_params.clone()
-                };
-
-                let object = resources.get_object_buffers(Object::Sphere);
-                object.index_buffer.draw(
-                    &object.vertex_buffer,
-                    &self.light_object_program,
-                    &uniforms.to_uniforms(),
-                    &draw_params,
-                    &mut light_buffer,
-                )?;
             }
         }
+
+        // Draw additional light using instancing
+        let uniforms = (&textures, &camera);
+
+        // With backface culling, there is a problem in that lights are
+        // not rendered when the camera moves within the sphere. With
+        // frontface culling this problem does not happen.
+        // (I think there's some other downside, but I'm not sure what
+        // it is exactly.)
+        let draw_params = glium::DrawParameters {
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
+            ..draw_params.clone()
+        };
+
+        self.light_instancing.draw(
+            resources,
+            &self.light_object_program,
+            &uniforms.to_uniforms(),
+            &draw_params,
+            &mut light_buffer,
+        )?;
 
         Ok(())
     }
