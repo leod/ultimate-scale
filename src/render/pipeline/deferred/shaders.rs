@@ -73,8 +73,8 @@ pub fn scene_buffers_core_transform<P, I, V>(
     }
 }
 
-fn light_fragment_core(have_shadows: bool) -> shader::FragmentCore<(Camera, Light)> {
-    let mut fragment = shader::FragmentCore::empty()
+fn light_fragment_core() -> shader::FragmentCore<(Camera, Light)> {
+    shader::FragmentCore::empty()
         .with_extra_uniform("position_texture", UniformType::Sampler2d)
         .with_extra_uniform("normal_texture", UniformType::Sampler2d)
         .with_body(
@@ -100,39 +100,33 @@ fn light_fragment_core(have_shadows: bool) -> shader::FragmentCore<(Camera, Ligh
             diffuse *= attenuation;
 
             float radiance = diffuse;
-        ",
+            ",
         )
-        .with_out(shader::defs::f_color(), "vec4(light_color * radiance, 1.0)");
+        .with_out(shader::defs::f_color(), "vec4(light_color * radiance, 1.0)")
+}
 
+/// Shader core for rendering a light source, given the position/normal buffers
+/// from the scene pass.
+pub fn main_light_screen_quad_core(
+    have_shadows: bool,
+) -> shader::Core<(Camera, Light), (), screen_quad::Vertex> {
+    let vertex = shader::VertexCore::default().with_out_expr(shader::defs::V_POSITION, "position");
+
+    let mut fragment = light_fragment_core();
     if have_shadows {
         fragment = fragment
             .with_extra_uniform("shadow_texture", UniformType::Sampler2d)
             .with_body(
                 "
-                if (light_is_main) {
-                    radiance *= texture(shadow_texture, tex_coord).r;
-                }
-            ",
+                radiance *= texture(shadow_texture, tex_coord).r;
+                ",
             );
     }
 
-    fragment
+    shader::Core { vertex, fragment }
 }
 
-/// Shader core for rendering a light source, given the position/normal buffers
-/// from the scene pass.
-pub fn light_screen_quad_core(
-    have_shadows: bool,
-) -> shader::Core<(Camera, Light), (), screen_quad::Vertex> {
-    let vertex = shader::VertexCore::default().with_out_expr(shader::defs::V_POSITION, "position");
-
-    shader::Core {
-        vertex,
-        fragment: light_fragment_core(have_shadows),
-    }
-}
-
-pub fn light_object_core(have_shadows: bool) -> shader::Core<(Camera, Light), (), object::Vertex> {
+pub fn light_object_core() -> shader::Core<(Camera, Light), (), object::Vertex> {
     let vertex = shader::VertexCore::default().with_out_expr(
         shader::defs::V_POSITION,
         "
@@ -144,7 +138,7 @@ pub fn light_object_core(have_shadows: bool) -> shader::Core<(Camera, Light), ()
 
     shader::Core {
         vertex,
-        fragment: light_fragment_core(have_shadows),
+        fragment: light_fragment_core(),
     }
 }
 
