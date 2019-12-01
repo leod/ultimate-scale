@@ -17,16 +17,24 @@ impl<F> Anim<F>
 where
     F: Fun,
 {
-    pub fn eval(&self, t: F::T) -> F::V {
-        self.0.eval(t)
-    }
-
     pub fn map<W>(self, f: impl Fn(F::V) -> W) -> Anim<impl Fun<T = F::T, V = W>> {
         func(move |t| f(self.eval(t)))
     }
 
     pub fn map_time<S>(self, f: impl Fn(S) -> F::T) -> Anim<impl Fun<T = S, V = F::V>> {
         func(move |t| self.eval(f(t)))
+    }
+}
+
+impl<F> Fun for Anim<F>
+where
+    F: Fun,
+{
+    type T = F::T;
+    type V = F::V;
+
+    fn eval(&self, t: F::T) -> F::V {
+        self.0.eval(t)
     }
 }
 

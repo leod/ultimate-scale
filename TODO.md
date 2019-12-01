@@ -6,6 +6,7 @@
 - Show some info on mouse over of blocks
 - Better handling of multi-layer editing
     - For example, don't move grid on Z, but show a smaller grid on top
+- Fast scrolling when zoomed out
 
 ## Execution
 - Define deterministic priorities when spawning blips
