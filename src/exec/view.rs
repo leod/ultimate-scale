@@ -267,7 +267,7 @@ impl ExecView {
                 BlipStatus::Existing => 1.0,
                 BlipStatus::Dying => {
                     // Animate killing the blip
-                    Self::blip_spawn_anim().backwards(1.0).map_time(|t| t * t).squeeze(1.0, 0.5..=1.0)
+                    Self::blip_spawn_anim().backwards(1.0).map_time(|t| t * t).squeeze(1.0, 0.4..=1.0)
                 }
             ) * 0.25;
 

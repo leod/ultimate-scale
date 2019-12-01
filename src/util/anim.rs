@@ -56,7 +56,7 @@ where
         G: Fun<T = F::T, V = F::V>,
         A: Into<Anim<G>>,
     {
-        cond_t(move |t| t <= self_end, self, next)
+        cond_t(func(move |t| t <= self_end), self, next)
     }
 }
 
@@ -249,22 +249,21 @@ where
     proportional(V::PI() * (V::one() / (V::one() + V::one())))
 }
 
-pub fn cond_t<T, V, F, G, A, B>(
-    cond: impl Fn(T) -> bool,
-    a: A,
-    b: B,
-) -> Anim<impl Fun<T = T, V = V>>
+pub fn cond_t<T, V, F, G, H, Cond, A, B>(cond: Cond, a: A, b: B) -> Anim<impl Fun<T = T, V = V>>
 where
     T: Copy,
-    F: Fun<T = T, V = V>,
+    F: Fun<T = T, V = bool>,
     G: Fun<T = T, V = V>,
-    A: Into<Anim<F>>,
-    B: Into<Anim<G>>,
+    H: Fun<T = T, V = V>,
+    Cond: Into<Anim<F>>,
+    A: Into<Anim<G>>,
+    B: Into<Anim<H>>,
 {
+    let cond = cond.into();
     let a = a.into();
     let b = b.into();
 
-    func(move |t| if cond(t) { a.eval(t) } else { b.eval(t) })
+    func(move |t| if cond.eval(t) { a.eval(t) } else { b.eval(t) })
 }
 
 pub fn cond<T, V, F, G, A, B>(cond: bool, a: A, b: B) -> Anim<impl Fun<T = T, V = V>>
@@ -275,7 +274,7 @@ where
     A: Into<Anim<F>>,
     B: Into<Anim<G>>,
 {
-    cond_t(move |_| cond, a, b)
+    cond_t(func(move |_| cond), a, b)
 }
 
 pub fn lerp<T, V, W, F, G, A, B>(a: A, b: B) -> Anim<impl Fun<T = T, V = V>>
