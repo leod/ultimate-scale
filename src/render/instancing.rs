@@ -122,10 +122,11 @@ where
         Ok(Self { buffers, buckets })
     }
 
-    pub fn update<F: glium::backend::Facade>(
-        &mut self,
+    pub fn update<'a, F: glium::backend::Facade>(
+        &'a mut self,
         facade: &F,
         instances: &[Instance<I>],
+        //instances: impl Iterator<Item=&'a Instance<I>>,
     ) -> Result<(), CreationError> {
         // Sort the instances into buckets according to their Object (i.e. mesh)
         for bucket in &mut self.buckets {
