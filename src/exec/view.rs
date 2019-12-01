@@ -260,7 +260,7 @@ impl ExecView {
                             let live = 1.0;
                             let die = Self::blip_spawn_anim()
                                 .backwards(1.0)
-                                .square_time()
+                                .map_time(|t| t * t)
                                 .squeeze(1.0, 0.0..=0.35);
 
                             spawn.seq(0.5, live).seq(0.65, die)
@@ -270,7 +270,7 @@ impl ExecView {
                 BlipStatus::Existing => 1.0,
                 BlipStatus::Dying => {
                     // Animate killing the blip
-                    Self::blip_spawn_anim().backwards(1.0).squeeze(1.0, 0.5..=1.0)
+                    Self::blip_spawn_anim().backwards(1.0).map_time(|t| t * t).squeeze(1.0, 0.5..=1.0)
                 }
             ) * 0.25;
 
