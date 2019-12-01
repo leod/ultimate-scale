@@ -32,13 +32,13 @@ pub struct Light {
     pub radius: f32,
 }
 
-impl_uniform_input!(
+impl_uniform_input_and_to_vertex!(
     Light,
     self => {
         light_position: Vec3 => self.position.coords.into(),
         light_attenuation: Vec3 => self.attenuation.into(),
         light_color: Vec3 => self.color.into(),
-        light_is_main: Bool => self.is_main,
+        //light_is_main: Bool => self.is_main,
         light_radius: Float => self.radius,
     },
 );

@@ -32,7 +32,7 @@ pub struct DeferredShading {
 
     light_texture: glium::texture::Texture2d,
 
-    light_screen_quad_program: glium::Program,
+    main_light_screen_quad_program: glium::Program,
     light_object_program: glium::Program,
 
     screen_quad: ScreenQuad,
@@ -103,12 +103,12 @@ impl DeferredShading {
         let light_texture = Self::create_texture(facade, rounded_size)?;
 
         info!("Creating deferred light programs");
-        let light_screen_quad_core = shaders::light_screen_quad_core(have_shadows);
-        let light_screen_quad_program =
-            light_screen_quad_core.build_program(facade, shader::InstancingMode::Uniforms)?;
-        let light_object_core = shaders::light_object_core(have_shadows);
+        let main_light_screen_quad_core = shaders::main_light_screen_quad_core(have_shadows);
+        let main_light_screen_quad_program =
+            main_light_screen_quad_core.build_program(facade, shader::InstancingMode::Uniforms)?;
+        let light_object_core = shaders::light_object_core();
         let light_object_program =
-            light_object_core.build_program(facade, shader::InstancingMode::Uniforms)?;
+            light_object_core.build_program(facade, shader::InstancingMode::Vertex)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
@@ -119,7 +119,7 @@ impl DeferredShading {
             scene_textures,
             shadow_texture,
             light_texture,
-            light_screen_quad_program,
+            main_light_screen_quad_program,
             light_object_program,
             screen_quad,
         })
@@ -203,7 +203,7 @@ impl DeferredShading {
                 light_buffer.draw(
                     &self.screen_quad.vertex_buffer,
                     &self.screen_quad.index_buffer,
-                    &self.light_screen_quad_program,
+                    &self.main_light_screen_quad_program,
                     &uniforms.to_uniforms(),
                     &draw_params,
                 )?;
