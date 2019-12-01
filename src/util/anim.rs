@@ -290,7 +290,7 @@ where
     a.into().lerp(b.into())
 }
 
-pub fn cubic_spline<T>(w: &[T; 4]) -> Anim<impl Fun<T = T, V = T> + '_>
+pub fn cubic<T>(w: &[T; 4]) -> Anim<impl Fun<T = T, V = T> + '_>
 where
     T: Float,
 {
