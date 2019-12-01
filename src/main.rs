@@ -1,3 +1,6 @@
+// Neede for crate::util::anim
+#![type_length_limit = "6000000"]
+
 //#![feature(type_alias_impl_trait)]
 
 #[macro_use]

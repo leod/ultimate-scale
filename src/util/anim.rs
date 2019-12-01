@@ -24,6 +24,10 @@ where
     pub fn map<W>(self, f: impl Fn(F::V) -> W) -> Anim<impl Fun<T = F::T, V = W>> {
         func(move |t| f(self.eval(t)))
     }
+
+    pub fn map_time<S>(self, f: impl Fn(S) -> F::T) -> Anim<impl Fun<T = S, V = F::V>> {
+        func(move |t| self.eval(f(t)))
+    }
 }
 
 impl<F> Anim<F>
@@ -45,16 +49,6 @@ where
 impl<F> Anim<F>
 where
     F: Fun,
-    F::T: Copy + Sub<Output = F::T>,
-{
-    pub fn backwards(self, end: F::T) -> Anim<impl Fun<T = F::T, V = F::V>> {
-        func(move |t| self.eval(end - t))
-    }
-}
-
-impl<F> Anim<F>
-where
-    F: Fun,
     F::T: Copy + PartialOrd,
 {
     pub fn switch<G, A>(self, self_end: F::T, next: A) -> Anim<impl Fun<T = F::T, V = F::V>>
@@ -69,29 +63,34 @@ where
 impl<F> Anim<F>
 where
     F: Fun,
-    F::T: Copy + PartialOrd + Mul<Output = F::T>,
+    F::T: Copy + Sub<Output = F::T>,
 {
-    pub fn square_time(self) -> Anim<impl Fun<T = F::T, V = F::V>> {
-        func(move |t| self.eval(t * t))
+    pub fn shift_time(self, t_add: F::T) -> Anim<impl Fun<T = F::T, V = F::V>> {
+        self.map_time(move |t| t - t_add)
     }
 }
 
 impl<F> Anim<F>
 where
     F: Fun,
-    F::T: Copy + PartialOrd + Add<Output = F::T> + Neg<Output = F::T>,
+    F::T: Copy + PartialOrd + Sub<Output = F::T>,
 {
-    pub fn add_time(self, t_add: F::T) -> Anim<impl Fun<T = F::T, V = F::V>> {
-        func(move |t| self.eval(t + t_add))
-    }
-
     pub fn seq<G, A>(self, self_end: F::T, next: A) -> Anim<impl Fun<T = F::T, V = F::V>>
     where
         G: Fun<T = F::T, V = F::V>,
         A: Into<Anim<G>>,
     {
-        let next = next.into();
-        cond_t(move |t| t <= self_end, self, next.add_time(-self_end))
+        self.switch(self_end, next.into().shift_time(self_end))
+    }
+}
+
+impl<F> Anim<F>
+where
+    F: Fun,
+    F::T: Copy + Sub<Output = F::T>,
+{
+    pub fn backwards(self, end: F::T) -> Anim<impl Fun<T = F::T, V = F::V>> {
+        func(move |t| self.eval(end - t))
     }
 }
 
@@ -143,13 +142,14 @@ where
         default: F::V,
         range: RangeInclusive<F::T>,
     ) -> Anim<impl Fun<T = F::T, V = F::V>> {
-        func(move |t| {
-            if range.contains(&t) {
-                self.eval((t - *range.start()) * F::T::one() / (*range.end() - *range.start()))
-            } else {
-                default
-            }
-        })
+        let time_shift = *range.start();
+        let time_scale = F::T::one() / (*range.end() - *range.start());
+
+        cond_t(
+            move |t| range.contains(&t),
+            self.map_time(move |t| (t - time_shift) * time_scale),
+            default,
+        )
     }
 }
 
