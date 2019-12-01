@@ -108,24 +108,19 @@ fn light_fragment_core() -> shader::FragmentCore<Camera> {
         .with_body(
             "
             vec2 tex_coord = gl_FragCoord.xy / viewport.zw;
+            vec3 position = texture(position_texture, tex_coord).xyz;
+            vec3 normal = texture(normal_texture, tex_coord).xyz;
 
-            vec4 position = texture(position_texture, tex_coord);
-            vec3 normal = normalize(texture(normal_texture, tex_coord).xyz);
-
-            vec3 light_vector = v_light_pos - position.xyz;
-            float light_distance = length(light_vector);
+            vec3 light_vector = v_light_pos - position;
+            float light_distance_sq = dot(light_vector, light_vector);
+            float light_distance = sqrt(light_distance_sq);
 
             float diffuse = max(dot(normal, light_vector / light_distance), 0.0);
-
-            float attenuation = 1.0 / (
-                v_light_attenuation.x +
-                v_light_attenuation.y * light_distance +
-                v_light_attenuation.z * light_distance * light_distance
+            float attenuation = 1.0 / dot(
+                v_light_attenuation,
+                vec3(1, light_distance, light_distance_sq)
             );
-            //attenuation *= 1.0 - pow(light_distance / light_radius, 2.0);
-            attenuation = max(attenuation, 0.0);
-
-            diffuse *= attenuation;
+            diffuse *= max(attenuation, 0.0);
 
             float radiance = diffuse;
             ",
