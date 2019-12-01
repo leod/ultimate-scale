@@ -73,10 +73,38 @@ pub fn scene_buffers_core_transform<P, I, V>(
     }
 }
 
-fn light_fragment_core() -> shader::FragmentCore<(Camera, Light)> {
+pub const V_LIGHT_POS: &str = "v_light_pos";
+pub const V_LIGHT_COLOR: &str = "v_light_color";
+pub const V_LIGHT_ATTENUATION: &str = "v_light_attenuation";
+
+pub fn v_light_pos() -> shader::VertexOutDef {
+    (
+        (V_LIGHT_POS.into(), UniformType::FloatVec3),
+        shader::VertexOutQualifier::Flat,
+    )
+}
+
+pub fn v_light_color() -> shader::VertexOutDef {
+    (
+        (V_LIGHT_COLOR.into(), UniformType::FloatVec3),
+        shader::VertexOutQualifier::Flat,
+    )
+}
+
+pub fn v_light_attenuation() -> shader::VertexOutDef {
+    (
+        (V_LIGHT_ATTENUATION.into(), UniformType::FloatVec3),
+        shader::VertexOutQualifier::Flat,
+    )
+}
+
+fn light_fragment_core() -> shader::FragmentCore<Camera> {
     shader::FragmentCore::empty()
         .with_extra_uniform("position_texture", UniformType::Sampler2d)
         .with_extra_uniform("normal_texture", UniformType::Sampler2d)
+        .with_in_def(v_light_pos())
+        .with_in_def(v_light_color())
+        .with_in_def(v_light_attenuation())
         .with_body(
             "
             vec2 tex_coord = gl_FragCoord.xy / viewport.zw;
@@ -84,15 +112,15 @@ fn light_fragment_core() -> shader::FragmentCore<(Camera, Light)> {
             vec4 position = texture(position_texture, tex_coord);
             vec3 normal = normalize(texture(normal_texture, tex_coord).xyz);
 
-            vec3 light_vector = light_position - position.xyz;
+            vec3 light_vector = v_light_pos - position.xyz;
             float light_distance = length(light_vector);
 
             float diffuse = max(dot(normal, light_vector / light_distance), 0.0);
 
             float attenuation = 1.0 / (
-                light_attenuation.x +
-                light_attenuation.y * light_distance +
-                light_attenuation.z * light_distance * light_distance
+                v_light_attenuation.x +
+                v_light_attenuation.y * light_distance +
+                v_light_attenuation.z * light_distance * light_distance
             );
             //attenuation *= 1.0 - pow(light_distance / light_radius, 2.0);
             attenuation = max(attenuation, 0.0);
@@ -102,15 +130,22 @@ fn light_fragment_core() -> shader::FragmentCore<(Camera, Light)> {
             float radiance = diffuse;
             ",
         )
-        .with_out(shader::defs::f_color(), "vec4(light_color * radiance, 1.0)")
+        .with_out(
+            shader::defs::f_color(),
+            "vec4(v_light_color * radiance, 1.0)",
+        )
 }
 
 /// Shader core for rendering a light source, given the position/normal buffers
 /// from the scene pass.
 pub fn main_light_screen_quad_core(
     have_shadows: bool,
-) -> shader::Core<(Camera, Light), (), screen_quad::Vertex> {
-    let vertex = shader::VertexCore::default().with_out_expr(shader::defs::V_POSITION, "position");
+) -> shader::Core<Camera, Light, screen_quad::Vertex> {
+    let vertex = shader::VertexCore::default()
+        .with_out(v_light_pos(), "light_position")
+        .with_out(v_light_color(), "light_color")
+        .with_out(v_light_attenuation(), "light_attenuation")
+        .with_out_expr(shader::defs::V_POSITION, "position");
 
     let mut fragment = light_fragment_core();
     if have_shadows {
@@ -126,15 +161,19 @@ pub fn main_light_screen_quad_core(
     shader::Core { vertex, fragment }
 }
 
-pub fn light_object_core() -> shader::Core<(Camera, Light), (), object::Vertex> {
-    let vertex = shader::VertexCore::default().with_out_expr(
-        shader::defs::V_POSITION,
-        "
-            mat_projection
-            * mat_view
-            * (vec4(position * light_radius, 1.0) + vec4(light_position, 0))
-        ",
-    );
+pub fn light_object_core() -> shader::Core<Camera, Light, object::Vertex> {
+    let vertex = shader::VertexCore::default()
+        .with_out(v_light_pos(), "light_position")
+        .with_out(v_light_color(), "light_color")
+        .with_out(v_light_attenuation(), "light_attenuation")
+        .with_out_expr(
+            shader::defs::V_POSITION,
+            "
+                mat_projection
+                * mat_view
+                * (vec4(position * light_radius, 1.0) + vec4(light_position, 0))
+            ",
+        );
 
     shader::Core {
         vertex,

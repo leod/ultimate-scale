@@ -107,8 +107,14 @@ impl DeferredShading {
         let main_light_screen_quad_program =
             main_light_screen_quad_core.build_program(facade, shader::InstancingMode::Uniforms)?;
         let light_object_core = shaders::light_object_core();
+        println!(
+            "{}",
+            light_object_core
+                .vertex
+                .compile(shader::InstancingMode::Vertex)
+        );
         let light_object_program =
-            light_object_core.build_program(facade, shader::InstancingMode::Vertex)?;
+            light_object_core.build_program(facade, shader::InstancingMode::Uniforms)?;
 
         info!("Creating screen quad");
         let screen_quad = ScreenQuad::create(facade)?;
