@@ -18,11 +18,29 @@ where
     F: Fun,
 {
     pub fn map<W>(self, f: impl Fn(F::V) -> W) -> Anim<impl Fun<T = F::T, V = W>> {
-        func(move |t| f(self.eval(t)))
+        self.map_anim(func(f))
+    }
+
+    pub fn map_anim<W, G, A>(self, anim: A) -> Anim<impl Fun<T = F::T, V = W>>
+    where
+        G: Fun<T = F::V, V = W>,
+        A: Into<Anim<G>>,
+    {
+        let anim = anim.into();
+        func(move |t| anim.eval(self.eval(t)))
     }
 
     pub fn map_time<S>(self, f: impl Fn(S) -> F::T) -> Anim<impl Fun<T = S, V = F::V>> {
-        func(move |t| self.eval(f(t)))
+        self.map_time_anim(func(f))
+    }
+
+    pub fn map_time_anim<S, G, A>(self, anim: A) -> Anim<impl Fun<T = S, V = F::V>>
+    where
+        G: Fun<T = S, V = F::T>,
+        A: Into<Anim<G>>,
+    {
+        let anim = anim.into();
+        func(move |t| self.eval(anim.eval(t)))
     }
 }
 
@@ -51,6 +69,15 @@ where
         let other = other.into();
 
         func(move |t| (self.eval(t), other.eval(t)))
+    }
+
+    pub fn bind<W, G>(self, f: impl Fn(F::V) -> Anim<G>) -> Anim<impl Fun<T = F::T, V = W>>
+    where
+        G: Fun<T = F::T, V = W>,
+    {
+        func(move |t| {
+            f(self.eval(t)).eval(t)
+        })
     }
 }
 
@@ -190,6 +217,17 @@ where
     F: Fun<V = Option<V>>,
     F::T: Copy,
 {
+    pub fn unwrap_or<G, A>(
+        self,
+        default: A,
+    ) -> Anim<impl Fun<T = F::T, V = V>>
+    where
+        G: Fun<T = F::T, V = V>,
+        A: Into<Anim<G>>,
+    {
+        self.zip(default.into()).map(|(v, default)| v.unwrap_or(default))
+    }
+
     pub fn map_or<W, G, H, A>(
         self,
         default: A,
@@ -201,6 +239,8 @@ where
         A: Into<Anim<G>>,
     {
         let default = default.into();
+
+        //self.bind(move |v| v.map_or(default, f))
 
         func(move |t| {
             self.eval(t)
