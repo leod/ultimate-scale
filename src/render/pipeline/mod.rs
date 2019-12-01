@@ -492,7 +492,7 @@ impl Pipeline {
         }
 
         // Render light sources into a buffer
-        if let Some(deferred_shading) = self.components.deferred_shading.as_ref() {
+        if let Some(deferred_shading) = self.components.deferred_shading.as_mut() {
             profile!("light_pass");
 
             deferred_shading.light_pass(

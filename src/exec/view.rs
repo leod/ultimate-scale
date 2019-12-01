@@ -295,13 +295,10 @@ impl ExecView {
             let transform = na::Matrix4::new_translation(&pos.coords) * rot;
 
             let color = machine::render::blip_color(blip.kind);
-            let instance = render::Instance {
-                object: render::Object::Cube,
-                params: scene::model::Params {
-                    color: na::Vector4::new(color.x, color.y, color.z, 1.0),
-                    transform: transform * na::Matrix4::new_scaling(size),
-                    ..Default::default()
-                },
+            let params = scene::model::Params {
+                color: na::Vector4::new(color.x, color.y, color.z, 1.0),
+                transform: transform * na::Matrix4::new_scaling(size),
+                ..Default::default()
             };
 
             machine::render::render_outline(
@@ -311,7 +308,7 @@ impl ExecView {
                 out,
             );
 
-            out.solid_glow.add_instance(&instance);
+            out.solid_glow.add(render::Object::Cube, &params);
 
             out.lights.push(Light {
                 position: pos,
