@@ -234,14 +234,11 @@ impl ExecView {
         //
         // Using this tool:
         //     https://tools.timodenk.com/cubic-spline-interpolation
-        anim::cubic_spline(&[4.4034, 0.0, -4.5455e-2, 0.0])
-            .switch(
-                0.4,
-                anim::cubic_spline(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]),
-            )
+        anim::cubic(&[4.4034, 0.0, -4.5455e-2, 0.0])
+            .switch(0.4, anim::cubic(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]))
             .switch(
                 0.8,
-                anim::cubic_spline(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
+                anim::cubic(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
             )
     }
 
