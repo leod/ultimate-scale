@@ -244,6 +244,7 @@ impl ExecView {
 
     fn render_blips(&self, time: &TickTime, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
+            let die_anim = || Self::blip_spawn_anim().backwards(1.0).map_time(|t| t * t);
             let size_anim = anim_match!(blip.status;
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
@@ -255,10 +256,7 @@ impl ExecView {
                         BlipSpawnMode::LiveToDie => {
                             let spawn = Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5);
                             let live = 1.0;
-                            let die = Self::blip_spawn_anim()
-                                .backwards(1.0)
-                                .map_time(|t| t * t)
-                                .squeeze(1.0, 0.0..=0.35);
+                            let die = die_anim().squeeze(1.0, 0.0..=0.35);
 
                             spawn.seq(0.5, live).seq(0.65, die)
                         }
@@ -267,7 +265,7 @@ impl ExecView {
                 BlipStatus::Existing => 1.0,
                 BlipStatus::Dying => {
                     // Animate killing the blip
-                    Self::blip_spawn_anim().backwards(1.0).map_time(|t| t * t).squeeze(1.0, 0.4..=1.0)
+                    die_anim().squeeze(1.0, 0.4..=1.0)
                 }
             ) * 0.25;
 
