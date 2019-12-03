@@ -8,8 +8,8 @@ use std::path::Path;
 use std::time::Duration;
 
 use log::{info, warn};
-
 use nalgebra as na;
+use coarse_prof::profile;
 
 use glium::glutin::{self, MouseButton, WindowEvent};
 
