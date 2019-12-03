@@ -12,7 +12,6 @@ use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{self, grid, level, BlipKind, Machine};
 use crate::render::{self, scene, Camera, Light, RenderLists};
-use crate::util::anim::{self, Anim, Fun};
 
 #[derive(Debug, Clone)]
 pub struct Config {}
@@ -225,7 +224,7 @@ impl ExecView {
         }
     }
 
-    fn blip_spawn_anim() -> Anim<impl Fun<T = f32, V = f32>> {
+    fn blip_spawn_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
         // Natural cubic spline interpolation of these points:
         //  0 0
         //  0.4 0.3
@@ -234,21 +233,21 @@ impl ExecView {
         //
         // Using this tool:
         //     https://tools.timodenk.com/cubic-spline-interpolation
-        anim::cubic(&[4.4034, 0.0, -4.5455e-2, 0.0])
-            .switch(0.4, anim::cubic(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]))
+        pareen::cubic(&[4.4034, 0.0, -4.5455e-2, 0.0])
+            .switch(0.4, pareen::cubic(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]))
             .switch(
                 0.8,
-                anim::cubic(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
+                pareen::cubic(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
             )
     }
 
     fn render_blips(&self, time: &TickTime, out: &mut RenderLists) {
         for (_index, blip) in self.exec.blips().iter() {
             let die_anim = || Self::blip_spawn_anim().backwards(1.0).map_time(|t| t * t);
-            let size_anim = anim_match!(blip.status;
+            let size_anim = pareen::anim_match!(blip.status;
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
-                    anim_match!(mode;
+                    pareen::anim_match!(mode;
                         BlipSpawnMode::Ease =>
                             Self::blip_spawn_anim().squeeze(0.0, 0.75..=1.0),
                         BlipSpawnMode::Quick =>
@@ -272,18 +271,18 @@ impl ExecView {
             let size = size_anim.eval(time.tick_progress());
 
             let center = machine::render::block_center(&blip.pos);
-            let pos_rot_anim = anim::constant(blip.old_move_dir).map_or(
+            let pos_rot_anim = pareen::constant(blip.old_move_dir).map_or(
                 (center, na::Matrix4::identity()),
                 |old_move_dir| {
                     let old_pos = blip.pos - old_move_dir.to_vector();
 
                     // Interpolate blip position if it is moving
                     let old_center = machine::render::block_center(&old_pos);
-                    let pos = anim::lerp(old_center, center);
+                    let pos = pareen::lerp(old_center, center);
 
                     // Rotate blip if it is moving
                     let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                    let rot = (-anim::quarter_circle::<_, f32>()).map(move |angle| {
+                    let rot = (-pareen::quarter_circle::<_, f32>()).map(move |angle| {
                         na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
                     });
 
