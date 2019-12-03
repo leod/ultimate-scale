@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use nalgebra as na;
+use coarse_prof::profile;
 
 use glium::glutin::{self, WindowEvent};
 
