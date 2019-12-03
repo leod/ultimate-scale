@@ -1,5 +1,5 @@
 [package]
-name = "ultimate_scale"
+name = "ultimate-scale"
 version = "0.1.0"
 authors = ["leod <subtle.frustration@proton.me>"]
 edition = "2018"
