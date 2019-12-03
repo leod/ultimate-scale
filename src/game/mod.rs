@@ -5,6 +5,7 @@ use std::time::Duration;
 use floating_duration::TimeAsFloat;
 use log::info;
 use nalgebra as na;
+use coarse_prof::profile;
 
 use glium::glutin;
 

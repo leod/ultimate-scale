@@ -1,4 +1,5 @@
 use nalgebra as na;
+use coarse_prof::profile;
 
 use crate::edit::{Editor, Mode, Piece};
 use crate::exec::TickTime;

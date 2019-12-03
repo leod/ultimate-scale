@@ -1,6 +1,4 @@
 #[macro_use]
-pub mod profile;
-#[macro_use]
 #[allow(dead_code)]
 pub mod intersection;
 pub mod stats;
