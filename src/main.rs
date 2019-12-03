@@ -22,6 +22,7 @@ use std::time::{Duration, Instant};
 use clap::{App, Arg};
 use glium::glutin;
 use log::info;
+use coarse_prof::profile;
 
 use game::Game;
 use input_state::InputState;
@@ -183,7 +184,7 @@ fn main() {
     let mut quit = false;
 
     while !quit {
-        let _frame_guard = util::profile::start_frame();
+        profile!("frame");
 
         // Remember only the last (hopefully: newest) resize event. We do this
         // because resizing textures is somewhat costly, so it makes sense to
@@ -237,8 +238,8 @@ fn main() {
                             if input.state == glutin::ElementState::Pressed {
                                 match input.virtual_keycode {
                                     Some(glutin::VirtualKeyCode::P) => {
-                                        util::profile::print(&mut std::io::stdout());
-                                        util::profile::reset();
+                                        coarse_prof::write(&mut std::io::stdout()).unwrap();
+                                        coarse_prof::reset();
                                     }
                                     _ => {}
                                 }
