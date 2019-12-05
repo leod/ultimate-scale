@@ -1,9 +1,11 @@
 use std::time::Duration;
 
-use nalgebra as na;
 use coarse_prof::profile;
+use nalgebra as na;
 
 use glium::glutin::{self, WindowEvent};
+
+use rendology::{basic_obj, BasicObj, Camera, Light};
 
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
@@ -11,8 +13,8 @@ use crate::exec::anim::{WindAnimState, WindDeadend, WindLife};
 use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
-use crate::machine::{self, grid, level, BlipKind, Machine};
-use crate::render::{self, scene, Camera, Light, RenderLists};
+use crate::machine::{grid, level, BlipKind, Machine};
+use crate::render::{self, Stage};
 
 #[derive(Debug, Clone)]
 pub struct Config {}
@@ -126,10 +128,10 @@ impl ExecView {
 
     pub fn ui(&mut self, _ui: &imgui::Ui) {}
 
-    pub fn render(&mut self, time: &TickTime, out: &mut RenderLists) {
+    pub fn render(&mut self, time: &TickTime, out: &mut Stage) {
         profile!("exec_view");
 
-        machine::render::render_machine(
+        render::machine::render_machine(
             &self.exec.machine(),
             time,
             Some(&self.exec),
@@ -147,9 +149,9 @@ impl ExecView {
         in_dir: Dir3,
         in_t: f32,
         out_t: f32,
-        out: &mut RenderLists,
+        out: &mut Stage,
     ) {
-        let block_center = machine::render::block_center(block_pos);
+        let block_center = render::machine::block_center(block_pos);
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
 
         // The cylinder object points in the direction of the x axis
@@ -158,29 +160,25 @@ impl ExecView {
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
 
-        let color = machine::render::wind_source_color();
+        let color = render::machine::wind_source_color();
         let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
 
-        let stripe_color = machine::render::wind_stripe_color();
+        let stripe_color = render::machine::wind_stripe_color();
         let stripe_color = na::Vector4::new(stripe_color.x, stripe_color.y, stripe_color.z, 1.0);
 
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
-            out.wind.add(
-                render::Object::TessellatedCylinder,
-                &scene::wind::Params {
-                    transform,
-                    color,
-                    stripe_color,
-                    start: in_t,
-                    end: out_t,
-                    phase: 2.0 * phase * std::f32::consts::PI,
-                    ..Default::default()
-                },
-            );
+            out.wind.add(render::wind::Instance {
+                transform,
+                color,
+                stripe_color,
+                start: in_t,
+                end: out_t,
+                phase: 2.0 * phase * std::f32::consts::PI,
+            });
         }
     }
 
-    fn render_blocks(&self, time: &TickTime, out: &mut RenderLists) {
+    fn render_blocks(&self, time: &TickTime, out: &mut Stage) {
         let blocks = &self.exec.machine().blocks;
 
         for (block_index, (block_pos, placed_block)) in blocks.data.iter() {
@@ -242,7 +240,7 @@ impl ExecView {
             )
     }
 
-    fn render_blips(&self, time: &TickTime, out: &mut RenderLists) {
+    fn render_blips(&self, time: &TickTime, out: &mut Stage) {
         for (_index, blip) in self.exec.blips().iter() {
             let die_anim = || Self::blip_spawn_anim().backwards(1.0).map_time(|t| t * t);
             let size_anim = pareen::anim_match!(blip.status;
@@ -271,14 +269,14 @@ impl ExecView {
 
             let size = size_anim.eval(time.tick_progress());
 
-            let center = machine::render::block_center(&blip.pos);
+            let center = render::machine::block_center(&blip.pos);
             let pos_rot_anim = pareen::constant(blip.old_move_dir).map_or(
                 (center, na::Matrix4::identity()),
                 |old_move_dir| {
                     let old_pos = blip.pos - old_move_dir.to_vector();
 
                     // Interpolate blip position if it is moving
-                    let old_center = machine::render::block_center(&old_pos);
+                    let old_center = render::machine::block_center(&old_pos);
                     let pos = pareen::lerp(old_center, center);
 
                     // Rotate blip if it is moving
@@ -294,26 +292,26 @@ impl ExecView {
             let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
             let transform = na::Matrix4::new_translation(&pos.coords) * rot;
 
-            let color = machine::render::blip_color(blip.kind);
-            let params = scene::model::Params {
+            let color = render::machine::blip_color(blip.kind);
+            let params = basic_obj::Instance {
                 color: na::Vector4::new(color.x, color.y, color.z, 1.0),
                 transform: transform * na::Matrix4::new_scaling(size),
                 ..Default::default()
             };
 
-            machine::render::render_outline(
+            render::machine::render_outline(
                 &transform,
                 &na::Vector3::new(size, size, size),
                 0.0,
                 out,
             );
 
-            out.solid_glow.add(render::Object::Cube, &params);
+            out.solid_glow[BasicObj::Cube].add(params);
 
             out.lights.push(Light {
                 position: pos,
                 attenuation: na::Vector3::new(1.0, 6.0, 30.0),
-                color: 20.0 * machine::render::blip_color(blip.kind),
+                color: 20.0 * render::machine::blip_color(blip.kind),
                 ..Default::default()
             });
         }
