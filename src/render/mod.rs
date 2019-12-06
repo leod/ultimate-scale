@@ -3,8 +3,8 @@ pub mod wind;
 
 use rendology::pipeline::CreationError;
 use rendology::{
-    basic_obj, BasicObj, Instancing, Light, PlainScenePass, RenderList, ShadedScenePass,
-    ShadedScenePassSetup, ShadowPass,
+    basic_obj, BasicObj, Instancing, InstancingMode, Light, PlainScenePass, RenderList,
+    ShadedScenePass, ShadedScenePassSetup, ShadowPass,
 };
 
 #[derive(Default)]
@@ -65,10 +65,12 @@ impl Pipeline {
 
         let rendology = rendology::Pipeline::create(facade, config, target_size)?;
 
-        let solid_shadow_pass = rendology.create_shadow_pass(facade, basic_obj::Core)?;
+        let solid_shadow_pass =
+            rendology.create_shadow_pass(facade, basic_obj::Core, InstancingMode::Vertex)?;
         let solid_scene_pass = rendology.create_shaded_scene_pass(
             facade,
             basic_obj::Core,
+            InstancingMode::Vertex,
             ShadedScenePassSetup {
                 draw_shadowed: true,
                 draw_glowing: false,
@@ -77,6 +79,7 @@ impl Pipeline {
         let solid_glow_scene_pass = rendology.create_shaded_scene_pass(
             facade,
             basic_obj::Core,
+            InstancingMode::Vertex,
             ShadedScenePassSetup {
                 draw_shadowed: true,
                 draw_glowing: true,
@@ -85,12 +88,14 @@ impl Pipeline {
         let wind_scene_pass = rendology.create_shaded_scene_pass(
             facade,
             wind::Core,
+            InstancingMode::Vertex,
             ShadedScenePassSetup {
                 draw_shadowed: true,
                 draw_glowing: true,
             },
         )?;
-        let plain_scene_pass = rendology.create_plain_scene_pass(facade, basic_obj::Core)?;
+        let plain_scene_pass =
+            rendology.create_plain_scene_pass(facade, basic_obj::Core, InstancingMode::Vertex)?;
 
         let solid_instancing = basic_obj::Instancing::create(facade)?;
         let solid_glow_instancing = basic_obj::Instancing::create(facade)?;
