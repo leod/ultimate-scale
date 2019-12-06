@@ -182,6 +182,7 @@ impl Pipeline {
                 &shaded_draw_params,
             )?
             .compose(&stage.lights)?
+            .plain_scene_pass()
             .draw(
                 &self.plain_scene_pass,
                 &self.plain_instancing.as_drawable(&self.basic_obj_resources),
