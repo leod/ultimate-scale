@@ -155,6 +155,7 @@ impl Pipeline {
                 &self.solid_shadow_pass,
                 &self.solid_instancing.as_drawable(&self.basic_obj_resources),
                 &(),
+                &shaded_draw_params,
             )?
             .draw(
                 &self.solid_shadow_pass,
@@ -162,6 +163,7 @@ impl Pipeline {
                     .solid_glow_instancing
                     .as_drawable(&self.basic_obj_resources),
                 &(),
+                &shaded_draw_params,
             )?
             .shaded_scene_pass()
             .draw(

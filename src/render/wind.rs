@@ -20,19 +20,19 @@ pub struct Instance {
 rendology::impl_uniform_input!(
     Params,
     self => {
-        tick_progress: Float => self.tick_progress,
+        params_tick_progress: f32 = self.tick_progress,
     },
 );
 
 rendology::impl_instance_input!(
     Instance,
     self => {
-        mat_model: Mat4 => self.transform.into(),
-        color: Vec4 => self.color.into(),
-        stripe_color: Vec4 => self.stripe_color.into(),
-        phase: Float => self.phase,
-        start: Float => self.start,
-        end: Float => self.end,
+        instance_transform: [[f32; 4]; 4] = self.transform,
+        instance_color: [f32; 4] = self.color,
+        instance_stripe_color: [f32; 4] = self.stripe_color,
+        instance_phase: f32 = self.phase,
+        instance_start: f32 = self.start,
+        instance_end: f32 = self.end,
     },
 );
 
@@ -75,8 +75,8 @@ impl SceneCore for Core {
             .with_body(
                 "
                 float angle = (position.x + 0.5) * PI
-                    + tick_progress * PI / 2.0
-                    + phase;
+                    + params_tick_progress * PI / 2.0
+                    + instance_phase;
 
                 float rot_s = sin(angle);
                 float rot_c = cos(angle);
@@ -92,30 +92,30 @@ impl SceneCore for Core {
 
                 float x = 0.5 - position.x;
 
-                if (x < start || x > end || start == end)
+                if (x < instance_start || x > instance_end || instance_start == instance_end)
                     v_discard = 1.0;
                 else
                     v_discard = 0.0;
 
-                if (x < tick_progress && x > tick_progress - 0.3)
-                    v_color = stripe_color;
-                else if (end == 1.0 && x > 0.7 + tick_progress)
-                    v_color = stripe_color;
+                if (x < params_tick_progress && x > params_tick_progress - 0.3)
+                    v_color = instance_stripe_color;
+                else if (instance_end == 1.0 && x > 0.7 + params_tick_progress)
+                    v_color = instance_stripe_color;
                 else
-                    v_color = color;
+                    v_color = instance_color;
             ",
             )
             .with_out(
                 shader::defs::v_world_normal(),
-                "normalize(transpose(inverse(mat3(mat_model))) * rot_normal)",
+                "normalize(transpose(inverse(mat3(instance_transform))) * rot_normal)",
             )
             .with_out(
                 shader::defs::v_world_pos(),
-                "mat_model * vec4(scaled_pos, 1.0)",
+                "instance_transform * vec4(scaled_pos, 1.0)",
             )
             .with_out_expr(
                 shader::defs::V_POSITION,
-                "mat_projection * mat_view * v_world_pos",
+                "context_camera_projection * context_camera_view * v_world_pos",
             );
 
         let fragment = shader::FragmentCore::empty()
