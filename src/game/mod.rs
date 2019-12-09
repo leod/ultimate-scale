@@ -153,6 +153,7 @@ impl Game {
                     20.0,
                 ),
                 main_light_center: na::Point3::new(15.0, 15.0, 0.0),
+                ambient_light: na::Vector3::new(0.3, 0.3, 0.3),
             },
             tick_progress: self
                 .exec
@@ -296,9 +297,7 @@ impl Game {
         self.config.view.window_size = new_window_size;
 
         self.camera.projection = Self::perspective_matrix(&self.config.view, new_window_size);
-        self.camera.viewport = na::Vector4::new(
-            0.0,
-            0.0,
+        self.camera.viewport_size = na::Vector2::new(
             new_window_size.width as f32,
             new_window_size.height as f32,
         );
