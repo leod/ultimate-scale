@@ -1,10 +1,14 @@
 pub mod machine;
 pub mod wind;
 
+use nalgebra as na;
+
+use coarse_prof::profile;
+
 use rendology::pipeline::CreationError;
 use rendology::{
-    basic_obj, BasicObj, Instancing, InstancingMode, Light, PlainScenePass, RenderList,
-    ShadedScenePass, ShadedScenePassSetup, ShadowPass,
+    basic_obj, BasicObj, Camera, Drawable, Instancing, InstancingMode, Light, PlainScenePass,
+    RenderList, SceneCore, ShadedScenePass, ShadedScenePassSetup, ShadowPass,
 };
 
 #[derive(Default)]
@@ -40,6 +44,7 @@ impl Stage {
 
 pub struct Pipeline {
     basic_obj_resources: basic_obj::Resources,
+    plain_program: glium::Program,
 
     rendology: rendology::Pipeline,
 
@@ -62,6 +67,10 @@ impl Pipeline {
         target_size: (u32, u32),
     ) -> Result<Self, CreationError> {
         let basic_obj_resources = basic_obj::Resources::create(facade)?;
+        let plain_program = basic_obj::Core
+            .scene_core()
+            .build_program(facade, InstancingMode::Uniforms)
+            .map_err(|e| CreationError::CreationError(rendology::CreationError::ShaderBuild(e)))?;
 
         let rendology = rendology::Pipeline::create(facade, config, target_size)?;
 
@@ -104,6 +113,7 @@ impl Pipeline {
 
         Ok(Self {
             basic_obj_resources,
+            plain_program,
             rendology,
             solid_shadow_pass,
             solid_scene_pass,
@@ -124,12 +134,16 @@ impl Pipeline {
         stage: &Stage,
         target: &mut S,
     ) -> Result<(), rendology::DrawError> {
-        self.solid_instancing.update(facade, &stage.solid)?;
-        self.solid_glow_instancing
-            .update(facade, &stage.solid_glow)?;
-        self.wind_instancing
-            .update(facade, &stage.wind.as_slice())?;
-        self.plain_instancing.update(facade, &stage.plain)?;
+        {
+            profile!("update_instances");
+
+            self.solid_instancing.update(facade, &stage.solid)?;
+            self.solid_glow_instancing
+                .update(facade, &stage.solid_glow)?;
+            self.wind_instancing
+                .update(facade, &stage.wind.as_slice())?;
+            self.plain_instancing.update(facade, &stage.plain)?;
+        }
 
         let shaded_draw_params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
@@ -197,6 +211,37 @@ impl Pipeline {
                 &plain_draw_params,
             )?
             .present()?;
+
+        // Render screen-space stuff on top
+        profile!("ortho");
+
+        let ortho_projection = na::Matrix4::new_orthographic(
+            0.0,
+            context.rendology.camera.viewport_size.x,
+            context.rendology.camera.viewport_size.y,
+            0.0,
+            -10.0,
+            10.0,
+        );
+        let ortho_camera = Camera {
+            projection: ortho_projection,
+            view: na::Matrix4::identity(),
+            ..context.rendology.camera.clone()
+        };
+        let ortho_render_context = rendology::Context {
+            camera: ortho_camera,
+            ..context.rendology.clone()
+        };
+        let ortho_parameters = glium::DrawParameters {
+            blend: glium::draw_parameters::Blend::alpha_blending(),
+            ..Default::default()
+        };
+        stage.ortho.as_drawable(&self.basic_obj_resources).draw(
+            &self.plain_program,
+            &ortho_render_context,
+            &ortho_parameters,
+            target,
+        )?;
 
         Ok(())
     }
