@@ -222,7 +222,6 @@ impl Editor {
             let block_center = render::machine::block_center(&pos);
             let block_transform = render::machine::placed_block_transform(&placed_block);
 
-            let mut out_hack = Stage::default();
             render::machine::render_block(
                 &placed_block,
                 &TickTime::zero(),
@@ -233,10 +232,7 @@ impl Editor {
                 out,
             );
 
-            // Hack to render tentative blocks as non-shadowed
-            //std::mem::swap(&mut out_hack.solid, &mut out_hack.plain);
-            //out.append(&mut out_hack);
-            // TODO
+            // TODO: Render tentative blocks as non-shadowed?
 
             any_pos_valid = any_pos_valid || self.machine.is_valid_pos(&pos);
 
