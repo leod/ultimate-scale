@@ -2,15 +2,18 @@ use nalgebra as na;
 
 use imgui::{im_str, ImString};
 
+use rendology::fxaa;
+
 use crate::exec::level_progress::InputsOutputsProgress;
 use crate::exec::LevelStatus;
 use crate::game::Game;
-use crate::machine::{self, level};
-use crate::render::fxaa;
+use crate::machine::level;
+use crate::render;
 
 impl Game {
     pub fn ui(&mut self, ui: &imgui::Ui) {
-        let window_size = na::Vector2::new(self.camera.viewport.z, self.camera.viewport.w);
+        let window_size =
+            na::Vector2::new(self.camera.viewport_size.x, self.camera.viewport_size.y);
 
         if let Some((_, exec_view)) = self.exec.as_mut() {
             exec_view.ui(ui);
@@ -241,7 +244,7 @@ impl Game {
 
             match input {
                 Some(level::Input::Blip(kind)) => {
-                    let color: [f32; 3] = machine::render::blip_color(kind).into();
+                    let color: [f32; 3] = render::machine::blip_color(kind).into();
                     let cursor_pos = ui.cursor_screen_pos();
 
                     let border_a = [cursor_pos[0] - border_margin, cursor_pos[1] - border_margin];
