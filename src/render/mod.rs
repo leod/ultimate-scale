@@ -49,6 +49,7 @@ pub struct Pipeline {
     rendology: rendology::Pipeline,
 
     solid_shadow_pass: Option<ShadowPass<basic_obj::Core>>,
+    wind_shadow_pass: Option<ShadowPass<wind::Core>>,
     solid_scene_pass: ShadedScenePass<basic_obj::Core>,
     solid_glow_scene_pass: ShadedScenePass<basic_obj::Core>,
     wind_scene_pass: ShadedScenePass<wind::Core>,
@@ -76,6 +77,8 @@ impl Pipeline {
 
         let solid_shadow_pass =
             rendology.create_shadow_pass(facade, basic_obj::Core, InstancingMode::Vertex)?;
+        let wind_shadow_pass =
+            rendology.create_shadow_pass(facade, wind::Core, InstancingMode::Vertex)?;
         let solid_scene_pass = rendology.create_shaded_scene_pass(
             facade,
             basic_obj::Core,
@@ -116,6 +119,7 @@ impl Pipeline {
             plain_program,
             rendology,
             solid_shadow_pass,
+            wind_shadow_pass,
             solid_scene_pass,
             solid_glow_scene_pass,
             wind_scene_pass,
@@ -177,6 +181,14 @@ impl Pipeline {
                     .solid_glow_instancing
                     .as_drawable(&self.basic_obj_resources),
                 &(),
+                &shaded_draw_params,
+            )?
+            .draw(
+                &self.wind_shadow_pass,
+                &self.wind_instancing.as_drawable(wind_mesh),
+                &wind::Params {
+                    tick_progress: context.tick_progress,
+                },
                 &shaded_draw_params,
             )?
             .shaded_scene_pass()
