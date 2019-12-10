@@ -172,39 +172,6 @@ impl Game {
         self.render_pipeline
             .draw_frame(display, &render_context, &self.render_stage, target)?;
 
-        // Render screen-space stuff on top
-        // TODO
-        /*profile!("ortho");
-
-        let ortho_projection = na::Matrix4::new_orthographic(
-            0.0,
-            self.camera.viewport.z,
-            self.camera.viewport.w,
-            0.0,
-            -10.0,
-            10.0,
-        );
-        let ortho_camera = Camera {
-            projection: ortho_projection,
-            view: na::Matrix4::identity(),
-            ..self.camera.clone()
-        };
-        let ortho_render_context = render::Context {
-            camera: ortho_camera,
-            ..render_context
-        };
-        let ortho_parameters = glium::DrawParameters {
-            blend: glium::draw_parameters::Blend::alpha_blending(),
-            ..Default::default()
-        };
-        self.render_lists.ortho.draw(
-            &self.resources,
-            &ortho_render_context,
-            &self.resources.plain_program,
-            &ortho_parameters,
-            target,
-        )?;*/
-
         Ok(())
     }
 
@@ -297,10 +264,8 @@ impl Game {
         self.config.view.window_size = new_window_size;
 
         self.camera.projection = Self::perspective_matrix(&self.config.view, new_window_size);
-        self.camera.viewport_size = na::Vector2::new(
-            new_window_size.width as f32,
-            new_window_size.height as f32,
-        );
+        self.camera.viewport_size =
+            na::Vector2::new(new_window_size.width as f32, new_window_size.height as f32);
 
         Ok(())
     }

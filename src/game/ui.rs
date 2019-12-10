@@ -12,7 +12,8 @@ use crate::render;
 
 impl Game {
     pub fn ui(&mut self, ui: &imgui::Ui) {
-        let window_size = na::Vector2::new(self.camera.viewport_size.x, self.camera.viewport_size.y);
+        let window_size =
+            na::Vector2::new(self.camera.viewport_size.x, self.camera.viewport_size.y);
 
         if let Some((_, exec_view)) = self.exec.as_mut() {
             exec_view.ui(ui);
