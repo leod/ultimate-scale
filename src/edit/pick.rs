@@ -2,8 +2,10 @@ use std::iter;
 
 use nalgebra as na;
 
-use crate::machine::{self, grid, Machine};
-use crate::render::Camera;
+use rendology::Camera;
+
+use crate::machine::{grid, Machine};
+use crate::render;
 use crate::util::intersection::{ray_aabb_intersection, ray_plane_intersection, Plane, Ray, AABB};
 
 pub fn camera_ray(camera: &Camera, eye: &na::Point3<f32>, window_pos: &na::Point2<f32>) -> Ray {
@@ -56,7 +58,7 @@ pub fn pick_block(
 
     let mut closest_block = None;
     for (_block_index, (block_pos, _placed_block)) in machine.iter_blocks() {
-        let center = machine::render::block_center(&block_pos);
+        let center = render::machine::block_center(&block_pos);
 
         let aabb = AABB {
             min: center - na::Vector3::new(0.5, 0.5, 0.5),
@@ -136,7 +138,7 @@ pub fn pick_window_rect<'a>(
         .iter_blocks()
         .map(|(_block_index, (block_pos, _placed_block))| *block_pos)
         .filter(move |block_pos| {
-            let center = machine::render::block_center(block_pos);
+            let center = render::machine::block_center(block_pos);
             let viewport_pos = camera.project_to_viewport(&center);
 
             viewport_pos.x >= min.x

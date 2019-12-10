@@ -7,17 +7,18 @@ use std::fs::File;
 use std::path::Path;
 use std::time::Duration;
 
+use coarse_prof::profile;
 use log::{info, warn};
 use nalgebra as na;
-use coarse_prof::profile;
 
 use glium::glutin::{self, MouseButton, WindowEvent};
+
+use rendology::Camera;
 
 use crate::edit_camera_view::EditCameraView;
 use crate::input_state::InputState;
 use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
-use crate::render::Camera;
 
 use crate::edit::config::ModifiedKey;
 use crate::edit::{pick, Config, Edit, Mode, Piece};

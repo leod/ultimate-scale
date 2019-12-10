@@ -25,6 +25,7 @@ rand = "0.7"
 glsl = "3.0"
 pareen = "0.1"
 coarse-prof = "0.2"
+rendology = "0.3"
 
 [profile.dev]
 opt-level = 1

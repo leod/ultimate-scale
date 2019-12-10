@@ -3,7 +3,6 @@ use glium::glutin;
 use crate::edit;
 use crate::edit_camera_view;
 use crate::exec;
-use crate::render;
 
 #[derive(Debug, Clone)]
 pub struct ViewConfig {
@@ -24,7 +23,7 @@ impl Default for ViewConfig {
 pub struct Config {
     pub camera: edit_camera_view::Config,
     pub view: ViewConfig,
-    pub render_pipeline: render::pipeline::Config,
+    pub render_pipeline: rendology::Config,
     pub editor: edit::Config,
     pub exec: exec::view::Config,
     pub play: exec::play::Config,

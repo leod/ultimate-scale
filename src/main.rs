@@ -1,4 +1,4 @@
-// Neede for crate::util::anim
+// Needed for pareen stuff
 #![type_length_limit = "60000000"]
 
 //#![feature(type_alias_impl_trait)]
@@ -20,9 +20,9 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use clap::{App, Arg};
+use coarse_prof::profile;
 use glium::glutin;
 use log::info;
-use coarse_prof::profile;
 
 use game::Game;
 use input_state::InputState;

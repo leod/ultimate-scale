@@ -2,12 +2,14 @@ mod ui;
 
 use std::time::Duration;
 
+use coarse_prof::profile;
 use floating_duration::TimeAsFloat;
 use log::info;
 use nalgebra as na;
-use coarse_prof::profile;
 
 use glium::glutin;
+
+use rendology::{Camera, Light};
 
 use crate::config::{self, Config};
 use crate::edit::Editor;
@@ -17,7 +19,7 @@ use crate::exec::play::{self, Play};
 use crate::exec::{ExecView, LevelStatus};
 use crate::input_state::InputState;
 use crate::machine::{level, Machine};
-use crate::render::{self, resources, Camera, Light, RenderLists, Resources};
+use crate::render;
 use crate::util::stats;
 
 pub struct Game {
@@ -27,9 +29,8 @@ pub struct Game {
     edit_camera_view: EditCameraView,
     edit_camera_view_input: EditCameraViewInput,
 
-    resources: Resources,
     render_pipeline: render::Pipeline,
-    render_lists: RenderLists,
+    render_stage: render::Stage,
 
     editor: Editor,
     play: Play,
@@ -67,11 +68,13 @@ impl Game {
         let edit_camera_view = EditCameraView::new();
         let edit_camera_view_input = EditCameraViewInput::new(&config.camera);
 
-        let resources = Resources::create(facade).map_err(CreationError::RenderResources)?;
-        let render_pipeline =
-            render::Pipeline::create(facade, &config.render_pipeline, &config.view)
-                .map_err(CreationError::RenderPipeline)?;
-        let render_lists = RenderLists::default();
+        let render_pipeline = render::Pipeline::create(
+            facade,
+            &config.render_pipeline,
+            config.view.window_size.into(),
+        )
+        .map_err(CreationError::RenderPipeline)?;
+        let render_stage = render::Stage::default();
 
         let editor = Editor::new(&config.editor, initial_machine);
         let play = Play::new(&config.play);
@@ -87,9 +90,8 @@ impl Game {
             camera,
             edit_camera_view,
             edit_camera_view_input,
-            resources,
             render_pipeline,
-            render_lists,
+            render_stage,
             editor,
             play,
             exec: None,
@@ -112,9 +114,12 @@ impl Game {
                 self.config.render_pipeline
             );
 
-            self.render_pipeline =
-                render::Pipeline::create(facade, &self.config.render_pipeline, &self.config.view)
-                    .map_err(CreationError::RenderPipeline)?;
+            self.render_pipeline = render::Pipeline::create(
+                facade,
+                &self.config.render_pipeline,
+                self.config.view.window_size.into(),
+            )
+            .map_err(CreationError::RenderPipeline)?;
 
             self.recreate_render_pipeline = false;
         }
@@ -126,81 +131,46 @@ impl Game {
         &mut self,
         display: &glium::backend::glutin::Display,
         target: &mut S,
-    ) -> Result<(), render::DrawError> {
+    ) -> Result<(), rendology::DrawError> {
         {
             profile!("render");
 
-            self.render_lists.clear();
+            self.render_stage.clear();
 
             if let Some((play_status, exec)) = self.exec.as_mut() {
-                exec.render(&play_status.time(), &mut self.render_lists);
+                exec.render(&play_status.time(), &mut self.render_stage);
             } else {
-                self.editor.render(&mut self.render_lists)?;
+                self.editor.render(&mut self.render_stage)?;
             }
         };
 
         let render_context = render::Context {
-            camera: self.camera.clone(),
-            elapsed_time_secs: self.elapsed_time.as_fractional_secs() as f32,
+            rendology: rendology::Context {
+                camera: self.camera.clone(),
+                main_light_pos: na::Point3::new(
+                    15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos(),
+                    15.0 + 20.0 * (std::f32::consts::PI / 4.0).sin(),
+                    20.0,
+                ),
+                main_light_center: na::Point3::new(15.0, 15.0, 0.0),
+                ambient_light: na::Vector3::new(0.3, 0.3, 0.3),
+            },
             tick_progress: self
                 .exec
                 .as_ref()
                 .map_or(0.0, |(play_status, _)| play_status.tick_progress()),
-            main_light_pos: na::Point3::new(
-                15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos(),
-                15.0 + 20.0 * (std::f32::consts::PI / 4.0).sin(),
-                20.0,
-            ),
-            main_light_center: na::Point3::new(15.0, 15.0, 0.0),
         };
 
-        self.render_lists.lights.push(Light {
-            position: render_context.main_light_pos,
+        self.render_stage.lights.push(Light {
+            position: render_context.rendology.main_light_pos,
             attenuation: na::Vector3::new(1.0, 0.0, 0.0),
             color: na::Vector3::new(1.0, 1.0, 1.0),
             is_main: true,
             ..Default::default()
         });
 
-        self.render_pipeline.draw_frame(
-            display,
-            &self.resources,
-            &render_context,
-            &self.render_lists,
-            target,
-        )?;
-
-        // Render screen-space stuff on top
-        profile!("ortho");
-
-        let ortho_projection = na::Matrix4::new_orthographic(
-            0.0,
-            self.camera.viewport.z,
-            self.camera.viewport.w,
-            0.0,
-            -10.0,
-            10.0,
-        );
-        let ortho_camera = Camera {
-            projection: ortho_projection,
-            view: na::Matrix4::identity(),
-            ..self.camera.clone()
-        };
-        let ortho_render_context = render::Context {
-            camera: ortho_camera,
-            ..render_context
-        };
-        let ortho_parameters = glium::DrawParameters {
-            blend: glium::draw_parameters::Blend::alpha_blending(),
-            ..Default::default()
-        };
-        self.render_lists.ortho.draw(
-            &self.resources,
-            &ortho_render_context,
-            &self.resources.plain_program,
-            &ortho_parameters,
-            target,
-        )?;
+        self.render_pipeline
+            .draw_frame(display, &render_context, &self.render_stage, target)?;
 
         Ok(())
     }
@@ -288,22 +258,14 @@ impl Game {
 
     pub fn on_window_resize<F: glium::backend::Facade>(
         &mut self,
-        facade: &F,
+        _facade: &F,
         new_window_size: glutin::dpi::LogicalSize,
     ) -> Result<(), CreationError> {
         self.config.view.window_size = new_window_size;
 
         self.camera.projection = Self::perspective_matrix(&self.config.view, new_window_size);
-        self.camera.viewport = na::Vector4::new(
-            0.0,
-            0.0,
-            new_window_size.width as f32,
-            new_window_size.height as f32,
-        );
-
-        self.render_pipeline
-            .on_window_resize(facade, new_window_size)
-            .map_err(CreationError::RenderPipeline)?;
+        self.camera.viewport_size =
+            na::Vector2::new(new_window_size.width as f32, new_window_size.height as f32);
 
         Ok(())
     }
@@ -324,6 +286,5 @@ impl Game {
 
 #[derive(Debug)]
 pub enum CreationError {
-    RenderPipeline(render::pipeline::CreationError),
-    RenderResources(resources::CreationError),
+    RenderPipeline(rendology::pipeline::CreationError),
 }
