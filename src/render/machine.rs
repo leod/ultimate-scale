@@ -1,7 +1,6 @@
 use nalgebra as na;
 
-use rendology::basic_obj;
-use rendology::{BasicObj, Light};
+use rendology::{basic_obj, line, BasicObj, Light};
 
 use crate::machine::grid::{self, Dir3, Sign};
 use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
@@ -15,7 +14,7 @@ pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 0.02;
-pub const OUTLINE_MARGIN: f32 = 0.0005;
+pub const OUTLINE_MARGIN: f32 = 0.001;
 pub const BRIDGE_MARGIN: f32 = 0.005;
 
 const GAMMA: f32 = 2.2;
@@ -416,10 +415,16 @@ pub fn render_outline(
             na::Vector4::new(line_start.x, line_start.y, line_start.z, 1.0),
         ]);
 
-        out.plain[BasicObj::LineX].add(basic_obj::Instance {
+        //out.solid[BasicObj::TessellatedCylinder].add(basic_obj::Instance {
+        /*out.plain[BasicObj::LineX].add(basic_obj::Instance {
             transform: line_transform,
             color: block_color(&outline_color(), alpha),
             ..Default::default()
+        });*/
+        out.lines.add(line::Instance {
+            transform: line_transform,
+            color: block_color(&outline_color(), alpha),
+            thickness: 5.0,
         });
     }
 }

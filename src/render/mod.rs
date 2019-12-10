@@ -7,8 +7,8 @@ use coarse_prof::profile;
 
 use rendology::pipeline::CreationError;
 use rendology::{
-    basic_obj, BasicObj, Camera, Drawable, Instancing, InstancingMode, Light, PlainScenePass,
-    RenderList, SceneCore, ShadedScenePass, ShadedScenePassSetup, ShadowPass,
+    basic_obj, line, BasicObj, Camera, Drawable, Instancing, InstancingMode, Light, Mesh,
+    PlainScenePass, RenderList, SceneCore, ShadedScenePass, ShadedScenePassSetup, ShadowPass,
 };
 
 #[derive(Default)]
@@ -20,6 +20,7 @@ pub struct Stage {
     pub lights: Vec<Light>,
 
     pub plain: basic_obj::RenderList<basic_obj::Instance>,
+    pub lines: RenderList<line::Instance>,
 
     /// Screen-space stuff.
     pub ortho: basic_obj::RenderList<basic_obj::Instance>,
@@ -38,22 +39,27 @@ impl Stage {
         self.wind.clear();
         self.lights.clear();
         self.plain.clear();
+        self.lines.clear();
         self.ortho.clear();
     }
 }
 
 pub struct Pipeline {
     basic_obj_resources: basic_obj::Resources,
+    line_x_mesh: Mesh<line::Point>,
     plain_program: glium::Program,
 
     rendology: rendology::Pipeline,
 
     solid_shadow_pass: Option<ShadowPass<basic_obj::Core>>,
     wind_shadow_pass: Option<ShadowPass<wind::Core>>,
+
     solid_scene_pass: ShadedScenePass<basic_obj::Core>,
     solid_glow_scene_pass: ShadedScenePass<basic_obj::Core>,
     wind_scene_pass: ShadedScenePass<wind::Core>,
+
     plain_scene_pass: PlainScenePass<basic_obj::Core>,
+    line_scene_pass: PlainScenePass<line::Core>,
 
     solid_instancing: basic_obj::Instancing<basic_obj::Instance>,
     solid_glow_instancing: basic_obj::Instancing<basic_obj::Instance>,
@@ -68,6 +74,7 @@ impl Pipeline {
         target_size: (u32, u32),
     ) -> Result<Self, CreationError> {
         let basic_obj_resources = basic_obj::Resources::create(facade)?;
+        let line_x_mesh = line::create_line_x_mesh(facade)?;
         let plain_program = basic_obj::Core
             .scene_core()
             .build_program(facade, InstancingMode::Uniforms)
@@ -79,6 +86,7 @@ impl Pipeline {
             rendology.create_shadow_pass(facade, basic_obj::Core, InstancingMode::Vertex)?;
         let wind_shadow_pass =
             rendology.create_shadow_pass(facade, wind::Core, InstancingMode::Vertex)?;
+
         let solid_scene_pass = rendology.create_shaded_scene_pass(
             facade,
             basic_obj::Core,
@@ -106,8 +114,11 @@ impl Pipeline {
                 draw_glowing: true,
             },
         )?;
+
         let plain_scene_pass =
             rendology.create_plain_scene_pass(facade, basic_obj::Core, InstancingMode::Vertex)?;
+        let line_scene_pass =
+            rendology.create_plain_scene_pass(facade, line::Core, InstancingMode::Uniforms)?;
 
         let solid_instancing = basic_obj::Instancing::create(facade)?;
         let solid_glow_instancing = basic_obj::Instancing::create(facade)?;
@@ -116,6 +127,7 @@ impl Pipeline {
 
         Ok(Self {
             basic_obj_resources,
+            line_x_mesh,
             plain_program,
             rendology,
             solid_shadow_pass,
@@ -124,6 +136,7 @@ impl Pipeline {
             solid_glow_scene_pass,
             wind_scene_pass,
             plain_scene_pass,
+            line_scene_pass,
             solid_instancing,
             solid_glow_instancing,
             wind_instancing,
@@ -160,7 +173,8 @@ impl Pipeline {
                 write: true,
                 ..Default::default()
             },
-            line_width: Some(2.0),
+            line_width: Some(1.0),
+            blend: glium::draw_parameters::Blend::alpha_blending(),
             ..Default::default()
         };
 
@@ -219,6 +233,12 @@ impl Pipeline {
             .draw(
                 &self.plain_scene_pass,
                 &self.plain_instancing.as_drawable(&self.basic_obj_resources),
+                &(),
+                &plain_draw_params,
+            )?
+            .draw(
+                &self.line_scene_pass,
+                &stage.lines.as_drawable(&self.line_x_mesh),
                 &(),
                 &plain_draw_params,
             )?
