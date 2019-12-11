@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 nalgebra = { version = "0.18", features = ["serde-serialize"] }
-glium = "0.25"
+glium = { git = "https://github.com/leod/glium.git", branch = "polygon_offset_0.25" }
 log = "0.4"
 simple_logger = "1.0"
 floating-duration = "0.1"
@@ -24,3 +24,7 @@ rendology = { path = "../rendology" }
 
 [profile.dev]
 opt-level = 1
+
+[patch.crates-io]
+glium = { git = "https://github.com/leod/glium.git", branch = "polygon_offset_0.25" }
+

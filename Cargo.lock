@@ -339,7 +339,7 @@ dependencies = [
 [[package]]
 name = "glium"
 version = "0.25.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+source = "git+https://github.com/leod/glium.git?branch=polygon_offset_0.25#1af335d63183422b7b5e579a8d61e59a7568c309"
 dependencies = [
  "backtrace 0.3.40 (registry+https://github.com/rust-lang/crates.io-index)",
  "fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -429,7 +429,7 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "glium 0.25.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glium 0.25.1 (git+https://github.com/leod/glium.git?branch=polygon_offset_0.25)",
  "imgui-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -440,7 +440,7 @@ name = "imgui-glium-renderer"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "glium 0.25.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glium 0.25.1 (git+https://github.com/leod/glium.git?branch=polygon_offset_0.25)",
  "imgui 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -964,7 +964,7 @@ version = "0.3.0"
 dependencies = [
  "coarse-prof 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "genmesh 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "glium 0.25.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glium 0.25.1 (git+https://github.com/leod/glium.git?branch=polygon_offset_0.25)",
  "glsl 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.18.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1170,7 +1170,7 @@ dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "coarse-prof 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "floating-duration 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "glium 0.25.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glium 0.25.1 (git+https://github.com/leod/glium.git?branch=polygon_offset_0.25)",
  "imgui 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "imgui-glium-renderer 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "imgui-winit-support 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1399,7 +1399,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum gl_generator 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "39a23d5e872a275135d66895d954269cf5e8661d234eb1c2480f4ce0d586acbd"
 "checksum gl_generator 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ca98bbde17256e02d17336a6bdb5a50f7d0ccacee502e191d3e3d0ec2f96f84a"
 "checksum gleam 0.6.19 (registry+https://github.com/rust-lang/crates.io-index)" = "cae10d7c99d0e77b4766e850a60898a17c1abaf01075531f1066f03dc7dc5fc5"
-"checksum glium 0.25.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6d7d887755ee729c5204e151db1c81b0b5beb809ef5e01d0eb14847e80a71256"
+"checksum glium 0.25.1 (git+https://github.com/leod/glium.git?branch=polygon_offset_0.25)" = "<none>"
 "checksum glsl 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "38c4063f1de8b40886b8b66a38eacd67d181d38ae7c952da6068a87741a82101"
 "checksum glutin 0.21.2 (registry+https://github.com/rust-lang/crates.io-index)" = "5371b35b309dace06be1b81b5f6adb1c9de578b7dbe1e74bf7e4ef762cf6febd"
 "checksum glutin_egl_sys 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "772edef3b28b8ad41e4ea202748e65eefe8e5ffd1f4535f1219793dbb20b3d4c"

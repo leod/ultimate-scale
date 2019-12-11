@@ -46,7 +46,7 @@ impl Stage {
 
 pub struct Pipeline {
     basic_obj_resources: basic_obj::Resources,
-    line_x_mesh: Mesh<line::Point>,
+    line_mesh: Mesh<line::Point>,
     plain_program: glium::Program,
 
     rendology: rendology::Pipeline,
@@ -74,7 +74,7 @@ impl Pipeline {
         target_size: (u32, u32),
     ) -> Result<Self, CreationError> {
         let basic_obj_resources = basic_obj::Resources::create(facade)?;
-        let line_x_mesh = line::create_line_x_mesh(facade)?;
+        let line_mesh = line::create_mesh(facade)?;
         let plain_program = basic_obj::Core
             .scene_core()
             .build_program(facade, InstancingMode::Uniforms)
@@ -127,7 +127,7 @@ impl Pipeline {
 
         Ok(Self {
             basic_obj_resources,
-            line_x_mesh,
+            line_mesh,
             plain_program,
             rendology,
             solid_shadow_pass,
@@ -170,18 +170,21 @@ impl Pipeline {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
                 test: glium::DepthTest::IfLessOrEqual,
-                write: true,
+                write: false,
                 ..Default::default()
             },
-            line_width: Some(1.0),
-            blend: glium::draw_parameters::Blend::alpha_blending(),
+            polygon_offset: Some(glium::draw_parameters::PolygonOffset {
+                factor: -1.0,
+                units: -1.0,
+            }),
+            blend: glium::Blend::alpha_blending(),
             ..Default::default()
         };
 
         let wind_mesh = self.basic_obj_resources.mesh(BasicObj::TessellatedCylinder);
 
         self.rendology
-            .start_frame(facade, context.rendology.clone(), target)?
+            .start_frame(facade, (0.0, 0.0, 0.0), context.rendology.clone(), target)?
             .shadow_pass()
             .draw(
                 &self.solid_shadow_pass,
@@ -236,10 +239,12 @@ impl Pipeline {
                 &(),
                 &plain_draw_params,
             )?
+            .postprocess()?
+            .plain_scene_pass()
             .draw(
                 &self.line_scene_pass,
-                &stage.lines.as_drawable(&self.line_x_mesh),
-                &(),
+                &stage.lines.as_drawable(&self.line_mesh),
+                &line::Params { feather: 1.0 },
                 &plain_draw_params,
             )?
             .present()?;

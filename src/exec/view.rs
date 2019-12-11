@@ -302,7 +302,7 @@ impl ExecView {
             render::machine::render_outline(
                 &transform,
                 &na::Vector3::new(size, size, size),
-                0.0,
+                1.0,
                 out,
             );
 
