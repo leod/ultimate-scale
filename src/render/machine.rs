@@ -13,8 +13,8 @@ use crate::render::Stage;
 pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
-pub const OUTLINE_THICKNESS: f32 = 0.02;
-pub const OUTLINE_MARGIN: f32 = 0.001;
+pub const OUTLINE_THICKNESS: f32 = 7.5;
+pub const OUTLINE_MARGIN: f32 = 0.002;
 pub const BRIDGE_MARGIN: f32 = 0.005;
 
 const GAMMA: f32 = 2.2;
@@ -91,7 +91,9 @@ pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
 
 pub fn floor_color() -> na::Vector3<f32> {
     //gamma_correct(&na::Vector3::new(0.1608, 0.4235, 0.5725))
-    gamma_correct(&na::Vector3::new(0.3, 0.3, 0.3))
+    //gamma_correct(&na::Vector3::new(0.3, 0.3, 0.3))
+    //gamma_correct(&(na::Vector3::new(52.9, 80.8, 92.2) / 255.0))
+    na::Vector3::new(52.9, 80.8, 92.2) / 255.0
 }
 
 pub fn grid_color() -> na::Vector3<f32> {
@@ -99,7 +101,7 @@ pub fn grid_color() -> na::Vector3<f32> {
 }
 
 pub fn outline_color() -> na::Vector3<f32> {
-    gamma_correct(&na::Vector3::new(0.01, 0.01, 0.01))
+    gamma_correct(&na::Vector3::new(0.0, 0.0, 0.0))
 }
 
 #[derive(Clone, Debug)]
@@ -424,7 +426,7 @@ pub fn render_outline(
         out.lines.add(line::Instance {
             transform: line_transform,
             color: block_color(&outline_color(), alpha),
-            thickness: 5.0,
+            thickness: OUTLINE_THICKNESS,
         });
     }
 }
