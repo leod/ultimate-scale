@@ -169,6 +169,10 @@ impl Pipeline {
 
         let shaded_draw_params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            polygon_offset: Some(glium::draw_parameters::PolygonOffset {
+                factor: 1.0,
+                units: 1.0,
+            }),
             ..Default::default()
         };
         let plain_draw_params = glium::DrawParameters {
@@ -178,10 +182,6 @@ impl Pipeline {
                 write: false,
                 ..Default::default()
             },
-            polygon_offset: Some(glium::draw_parameters::PolygonOffset {
-                factor: -1.0,
-                units: -1.0,
-            }),
             blend: glium::Blend::alpha_blending(),
             ..Default::default()
         };

@@ -13,8 +13,8 @@ use crate::render::Stage;
 pub const PIPE_THICKNESS: f32 = 0.05;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
-pub const OUTLINE_THICKNESS: f32 = 7.5;
-pub const OUTLINE_MARGIN: f32 = 0.002;
+pub const OUTLINE_THICKNESS: f32 = 6.5;
+pub const OUTLINE_MARGIN: f32 = 0.000;
 pub const BRIDGE_MARGIN: f32 = 0.005;
 
 const GAMMA: f32 = 2.2;
