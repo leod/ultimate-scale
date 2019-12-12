@@ -20,7 +20,9 @@ maplit = "1.0"
 rand = "0.7"
 pareen = "0.1"
 coarse-prof = "0.2"
-rendology = { git = "https://github.com/leod/rendology.git" }
+#rendology = { git = "https://github.com/leod/rendology.git" }
+#rendology = { path = "../rendology" }
+rendology = "0.4"
 
 [profile.dev]
 opt-level = 1
