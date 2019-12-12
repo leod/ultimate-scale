@@ -36,50 +36,20 @@ rendology::impl_instance_input!(
     },
 );
 
-const V_DISCARD: &str = "v_discard";
+const V_X: (&str, shader::VertexOutDef) = (
+    "v_x",
+    shader::VertexOutDef(shader::Type::Float, shader::VertexOutQualifier::Smooth),
+);
 
-fn v_discard() -> shader::VertexOutDef {
-    (
-        (V_DISCARD.into(), glium::uniforms::UniformType::Float),
-        shader::VertexOutQualifier::Smooth,
-    )
-}
+const V_INSTANCE_START: (&str, shader::VertexOutDef) = (
+    "v_instance_start",
+    shader::VertexOutDef(shader::Type::Float, shader::VertexOutQualifier::Smooth),
+);
 
-const V_COLOR: &str = "v_color";
-
-fn v_color() -> shader::VertexOutDef {
-    (
-        (V_COLOR.into(), glium::uniforms::UniformType::FloatVec4),
-        shader::VertexOutQualifier::Smooth,
-    )
-}
-
-const V_X: &str = "v_x";
-
-fn v_x() -> shader::VertexOutDef {
-    (
-        (V_X.into(), glium::uniforms::UniformType::Float),
-        shader::VertexOutQualifier::Smooth,
-    )
-}
-
-const V_INSTANCE_START: &str = "v_instance_start";
-
-fn v_instance_start() -> shader::VertexOutDef {
-    (
-        (V_INSTANCE_START.into(), glium::uniforms::UniformType::Float),
-        shader::VertexOutQualifier::Flat,
-    )
-}
-
-const V_INSTANCE_END: &str = "v_instance_end";
-
-fn v_instance_end() -> shader::VertexOutDef {
-    (
-        (V_INSTANCE_END.into(), glium::uniforms::UniformType::Float),
-        shader::VertexOutQualifier::Flat,
-    )
-}
+const V_INSTANCE_END: (&str, shader::VertexOutDef) = (
+    "v_instance_end",
+    shader::VertexOutDef(shader::Type::Float, shader::VertexOutQualifier::Smooth),
+);
 
 pub struct Core;
 
@@ -97,8 +67,6 @@ impl SceneCore for Core {
                 const float scale = 0.0105;
                 ",
             )
-            .with_out_def(v_discard())
-            .with_out_def(v_color())
             .with_body(
                 "
                 float angle = (position.x + 0.5) * PI
@@ -119,27 +87,25 @@ impl SceneCore for Core {
                 ",
             )
             .with_out(
-                shader::defs::v_world_normal(),
+                shader::defs::V_WORLD_NORMAL,
                 "normalize(transpose(inverse(mat3(instance_transform))) * rot_normal)",
             )
             .with_out(
-                shader::defs::v_world_pos(),
+                shader::defs::V_WORLD_POS,
                 "instance_transform * vec4(scaled_pos, 1.0)",
             )
-            .with_out(v_x(), "0.5 - position.x")
-            .with_out(v_instance_start(), "instance_start")
-            .with_out(v_instance_end(), "instance_end")
-            .with_out_expr(
+            .with_out(V_X, "0.5 - position.x")
+            .with_out(V_INSTANCE_START, "instance_start")
+            .with_out(V_INSTANCE_END, "instance_end")
+            .with_out(
                 shader::defs::V_POS,
                 "context_camera_projection * context_camera_view * v_world_pos",
             );
 
         let fragment = shader::FragmentCore::empty()
-            .with_in_def(v_discard())
-            .with_in_def(v_color())
-            .with_in_def(v_x())
-            .with_in_def(v_instance_start())
-            .with_in_def(v_instance_end())
+            .with_in_def(V_X)
+            .with_in_def(V_INSTANCE_START)
+            .with_in_def(V_INSTANCE_END)
             .with_defs(
                 "
                 vec4 wind_color() {
@@ -158,7 +124,7 @@ impl SceneCore for Core {
                     discard;
                 ",
             )
-            .with_out(shader::defs::f_color(), "wind_color()");
+            .with_out(shader::defs::F_COLOR, "wind_color()");
 
         shader::Core { vertex, fragment }
     }
