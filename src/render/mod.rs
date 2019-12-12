@@ -186,6 +186,18 @@ impl Pipeline {
             ..Default::default()
         };
 
+        let wind_color = machine::wind_source_color();
+        let wind_stripe_color = machine::wind_stripe_color();
+        let wind_params = wind::Params {
+            tick_progress: context.tick_progress,
+            color: na::Vector4::new(wind_color.x, wind_color.y, wind_color.z, 1.0),
+            stripe_color: na::Vector4::new(
+                wind_stripe_color.x,
+                wind_stripe_color.y,
+                wind_stripe_color.z,
+                1.0,
+            ),
+        };
         let wind_mesh = self.basic_obj_resources.mesh(BasicObj::TessellatedCylinder);
 
         self.rendology
@@ -208,9 +220,7 @@ impl Pipeline {
             .draw(
                 &self.wind_shadow_pass,
                 &self.wind_instancing.as_drawable(wind_mesh),
-                &wind::Params {
-                    tick_progress: context.tick_progress,
-                },
+                &wind_params,
                 &shaded_draw_params,
             )?
             .shaded_scene_pass()
@@ -231,9 +241,7 @@ impl Pipeline {
             .draw(
                 &self.wind_scene_pass,
                 &self.wind_instancing.as_drawable(wind_mesh),
-                &wind::Params {
-                    tick_progress: context.tick_progress,
-                },
+                &wind_params,
                 &shaded_draw_params,
             )?
             .compose(&stage.lights)?
