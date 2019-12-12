@@ -65,6 +65,7 @@ pub struct Pipeline {
     solid_glow_instancing: basic_obj::Instancing<basic_obj::Instance>,
     wind_instancing: Instancing<wind::Instance>,
     plain_instancing: basic_obj::Instancing<basic_obj::Instance>,
+    line_instancing: Instancing<line::Instance>,
 }
 
 impl Pipeline {
@@ -118,12 +119,13 @@ impl Pipeline {
         let plain_scene_pass =
             rendology.create_plain_scene_pass(facade, basic_obj::Core, InstancingMode::Vertex)?;
         let line_scene_pass =
-            rendology.create_plain_scene_pass(facade, line::Core, InstancingMode::Uniforms)?;
+            rendology.create_plain_scene_pass(facade, line::Core, InstancingMode::Vertex)?;
 
         let solid_instancing = basic_obj::Instancing::create(facade)?;
         let solid_glow_instancing = basic_obj::Instancing::create(facade)?;
         let wind_instancing = Instancing::create(facade)?;
         let plain_instancing = basic_obj::Instancing::create(facade)?;
+        let line_instancing = Instancing::create(facade)?;
 
         Ok(Self {
             basic_obj_resources,
@@ -141,6 +143,7 @@ impl Pipeline {
             solid_glow_instancing,
             wind_instancing,
             plain_instancing,
+            line_instancing,
         })
     }
 
@@ -160,6 +163,8 @@ impl Pipeline {
             self.wind_instancing
                 .update(facade, &stage.wind.as_slice())?;
             self.plain_instancing.update(facade, &stage.plain)?;
+            self.line_instancing
+                .update(facade, stage.lines.as_slice())?;
         }
 
         let shaded_draw_params = glium::DrawParameters {
@@ -243,7 +248,7 @@ impl Pipeline {
             .plain_scene_pass()
             .draw(
                 &self.line_scene_pass,
-                &stage.lines.as_drawable(&self.line_mesh),
+                &self.line_instancing.as_drawable(&self.line_mesh),
                 &line::Params { feather: 1.0 },
                 &plain_draw_params,
             )?
