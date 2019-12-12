@@ -160,17 +160,9 @@ impl ExecView {
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
 
-        let color = render::machine::wind_source_color();
-        let color = na::Vector4::new(color.x, color.y, color.z, 1.0);
-
-        let stripe_color = render::machine::wind_stripe_color();
-        let stripe_color = na::Vector4::new(stripe_color.x, stripe_color.y, stripe_color.z, 1.0);
-
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
             out.wind.add(render::wind::Instance {
                 transform,
-                color,
-                stripe_color,
                 start: in_t,
                 end: out_t,
                 phase: 2.0 * phase * std::f32::consts::PI,
