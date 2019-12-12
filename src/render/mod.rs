@@ -167,15 +167,27 @@ impl Pipeline {
                 .update(facade, stage.lines.as_slice())?;
         }
 
+        let scene_offset = Some(glium::draw_parameters::PolygonOffset {
+            factor: 1.0,
+            units: 1.0,
+        });
         let shaded_draw_params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
-            polygon_offset: Some(glium::draw_parameters::PolygonOffset {
-                factor: 1.0,
-                units: 1.0,
-            }),
+            polygon_offset: scene_offset,
             ..Default::default()
         };
         let plain_draw_params = glium::DrawParameters {
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            depth: glium::Depth {
+                test: glium::DepthTest::IfLessOrEqual,
+                write: true,
+                ..Default::default()
+            },
+            polygon_offset: scene_offset,
+            blend: glium::Blend::alpha_blending(),
+            ..Default::default()
+        };
+        let line_draw_params = glium::DrawParameters {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
                 test: glium::DepthTest::IfLessOrEqual,
@@ -258,7 +270,7 @@ impl Pipeline {
                 &self.line_scene_pass,
                 &self.line_instancing.as_drawable(&self.line_mesh),
                 &line::Params { feather: 1.0 },
-                &plain_draw_params,
+                &line_draw_params,
             )?
             .present()?;
 
