@@ -43,12 +43,12 @@ const V_X: (&str, shader::VertexOutDef) = (
 
 const V_INSTANCE_START: (&str, shader::VertexOutDef) = (
     "v_instance_start",
-    shader::VertexOutDef(shader::Type::Float, shader::VertexOutQualifier::Smooth),
+    shader::VertexOutDef(shader::Type::Float, shader::VertexOutQualifier::Flat),
 );
 
 const V_INSTANCE_END: (&str, shader::VertexOutDef) = (
     "v_instance_end",
-    shader::VertexOutDef(shader::Type::Float, shader::VertexOutQualifier::Smooth),
+    shader::VertexOutDef(shader::Type::Float, shader::VertexOutQualifier::Flat),
 );
 
 pub struct Core;
