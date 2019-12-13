@@ -257,9 +257,9 @@ impl ExecView {
                     // Animate killing the blip
                     die_anim().squeeze(1.0, 0.4..=1.0)
                 }
-            ) * 0.25;
+            );
 
-            let size = size_anim.eval(time.tick_progress());
+            let size_factor = size_anim.eval(time.tick_progress());
 
             let center = render::machine::block_center(&blip.pos);
             let pos_rot_anim = pareen::constant(blip.old_move_dir).map_or(
@@ -285,6 +285,7 @@ impl ExecView {
             let transform = na::Matrix4::new_translation(&pos.coords) * rot;
 
             let color = render::machine::blip_color(blip.kind);
+            let size = size_factor * 0.22;
             let params = basic_obj::Instance {
                 color: na::Vector4::new(color.x, color.y, color.z, 1.0),
                 transform: transform * na::Matrix4::new_scaling(size),
@@ -300,10 +301,11 @@ impl ExecView {
 
             out.solid_glow[BasicObj::Cube].add(params);
 
+            let intensity = size_factor * 20.0;
             out.lights.push(Light {
                 position: pos,
                 attenuation: na::Vector3::new(1.0, 6.0, 30.0),
-                color: 20.0 * render::machine::blip_color(blip.kind),
+                color: intensity * render::machine::blip_color(blip.kind),
                 ..Default::default()
             });
         }
