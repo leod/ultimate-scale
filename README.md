@@ -1,5 +1,9 @@
 # Ultimate Scale
 
+Ultimate Scale is a puzzle game in which you build machines to solve problems.
+
+Current state: [Video on YouTube](https://www.youtube.com/watch?v=qOKUS2cwufg)
+
 ## Running
 ### Ubuntu
 - Install FreeType libraries:
