@@ -67,7 +67,7 @@ impl Editor {
 
             // Bias towards positive direction for even sizes.
             // Just feels more natural.
-            // TODO: Bias actually needs to depends on the view position?
+            // TODO: Bias actually needs to depend on the view position?
             if extent.x > 0 && extent.x % 2 == 0 {
                 piece.shift(&grid::Vector3::x());
             }
