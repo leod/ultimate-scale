@@ -16,9 +16,6 @@
 - Render block inputs
 - Particles
 - Culling
-- Better outline rendering when zoomed out
-
-- Check if it's okay to rely on `glutin::dpi::LogicalSize` for texture sizes
 - Unify glow on / glow off calls
 
 ## Gameplay
