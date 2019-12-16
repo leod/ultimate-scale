@@ -72,20 +72,18 @@ impl Piece {
     }
 
     pub fn rotate_cw_xy(&mut self) {
-        self.blocks = Self::blocks_to_origin(
-            &self
-                .blocks
-                .clone()
-                .into_iter()
-                .map(|(p, mut placed_block)| {
-                    let rotated_p = grid::Point3::new(p.y, self.grid_size().y - p.x, p.z);
+        self.blocks = self
+            .blocks
+            .clone()
+            .into_iter()
+            .map(|(p, mut placed_block)| {
+                let rotated_p = grid::Point3::new(p.y, self.grid_size().x - p.x - 1, p.z);
 
-                    placed_block.block.mutate_dirs(|dir| dir.rotated_cw_xy());
+                placed_block.block.mutate_dirs(|dir| dir.rotated_cw_xy());
 
-                    (rotated_p, placed_block)
-                })
-                .collect::<Vec<_>>(),
-        );
+                (rotated_p, placed_block)
+            })
+            .collect::<Vec<_>>();
     }
 
     pub fn rotate_ccw_xy(&mut self) {
@@ -95,26 +93,24 @@ impl Piece {
     }
 
     pub fn mirror_y(&mut self) {
-        self.blocks = Self::blocks_to_origin(
-            &self
-                .blocks
-                .clone()
-                .into_iter()
-                .map(|(p, mut placed_block)| {
-                    let mirrored_p = grid::Point3::new(self.grid_size().x - p.x, p.y, p.z);
+        self.blocks = self
+            .blocks
+            .clone()
+            .into_iter()
+            .map(|(p, mut placed_block)| {
+                let mirrored_p = grid::Point3::new(self.grid_size().x - p.x - 1, p.y, p.z);
 
-                    placed_block.block.mutate_dirs(|dir| {
-                        if dir.0 == grid::Axis3::X {
-                            dir.invert()
-                        } else {
-                            dir
-                        }
-                    });
+                placed_block.block.mutate_dirs(|dir| {
+                    if dir.0 == grid::Axis3::X {
+                        dir.invert()
+                    } else {
+                        dir
+                    }
+                });
 
-                    (mirrored_p, placed_block)
-                })
-                .collect::<Vec<_>>(),
-        );
+                (mirrored_p, placed_block)
+            })
+            .collect::<Vec<_>>();
     }
 
     pub fn next_kind(&mut self) {
