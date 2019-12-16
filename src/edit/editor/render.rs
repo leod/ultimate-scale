@@ -83,29 +83,17 @@ impl Editor {
                     ..Default::default()
                 });
             }
-            Mode::PlacePiece { piece, offset } => {
+            Mode::PlacePiece { piece } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    self.render_piece_to_place(piece, &(mouse_grid_pos + offset), out);
+                    self.render_piece_to_place(piece, &mouse_grid_pos, out);
                 }
             }
-            Mode::DragAndDrop {
-                selection,
-                center_pos,
-                rotation_xy,
-                layer_offset,
-            } => {
+            Mode::DragAndDrop { piece, selection } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let (piece, center_pos_transformed) = self.drag_and_drop_piece_from_selection(
-                        selection,
-                        center_pos,
-                        *rotation_xy,
-                        *layer_offset,
-                    );
-                    let offset = mouse_grid_pos - center_pos_transformed;
+                    self.render_piece_to_place(&piece, &mouse_grid_pos, out);
 
-                    self.render_piece_to_place(&piece, &grid::Point3::from(offset), out);
-
-                    self.render_selection(selection, false, out);
+                    //let selection: Vec<_> = piece.iter().map(|(pos, _)| *pos);
+                    self.render_selection(&selection, false, out);
                 }
             }
             Mode::PipeTool {
@@ -259,15 +247,20 @@ impl Editor {
     }
 
     fn render_piece_to_place(&self, piece: &Piece, piece_pos: &grid::Point3, out: &mut Stage) {
-        let any_pos_valid =
-            self.render_tentative_blocks(piece.iter_blocks(&piece_pos.coords), false, out);
+        let blocks = piece
+            .iter()
+            .map(|(pos, block)| (pos + piece_pos.coords, block));
+        let any_pos_valid = self.render_tentative_blocks(blocks, false, out);
 
         // Show wireframe around whole piece only if there is at
         // least one block we can place at a valid position.
         if any_pos_valid {
-            let piece_pos: na::Point3<f32> = na::convert(*piece_pos);
-            let wire_size: na::Vector3<f32> = na::convert(piece.grid_size());
-            let wire_center = piece_pos + wire_size / 2.0;
+            let piece_min: na::Point3<f32> = na::convert(piece.min_pos() + piece_pos.coords);
+            let piece_max: na::Point3<f32> = na::convert(piece.max_pos() + piece_pos.coords);
+
+            let wire_size = piece_max - piece_min + na::Vector3::new(1.0, 1.0, 1.0);
+            let wire_center = piece_min + wire_size / 2.0;
+
             render::machine::render_cuboid_wireframe(
                 &render::machine::Cuboid {
                     center: wire_center + na::Vector3::z() * GRID_OFFSET_2_Z,
