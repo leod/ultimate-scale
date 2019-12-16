@@ -127,6 +127,14 @@ impl Dir3 {
         Dir3(axis, sign)
     }
 
+    pub fn mirrored_y(self) -> Dir3 {
+        if self.0 == Axis3::X {
+            self.invert()
+        } else {
+            self
+        }
+    }
+
     /// Returns pitch and yaw to rotate an object that is oriented towards the x
     /// axis to point in our direction.
     ///
