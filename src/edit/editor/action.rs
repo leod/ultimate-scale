@@ -1,4 +1,5 @@
 use crate::edit::{Edit, Editor, Mode, Piece};
+use crate::machine::grid;
 
 /// Actions that can be accessed by buttons and shortcuts in the editor.
 impl Editor {
@@ -57,11 +58,24 @@ impl Editor {
 
     pub fn action_paste(&mut self) {
         if let Some(clipboard) = &self.clipboard {
+            let mut piece = clipboard.clone();
+
             // Kinda center the piece at the mouse
-            self.mode = Mode::PlacePiece {
-                piece: clipboard.clone(),
-                offset: -clipboard.grid_center_xy(),
-            };
+            let extent = piece.extent();
+
+            piece.shift(&(-piece.min_pos().coords - extent / 2));
+
+            // Bias towards positive direction for even sizes.
+            // Just feels more natural.
+            // TODO: Bias actually needs to depends on the view position?
+            if extent.x > 0 && extent.x % 2 == 0 {
+                piece.shift(&grid::Vector3::x());
+            }
+            if extent.y > 0 && extent.y % 2 == 0 {
+                piece.shift(&grid::Vector3::y());
+            }
+
+            self.mode = Mode::PlacePiece { piece };
         }
     }
 
@@ -121,9 +135,8 @@ impl Editor {
         let mut edit = None;
 
         match &mut self.mode {
-            Mode::PlacePiece { piece, offset } => {
+            Mode::PlacePiece { piece } => {
                 piece.rotate_cw_xy();
-                *offset = -piece.grid_center_xy();
             }
             Mode::Select { selection, .. } => {
                 if !selection.is_empty() {
@@ -132,11 +145,8 @@ impl Editor {
                     edit = Some(Edit::RotateCWXY(vec![mouse_block_pos]));
                 }
             }
-            Mode::DragAndDrop { rotation_xy, .. } => {
-                *rotation_xy += 1;
-                if *rotation_xy == 4 {
-                    *rotation_xy = 0;
-                }
+            Mode::DragAndDrop { piece, .. } => {
+                piece.rotate_cw_xy();
             }
             Mode::PipeTool { rotation_xy, .. } => {
                 *rotation_xy += 1;
@@ -158,9 +168,8 @@ impl Editor {
         let mut edit = None;
 
         match &mut self.mode {
-            Mode::PlacePiece { piece, offset } => {
+            Mode::PlacePiece { piece } => {
                 piece.rotate_ccw_xy();
-                *offset = -piece.grid_center_xy();
             }
             Mode::Select { selection, .. } => {
                 if !selection.is_empty() {
@@ -169,12 +178,8 @@ impl Editor {
                     edit = Some(Edit::RotateCCWXY(vec![mouse_block_pos]));
                 }
             }
-            Mode::DragAndDrop { rotation_xy, .. } => {
-                if *rotation_xy == 0 {
-                    *rotation_xy = 3;
-                } else {
-                    *rotation_xy -= 1;
-                }
+            Mode::DragAndDrop { piece, .. } => {
+                piece.rotate_ccw_xy();
             }
             Mode::PipeTool { rotation_xy, .. } => {
                 if *rotation_xy == 0 {
@@ -207,7 +212,7 @@ impl Editor {
     pub fn action_next_kind(&mut self) {
         match &mut self.mode {
             Mode::PlacePiece { piece, .. } => {
-                piece.next_kind();
+                piece.set_next_kind();
             }
             _ => {
                 // No op in other modes.

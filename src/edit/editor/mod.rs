@@ -115,10 +115,7 @@ impl Editor {
         // to place.
         let piece = Piece::new_origin_block(PlacedBlock { block });
 
-        self.mode = Mode::PlacePiece {
-            piece,
-            offset: grid::Vector3::zeros(),
-        };
+        self.mode = Mode::PlacePiece { piece };
     }
 
     pub fn update(
@@ -164,19 +161,21 @@ impl Editor {
                 // User has clicked on a selected block. Activate drag and
                 // drop as soon as the mouse grid pos changes.
                 if self.mouse_grid_pos.map(|p| p != grid_pos).unwrap_or(false) {
+                    let mut piece =
+                        Piece::new_from_selection(&self.machine, selection.iter().cloned());
+
+                    // Move blocks so that the block that the user clicked on is at the origin.
+                    piece.shift(&(-block_pos.coords));
+
                     // Consider the case that we are selecting a block in layer 1
                     // while the placement layer is at 0. Then the block would
                     // immediately be dragged into layer 0, which is undesirable.
                     // Thus, we calculate a `layer_offset` here, which is
                     // subtracted from the piece z coords before placing.
                     let layer_offset = block_pos.z - self.current_layer as isize;
+                    piece.shift(&(grid::Vector3::z() * layer_offset));
 
-                    Mode::DragAndDrop {
-                        selection,
-                        center_pos: block_pos,
-                        rotation_xy: 0,
-                        layer_offset,
-                    }
+                    Mode::DragAndDrop { selection, piece }
                 } else {
                     Mode::Select {
                         selection,
@@ -241,19 +240,18 @@ impl Editor {
                     end_pos: input_state.mouse_window_pos(),
                 }
             }
-            Mode::PlacePiece { piece, offset }
-                if input_state.is_button_pressed(MouseButton::Left) =>
-            {
+            Mode::PlacePiece { piece } if input_state.is_button_pressed(MouseButton::Left) => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let edit = piece.place_edit(&(mouse_grid_pos.coords + offset));
+                    let mut piece = piece.clone();
+                    piece.shift(&mouse_grid_pos.coords);
+
+                    let edit = piece.as_place_edit();
                     self.run_and_track_edit(edit);
                 }
 
-                Mode::PlacePiece { piece, offset }
+                Mode::PlacePiece { piece }
             }
-            Mode::PlacePiece { piece, offset }
-                if input_state.is_button_pressed(MouseButton::Right) =>
-            {
+            Mode::PlacePiece { piece } if input_state.is_button_pressed(MouseButton::Right) => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                     let edit = Edit::SetBlocks(maplit::hashmap! {
                         mouse_grid_pos => None,
@@ -261,7 +259,7 @@ impl Editor {
                     self.run_and_track_edit(edit);
                 }
 
-                Mode::PlacePiece { piece, offset }
+                Mode::PlacePiece { piece }
             }
             Mode::DragAndDrop { selection, .. }
                 if input_state.is_button_pressed(MouseButton::Right) =>
@@ -271,29 +269,20 @@ impl Editor {
             }
             Mode::DragAndDrop {
                 selection,
-                center_pos,
-                rotation_xy,
-                layer_offset,
+                mut piece,
             } if !input_state.is_button_pressed(MouseButton::Left) => {
                 // Drop the dragged stuff.
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let (piece, center_pos_transformed) = self.drag_and_drop_piece_from_selection(
-                        &selection,
-                        &center_pos,
-                        rotation_xy,
-                        layer_offset,
-                    );
-                    let offset = mouse_grid_pos - center_pos_transformed;
-
                     // First remove the selected blocks.
                     let remove_edit =
                         Edit::SetBlocks(selection.iter().map(|p| (*p, None)).collect());
 
                     // Then place the piece at the new position.
-                    let place_edit = piece.place_edit(&offset);
+                    piece.shift(&mouse_grid_pos.coords);
+                    let place_edit = piece.as_place_edit();
 
                     let new_selection = piece
-                        .iter_blocks(&offset)
+                        .iter()
                         .map(|(p, _)| p)
                         .filter(|p| self.machine.is_valid_pos(p))
                         .collect();
@@ -695,32 +684,6 @@ impl Editor {
                 );
             }
         };
-    }
-
-    fn drag_and_drop_piece_from_selection(
-        &self,
-        selection: &[grid::Point3],
-        center_pos: &grid::Point3,
-        rotation_xy: usize,
-        layer_offset: isize,
-    ) -> (Piece, grid::Point3) {
-        let selected_blocks =
-            Piece::selected_blocks(&self.machine, selection.iter().cloned()).collect::<Vec<_>>();
-        let mut piece = Piece::new_blocks_to_origin(&selected_blocks);
-        for _ in 0..rotation_xy {
-            piece.rotate_cw_xy();
-        }
-
-        // Get the `center_pos` after it was transformed by centering and
-        // rotation.
-        let center_pos_index = selected_blocks
-            .iter()
-            .position(|(p, _)| p == center_pos)
-            .expect("Mode::DragAndDrop must always contain center_pos in selection");
-        let mut center_pos_transformed = piece.block_at_index(center_pos_index).0;
-        center_pos_transformed.z -= layer_offset;
-
-        (piece, center_pos_transformed)
     }
 
     fn pipe_tool_connect_pipe(
