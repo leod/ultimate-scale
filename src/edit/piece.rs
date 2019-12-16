@@ -2,6 +2,48 @@ use crate::edit::Edit;
 use crate::machine::grid;
 use crate::machine::{Machine, PlacedBlock};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Transform {
+    Shift(grid::Vector3),
+    RotateCWXY,
+    RotateCCWXY,
+    MirrorY,
+    Seq(Vec<Transform>),
+}
+
+impl Transform {
+    pub fn map_point(&self, p: &grid::Point3) -> grid::Point3 {
+        match self {
+            Transform::Shift(delta) => p + delta,
+            Transform::RotateCWXY => grid::Point3::new(p.y, -p.x, p.z),
+            Transform::RotateCCWXY => grid::Point3::new(-p.y, p.x, p.z),
+            Transform::MirrorY => grid::Point3::new(-p.x, p.y, p.z),
+            Transform::Seq(inner) => {
+                let mut p = *p;
+                for transform in inner {
+                    p = transform.map_point(&p);
+                }
+                p
+            }
+        }
+    }
+
+    pub fn map_dir(&self, mut dir: grid::Dir3) -> grid::Dir3 {
+        match self {
+            Transform::Shift(_) => dir,
+            Transform::RotateCWXY => dir.rotated_cw_xy(),
+            Transform::RotateCCWXY => dir.rotated_ccw_xy(),
+            Transform::MirrorY => dir.mirrored_y(),
+            Transform::Seq(inner) => {
+                for transform in inner {
+                    dir = transform.map_dir(dir);
+                }
+                dir
+            }
+        }
+    }
+}
+
 /// A piece of a machine that can be kept around as edit actions, or in the
 /// clipboard and stuff like that.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,6 +73,59 @@ impl Piece {
         });
 
         Self::new(blocks.collect())
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (grid::Point3, PlacedBlock)> + '_ {
+        self.blocks.iter().map(|(pos, block)| (*pos, block.clone()))
+    }
+
+    pub fn transform(&mut self, transform: &Transform) {
+        for (pos, placed_block) in self.blocks.iter_mut() {
+            *pos = transform.map_point(pos);
+            placed_block.block.mutate_dirs(|dir| transform.map_dir(dir));
+        }
+    }
+
+    pub fn shift(&mut self, delta: &grid::Vector3) {
+        self.transform(&Transform::Shift(*delta));
+    }
+
+    pub fn rotate_cw_xy(&mut self) {
+        self.transform(&Transform::RotateCWXY);
+    }
+
+    pub fn rotate_ccw_xy(&mut self) {
+        self.transform(&Transform::RotateCCWXY);
+    }
+
+    pub fn mirror_y(&mut self) {
+        self.transform(&Transform::MirrorY);
+    }
+
+    pub fn set_next_kind(&mut self) {
+        for (_, placed_block) in self.blocks.iter_mut() {
+            if let Some(kind) = placed_block.block.kind() {
+                placed_block.block.set_kind(kind.next());
+            }
+        }
+    }
+
+    pub fn as_place_edit(&self) -> Edit {
+        let set_blocks = self.iter().map(|(pos, block)| (pos, Some(block))).collect();
+
+        Edit::SetBlocks(set_blocks)
+    }
+
+    pub fn get_singleton(&self) -> Option<(grid::Point3, PlacedBlock)> {
+        if let Some(entry) = self.blocks.iter().next() {
+            if self.blocks.len() == 1 {
+                Some(entry.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
     pub fn min_pos(&self) -> grid::Point3 {
@@ -71,70 +166,5 @@ impl Piece {
 
     pub fn extent(&self) -> grid::Vector3 {
         self.max_pos() - self.min_pos() + grid::Vector3::new(1, 1, 1)
-    }
-
-    pub fn shift(&mut self, delta: &grid::Vector3) {
-        for (pos, _) in self.blocks.iter_mut() {
-            *pos += delta;
-        }
-    }
-
-    pub fn rotate_cw_xy(&mut self) {
-        for (pos, placed_block) in self.blocks.iter_mut() {
-            *pos = grid::Point3::new(pos.y, -pos.x, pos.z);
-            placed_block.block.mutate_dirs(grid::Dir3::rotated_cw_xy);
-        }
-    }
-
-    pub fn rotate_ccw_xy(&mut self) {
-        for _ in 0..3 {
-            self.rotate_cw_xy();
-        }
-    }
-
-    pub fn mirror_y(&mut self) {
-        let max_pos = self.max_pos();
-
-        for (pos, placed_block) in self.blocks.iter_mut() {
-            *pos = grid::Point3::new(max_pos.x - pos.x - 1, pos.y, pos.z);
-
-            placed_block.block.mutate_dirs(|dir| {
-                if dir.0 == grid::Axis3::X {
-                    dir.invert()
-                } else {
-                    dir
-                }
-            });
-        }
-    }
-
-    pub fn set_next_kind(&mut self) {
-        for (_, placed_block) in self.blocks.iter_mut() {
-            if let Some(kind) = placed_block.block.kind() {
-                placed_block.block.set_kind(kind.next());
-            }
-        }
-    }
-
-    pub fn as_place_edit(&self) -> Edit {
-        let set_blocks = self.iter().map(|(pos, block)| (pos, Some(block))).collect();
-
-        Edit::SetBlocks(set_blocks)
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = (grid::Point3, PlacedBlock)> + '_ {
-        self.blocks.iter().map(|(pos, block)| (*pos, block.clone()))
-    }
-
-    pub fn get_singleton(&self) -> Option<(grid::Point3, PlacedBlock)> {
-        if let Some(entry) = self.blocks.iter().next() {
-            if self.blocks.len() == 1 {
-                Some(entry.clone())
-            } else {
-                None
-            }
-        } else {
-            None
-        }
     }
 }
