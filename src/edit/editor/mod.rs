@@ -154,39 +154,45 @@ impl Editor {
         let mut edit = None;
 
         self.mode = match self.mode.clone() {
-            Mode::Select {
+            Mode::SelectClickedOnBlock {
                 selection,
-                dragged_mouse_pos: Some((block_pos, grid_pos)),
+                dragged_grid_pos,
+                dragged_block_pos,
             } if input_state.is_button_pressed(MouseButton::Left) => {
                 // User has clicked on a selected block. Activate drag and
                 // drop as soon as the mouse grid pos changes.
-                if self.mouse_grid_pos.map(|p| p != grid_pos).unwrap_or(false) {
+                if self
+                    .mouse_grid_pos
+                    .map(|p| p != dragged_grid_pos)
+                    .unwrap_or(false)
+                {
                     let mut piece =
                         Piece::new_from_selection(&self.machine, selection.iter().cloned());
 
                     // Move blocks so that the block that the user clicked on is at the origin.
-                    piece.shift(&(-block_pos.coords));
+                    piece.shift(&(-dragged_block_pos.coords));
 
-                    // Consider the case that we are selecting a block in layer 1
-                    // while the placement layer is at 0. Then the block would
-                    // immediately be dragged into layer 0, which is undesirable.
-                    // Thus, we calculate a `layer_offset` here, which is
-                    // subtracted from the piece z coords before placing.
-                    let layer_offset = block_pos.z - self.current_layer as isize;
+                    // Consider the case that we are selecting a block in layer
+                    // 1 while the placement layer is at 0. Then the block would
+                    // immediately be dragged into layer 0, which is
+                    // undesirable. Thus, we calculate a `layer_offset` here,
+                    // which is subtracted from the piece z coords.
+                    let layer_offset = dragged_block_pos.z - self.current_layer as isize;
                     piece.shift(&(grid::Vector3::z() * layer_offset));
 
                     Mode::DragAndDrop { selection, piece }
                 } else {
-                    Mode::Select {
+                    // Mouse grid position has not changed (yet?).
+                    Mode::SelectClickedOnBlock {
                         selection,
-                        dragged_mouse_pos: Some((block_pos, grid_pos)),
+                        dragged_grid_pos,
+                        dragged_block_pos,
                     }
                 }
             }
-            Mode::Select {
-                selection,
-                dragged_mouse_pos: Some(_),
-            } if !input_state.is_button_pressed(MouseButton::Left) => {
+            Mode::SelectClickedOnBlock { selection, .. }
+                if !input_state.is_button_pressed(MouseButton::Left) =>
+            {
                 // Stop trying to go into drag and drop mode.
                 Mode::new_selection(selection)
             }
@@ -198,10 +204,7 @@ impl Editor {
                     self.run_and_track_edit(edit);
                 }
 
-                Mode::Select {
-                    selection,
-                    dragged_mouse_pos: None,
-                }
+                Mode::Select { selection }
             }
             Mode::RectSelect {
                 existing_selection,
@@ -578,11 +581,11 @@ impl Editor {
     ) -> Mode {
         // Double check that there actually is a block at the mouse block
         // position.
-        let grid_pos = self
+        let block_pos = self
             .mouse_block_pos
             .filter(|p| self.machine.get_block_at_pos(p).is_some());
 
-        if let Some(grid_pos) = grid_pos {
+        if let Some(block_pos) = block_pos {
             // Clicked on a block!
 
             if modifiers.shift && !selection.is_empty() {
@@ -595,13 +598,13 @@ impl Editor {
                 // For now draw line only if there are two shared coordinates,
                 // otherwise behavior is too wonky. Note that rust guarantees
                 // bools to be either 0 or 1 when cast to integer types.
-                let num_shared = (last.x == grid_pos.x) as usize
-                    + (last.y == grid_pos.y) as usize
-                    + (last.z == grid_pos.z) as usize;
+                let num_shared = (last.x == block_pos.x) as usize
+                    + (last.y == block_pos.y) as usize
+                    + (last.z == block_pos.z) as usize;
                 let line = if num_shared == 2 {
-                    pick::pick_line(&self.machine, last, &grid_pos)
+                    pick::pick_line(&self.machine, last, &block_pos)
                 } else {
-                    vec![grid_pos]
+                    vec![block_pos]
                 };
 
                 // Push the selected line to the end of the vector, so that it
@@ -618,27 +621,33 @@ impl Editor {
                 Mode::new_selection(selection)
             } else if modifiers.ctrl {
                 // Control: Extend/toggle block selection.
-                if selection.contains(&grid_pos) {
-                    selection.retain(|p| *p != grid_pos);
+                if selection.contains(&block_pos) {
+                    selection.retain(|p| *p != block_pos);
                 } else {
-                    selection.push(grid_pos);
+                    selection.push(block_pos);
                 }
 
                 // Stay in selection mode.
                 Mode::new_selection(selection)
             } else {
                 // No modifier, but clicked on a block...
-                if !selection.contains(&grid_pos) {
+                if !selection.contains(&block_pos) {
                     // Different block, select only this one.
                     selection = Vec::new();
-                    selection.push(grid_pos);
+                    selection.push(block_pos);
                 }
 
-                // Remember clicked mouse grid pos to allow switching to drag
-                // and drop mode as soon as the position changes.
-                Mode::Select {
-                    selection,
-                    dragged_mouse_pos: self.mouse_grid_pos.map(|p| (grid_pos, p)),
+                if let Some(grid_pos) = self.mouse_grid_pos {
+                    // Remember clicked mouse pos to allow switching to drag and
+                    // drop mode as soon as the grid position changes.
+                    Mode::SelectClickedOnBlock {
+                        selection,
+                        dragged_block_pos: block_pos,
+                        dragged_grid_pos: grid_pos,
+                    }
+                } else {
+                    // Stay in selection mode.
+                    Mode::new_selection(selection)
                 }
             }
         } else {

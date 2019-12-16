@@ -42,6 +42,7 @@ impl Editor {
 
         let selected = match &self.mode {
             Mode::Select { .. } => true,
+            Mode::SelectClickedOnBlock { .. } => true,
             Mode::RectSelect { .. } => true,
             Mode::DragAndDrop { .. } => true,
             _ => false,
