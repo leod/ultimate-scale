@@ -36,22 +36,14 @@ pub enum Mode {
 
     PlacePiece {
         piece: Piece,
-        offset: grid::Vector3,
     },
 
     DragAndDrop {
-        /// Selection that is being dragged. No duplicate positions, and each
-        /// must contain a block in the machine.
+        /// Blocks that were selected at the time of starting drag-and-drop.
+        /// Used for returning to selection mode if drag-and-drop is aborted.
         selection: Vec<grid::Point3>,
 
-        /// Position that is being dragged, i.e. the block that was grabbed by
-        /// the user.
-        center_pos: grid::Point3,
-
-        /// Rotation to be applied to the piece.
-        rotation_xy: usize,
-
-        layer_offset: isize,
+        piece: Piece,
     },
 
     PipeTool {
@@ -120,24 +112,10 @@ impl Mode {
             }
             Mode::DragAndDrop {
                 mut selection,
-                center_pos,
-                rotation_xy,
-                layer_offset,
+                piece,
             } => {
                 selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
-
-                if !selection.contains(&center_pos) {
-                    // If the center block is not selected anymore, let's just
-                    // not bother with this.
-                    Mode::new_selection(selection)
-                } else {
-                    Mode::DragAndDrop {
-                        selection,
-                        center_pos,
-                        rotation_xy,
-                        layer_offset,
-                    }
-                }
+                Mode::DragAndDrop { selection, piece }
             }
             mode => mode,
         }
