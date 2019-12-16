@@ -58,6 +58,9 @@ impl Editor {
                     );
                 }
             }
+            Mode::SelectClickedOnBlock { selection, .. } => {
+                self.render_selection(selection, false, out);
+            }
             Mode::RectSelect {
                 existing_selection,
                 new_selection,
