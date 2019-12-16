@@ -15,8 +15,20 @@ pub enum Mode {
     /// selection order.
     Select {
         selection: Vec<grid::Point3>,
+    },
 
-        dragged_mouse_pos: Option<(grid::Point3, grid::Point3)>,
+    /// User just clicked on a block in selection mode.
+    ///
+    /// Based on this, we will switch to `DragAndDrop` if the mouse grid
+    /// position changes.
+    SelectClickedOnBlock {
+        selection: Vec<grid::Point3>,
+
+        /// The position of the block the user clicked on.
+        dragged_block_pos: grid::Point3,
+
+        /// The mouse grid position at the time of the click.
+        dragged_grid_pos: grid::Point3,
     },
 
     /// Select blocks in the machine by a screen rectangle.
@@ -59,10 +71,7 @@ impl Mode {
     }
 
     pub fn new_selection(selection: Vec<grid::Point3>) -> Self {
-        Mode::Select {
-            selection,
-            dragged_mouse_pos: None,
-        }
+        Mode::Select { selection }
     }
 
     pub fn new_pipe_tool() -> Self {
@@ -85,14 +94,29 @@ impl Mode {
     /// it from the selection.
     pub fn make_consistent_with_machine(self, machine: &Machine) -> Self {
         match self {
-            Mode::Select {
+            Mode::Select { mut selection } => {
+                selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+
+                Mode::Select { selection }
+            }
+            Mode::SelectClickedOnBlock {
                 mut selection,
-                dragged_mouse_pos,
+                dragged_block_pos,
+                dragged_grid_pos,
             } => {
                 selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
-                Mode::Select {
-                    selection,
-                    dragged_mouse_pos,
+
+                if machine.get_block_at_pos(&dragged_block_pos).is_none() {
+                    // The block that the user want to drag-and-drop was
+                    // removed; give up on dragging.
+                    Mode::Select { selection }
+                } else {
+                    // Keep on trying.
+                    Mode::SelectClickedOnBlock {
+                        selection,
+                        dragged_block_pos,
+                        dragged_grid_pos,
+                    }
                 }
             }
             Mode::RectSelect {
@@ -103,6 +127,7 @@ impl Mode {
             } => {
                 existing_selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
                 new_selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+
                 Mode::RectSelect {
                     existing_selection,
                     new_selection,
@@ -115,6 +140,7 @@ impl Mode {
                 piece,
             } => {
                 selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+
                 Mode::DragAndDrop { selection, piece }
             }
             mode => mode,
