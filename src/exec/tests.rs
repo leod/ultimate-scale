@@ -21,25 +21,25 @@ fn test_straight_wind_propagation() {
 
             // Wind source has outgoing wind everywhere.
             for &d in &Dir3::ALL {
-                assert!(wind(exec, t * (0, 0, 0)).wind_out(d));
+                assert!(wind_out(exec, t * (0, 0, 0), d));
             }
 
             // Pipe has outgoing wind to the right.
             for x in 1..=i.min(10) {
-                assert!(wind(exec, t * (x, 0, 0)).wind_out(t * Dir3::X_POS));
+                assert!(wind_out(exec, t * (x, 0, 0), t * Dir3::X_POS));
             }
 
             // To the right, there is no wind yet.
             for x in i + 1..=10 {
                 for &d in &Dir3::ALL {
-                    assert!(!wind(exec, t * (x, 0, 0)).wind_out(d));
+                    assert!(!wind_out(exec, t * (x, 0, 0), d));
                 }
             }
 
             // And to the bottom, there never is any wind.
             for x in 0..=10 {
                 for &d in &Dir3::ALL {
-                    assert!(!wind(exec, t * (x, 1, 0)).wind_out(d));
+                    assert!(!wind_out(exec, t * (x, 1, 0), d));
                 }
             }
         }
@@ -60,13 +60,13 @@ fn test_funnel_wind_propagation() {
 
             // Pipes up to the funnel get outgoing wind (after some time).
             for x in 1..i.min(5) {
-                assert!(wind(exec, t * (x, 0, 0)).wind_out(t * Dir3::X_POS));
+                assert!(wind_out(exec, t * (x, 0, 0), t * Dir3::X_POS));
             }
 
             // The funnel and pipes to the right never have any outgoing wind.
             for x in 5..=10 {
                 for &d in &Dir3::ALL {
-                    assert!(!wind(exec, t * (x, 0, 0)).wind_out(d));
+                    assert!(!wind_out(exec, t * (x, 0, 0), d));
                 }
             }
         }
@@ -91,18 +91,18 @@ fn test_merge_xy_wind_propagation() {
 
             // Flow to the right.
             for x in 1..=i.min(10) {
-                assert!(wind(exec, t * (x, 2, 0)).wind_out(t * Dir3::X_POS));
+                assert!(wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS));
             }
 
             // Flow up starts after 9 updates.
-            assert_eq!(wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_NEG), i >= 8);
-            assert_eq!(wind(exec, t * (8, 1, 0)).wind_out(t * Dir3::Y_NEG), i >= 9);
-            assert_eq!(wind(exec, t * (8, 0, 0)).wind_out(t * Dir3::Y_NEG), i >= 10);
+            assert_eq!(wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG), i >= 8);
+            assert_eq!(wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG), i >= 9);
+            assert_eq!(wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG), i >= 10);
 
             // Flow down starts after 9 updates.
-            assert_eq!(wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_POS), i >= 8);
-            assert_eq!(wind(exec, t * (8, 3, 0)).wind_out(t * Dir3::Y_POS), i >= 9);
-            assert_eq!(wind(exec, t * (8, 4, 0)).wind_out(t * Dir3::Y_POS), i >= 10);
+            assert_eq!(wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS), i >= 8);
+            assert_eq!(wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS), i >= 9);
+            assert_eq!(wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS), i >= 10);
         }
     });
 }
@@ -133,47 +133,26 @@ fn test_wind_sliver_propagation() {
             for x in 1..=10 {
                 // Note that the blip wind source is at x=1, where wind flows
                 // out at i=2.
-                assert_eq!(
-                    wind(exec, t * (x, 2, 0)).wind_out(t * Dir3::X_POS),
-                    i == x + 1
-                );
+                assert_eq!(wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS), i == x + 1);
             }
 
             // Flow up starts after 10 updates.
-            assert_eq!(
-                wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_NEG),
-                i == 8 + 1
-            );
-            assert_eq!(
-                wind(exec, t * (8, 1, 0)).wind_out(t * Dir3::Y_NEG),
-                i == 9 + 1
-            );
-            assert_eq!(
-                wind(exec, t * (8, 0, 0)).wind_out(t * Dir3::Y_NEG),
-                i == 10 + 1
-            );
+            assert_eq!(wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG), i == 8 + 1);
+            assert_eq!(wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG), i == 9 + 1);
+            assert_eq!(wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG), i == 10 + 1);
 
             // Flow down starts after 10 updates.
-            assert_eq!(
-                wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_POS),
-                i == 8 + 1
-            );
-            assert_eq!(
-                wind(exec, t * (8, 3, 0)).wind_out(t * Dir3::Y_POS),
-                i == 9 + 1
-            );
-            assert_eq!(
-                wind(exec, t * (8, 4, 0)).wind_out(t * Dir3::Y_POS),
-                i == 10 + 1
-            );
+            assert_eq!(wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS), i == 8 + 1);
+            assert_eq!(wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS), i == 9 + 1);
+            assert_eq!(wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS), i == 10 + 1);
         }
     });
 }
 
-fn wind(exec: &Exec, p: grid::Point3) -> &WindState {
+fn wind_out(exec: &Exec, p: Point3, d: Dir3) -> bool {
     let (block_index, _block) = exec.machine().get_with_index(&p).unwrap();
 
-    &exec.wind_state()[block_index]
+    exec.wind_state()[block_index].wind_out(d)
 }
 
 fn test_transform_invariant<T>(blocks: &[(Point3, Block)], test: T)
