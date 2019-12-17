@@ -1,3 +1,5 @@
+use std::ops::Mul;
+
 use crate::edit::Edit;
 use crate::machine::grid;
 use crate::machine::{Machine, PlacedBlock};
@@ -11,35 +13,30 @@ pub enum Transform {
     Seq(Vec<Transform>),
 }
 
-impl Transform {
-    pub fn map_point(&self, p: &grid::Point3) -> grid::Point3 {
+impl<'a> Mul<grid::Point3> for &'a Transform {
+    type Output = grid::Point3;
+
+    fn mul(self, p: grid::Point3) -> grid::Point3 {
         match self {
             Transform::Shift(delta) => p + delta,
             Transform::RotateCWXY => grid::Point3::new(p.y, -p.x, p.z),
             Transform::RotateCCWXY => grid::Point3::new(-p.y, p.x, p.z),
             Transform::MirrorY => grid::Point3::new(-p.x, p.y, p.z),
-            Transform::Seq(inner) => {
-                let mut p = *p;
-                for transform in inner {
-                    p = transform.map_point(&p);
-                }
-                p
-            }
+            Transform::Seq(inner) => inner.iter().fold(p, |p, transform| transform * p),
         }
     }
+}
 
-    pub fn map_dir(&self, mut dir: grid::Dir3) -> grid::Dir3 {
+impl<'a> Mul<grid::Dir3> for &'a Transform {
+    type Output = grid::Dir3;
+
+    fn mul(self, d: grid::Dir3) -> grid::Dir3 {
         match self {
-            Transform::Shift(_) => dir,
-            Transform::RotateCWXY => dir.rotated_cw_xy(),
-            Transform::RotateCCWXY => dir.rotated_ccw_xy(),
-            Transform::MirrorY => dir.mirrored_y(),
-            Transform::Seq(inner) => {
-                for transform in inner {
-                    dir = transform.map_dir(dir);
-                }
-                dir
-            }
+            Transform::Shift(_) => d,
+            Transform::RotateCWXY => d.rotated_cw_xy(),
+            Transform::RotateCCWXY => d.rotated_ccw_xy(),
+            Transform::MirrorY => d.mirrored_y(),
+            Transform::Seq(inner) => inner.iter().fold(d, |d, transform| transform * d),
         }
     }
 }
@@ -81,8 +78,8 @@ impl Piece {
 
     pub fn transform(&mut self, transform: &Transform) {
         for (pos, placed_block) in self.blocks.iter_mut() {
-            *pos = transform.map_point(pos);
-            placed_block.block.mutate_dirs(|dir| transform.map_dir(dir));
+            *pos = transform * *pos;
+            placed_block.block.mutate_dirs(|dir| transform * dir);
         }
     }
 
