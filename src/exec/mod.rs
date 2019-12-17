@@ -46,9 +46,10 @@ pub struct Blip {
     /// The direction in which the blip moved last tick, if any.
     pub old_move_dir: Option<Dir3>,
 
-    /// Has this blip moved in the previous frame? If true, effects for
-    /// entering block will be applied in the next tick
-    pub moved: bool,
+    /// Apply effects of entering a block (if any) in the next update?
+    /// This will be set to true if the block has moved in the previous tick, or
+    /// it has been spawned.
+    pub run_block_effects: bool,
 
     /// Status. Used mostly for visual purposes. Blips marked as Dying will
     /// be removed at the start of the next tick.
@@ -378,7 +379,7 @@ impl Exec {
                         kind,
                         pos: *pos,
                         old_move_dir: None,
-                        moved: false,
+                        run_block_effects: false,
                         status: BlipStatus::Spawning(BlipSpawnMode::LiveToDie),
                     };
 
@@ -392,7 +393,7 @@ impl Exec {
                     kind,
                     pos: *pos,
                     old_move_dir: None,
-                    moved: true, // apply effects for entering block in next frame
+                    run_block_effects: true, // apply effects for entering block in next frame
                     status: BlipStatus::Spawning(mode),
                 };
                 let blip_index = Some(blips.add(blip));
@@ -605,10 +606,10 @@ impl Exec {
     ) {
         assert_eq!(block_data[block_index].0, blip.pos);
 
-        if blip.moved {
-            // Blip moved in last tick. Apply effects of entering the new
-            // block.
-            blip.moved = false;
+        if blip.run_block_effects {
+            // Blip moved in last tick (or it was spawned). Apply effects of
+            // entering the new block.
+            blip.run_block_effects = false;
 
             let placed_block = &mut block_data[block_index].1;
             let remove = Self::on_blip_enter_block(blip, placed_block);
@@ -632,7 +633,7 @@ impl Exec {
             Self::get_blip_move_dir(blip, &placed_block, block_ids, block_data, wind_state);
         let new_pos = if let Some(out_dir) = out_dir {
             Self::on_blip_leave_block(blip, out_dir, &mut block_data[block_index].1);
-            blip.moved = true;
+            blip.run_block_effects = true;
 
             blip.pos + out_dir.to_vector()
         } else {
