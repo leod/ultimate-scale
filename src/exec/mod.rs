@@ -1,6 +1,8 @@
 pub mod anim;
 pub mod level_progress;
 pub mod play;
+#[cfg(test)]
+mod tests;
 pub mod view;
 
 use std::iter;

@@ -27,6 +27,14 @@ impl<'a> Mul<grid::Point3> for &'a Transform {
     }
 }
 
+impl<'a> Mul<(isize, isize, isize)> for &'a Transform {
+    type Output = grid::Point3;
+
+    fn mul(self, p: (isize, isize, isize)) -> grid::Point3 {
+        self * grid::Point3::new(p.0, p.1, p.2)
+    }
+}
+
 impl<'a> Mul<grid::Dir3> for &'a Transform {
     type Output = grid::Dir3;
 
@@ -74,6 +82,10 @@ impl Piece {
 
     pub fn iter(&self) -> impl Iterator<Item = (grid::Point3, PlacedBlock)> + '_ {
         self.blocks.iter().map(|(pos, block)| (*pos, block.clone()))
+    }
+
+    pub fn blocks(&self) -> &[(grid::Point3, PlacedBlock)] {
+        &self.blocks
     }
 
     pub fn transform(&mut self, transform: &Transform) {
