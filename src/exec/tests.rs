@@ -12,6 +12,7 @@ fn test_straight_wind_propagation() {
     // A wind source, followed by 10 straight pipes to the right.
     let m = "
 ◉----------
+-----------
 ";
 
     test_transform_invariant(&blocks_from_string(m), |t, exec| {
@@ -29,9 +30,16 @@ fn test_straight_wind_propagation() {
             }
 
             // To the right, there is no wind yet.
-            for x in i + 1..10 {
+            for x in i + 1..=10 {
                 for &d in &Dir3::ALL {
                     assert!(!wind(exec, t * (x, 0, 0)).wind_out(d));
+                }
+            }
+
+            // And to the bottom, there never is any wind.
+            for x in 0..=10 {
+                for &d in &Dir3::ALL {
+                    assert!(!wind(exec, t * (x, 1, 0)).wind_out(d));
                 }
             }
         }
@@ -41,7 +49,7 @@ fn test_straight_wind_propagation() {
 /// Test that funnel propagates wind in only one direction.
 #[test]
 fn test_funnel_wind_propagation() {
-    // A wind source, followed by a funnel at x=5.
+    // A wind source, followed by a funnel at x=5 and then pipes up to x=10.
     let m = "
 ◉----▷-----
 ";
@@ -61,6 +69,40 @@ fn test_funnel_wind_propagation() {
                     assert!(!wind(exec, t * (x, 0, 0)).wind_out(d));
                 }
             }
+        }
+    });
+}
+
+/// Test that intersections propagate wind in all directions.
+#[test]
+fn test_merge_xy_wind_propagation() {
+    // Intersection at (8,2), followed by 2 pipes up/right/down.
+    let m = "
+        | 
+        |
+◉-------┼--
+        |
+        |
+";
+
+    test_transform_invariant(&blocks_from_string(m), |t, exec| {
+        for i in 0..20 {
+            exec.update();
+
+            // Flow to the right.
+            for x in 1..=i.min(10) {
+                assert!(wind(exec, t * (x, 2, 0)).wind_out(t * Dir3::X_POS));
+            }
+
+            // Flow up starts after 9 updates.
+            assert_eq!(wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_NEG), i >= 8);
+            assert_eq!(wind(exec, t * (8, 1, 0)).wind_out(t * Dir3::Y_NEG), i >= 9);
+            assert_eq!(wind(exec, t * (8, 0, 0)).wind_out(t * Dir3::Y_NEG), i >= 10);
+
+            // Flow down starts after 9 updates.
+            assert_eq!(wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_POS), i >= 8);
+            assert_eq!(wind(exec, t * (8, 3, 0)).wind_out(t * Dir3::Y_POS), i >= 9);
+            assert_eq!(wind(exec, t * (8, 4, 0)).wind_out(t * Dir3::Y_POS), i >= 10);
         }
     });
 }

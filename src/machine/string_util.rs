@@ -14,7 +14,7 @@ pub fn blocks_from_string(s: &str) -> Vec<(Point3, Block)> {
 }
 
 pub fn block_from_char(c: char) -> Option<Block> {
-    if c == '.' {
+    if c == '.' || c == ' ' {
         return None;
     }
 
