@@ -1,5 +1,6 @@
 pub mod grid;
 pub mod level;
+pub mod string_util;
 
 use std::fmt;
 
