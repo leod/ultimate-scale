@@ -117,7 +117,7 @@ pub fn pick_line(machine: &Machine, a: &grid::Point3, b: &grid::Point3) -> Vec<g
         // We remove duplicates in a simple and costly way here that allows us
         // to keep the order (if b is included it should always be the last
         // element). We expect `points` to be relatively small anyway.
-        if machine.get_block_at_pos(&c).is_some() && !points.contains(&c) {
+        if machine.is_block_at(&c) && !points.contains(&c) {
             points.push(c);
         }
     }

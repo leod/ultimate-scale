@@ -382,9 +382,9 @@ impl Editor {
                 }
 
                 if blocks.get(&mouse_grid_pos).is_none() {
-                    let existing_new_block = self.machine.get_block_at_pos(&mouse_grid_pos);
+                    let existing_new_block = self.machine.get(&mouse_grid_pos);
 
-                    if let Some((_, existing_new_block)) = existing_new_block {
+                    if let Some(existing_new_block) = existing_new_block {
                         blocks.insert(mouse_grid_pos, existing_new_block.clone());
                     }
                 }
@@ -544,10 +544,9 @@ impl Editor {
 
                 if let Some(mouse_grid_pos) = mouse_grid_pos {
                     // Don't overwrite existing block when starting placement
-                    let blocks = if let Some(block) = self.machine.get_block_at_pos(&mouse_grid_pos)
-                    {
+                    let blocks = if let Some(block) = self.machine.get(&mouse_grid_pos) {
                         maplit::hashmap! {
-                            mouse_grid_pos => block.1.clone(),
+                            mouse_grid_pos => block.clone(),
                         }
                     } else {
                         let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
@@ -581,9 +580,7 @@ impl Editor {
     ) -> Mode {
         // Double check that there actually is a block at the mouse block
         // position.
-        let block_pos = self
-            .mouse_block_pos
-            .filter(|p| self.machine.get_block_at_pos(p).is_some());
+        let block_pos = self.mouse_block_pos.filter(|p| self.machine.is_block_at(p));
 
         if let Some(block_pos) = block_pos {
             // Clicked on a block!
@@ -711,8 +708,8 @@ impl Editor {
                         .unwrap_or(false);
                     let existing = self
                         .machine
-                        .get_block_at_pos(&(pos + dir.to_vector()))
-                        .map(|(_, neighbor)| neighbor.has_wind_hole(dir.invert()))
+                        .get(&(pos + dir.to_vector()))
+                        .map(|neighbor| neighbor.has_wind_hole(dir.invert()))
                         .unwrap_or(false);
 
                     tentative || existing

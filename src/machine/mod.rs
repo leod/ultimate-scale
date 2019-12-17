@@ -385,7 +385,7 @@ impl Machine {
         let input_y_start = level.size.y / 2 + level.spec.input_dim() as isize / 2;
 
         for index in 0..level.spec.input_dim() {
-            machine.set_block_at_pos(
+            machine.set(
                 &Point3::new(0, input_y_start - index as isize, 0),
                 Some(PlacedBlock {
                     block: Block::Input {
@@ -401,7 +401,7 @@ impl Machine {
         let output_y_start = level.size.y / 2 + level.spec.output_dim() as isize / 2;
 
         for index in 0..level.spec.output_dim() {
-            machine.set_block_at_pos(
+            machine.set(
                 &Point3::new(level.size.x - 1, output_y_start - index as isize, 0),
                 Some(PlacedBlock {
                     block: Block::Output {
@@ -430,7 +430,27 @@ impl Machine {
         layer >= 0 && layer < self.size().z
     }
 
-    pub fn get_block_at_pos(&self, p: &Point3) -> Option<(BlockIndex, &PlacedBlock)> {
+    pub fn is_block_at(&self, p: &Point3) -> bool {
+        self.get(p).is_some()
+    }
+
+    pub fn get(&self, p: &Point3) -> Option<&PlacedBlock> {
+        self.blocks
+            .indices
+            .get(p)
+            .and_then(|id| *id)
+            .map(|id| &self.blocks.data[id].1)
+    }
+
+    pub fn get_mut(&mut self, p: &Point3) -> Option<&mut PlacedBlock> {
+        self.blocks
+            .indices
+            .get(p)
+            .and_then(|id| *id)
+            .map(move |id| &mut self.blocks.data[id].1)
+    }
+
+    pub fn get_with_index(&self, p: &Point3) -> Option<(BlockIndex, &PlacedBlock)> {
         self.blocks
             .indices
             .get(p)
@@ -438,20 +458,12 @@ impl Machine {
             .map(|id| (id, &self.blocks.data[id].1))
     }
 
-    pub fn get_block_at_pos_mut(&mut self, p: &Point3) -> Option<(BlockIndex, &mut PlacedBlock)> {
-        self.blocks
-            .indices
-            .get(p)
-            .and_then(|id| *id)
-            .map(move |id| (id, &mut self.blocks.data[id].1))
-    }
-
     pub fn block_pos_at_index(&self, index: BlockIndex) -> Point3 {
         self.blocks.data[index].0
     }
 
-    pub fn set_block_at_pos(&mut self, p: &Point3, block: Option<PlacedBlock>) {
-        self.remove_at_pos(p);
+    pub fn set(&mut self, p: &Point3, block: Option<PlacedBlock>) {
+        self.remove(p);
 
         if let Some(block) = block {
             let id = self.blocks.data.add((*p, block));
@@ -459,7 +471,7 @@ impl Machine {
         }
     }
 
-    pub fn remove_at_pos(&mut self, p: &Point3) -> Option<(BlockIndex, PlacedBlock)> {
+    pub fn remove(&mut self, p: &Point3) -> Option<(BlockIndex, PlacedBlock)> {
         if let Some(Some(id)) = self.blocks.indices.get(p).cloned() {
             self.blocks.indices[*p] = None;
             self.blocks.data.remove(id).map(|(data_pos, block)| {
