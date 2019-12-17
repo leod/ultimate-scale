@@ -114,9 +114,7 @@ impl Editor {
                             out,
                         );
 
-                        if last_pos.is_none()
-                            && self.machine.get_block_at_pos(&mouse_grid_pos).is_none()
-                        {
+                        if last_pos.is_none() && self.machine.get(&mouse_grid_pos).is_none() {
                             let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
                             for _ in 0..*rotation_xy {
                                 block.mutate_dirs(|dir| dir.rotated_cw_xy());
@@ -234,9 +232,7 @@ impl Editor {
                     &na::Vector4::new(0.5, 0.5, 0.5, 1.0),
                     out,
                 );
-            } else if !self.machine.is_valid_pos(&pos)
-                || self.machine.get_block_at_pos(&pos).is_some()
-            {
+            } else if !self.machine.is_valid_pos(&pos) || self.machine.is_block_at(&pos) {
                 self.render_block_wireframe(
                     &pos,
                     0.020,

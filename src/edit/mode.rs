@@ -95,7 +95,7 @@ impl Mode {
     pub fn make_consistent_with_machine(self, machine: &Machine) -> Self {
         match self {
             Mode::Select { mut selection } => {
-                selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                selection.retain(|grid_pos| machine.is_block_at(grid_pos));
 
                 Mode::Select { selection }
             }
@@ -104,9 +104,9 @@ impl Mode {
                 dragged_block_pos,
                 dragged_grid_pos,
             } => {
-                selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                selection.retain(|grid_pos| machine.is_block_at(grid_pos));
 
-                if machine.get_block_at_pos(&dragged_block_pos).is_none() {
+                if !machine.is_block_at(&dragged_block_pos) {
                     // The block that the user want to drag-and-drop was
                     // removed; give up on dragging.
                     Mode::Select { selection }
@@ -125,8 +125,8 @@ impl Mode {
                 start_pos,
                 end_pos,
             } => {
-                existing_selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
-                new_selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                existing_selection.retain(|grid_pos| machine.is_block_at(grid_pos));
+                new_selection.retain(|grid_pos| machine.is_block_at(grid_pos));
 
                 Mode::RectSelect {
                     existing_selection,
@@ -139,7 +139,7 @@ impl Mode {
                 mut selection,
                 piece,
             } => {
-                selection.retain(|grid_pos| machine.get_block_at_pos(grid_pos).is_some());
+                selection.retain(|grid_pos| machine.is_block_at(grid_pos));
 
                 Mode::DragAndDrop { selection, piece }
             }
