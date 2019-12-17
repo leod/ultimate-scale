@@ -15,7 +15,7 @@ fn test_straight_wind_propagation() {
 ";
 
     test_transform_invariant(&blocks_from_string(m), |t, exec| {
-        for i in 0..=10 {
+        for i in 0..=20 {
             exec.update();
 
             // Wind source has outgoing wind everywhere.
@@ -24,14 +24,41 @@ fn test_straight_wind_propagation() {
             }
 
             // Pipe has outgoing wind to the right.
-            for j in 1..=i.min(10) {
-                assert!(wind(exec, t * (j, 0, 0)).wind_out(t * Dir3::X_POS));
+            for x in 1..=i.min(10) {
+                assert!(wind(exec, t * (x, 0, 0)).wind_out(t * Dir3::X_POS));
             }
 
             // To the right, there is no wind yet.
-            for j in i + 1..10 {
+            for x in i + 1..10 {
                 for &d in &Dir3::ALL {
-                    assert!(!wind(exec, t * (j, 0, 0)).wind_out(d));
+                    assert!(!wind(exec, t * (x, 0, 0)).wind_out(d));
+                }
+            }
+        }
+    });
+}
+
+/// Test that funnel propagates wind in only one direction.
+#[test]
+fn test_funnel_wind_propagation() {
+    // A wind source, followed by a funnel at x=5.
+    let m = "
+◉----▷-----
+";
+
+    test_transform_invariant(&blocks_from_string(m), |t, exec| {
+        for i in 0..20 {
+            exec.update();
+
+            // Pipes up to the funnel get outgoing wind (after some time).
+            for x in 1..i.min(5) {
+                assert!(wind(exec, t * (x, 0, 0)).wind_out(t * Dir3::X_POS));
+            }
+
+            // The funnel and pipes to the right never have any outgoing wind.
+            for x in 5..=10 {
+                for &d in &Dir3::ALL {
+                    assert!(!wind(exec, t * (x, 0, 0)).wind_out(d));
                 }
             }
         }
