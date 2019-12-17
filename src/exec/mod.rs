@@ -336,8 +336,8 @@ impl Exec {
                 ..
             } => {
                 // Here, the check if the `activated` blip matches the expected
-                // output has already been performed in
-                // `update_block_blip_state` in the previous tick.
+                // output has already been performed in `check_output` in the
+                // previous tick.
                 if activated.is_some() {
                     outputs.pop();
                 }
@@ -875,6 +875,7 @@ impl Exec {
             {
                 // The last element of `outputs` is the next expected output.
                 // Note that the last element will be popped at the start of
+                // the next tick in `update_block`.
                 let expected = outputs.last().copied();
 
                 let (block_failed, block_completed) = match (expected, activated) {
