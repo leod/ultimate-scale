@@ -73,7 +73,7 @@ impl WindAnimState {
 
             // Incoming wind
             let neighbor_pos = machine.block_pos_at_index(block_index) + dir.to_vector();
-            let neighbor_block = machine.get_block_at_pos(&neighbor_pos);
+            let neighbor_block = machine.get_with_index(&neighbor_pos);
             if let Some((neighbor_index, neighbor_block)) = neighbor_block {
                 // If neighboring block has no wind connection in this
                 // direction, we won't show wind.

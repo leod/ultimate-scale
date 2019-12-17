@@ -61,7 +61,8 @@ impl Editor {
             let mut piece = clipboard.clone();
 
             // Kinda center the piece at the mouse
-            let extent = piece.extent();
+            let mut extent = piece.extent();
+            extent.z = 0;
 
             piece.shift(&(-piece.min_pos().coords - extent / 2));
 
