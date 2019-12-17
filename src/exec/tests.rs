@@ -1,46 +1,50 @@
 use rand::Rng;
 
 use crate::edit::piece::{Piece, Transform};
-use crate::exec::Exec;
+use crate::exec::{Exec, WindState};
 use crate::machine::grid::{Dir3, Point3, Vector3};
-use crate::machine::{grid, Block, Machine, PlacedBlock};
+use crate::machine::string_util::blocks_from_string;
+use crate::machine::{grid, BlipKind, Block, Machine, PlacedBlock};
 
-use Block::*;
-
-type Blocks = [((isize, isize, isize), Block)];
-
-fn machine(blocks: &Blocks) -> Machine {
-    let blocks: Vec<(Point3, PlacedBlock)> = blocks
-        .iter()
-        .map(|(pos, block)| {
-            (
-                Point3::new(pos.0, pos.1, pos.2),
-                PlacedBlock {
-                    block: block.clone(),
-                },
-            )
-        })
-        .collect();
-    let size_x = blocks.iter().map(|(pos, _)| pos.x).max().unwrap() + 1;
-    let size_y = blocks.iter().map(|(pos, _)| pos.y).max().unwrap() + 1;
-    let size_z = blocks.iter().map(|(pos, _)| pos.z).max().unwrap() + 1;
-
-    Machine::new_from_block_data(&Vector3::new(size_x, size_y, size_z), &blocks, &None)
-}
-
+/// Test that wind flows one grid block per tick.
 #[test]
-fn simple_wind() {
-    let b = machine(&[
-        ((0, 0, 0), Pipe(Dir3::X_NEG, Dir3::X_POS)),
-        ((0, 1, 0), Pipe(Dir3::X_NEG, Dir3::X_POS)),
-        ((0, 2, 0), Pipe(Dir3::X_NEG, Dir3::X_POS)),
-        ((0, 3, 0), Pipe(Dir3::X_NEG, Dir3::X_POS)),
-    ]);
+fn test_straight_wind_propagation() {
+    // A wind source, followed by 10 straight pipes to the right.
+    let m = "
+◉----------
+";
 
-    assert!(true);
+    test_transform_invariant(&blocks_from_string(m), |t, exec| {
+        for i in 0..=10 {
+            exec.update();
+
+            // Wind source has outgoing wind everywhere.
+            for &d in &Dir3::ALL {
+                assert!(wind(exec, t * (0, 0, 0)).wind_out(d));
+            }
+
+            // Pipe has outgoing wind to the right.
+            for j in 1..=i.min(10) {
+                assert!(wind(exec, t * (j, 0, 0)).wind_out(t * Dir3::X_POS));
+            }
+
+            // To the right, there is no wind yet.
+            for j in i + 1..10 {
+                for &d in &Dir3::ALL {
+                    assert!(!wind(exec, t * (j, 0, 0)).wind_out(d));
+                }
+            }
+        }
+    });
 }
 
-fn test_transform_invariance<T>(blocks: &Blocks, test: T)
+fn wind(exec: &Exec, p: grid::Point3) -> &WindState {
+    let (block_index, _block) = exec.machine().get_with_index(&p).unwrap();
+
+    &exec.wind_state()[block_index]
+}
+
+fn test_transform_invariant<T>(blocks: &[(Point3, Block)], test: T)
 where
     T: for<'a> Fn(&'a Transform, &'a mut Exec),
 {
@@ -48,7 +52,7 @@ where
         .iter()
         .map(|(pos, block)| {
             (
-                Point3::new(pos.0, pos.1, pos.2),
+                *pos,
                 PlacedBlock {
                     block: block.clone(),
                 },
