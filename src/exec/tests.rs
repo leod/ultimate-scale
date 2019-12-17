@@ -76,7 +76,7 @@ fn test_funnel_wind_propagation() {
 /// Test that intersections propagate wind in all directions.
 #[test]
 fn test_merge_xy_wind_propagation() {
-    // Intersection at (8,2), followed by 2 pipes up/right/down.
+    // Intersection at (8,2), followed by two pipes up/right/down.
     let m = "
         | 
         |
@@ -103,6 +103,69 @@ fn test_merge_xy_wind_propagation() {
             assert_eq!(wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_POS), i >= 8);
             assert_eq!(wind(exec, t * (8, 3, 0)).wind_out(t * Dir3::Y_POS), i >= 9);
             assert_eq!(wind(exec, t * (8, 4, 0)).wind_out(t * Dir3::Y_POS), i >= 10);
+        }
+    });
+}
+
+/// Test propagation of a single sliver of wind.
+#[test]
+fn test_wind_sliver_propagation() {
+    // Singleton blip spawn at (0,2), which activates a blip wind source
+    // pointing to the right. Intersection at (8,2), followed by two pipes
+    // up/right/down.
+    let m = "
+        | 
+        |
+┠[------┼--
+        |
+        |
+";
+
+    test_transform_invariant(&blocks_from_string(m), |t, exec| {
+        for i in 0..20 {
+            exec.update();
+
+            // Flow to the right.
+            //
+            // i=0: Blip is spawned at (1,2).
+            // i=1: Wind source is activated.
+            // i=2: Wind starts flowing out.
+            for x in 1..=10 {
+                // Note that the blip wind source is at x=1, where wind flows
+                // out at i=2.
+                assert_eq!(
+                    wind(exec, t * (x, 2, 0)).wind_out(t * Dir3::X_POS),
+                    i == x + 1
+                );
+            }
+
+            // Flow up starts after 10 updates.
+            assert_eq!(
+                wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_NEG),
+                i == 8 + 1
+            );
+            assert_eq!(
+                wind(exec, t * (8, 1, 0)).wind_out(t * Dir3::Y_NEG),
+                i == 9 + 1
+            );
+            assert_eq!(
+                wind(exec, t * (8, 0, 0)).wind_out(t * Dir3::Y_NEG),
+                i == 10 + 1
+            );
+
+            // Flow down starts after 10 updates.
+            assert_eq!(
+                wind(exec, t * (8, 2, 0)).wind_out(t * Dir3::Y_POS),
+                i == 8 + 1
+            );
+            assert_eq!(
+                wind(exec, t * (8, 3, 0)).wind_out(t * Dir3::Y_POS),
+                i == 9 + 1
+            );
+            assert_eq!(
+                wind(exec, t * (8, 4, 0)).wind_out(t * Dir3::Y_POS),
+                i == 10 + 1
+            );
         }
     });
 }
@@ -135,8 +198,8 @@ where
         let mut transformed_piece = piece.clone();
         transformed_piece.transform(&transform);
 
-        // Make sure the blocks all have non-negative positions. This is currently a
-        // requirement for Machine.
+        // Make sure the blocks all have non-negative positions. This is
+        // currently a requirement for Machine.
         let shift = random_shift_to_non_negative(&transformed_piece.min_pos());
         transformed_piece.transform(&shift);
         transform = Transform::Seq(vec![transform, shift]);
