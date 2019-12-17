@@ -71,11 +71,8 @@ impl Piece {
         machine: &Machine,
         selection: impl Iterator<Item = grid::Point3>,
     ) -> Self {
-        let blocks = selection.filter_map(|pos| {
-            machine
-                .get_block_at_pos(&pos)
-                .map(|(_, block)| (pos, block.clone()))
-        });
+        let blocks =
+            selection.filter_map(|pos| machine.get(&pos).map(|block| (pos, block.clone())));
 
         Self::new(blocks.collect())
     }

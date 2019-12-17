@@ -43,21 +43,14 @@ impl Edit {
 
                 let previous_blocks = valid_blocks
                     .keys()
-                    .map(|p| {
-                        (
-                            *p,
-                            machine
-                                .get_block_at_pos(p)
-                                .map(|(_index, block)| block.clone()),
-                        )
-                    })
+                    .map(|p| (*p, machine.get(p).cloned()))
                     .collect();
 
                 if previous_blocks == valid_blocks {
                     Edit::NoOp
                 } else {
                     for (p, block) in valid_blocks.iter() {
-                        machine.set_block_at_pos(p, block.clone());
+                        machine.set(p, block.clone());
                     }
 
                     Edit::SetBlocks(previous_blocks)
@@ -65,7 +58,7 @@ impl Edit {
             }
             Edit::RotateCWXY(points) => {
                 for p in &points {
-                    if let Some((_, placed_block)) = machine.get_block_at_pos_mut(p) {
+                    if let Some(placed_block) = machine.get_mut(p) {
                         placed_block.block.mutate_dirs(|dir| dir.rotated_cw_xy());
                     }
                 }
@@ -78,7 +71,7 @@ impl Edit {
             }
             Edit::RotateCCWXY(points) => {
                 for p in &points {
-                    if let Some((_, placed_block)) = machine.get_block_at_pos_mut(p) {
+                    if let Some(placed_block) = machine.get_mut(p) {
                         placed_block.block.mutate_dirs(|dir| dir.rotated_ccw_xy());
                     }
                 }
