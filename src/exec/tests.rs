@@ -1,7 +1,7 @@
 use rand::Rng;
 
 use crate::edit::piece::{Piece, Transform};
-use crate::exec::{Exec, WindState};
+use crate::exec::{BlipIndex, BlipSpawnMode, BlipStatus, Exec, WindState};
 use crate::machine::grid::{Dir3, Point3, Vector3};
 use crate::machine::string_util::blocks_from_string;
 use crate::machine::{grid, BlipKind, Block, Machine, PlacedBlock};
@@ -149,10 +149,95 @@ fn test_wind_sliver_propagation() {
     });
 }
 
+/// Test blip duplicator and single blip movement.
+#[test]
+fn test_blip_duplicator_and_single_blip_movement() {
+    // A single blip is spawned and moved into the blip duplicator at (8,1).
+    let m = "
+◉-------┐
+ ┷     -┿-
+";
+
+    test_transform_invariant(&blocks_from_string(m), |t, exec| {
+        for i in 0..20 {
+            exec.update();
+
+            // Check blip movement.
+            //
+            // i=0: Blip is spawned at (1,0). Wind is spawned at (0,0).
+            // i=1: Blip is at (2,0).
+            // etc.
+            for x in 1..=8 {
+                assert_eq!(blip_index(exec, t * (x, 0, 0)).is_some(), i == x - 1);
+            }
+
+            // i=8: Blip enters blip duplicator.
+            // i=9: Two output blips are spawned.
+            assert_eq!(blip_index(exec, t * (7, 1, 0)).is_some(), i >= 9);
+            assert_eq!(blip_index(exec, t * (9, 1, 0)).is_some(), i >= 9);
+        }
+    });
+}
+
+/// Test blip duplicator inversion and blip movement.
+#[test]
+fn test_blip_duplicator_inversion_and_blip_movement() {
+    // A stream of blips is spawned and moved into the blip duplicator at (8,1).
+    // Then, the blip duplicator will flip the blip status at (7,1) and (9,1)
+    // once per update.
+    let m = "
+◉-------┐
+ ┻     -┿-
+";
+
+    test_transform_invariant(&blocks_from_string(m), |t, exec| {
+        for i in 0..20 {
+            exec.update();
+
+            // Check blip movement.
+            //
+            // i=0: First blip is spawned at (1,0). Wind is spawned at (0,0).
+            // i=1: First blip is at (2,0).
+            // etc.
+            for x in 1..=8 {
+                assert_eq!(blip_index(exec, t * (x, 0, 0)).is_some(), i >= x - 1);
+            }
+
+            // i=8: First blip enters duplicator.
+            // i=9: First two output blips are spawned. Next blip enters
+            //      duplicator.
+            // i=10: Duplicator inverts the first two output blips. Next blip
+            //       enters duplicator. For visualization purposes, the first
+            //       two output blips *still live*, but they are marked as
+            //       dying. The actual removal happens in the next tick.
+            let left_blip = blip_index(exec, t * (7, 1, 0));
+            let right_blip = blip_index(exec, t * (9, 1, 0));
+
+            assert_eq!(left_blip.is_some(), i >= 9);
+            assert_eq!(right_blip.is_some(), i >= 9);
+
+            if i >= 9 {
+                let status = if (i - 9) % 2 == 0 {
+                    BlipStatus::Spawning(BlipSpawnMode::Ease)
+                } else {
+                    BlipStatus::Dying
+                };
+
+                assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
+                assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
+            }
+        }
+    });
+}
+
 fn wind_out(exec: &Exec, p: Point3, d: Dir3) -> bool {
     let (block_index, _block) = exec.machine().get_with_index(&p).unwrap();
-
     exec.wind_state()[block_index].wind_out(d)
+}
+
+fn blip_index(exec: &Exec, p: Point3) -> Option<BlipIndex> {
+    let (block_index, _block) = exec.machine().get_with_index(&p).unwrap();
+    exec.blip_state()[block_index].blip_index
 }
 
 fn test_transform_invariant<T>(blocks: &[(Point3, Block)], test: T)

@@ -156,6 +156,10 @@ impl Exec {
         &self.old_wind_state
     }
 
+    pub fn blip_state(&self) -> &[BlipState] {
+        &self.blip_state
+    }
+
     pub fn blips(&self) -> &VecOption<Blip> {
         &self.blips
     }
@@ -504,7 +508,9 @@ impl Exec {
             let block_index = block_indices[blip.pos].unwrap();
             let blip_index_in_block = self.blip_state[block_index].blip_index;
 
-            if blip.status != BlipStatus::Dying {
+            if blip.status != BlipStatus::Dying
+                && blip.status != BlipStatus::Spawning(BlipSpawnMode::LiveToDie)
+            {
                 debug_assert_eq!(
                     blip_index_in_block,
                     Some(blip_index),
