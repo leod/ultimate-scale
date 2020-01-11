@@ -11,7 +11,7 @@ use crate::util::vec_option::VecOption;
 use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
 use level::Level;
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum BlipKind {
     A,
     B,
@@ -62,22 +62,13 @@ pub enum Block {
         out_dir: Dir3,
         kind: BlipKind,
         num_spawns: Option<usize>,
-
-        #[serde(skip)]
-        activated: Option<TickNum>,
     },
     BlipDuplicator {
         out_dirs: (Dir3, Dir3),
         kind: Option<BlipKind>,
-
-        #[serde(skip)]
-        activated: Option<BlipKind>,
     },
     BlipWindSource {
         button_dir: Dir3,
-
-        #[serde(skip)]
-        activated: bool,
     },
     Solid,
     Input {
@@ -95,8 +86,6 @@ pub enum Block {
 
         #[serde(skip)]
         outputs: Vec<BlipKind>,
-        #[serde(skip)]
-        activated: Option<BlipKind>,
 
         /// Only for visualization, store if this output failed.
         #[serde(skip)]
@@ -106,9 +95,6 @@ pub enum Block {
         out_dir: Dir3,
         flow_axis: Axis3,
         kind: Option<BlipKind>,
-
-        #[serde(skip)]
-        activated: Option<BlipKind>,
     },
 }
 
@@ -287,6 +273,27 @@ impl Block {
             _ => self.has_wind_hole(dir),
         }
     }
+
+    pub fn is_blip_killer(&self) -> bool {
+        match self {
+            Block::BlipDuplicator { .. } => true,
+            Block::BlipWindSource { .. } => true,
+            Block::Solid => true,
+            Block::Output { .. } => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_activatable(&self, blip_kind: BlipKind) -> bool {
+        match self {
+            Block::BlipDuplicator { kind, .. } => kind == None || kind == Some(blip_kind),
+            Block::BlipWindSource { .. } => true,
+            Block::Solid { .. } => true,
+            Block::Output { .. } => true,
+            Block::DetectorBlipDuplicator { kind } => kind == None || kind == Some(blip_kind),
+            _ => false,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
@@ -409,7 +416,6 @@ impl Machine {
                         in_dir: Dir3::X_NEG,
                         index,
                         outputs: Vec::new(),
-                        activated: None,
                         failed: false,
                     },
                 }),

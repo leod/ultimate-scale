@@ -46,11 +46,6 @@ pub struct Blip {
     /// The direction in which the blip moved last tick, if any.
     pub old_move_dir: Option<Dir3>,
 
-    /// Apply effects of entering a block (if any) in the next update?
-    /// This will be set to true if the block has moved in the previous tick, or
-    /// it has been spawned.
-    pub run_block_effects: bool,
-
     /// Status. Used mostly for visual purposes. Blips marked as Dying will
     /// be removed at the start of the next tick.
     pub status: BlipStatus,
@@ -64,6 +59,10 @@ pub struct WindState {
 impl WindState {
     pub fn wind_out(self, dir: Dir3) -> bool {
         self.wind_out[dir.to_index()]
+    }
+
+    pub fn set_wind_out(self, dir: Dir3, value: bool) {
+        self.wind_out[dir.to_index()] = value;
     }
 }
 
@@ -81,6 +80,38 @@ pub enum LevelStatus {
     Failed,
 }
 
+pub type ActivationState = Option<BlipIndex>;
+
+struct State {
+    wind: Vec<WindState>,
+    blip: Vec<BlipState>,
+    activated: Vec<ActivationState>,
+}
+
+impl State {
+    fn new_initial(machine: &Machine) -> Self {
+        // We assume that the machine's blocks are contiguous in memory, so that
+        // we can store block state as a Vec, instead of wasting memory or
+        // cycles on VecOption while executing.
+        assert!(machine.is_contiguous());
+        
+        State {
+            wind: vec![WindState::default(); machine.num_blocks()],
+            blip: vec![BlipState::default(); machine.num_blocks()],
+            activated: vec![ActivationState::default(); machine.num_blocks()],
+        }
+    }
+
+    fn clone_from(&mut self, state: &State) {
+        self.wind.clone_from_slice(&state.wind);
+
+        // TODO: Cloning BlipState is used for debugging only.
+        self.blip.clone_from_slice(&state.blip);
+
+        self.activated.clone_from_slice(&state.activated);
+    }
+}
+
 pub struct Exec {
     cur_tick: TickNum,
 
@@ -91,18 +122,8 @@ pub struct Exec {
 
     blips: VecOption<Blip>,
 
-    /// Wind state for each block, indexed by BlockIndex
-    wind_state: Vec<WindState>,
-
-    /// Wind state from the previous tick, used for double
-    /// buffering
-    old_wind_state: Vec<WindState>,
-
-    /// Blip state for each block, indexed by BlockIndex
-    blip_state: Vec<BlipState>,
-
-    /// Blip state from the previous tick
-    old_blip_state: Vec<BlipState>,
+    state: State,
+    old_state: State,
 }
 
 impl Exec {
@@ -119,21 +140,14 @@ impl Exec {
             Self::initialize_inputs_outputs(inputs_outputs, &mut machine);
         }
 
-        let wind_state = Self::initial_block_state(&machine);
-        let old_wind_state = wind_state.clone();
-        let blip_state = Self::initial_block_state(&machine);
-        let old_blip_state = blip_state.clone();
-
         Exec {
             cur_tick: 0,
             machine,
             level_status: LevelStatus::Running,
             inputs_outputs,
             blips: VecOption::new(),
-            wind_state,
-            old_wind_state,
-            blip_state,
-            old_blip_state,
+            state: State::new_initial(&machine),
+            old_state: State::new_initial(&machine),
         }
     }
 
@@ -150,15 +164,15 @@ impl Exec {
     }
 
     pub fn wind_state(&self) -> &[WindState] {
-        &self.wind_state
+        &self.state.wind
     }
 
     pub fn old_wind_state(&self) -> &[WindState] {
-        &self.old_wind_state
+        &self.old_state.wind
     }
 
     pub fn blip_state(&self) -> &[BlipState] {
-        &self.blip_state
+        &self.state.blip_state
     }
 
     pub fn blips(&self) -> &VecOption<Blip> {
@@ -168,22 +182,23 @@ impl Exec {
     pub fn update(&mut self) {
         self.check_consistency();
 
-        self.old_wind_state[..].clone_from_slice(&self.wind_state);
-        self.old_blip_state[..].clone_from_slice(&self.blip_state);
+        self.old_state.clone_from(&self.state);
 
         for index in 0..self.blip_state.len() {
             // The new blip state is written completely from scratch using the blips
             self.blip_state[index].blip_index = None;
         }
 
+        for index in 0..self.blip_state.len() {
+            self.activated[index] = None;
+        }
+
         // Spawn and move wind
-        for (block_index, (block_pos, _placed_block)) in self.machine.blocks.data.iter() {
+        for block_index in 0..self.machine.blocks.len() {
             Self::update_block_wind_state(
                 block_index,
-                block_pos,
-                &self.machine.blocks.indices,
-                &self.machine.blocks.data,
-                &self.old_wind_state,
+                &self.machine,
+                &self.old_state,
                 &mut self.wind_state,
             );
         }
@@ -230,13 +245,12 @@ impl Exec {
 
     fn update_block_wind_state(
         block_index: usize,
-        block_pos: &Point3,
-        block_ids: &Grid3<Option<BlockIndex>>,
-        block_data: &VecOption<(Point3, PlacedBlock)>,
-        old_wind_state: &[WindState],
+        machine: &Machine,
+        old_state: &State,
         wind_state: &mut Vec<WindState>,
     ) {
-        let placed_block = &block_data[block_index].1;
+        let (&block_pos, placed_block) = &block_data[block_index];
+
         debug!(
             "wind: {:?} with {:?}",
             placed_block.block, old_wind_state[block_index]
@@ -245,12 +259,11 @@ impl Exec {
         match placed_block.block {
             Block::WindSource => {
                 for &dir in &Dir3::ALL {
-                    wind_state[block_index].wind_out[dir.to_index()] = true;
+                    wind_state[block_index].set_wind_out(dir, true);
                 }
             }
             Block::BlipWindSource {
                 button_dir,
-                activated,
             } => {
                 for &dir in &Dir3::ALL {
                     if dir == button_dir {
@@ -258,14 +271,19 @@ impl Exec {
                         continue;
                     }
 
-                    wind_state[block_index].wind_out[dir.to_index()] = activated;
+                    wind_state[block_index].set_wind_out(
+                        dir,
+                        old_state.activated[block_index].is_some(),
+                    );
                 }
 
                 // Note: activated will be set to false in the same tick in
                 // `update_block`.
             }
             Block::Input {
-                out_dir, activated, ..
+                out_dir,
+                activated,
+                ..
             } => {
                 let _active = activated.map_or(false, |input| match input {
                     level::Input::Blip(_) => true,
@@ -280,34 +298,39 @@ impl Exec {
                 // spawned blip.
                 let active = true;
 
-                wind_state[block_index].wind_out[out_dir.to_index()] = active;
+                wind_state[block_index].set_wind_out(out_dir, active);
             }
             _ => {
                 // Check if we got any wind in flow from our neighbors in the
                 // old state
                 let mut any_in = false;
-                let mut dirs_in = [false; Dir3::NUM_INDICES];
+                let mut wind_in = [false; Dir3::NUM_INDICES];
 
                 for &dir in &placed_block.wind_holes_in() {
                     let neighbor_pos = *block_pos + dir.to_vector();
 
-                    dirs_in[dir.to_index()] =
-                        if let Some(Some(neighbor_index)) = block_ids.get(&neighbor_pos) {
-                            old_wind_state[*neighbor_index].wind_out(dir.invert())
-                                && block_data[*neighbor_index]
-                                    .1
-                                    .has_wind_hole_out(dir.invert())
+                    wind_in[dir.to_index()] =
+                        if let Some(neighbor_index) = block_ids.get(&neighbor_pos).flatten() {
+                            let neighbor_had_wind =
+                                old_state.wind[*neighbor_index].wind_out(dir.invert());
+
+                            let neighbor_has_hole =
+                                block_data[*neighbor_index].1.has_wind_hole_out(dir.invert());
+
+                            neighbor_had_wind && neighbor_has_hole
                         } else {
                             false
                         };
 
-                    any_in = any_in || dirs_in[dir.to_index()];
+                    any_in = any_in || wind_in[dir.to_index()];
                 }
 
                 // Forward in flow to our outgoing wind hole directions
                 for &dir in &placed_block.wind_holes_out() {
-                    wind_state[block_index].wind_out[dir.to_index()] =
-                        any_in && !dirs_in[dir.to_index()];
+                    wind_state[block_index].set_wind_out(
+                        dir,
+                        any_in && !wind_in[dir.to_index(),
+                    );
                 }
             }
         }
@@ -315,21 +338,6 @@ impl Exec {
 
     fn update_block(block: &mut PlacedBlock) {
         match block.block {
-            Block::BlipWindSource {
-                ref mut activated, ..
-            } => {
-                *activated = false;
-            }
-            Block::BlipSpawn {
-                ref mut activated, ..
-            } => {
-                *activated = None;
-            }
-            Block::BlipDuplicator {
-                ref mut activated, ..
-            } => {
-                *activated = None;
-            }
             Block::Output {
                 ref mut outputs,
                 ref mut activated,
@@ -342,11 +350,6 @@ impl Exec {
                     outputs.pop();
                 }
 
-                *activated = None;
-            }
-            Block::DetectorBlipDuplicator {
-                ref mut activated, ..
-            } => {
                 *activated = None;
             }
             _ => (),
@@ -362,47 +365,44 @@ impl Exec {
         blip_state: &mut Vec<BlipState>,
         blips: &mut VecOption<Blip>,
     ) -> Option<BlipIndex> {
-        if let Some(Some(output_index)) = block_ids.get(&pos) {
-            if let Some(blip_index) = blip_state[*output_index].blip_index {
-                if invert {
-                    debug!("removing blip {} at {:?}", blip_index, pos);
-                    blips[blip_index].status =
-                        if let BlipStatus::Spawning(_) = blips[blip_index].status {
-                            BlipStatus::Spawning(BlipSpawnMode::LiveToDie)
-                        } else {
-                            BlipStatus::Dying
-                        };
-                    //blip_state[*output_index].blip_index = None;
+        let output_index = block_ids.get(&pos).flatten()?;
 
-                    debug!("spawning dead blip at {:?}", pos);
-                    let blip = Blip {
-                        kind,
-                        pos: *pos,
-                        old_move_dir: None,
-                        run_block_effects: false,
-                        status: BlipStatus::Spawning(BlipSpawnMode::LiveToDie),
+        if let Some(blip_index) = blip_state[*output_index].blip_index {
+            if invert {
+                debug!("removing blip {} at {:?}", blip_index, pos);
+                blips[blip_index].status =
+                    if let BlipStatus::Spawning(_) = blips[blip_index].status {
+                        BlipStatus::Spawning(BlipSpawnMode::LiveToDie)
+                    } else {
+                        BlipStatus::Dying
                     };
 
-                    Some(blips.add(blip))
-                } else {
-                    None
-                }
-            } else {
-                debug!("spawning blip at {:?}", pos);
+                debug!("spawning dead blip at {:?}", pos);
                 let blip = Blip {
                     kind,
                     pos: *pos,
                     old_move_dir: None,
-                    run_block_effects: true, // apply effects for entering block in next frame
-                    status: BlipStatus::Spawning(mode),
+                    run_block_effects: false,
+                    status: BlipStatus::Spawning(BlipSpawnMode::LiveToDie),
                 };
-                let blip_index = Some(blips.add(blip));
-                blip_state[*output_index].blip_index = blip_index;
 
-                blip_index
+                Some(blips.add(blip))
+            } else {
+                None
             }
         } else {
-            None
+            debug!("spawning blip at {:?}", pos);
+            let blip = Blip {
+                kind,
+                pos: *pos,
+                old_move_dir: None,
+                run_block_effects: true, // apply effects for entering block in next frame
+                status: BlipStatus::Spawning(mode),
+            };
+            let blip_index = Some(blips.add(blip));
+            blip_state[*output_index].blip_index = blip_index;
+
+            blip_index
         }
     }
 
@@ -435,8 +435,6 @@ impl Exec {
                 blip.status = BlipStatus::Existing;
             }
 
-            let block_index = block_ids.get(&blip.pos);
-
             // Don't consider blips that are to be removed in the current tick
             if remove_indices.contains(&blip_index) {
                 // TODO: The above check could be inefficient; consider using a
@@ -444,7 +442,7 @@ impl Exec {
                 continue;
             }
 
-            if let Some(Some(block_index)) = block_index {
+            if let Some(block_index) = block_ids.get(&blip.pos).flatten() {
                 debug!(
                     "blip at {:?}: {:?} vs {:?}",
                     blip.pos, old_blip_state[*block_index].blip_index, blip_index,
@@ -478,7 +476,7 @@ impl Exec {
 
                 debug!("marking blip {} as dead at pos {:?}", remove_index, pos);
 
-                if let Some(Some(block_index)) = block_ids.get(&pos) {
+                if let Some(block_index) = block_ids.get(&pos).flatten() {
                     if blip_state[*block_index].blip_index == Some(remove_index) {
                         blip_state[*block_index].blip_index = None;
                     }
@@ -600,40 +598,29 @@ impl Exec {
         blip: &mut Blip,
         block_ids: &Grid3<Option<BlockIndex>>,
         wind_state: &[WindState],
-        blip_state: &mut Vec<BlipState>,
+        blip_state: &mut [BlipState],
+        activation_state: &mut [ActivationState],
         block_data: &mut VecOption<(Point3, PlacedBlock)>,
         remove_indices: &mut Vec<BlipIndex>,
     ) {
         assert_eq!(block_data[block_index].0, blip.pos);
 
-        if blip.run_block_effects {
-            // Blip moved in last tick (or it was spawned). Apply effects of
-            // entering the new block.
-            blip.run_block_effects = false;
+        let placed_block = block_data[block_index].1.clone();
 
-            let placed_block = &mut block_data[block_index].1;
-            let remove = Self::on_blip_enter_block(blip, placed_block);
-            if remove {
-                // Effect of new block causes blip to be removed
-                debug!(
-                    "will mark blip {} as dead due to block {:?} effect",
-                    blip_index, placed_block,
-                );
-
-                // Disable interpolation for this blip
-                blip.old_move_dir = None;
-
-                remove_indices.push(blip_index);
-                return;
-            }
+        if placed_block.block.is_blip_killer() {
+            remove_indices.push(blip_index);
+            return;
         }
 
-        let placed_block = block_data[block_index].1.clone();
         let out_dir =
             Self::get_blip_move_dir(blip, &placed_block, block_ids, block_data, wind_state);
         let new_pos = if let Some(out_dir) = out_dir {
             Self::on_blip_leave_block(blip, out_dir, &mut block_data[block_index].1);
-            blip.run_block_effects = true;
+            Self::on_blip_enter_block(
+                blip.kind,
+                &block_data[block_index].1.block,
+                &mut activation_state[block_index],
+            );
 
             blip.pos + out_dir.to_vector()
         } else {
@@ -685,63 +672,13 @@ impl Exec {
         }
     }
 
-    fn on_blip_enter_block(blip: &Blip, new_placed_block: &mut PlacedBlock) -> bool {
-        match new_placed_block.block {
-            Block::BlipDuplicator {
-                kind,
-                ref mut activated,
-                ..
-            } => {
-                // TODO: Resolve possible race condition in blip
-                //       duplicator. If two blips of different
-                //       kind race into the duplicator, the output
-                //       kind depends on the order of blip
-                //       evaluation.
-                if kind == None || kind == Some(blip.kind) {
-                    *activated = Some(blip.kind);
-                }
-
-                // Remove blip
-                true
-            }
-            Block::BlipWindSource {
-                ref mut activated, ..
-            } => {
-                *activated = true;
-
-                // Remove blip
-                true
-            }
-            Block::Solid => {
-                // Remove blip
-                true
-            }
-            Block::Output {
-                ref mut activated, ..
-            } => {
-                *activated = Some(blip.kind);
-
-                // Remove blip
-                true
-            }
-            Block::DetectorBlipDuplicator {
-                kind,
-                ref mut activated,
-                ..
-            } => {
-                // TODO: Resolve possible race condition in blip
-                //       duplicator. If two blips of different
-                //       kind race into the duplicator, the output
-                //       kind depends on the order of blip
-                //       evaluation.
-                if kind == None || kind == Some(blip.kind) {
-                    *activated = Some(blip.kind);
-                }
-
-                // Let it live
-                false
-            }
-            _ => false,
+    fn on_blip_enter_block(
+        blip_kind: BlipKind,
+        block: &Block,
+        activated: &mut ActivationState,
+    ) {
+        if block.is_activatable(blip_kind) {
+            *activated = std::cmp::max(*activated, Some(blip_kind));
         }
     }
 
@@ -906,15 +843,6 @@ impl Exec {
         } else {
             LevelStatus::Running
         }
-    }
-
-    fn initial_block_state<T: Default + Copy>(machine: &Machine) -> Vec<T> {
-        // We assume that the machine's blocks are contiguous in memory, so that
-        // we can store wind state as a Vec, instead of wasting memory or cycles
-        // on VecOption while executing.
-        assert!(machine.is_contiguous());
-
-        vec![Default::default(); machine.num_blocks()]
     }
 
     fn initialize_inputs_outputs(inputs_outputs: &level::InputsOutputs, machine: &mut Machine) {
