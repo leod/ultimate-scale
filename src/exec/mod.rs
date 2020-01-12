@@ -56,6 +56,9 @@ pub struct Blip {
     /// The blip's current position on the grid.
     pub pos: Point3,
 
+    /// The last direction that this blip moved in.
+    pub last_move_dir: Dir3,
+
     /// The direction in which the blip moved last tick, if any.
     pub move_dir: Option<Dir3>,
 
@@ -189,20 +192,19 @@ impl Exec {
     }
 
     pub fn update(&mut self) {
-        self.check_consistency();
-
-        // Perform blip movement, as it was defined in the previous update.
+        // 1) Perform blip movement, as it was defined in the previous update.
         for (blip_index, blip) in self.blips {
             if let Some(move_dir) = blip.move_dir {
                 blip.pos = blip.pos + move_dir.to_vector();
+                blip.last_move_dir = move_dir;
                 blip.move_dir = None;
             }
         }
 
-        // Remove dead blips.
+        // 2) Remove dead blips.
         self.blips.retain(|blip| !blip.state.is_dead());
 
-        // Spawn and move wind.
+        // 3) Spawn and move wind.
         std::mem::swap(&mut self.blocks.wind, &mut self.blocks.next_wind);
 
         for block_index in 0..self.machine.num_blocks() {
@@ -215,14 +217,15 @@ impl Exec {
             );
         }
 
-        // Determine blip movement directions.
+        // 4) Determine blip movement directions.
         for block_index in 0..self.machine.num_blocks() {
             self.blocks.next_blip_count[block_index] = 0;
         }
 
-        for 
+        for (_blip_index, blip) in self.blips.iter_mut() {
+        }
 
-        // Run effects of blocks that were activated in this tick.
+        // 5) Run effects of blocks that were activated in this tick.
         for (block_index, (block_pos, placed_block)) in self.machine.iter_blocks() {
             if let Some(blip_kind) = self.blocks.activation[block_index] {
                 run_activated_block(
@@ -233,8 +236,6 @@ impl Exec {
                 );
             }
         }
-
-        self.check_consistency();
 
         self.cur_tick += 1;
     }
@@ -287,6 +288,24 @@ fn spawn_or_advect_wind(
     }
 }
 
+fn blip_move_dir(
+    blip: &Blip,
+    machine: &Machine,
+    neighbor_map: &NeighborMap,
+    next_wind_out: &[DirMap<bool>],
+) -> Option<Dir3> {
+    let block = &machine.get(blip.pos).block;
+
+    let can_move_to = |(dir: Dir3, neighbor_index: BlockIndex)| {
+        next_wind_out[*dir] 
+            && block.has_move_hole(*dir)
+            && machine.block_at_index(neighbor_index).has_move_hole(dir.invert())
+    };
+
+    // When given a choice, prefer moving in the same direction as last time.
+    let dirs = iter::once(blip.last_move_dir);
+}
+
 fn run_activated_block(
     block_pos: &Point3,
     block: &Block,
@@ -295,70 +314,20 @@ fn run_activated_block(
 ) {
     match block {
         BlipDuplicator {
-            out_dirs: (out_dir_1, out_dir_2),
+            out_dirs,
             ..
         } => {
-            blips.add(Blip {
-                kind: blip_kind,
-                pos: block_pos + out_dir_1.to_vector(),
-                move_dir: None,
-                status: BlipStatus::Spawning(BlipSpawnMode::Quick),
-            });
-            blips.add(Blip {
-                kind: blip_kind,
-                pos: block_pos + out_dir_2.to_vector(),
-                move_dir: None,
-                status: BlipStatus::Spawning(BlipSpawnMode::Quick),
-            });
+            for &dir in &[out_dir.0, out_dirs.1] {
+                blips.add(Blip {
+                    kind: blip_kind,
+                    pos: block_pos,
+                    last_move_dir: dir,
+                    move_dir: Some(dir),
+                    status: BlipStatus::Spawning(BlipSpawnMode::Quick),
+                });
+            }
         }
         _ => (),
-    }
-}
-
-fn check_output(block_data: &mut VecOption<(Point3, PlacedBlock)>) -> LevelStatus {
-    let mut failed = false;
-    let mut completed = true;
-
-    for (_, (_, block)) in block_data.iter_mut() {
-        if let Block::Output {
-            ref mut outputs,
-            ref activated,
-            failed: ref mut output_failed,
-            ..
-        } = block.block
-        {
-            // The last element of `outputs` is the next expected output.
-            // Note that the last element will be popped at the start of
-            // the next tick in `update_block`.
-            let expected = outputs.last().copied();
-
-            let (block_failed, block_completed) = match (expected, activated) {
-                (Some(expected), Some(activated)) => {
-                    (expected != *activated, outputs.len() == 1)
-                }
-                (Some(_), None) => (false, false),
-                (None, Some(_)) => (true, false),
-                (None, None) => (false, true),
-            };
-
-            if block_failed {
-                // Remember failure status for visualization.
-                *output_failed = true;
-            }
-
-            failed = failed || block_failed;
-            completed = completed && block_completed;
-        }
-    }
-
-    if failed {
-        info!("Level failed");
-        LevelStatus::Failed
-    } else if completed {
-        info!("Level completed");
-        LevelStatus::Completed
-    } else {
-        LevelStatus::Running
     }
 }
 
