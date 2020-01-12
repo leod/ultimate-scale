@@ -1,5 +1,5 @@
 use crate::exec::Exec;
-use crate::machine::grid::Dir3;
+use crate::machine::grid::{Dir3, DirMap3};
 use crate::machine::BlockIndex;
 
 /// Stages in the lifecycle of wind in some direction in a block. Used for
@@ -49,9 +49,8 @@ impl WindLife {
 /// Animation state for wind in all directions in a block. Used for animation
 /// purposes.
 pub struct WindAnimState {
-    pub wind_in: [WindLife; Dir3::NUM_INDICES],
-    pub wind_out: [WindLife; Dir3::NUM_INDICES],
-    pub out_deadend: [Option<WindDeadend>; Dir3::NUM_INDICES],
+    pub wind_out: DirMap3<WindLife>,
+    pub out_deadend: DirMap3<Option<WindDeadend>>,
 }
 
 impl WindAnimState {
@@ -60,41 +59,31 @@ impl WindAnimState {
     pub fn from_exec_block(exec: &Exec, block_index: BlockIndex) -> Self {
         let machine = exec.machine();
 
-        let mut wind_in = [WindLife::None; Dir3::NUM_INDICES];
-        let mut wind_out = [WindLife::None; Dir3::NUM_INDICES];
-        let mut out_deadend = [None; Dir3::NUM_INDICES];
+        let wind_out = DirMap3::from_fn(|dir| {
+            WindLife::from_states(
+                exec.blocks().wind_out[block_index][dir],
+                exec.next_blocks().wind_out[block_index][dir],
+            )
+        });
 
-        for &dir in &Dir3::ALL {
-            // Outgoing wind
-            wind_out[dir.to_index()] = WindLife::from_states(
-                exec.old_wind_state()[block_index].wind_out(dir),
-                exec.wind_state()[block_index].wind_out(dir),
-            );
+        let out_deadend = exec.neighbor_map()[block_index].map(|(dir, neighbor_index)| {
+            if let Some(neighbor_index) = neighbor_index {
+                let neighbor_block = exec.machine().block_at_index(neighbor_index);
 
-            // Incoming wind
-            let neighbor_pos = machine.block_pos_at_index(block_index) + dir.to_vector();
-            let neighbor_block = machine.get_with_index(&neighbor_pos);
-            if let Some((neighbor_index, neighbor_block)) = neighbor_block {
-                // If neighboring block has no wind connection in this
-                // direction, we won't show wind.
-                out_deadend[dir.to_index()] = if !neighbor_block.has_wind_hole_in(dir.invert()) {
+                if !neighbor_block.has_wind_hole_in(dir.invert()) {
+                    // If neighboring block has no wind connection in this
+                    // direction, we won't show wind.
                     Some(WindDeadend::Block)
                 } else {
                     None
-                };
-
-                wind_in[dir.to_index()] = WindLife::from_states(
-                    exec.old_wind_state()[neighbor_index].wind_out(dir.invert()),
-                    exec.wind_state()[neighbor_index].wind_out(dir.invert()),
-                );
+                }
             } else {
                 // No block, will show wind partially.
-                out_deadend[dir.to_index()] = Some(WindDeadend::Space);
+                Some(WindDeadend::Space)
             }
-        }
+        });
 
         WindAnimState {
-            wind_in,
             wind_out,
             out_deadend,
         }

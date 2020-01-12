@@ -113,9 +113,9 @@ pub enum LevelStatus {
 
 pub type Activation = Option<BlipIndex>;
 
-struct BlocksState {
-    wind_out: Vec<DirMap3<bool>>,
-    activation: Vec<Activation>,
+pub struct BlocksState {
+    pub wind_out: Vec<DirMap3<bool>>,
+    pub activation: Vec<Activation>,
 }
 
 impl BlocksState {
@@ -181,6 +181,10 @@ impl Exec {
         &self.machine
     }
 
+    pub fn neighbor_map(&self) -> &NeighborMap {
+        &self.neighbor_map
+    }
+
     pub fn level_status(&self) -> LevelStatus {
         self.level_status
     }
@@ -199,6 +203,14 @@ impl Exec {
 
     pub fn blips(&self) -> &VecOption<Blip> {
         &self.blips
+    }
+
+    pub fn blocks(&self) -> &BlocksState {
+        &self.blocks
+    }
+
+    pub fn next_blocks(&self) -> &BlocksState {
+        &self.next_blocks
     }
 
     pub fn update(&mut self) {
