@@ -36,3 +36,5 @@ impl NeighborMap {
             .filter_map(|(dir, neighbor_index)| neighbor_index.map(|i| (dir, *i))
     }
 }
+
+impl Index<BlockIndex> for NeighborMap

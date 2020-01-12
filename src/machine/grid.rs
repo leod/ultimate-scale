@@ -89,6 +89,13 @@ impl Dir3 {
         Dir3::Z_NEG,
     ];
 
+    pub const ALL_XY: [Dir3; 4] = [
+        Dir3::X_POS,
+        Dir3::X_NEG,
+        Dir3::Y_POS,
+        Dir3::Y_NEG,
+    ];
+
     pub fn to_vector(self) -> Vector3 {
         self.0.to_vector() * self.1.to_number()
     }
@@ -156,7 +163,7 @@ impl Dir3 {
 pub struct DirMap3<T>(pub [T; Dir3::NUM_INDICES]);
 
 impl<T> DirMap3<T> {
-    fn from_fn(f: impl Fn(Dir3) -> T) -> Self {
+    pub fn from_fn(f: impl Fn(Dir3) -> T) -> Self {
         Self([
             f(Dir3::ALL[0]),    
             f(Dir3::ALL[1]),
@@ -167,11 +174,27 @@ impl<T> DirMap3<T> {
         ])
     }
 
-    fn iter(&self) -> impl Iterator<Item = (Dir3, &T)> {
-        Dir3::ALL
-            .iter()
-            .cloned()
-            .zip(self.0.iter())
+    pub fn keys(&self) -> impl Iterator<Item = Dir3> {
+        Dir3::ALL.iter().cloned()
+    }
+
+    pub fn values(&self) -> impl Iterator<Item = &T> {
+        self.0.iter()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (Dir3, &T)> {
+        self.keys().zip(self.values())
+    }
+
+    pub fn map<U>(self, f: impl Fn(Dir3, T) -> U) -> DirMap3<U> {
+        Self([
+            f(Dir3::ALL[0], self.0[0]),
+            f(Dir3::ALL[1], self.0[1]),
+            f(Dir3::ALL[2], self.0[2]),
+            f(Dir3::ALL[3], self.0[3]),
+            f(Dir3::ALL[4], self.0[4]),
+            f(Dir3::ALL[5], self.0[5]),
+        ])
     }
 }
 

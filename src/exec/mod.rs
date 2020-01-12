@@ -7,6 +7,7 @@ pub mod view;
 pub mod neighbors;
 
 use std::iter;
+use std::convert::identity;
 
 use log::{debug, info};
 use rand::Rng;
@@ -248,7 +249,8 @@ fn spawn_or_advect_wind(
     wind_out: &[DirMap<bool>],
     prev_activation: &[Activation],
 ) -> DirMap<bool> {
-    match machine.block_at_index(block_index) {
+    let block = machine.block_at_index(block_index);
+    match block {
         Block::WindSource => flow_everywhere(),
         Block::BlipWindSource {
             button_dir,
@@ -266,26 +268,33 @@ fn spawn_or_advect_wind(
         _ => {
             // Check if we got any wind in flow from our neighbors in the
             // old state
-            let mut any_wind_in = false;
+            let block_wind_in = neighbor_map[block_index].map(|(dir, neighbor_index)| {
+                neighbor_index.map_or(false, |neighbor_index| {
+                    block.has_wind_hole_in(dir) && wind_out[neighbor_index][dir.invert()]
+                })
+            });
 
-            for (dir, neighbor_index) in neighbor_map.iter(block_index) {
-                any_wind_in = any_wind_in || wind_out[neighbor_index][dir.invert()];
-            }
-
-            if any_wind_in {
+            if block_wind_in.values().any(identity) {
                 // Forward in flow to our outgoing wind hole directions
-                let mut next_wind_out = flow_nowhere();
-
-                for (neighbor_dir, neighbor_index) in neighbor_map.iter(block_index) {
-                    next_wind_out[dir] = !wind_out[neigbhor_index][dir.invert()];
-                }
-
-                next_wind_out
+                neighbor_map[block_index].map(|(dir, neighbor_index)| {
+                    neighbor_index.map_or(true, |neighbor_index| {
+                        block.has_wind_hole_out(dir) && !block_wind_in[dir]
+                    })
+                })
             } else {
-                flow_nowhere();
+                flow_nowhere()
             }
         }
     }
+}
+
+fn find_dir_ccw_xy(
+    initial_dir: Dir3,
+    f: impl Fn(Dir3) -> bool, 
+) -> Option<Dir3> {
+    iter::successors(Some(initial_dir), |dir| Some(dir.rotated_ccw_xy()))
+        .take(4)
+        .find(f)
 }
 
 fn blip_move_dir(
@@ -296,14 +305,46 @@ fn blip_move_dir(
 ) -> Option<Dir3> {
     let block = &machine.get(blip.pos).block;
 
-    let can_move_to = |(dir: Dir3, neighbor_index: BlockIndex)| {
-        next_wind_out[*dir] 
-            && block.has_move_hole(*dir)
-            && machine.block_at_index(neighbor_index).has_move_hole(dir.invert())
-    };
+    let block_move_out = neighbor_map[block_index].map(|(dir, neighbor_index)| {
+        neighbor_index.map_or(false, |neighbor_index| {
+            next_wind_out[block_index][dir] 
+                && block.has_move_hole(dir)
+                && machine.block_at_index(neighbor_index).has_move_hole(dir.invert())
+        });
+    });
+    let block_wind_in = neighbor_map[block_index].map(|(dir, neighbor_index)| {
+        neighbor_index.map_or(false, |neighbor_index| {
+            block.has_wind_hole_in(dir) && next_wind_out[neighbor_index][dir.invert()]
+        })
+    });
 
-    // When given a choice, prefer moving in the same direction as last time.
-    let dirs = iter::once(blip.last_move_dir);
+    let num_move_out = block_move_out.values().map(|flow| flow as usize).sum();
+    let num_wind_in = block_wind_in.values().map(|flow| flow as usize).sum();
+
+    match num_wind_in {
+        1 => {
+            let wind_in_dir = wind_in.iter().find(|dir, flow| flow).0;
+
+            find_dir_ccw_xy(
+                wind_in_dir.invert(),
+                |dir| !wind_in[dir] && block_move_out[dir],
+            )
+        }
+        3 => {
+            let all_wind_in_xy = block_wind_in
+                .iter()
+                .map(|(dir, flow)| !flow || dir.0 != Axis3::Z)
+                .all();
+
+            if all_wind_in_xy {
+                Dir3::ALL_XY.iter().cloned().find(|dir| !wind_in[dir] && block_move_out[dir])
+            } else {
+                // TODO: I don't think this can actually happen.
+                None
+            }
+        }
+        _ => None
+    }
 }
 
 fn run_activated_block(
