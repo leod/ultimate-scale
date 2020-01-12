@@ -1,18 +1,18 @@
 pub mod anim;
 pub mod level_progress;
+pub mod neighbors;
 pub mod play;
 #[cfg(test)]
 mod tests;
 pub mod view;
-pub mod neighbors;
 
-use std::iter;
 use std::convert::identity;
+use std::iter;
 
 use log::{debug, info};
 use rand::Rng;
 
-use crate::machine::grid::{Axis3, Dir3, Grid3, Point3, DirMap3};
+use crate::machine::grid::{Axis3, Dir3, DirMap3, Grid3, Point3};
 use crate::machine::{level, BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 
@@ -44,8 +44,11 @@ pub enum BlipStatus {
 
 impl BlipStatus {
     fn is_dead(self) -> bool {
-        BlipStatus::Spawning(BlipSpawnMode::LiveToDie) => true,
-        BlipStatus::Dying => true,
+        match self {
+            BlipStatus::Spawning(BlipSpawnMode::LiveToDie) => true,
+            BlipStatus::Dying => true,
+            _ => false,
+        }
     }
 }
 
@@ -119,7 +122,7 @@ impl BlocksState {
         // we can store block state as a Vec, instead of wasting memory or
         // cycles on VecOption while executing.
         assert!(machine.is_contiguous());
-        
+
         State {
             wind_out: vec![DirMap::default(); machine.num_blocks()],
             next_wind_out: vec![DirMap::default(); machine.num_blocks()],
@@ -223,18 +226,12 @@ impl Exec {
             self.blocks.next_blip_count[block_index] = 0;
         }
 
-        for (_blip_index, blip) in self.blips.iter_mut() {
-        }
+        for (_blip_index, blip) in self.blips.iter_mut() {}
 
         // 5) Run effects of blocks that were activated in this tick.
         for (block_index, (block_pos, placed_block)) in self.machine.iter_blocks() {
             if let Some(blip_kind) = self.blocks.activation[block_index] {
-                run_activated_block(
-                    *block_pos,
-                    &placed_block.block,
-                    blip_kind,
-                    &mut self.blips,
-                );
+                run_activated_block(*block_pos, &placed_block.block, blip_kind, &mut self.blips);
             }
         }
 
@@ -252,19 +249,14 @@ fn spawn_or_advect_wind(
     let block = machine.block_at_index(block_index);
     match block {
         Block::WindSource => flow_everywhere(),
-        Block::BlipWindSource {
-            button_dir,
-        } => {
+        Block::BlipWindSource { button_dir } => {
             if prev_activation[block_index].is_some() {
                 flow_everywhere_except(button_dir)
             } else {
                 flow_nowhere()
             }
         }
-        Block::Input {
-            out_dir,
-            ..
-        } => flow_only(out_dir),
+        Block::Input { out_dir, .. } => flow_only(out_dir),
         _ => {
             // Check if we got any wind in flow from our neighbors in the
             // old state
@@ -288,10 +280,7 @@ fn spawn_or_advect_wind(
     }
 }
 
-fn find_dir_ccw_xy(
-    initial_dir: Dir3,
-    f: impl Fn(Dir3) -> bool, 
-) -> Option<Dir3> {
+fn find_dir_ccw_xy(initial_dir: Dir3, f: impl Fn(Dir3) -> bool) -> Option<Dir3> {
     iter::successors(Some(initial_dir), |dir| Some(dir.rotated_ccw_xy()))
         .take(4)
         .find(f)
@@ -307,9 +296,11 @@ fn blip_move_dir(
 
     let block_move_out = neighbor_map[block_index].map(|(dir, neighbor_index)| {
         neighbor_index.map_or(false, |neighbor_index| {
-            next_wind_out[block_index][dir] 
+            next_wind_out[block_index][dir]
                 && block.has_move_hole(dir)
-                && machine.block_at_index(neighbor_index).has_move_hole(dir.invert())
+                && machine
+                    .block_at_index(neighbor_index)
+                    .has_move_hole(dir.invert())
         });
     });
     let block_wind_in = neighbor_map[block_index].map(|(dir, neighbor_index)| {
@@ -325,10 +316,9 @@ fn blip_move_dir(
         1 => {
             let wind_in_dir = wind_in.iter().find(|dir, flow| flow).0;
 
-            find_dir_ccw_xy(
-                wind_in_dir.invert(),
-                |dir| !wind_in[dir] && block_move_out[dir],
-            )
+            find_dir_ccw_xy(wind_in_dir.invert(), |dir| {
+                !wind_in[dir] && block_move_out[dir]
+            })
         }
         3 => {
             let all_wind_in_xy = block_wind_in
@@ -337,13 +327,16 @@ fn blip_move_dir(
                 .all();
 
             if all_wind_in_xy {
-                Dir3::ALL_XY.iter().cloned().find(|dir| !wind_in[dir] && block_move_out[dir])
+                Dir3::ALL_XY
+                    .iter()
+                    .cloned()
+                    .find(|dir| !wind_in[dir] && block_move_out[dir])
             } else {
                 // TODO: I don't think this can actually happen.
                 None
             }
         }
-        _ => None
+        _ => None,
     }
 }
 
@@ -354,10 +347,7 @@ fn run_activated_block(
     blips: &mut VecOption<Blip>,
 ) {
     match block {
-        BlipDuplicator {
-            out_dirs,
-            ..
-        } => {
+        BlipDuplicator { out_dirs, .. } => {
             for &dir in &[out_dir.0, out_dirs.1] {
                 blips.add(Blip {
                     kind: blip_kind,
@@ -405,4 +395,3 @@ fn initialize_inputs_outputs(inputs_outputs: &level::InputsOutputs, machine: &mu
         }
     }
 }
-

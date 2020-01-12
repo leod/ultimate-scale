@@ -89,12 +89,7 @@ impl Dir3 {
         Dir3::Z_NEG,
     ];
 
-    pub const ALL_XY: [Dir3; 4] = [
-        Dir3::X_POS,
-        Dir3::X_NEG,
-        Dir3::Y_POS,
-        Dir3::Y_NEG,
-    ];
+    pub const ALL_XY: [Dir3; 4] = [Dir3::X_POS, Dir3::X_NEG, Dir3::Y_POS, Dir3::Y_NEG];
 
     pub fn to_vector(self) -> Vector3 {
         self.0.to_vector() * self.1.to_number()
@@ -165,12 +160,12 @@ pub struct DirMap3<T>(pub [T; Dir3::NUM_INDICES]);
 impl<T> DirMap3<T> {
     pub fn from_fn(f: impl Fn(Dir3) -> T) -> Self {
         Self([
-            f(Dir3::ALL[0]),    
+            f(Dir3::ALL[0]),
             f(Dir3::ALL[1]),
-            f(Dir3::ALL[2]),    
-            f(Dir3::ALL[3]),    
-            f(Dir3::ALL[4]),    
-            f(Dir3::ALL[5]),    
+            f(Dir3::ALL[2]),
+            f(Dir3::ALL[3]),
+            f(Dir3::ALL[4]),
+            f(Dir3::ALL[5]),
         ])
     }
 
