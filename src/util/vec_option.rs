@@ -83,11 +83,19 @@ impl<T> VecOption<T> {
     pub fn contains(&self, index: usize) -> bool {
         index < self.data.len() && self.data[index].is_some()
     }
-}
 
-impl<T: Clone> VecOption<T> {
+    pub fn retain(&mut self, f: impl FnMut(&T) -> bool) {
+        for i in 0..self.data.len() {
+            let remove = self.data[i].map_or(false, |elem| !f(elem));
+
+            if remove {
+                self.remove(i);
+            }
+        }
+    }
+
     pub fn gc(&mut self) {
-        self.data = self.data.iter().filter(|x| x.is_some()).cloned().collect();
+        self.data.retain(Option::is_some);
         self.free.clear();
     }
 }
