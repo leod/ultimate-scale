@@ -288,7 +288,6 @@ impl Block {
         match self {
             Block::BlipDuplicator { kind, .. } => kind == None || kind == Some(blip_kind),
             Block::BlipWindSource { .. } => true,
-            Block::Solid { .. } => true,
             Block::Output { .. } => true,
             Block::DetectorBlipDuplicator { kind } => kind == None || kind == Some(blip_kind),
             _ => false,
