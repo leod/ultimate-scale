@@ -182,14 +182,7 @@ impl<T> DirMap3<T> {
     }
 
     pub fn map<U>(self, f: impl Fn(Dir3, T) -> U) -> DirMap3<U> {
-        Self([
-            f(Dir3::ALL[0], self.0[0]),
-            f(Dir3::ALL[1], self.0[1]),
-            f(Dir3::ALL[2], self.0[2]),
-            f(Dir3::ALL[3], self.0[3]),
-            f(Dir3::ALL[4], self.0[4]),
-            f(Dir3::ALL[5], self.0[5]),
-        ])
+        DirMap3::from_fn(|dir| f(self[dir]))
     }
 }
 
