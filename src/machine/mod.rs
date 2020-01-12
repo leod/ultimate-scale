@@ -454,6 +454,10 @@ impl Machine {
             .map(move |id| &mut self.blocks.data[id].1)
     }
 
+    pub fn get_index(&self, p: &Point3) -> Option<BlockIndex> {
+        self.blocks.indices.get(p).and_then(|id| *id)
+    }
+
     pub fn get_with_index(&self, p: &Point3) -> Option<(BlockIndex, &PlacedBlock)> {
         self.blocks
             .indices
