@@ -4,15 +4,18 @@ pub mod play;
 #[cfg(test)]
 mod tests;
 pub mod view;
+pub mod neighbors;
 
 use std::iter;
 
 use log::{debug, info};
 use rand::Rng;
 
-use crate::machine::grid::{Axis3, Dir3, Grid3, Point3};
+use crate::machine::grid::{Axis3, Dir3, Grid3, Point3, DirMap3};
 use crate::machine::{level, BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
+
+use neighbors::NeighborMap;
 
 pub use play::TickTime;
 pub use view::ExecView;
@@ -63,43 +66,26 @@ pub struct Blip {
 
 pub type BlipIndex = usize;
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
-pub struct Flow {
-    pub out: [bool; Dir3::NUM_INDICES],
+pub fn flow_nowhere() -> DirMap<bool> {
+    Default::default()
 }
 
-impl Flow {
-    pub fn nowhere() -> Self {
-        Default::default()
-    }
+pub fn flow_everywhere() -> DirMap<bool> {
+    DirMap([true; Dir3::NUM_INDICES])
+}
 
-    pub fn everywhere() -> Self {
-        Flow {
-            out: [true; Dir3::NUM_INDICES],
-        }
-    }
+pub fn flow_only(dir: Dir3) -> DirMap<bool> {
+    let mut flow = Self::nowhere();
+    flow[except] = true;
 
-    pub fn only(dir: Dir3) -> Self {
-        let mut flow = Self::nowhere();
-        flow.set_out(except, true);
+    flow
+}
 
-        flow
-    }
+pub fn flow_everywhere_except(except: Dir3) -> DirMap<bool> {
+    let mut flow = Self::everywhere();
+    flow[except] = false;
 
-    pub fn everywhere_except(except: Dir3) -> Self {
-        let mut flow = Self::everywhere();
-        flow.set_out(except, false);
-
-        flow
-    }
-
-    pub fn out(self, dir: Dir3) -> bool {
-        self.out[dir.to_index()]
-    }
-
-    pub fn set_out(self, dir: Dir3, value: bool) {
-        self.out[dir.to_index()] = value;
-    }
+    flow
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
@@ -112,8 +98,13 @@ pub enum LevelStatus {
 pub type Activation = Option<BlipIndex>;
 
 struct BlocksState {
-    wind: Vec<Flow>,
-    next_wind: Vec<Flow>,
+    wind_out: Vec<DirMap<bool>>,
+    next_wind_out: Vec<DirMap<bool>>,
+
+    prev_activation: Vec<Activation>,
+    activation: Vec<Activation>,
+    next_activation: Vec<Activation>,
+
     activation: Vec<Activation>,
     blip_count: Vec<usize>,
 }
@@ -126,8 +117,8 @@ impl BlocksState {
         assert!(machine.is_contiguous());
         
         State {
-            wind: vec![Flow::default(); machine.num_blocks()],
-            next_wind: vec![Flow::default(); machine.num_blocks()],
+            wind: vec![DirMap::default(); machine.num_blocks()],
+            next_wind: vec![DirMap::default(); machine.num_blocks()],
             activation: vec![Activation::default(); machine.num_blocks()],
             blip_count: vec![0; machine.num_blocks()],
         }
@@ -138,6 +129,7 @@ pub struct Exec {
     cur_tick: TickNum,
 
     machine: Machine,
+    neighbor_map: NeighborMap,
 
     inputs_outputs: Option<level::InputsOutputs>,
     level_status: LevelStatus,
@@ -151,6 +143,7 @@ impl Exec {
         // Make the machine's blocks contiguous in memory.
         machine.gc();
 
+        let neighbor_map = NeighborMap::new_from_machine(&machine);
         let inputs_outputs = machine
             .level
             .as_ref()
@@ -163,6 +156,7 @@ impl Exec {
         Exec {
             cur_tick: 0,
             machine,
+            neighbor_map,
             level_status: LevelStatus::Running,
             inputs_outputs,
             blips: VecOption::new(),
@@ -197,15 +191,7 @@ impl Exec {
     pub fn update(&mut self) {
         self.check_consistency();
 
-        self.blocks.wind.clone_from(&self.blocks.next_wind);
-
-        for index in 0..self.blocks.len() {
-            self.blip_state[index].blip_index = None;
-        }
-
-        for index in 0..self.blip_state.len() {
-            self.activated[index] = None;
-        }
+        std::mem::swap(&mut self.blocks.wind, &mut self.blocks.next_wind);
 
         // Perform blip movement, as it was defined in the previous update.
         for (blip_index, blip) in self.blips {
@@ -253,29 +239,24 @@ impl Exec {
 }
 
 fn advect_wind(
-    (block_pos, block): (&Point3, &Block),
+    block_index: usize,
     machine: &Machine,
-    wind: &[Flow],
-) -> Flow {
-    match block {
-        Block::WindSource => Flow::everywhere(),
+    neighbor_map: &NeighborMap,
+    prev_activation: &[Activation],
+    wind_out: &[DirMap<bool>],
+) -> DirMap<bool> {
+    let (block_pos, ref placed_block) = &machine.blocks.data[block_index];
+
+    match placed_block.block {
+        Block::WindSource => flow_everywhere(),
         Block::BlipWindSource {
             button_dir,
         } => {
-            for &dir in &Dir3::ALL {
-                if dir == button_dir {
-                    // Don't put wind in the direction of our blip button
-                    continue;
-                }
-
-                wind_state[block_index].set_wind_out(
-                    dir,
-                    old_state.activated[block_index].is_some(),
-                );
+            if prev_activation[block_index].is_some() {
+                flow_everywhere_except(button_dir)
+            } else {
+                flow_nowhere()
             }
-
-            // Note: activated will be set to false in the same tick in
-            // `update_block`.
         }
         Block::Input {
             out_dir,
@@ -295,13 +276,20 @@ fn advect_wind(
             // spawned blip.
             let active = true;
 
-            wind_state[block_index].set_wind_out(out_dir, active);
+            if active {
+                flow_only(out_dir)
+            } else {
+                flow_nowhere()
+            }
         }
         _ => {
             // Check if we got any wind in flow from our neighbors in the
             // old state
             let mut any_in = false;
-            let mut wind_in = [false; Dir3::NUM_INDICES];
+            let mut wind_in = DirMap3::default();
+
+            for (dir, neighbor_index) in neighbor_map.iter(block_index) {
+            }
 
             for &dir in &placed_block.wind_holes_in() {
                 let neighbor_pos = *block_pos + dir.to_vector();
@@ -323,6 +311,14 @@ fn advect_wind(
             }
 
             // Forward in flow to our outgoing wind hole directions
+            let mut result = flow_nowhere();
+
+            if any_in {
+                for (neighbor_dir, neighbor_index) in neighbor_map.iter(block_index) {
+                    if !wind_in[dir]
+                }
+            }
+
             for &dir in &placed_block.wind_holes_out() {
                 wind_state[block_index].set_wind_out(
                     dir,
