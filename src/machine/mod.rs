@@ -466,6 +466,10 @@ impl Machine {
         self.blocks.data[index].0
     }
 
+    pub fn block_at_index(&self, index: BlockIndex) -> &Block {
+        &self.blocks.data[index].1.block
+    }
+
     pub fn set(&mut self, p: &Point3, block: Option<PlacedBlock>) {
         self.remove(p);
 
