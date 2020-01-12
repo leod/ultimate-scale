@@ -152,6 +152,43 @@ impl Dir3 {
     }
 }
 
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
+pub struct DirMap3<T>(pub [T; Dir3::NUM_INDICES]);
+
+impl<T> DirMap3<T> {
+    fn from_fn(f: impl Fn(Dir3) -> T) -> Self {
+        Self([
+            f(Dir3::ALL[0]),    
+            f(Dir3::ALL[1]),
+            f(Dir3::ALL[2]),    
+            f(Dir3::ALL[3]),    
+            f(Dir3::ALL[4]),    
+            f(Dir3::ALL[5]),    
+        ])
+    }
+
+    fn iter(&self) -> impl Iterator<Item = (Dir3, &T)> {
+        Dir3::ALL
+            .iter()
+            .cloned()
+            .zip(self.0.iter())
+    }
+}
+
+impl<T> Index<Dir3> for DirMap3<T> {
+    type Output = T;
+
+    fn index(&self, dir: Dir3) -> &T {
+        &self.0[dir.to_index()]
+    }
+}
+
+impl<T> IndexMut<Dir3> for DirMap3<T> {
+    fn index_mut(&mut self, dir: Dir3) -> &mut T {
+        &mut self.0[dir.to_index()]
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Grid3<T> {
     size: Vector3,

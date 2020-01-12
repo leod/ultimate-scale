@@ -293,6 +293,20 @@ impl Block {
             _ => false,
         }
     }
+
+    pub fn wind_holes_in(&self) -> impl Iterator<Item = Dir3> {
+        Dir3::ALL
+            .iter()
+            .filter(|dir| self.has_wind_hole_in(**dir))
+            .copied()
+    }
+
+    pub fn wind_holes_out(&self) -> impl Iterator<Item = Dir3> {
+        Dir3::ALL
+            .iter()
+            .filter(|dir| self.has_wind_hole_out(**dir))
+            .copied()
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
@@ -300,7 +314,7 @@ pub struct PlacedBlock {
     pub block: Block,
 }
 
-impl PlacedBlock {
+/*impl PlacedBlock {
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         self.block.has_wind_hole(dir)
     }
@@ -316,23 +330,7 @@ impl PlacedBlock {
     pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
         self.block.has_wind_hole_out(dir)
     }
-
-    pub fn wind_holes_in(&self) -> Vec<Dir3> {
-        Dir3::ALL
-            .iter()
-            .filter(|dir| self.has_wind_hole_in(**dir))
-            .copied()
-            .collect()
-    }
-
-    pub fn wind_holes_out(&self) -> Vec<Dir3> {
-        Dir3::ALL
-            .iter()
-            .filter(|dir| self.has_wind_hole_out(**dir))
-            .copied()
-            .collect()
-    }
-}
+}*/
 
 pub type BlockIndex = usize;
 
