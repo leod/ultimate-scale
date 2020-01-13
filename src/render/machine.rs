@@ -317,7 +317,7 @@ pub fn render_wind_mills(
     out: &mut Stage,
 ) {
     for &dir in &Dir3::ALL {
-        if !placed_block.has_wind_hole_out(dir) {
+        if !placed_block.block.has_wind_hole_out(dir) {
             continue;
         }
 
@@ -328,7 +328,7 @@ pub fn render_wind_mills(
 
             // TODO: There is a problem with this animation in that it is
             //       faster when wind is appearing/disappearing.
-            let wind_anim = pareen::anim_match!(state.wind_out(dir);
+            let wind_anim = pareen::anim_match!(state.wind_out[dir];
                 WindLife::None => 0.0,
                 WindLife::Appearing => {
                     // The wind will start moving inside of the block, so
@@ -348,7 +348,7 @@ pub fn render_wind_mills(
 
             // Only show rotation when not running into a deadend in that
             // direction.
-            pareen::cond(state.out_deadend(dir).is_none(), wind_anim, 0.0)
+            pareen::cond(state.out_deadend[dir].is_none(), wind_anim, 0.0)
         });
 
         let roll = roll_anim.eval(tick_time.tick_progress());
@@ -440,7 +440,7 @@ pub fn render_pulsator(
     out: &mut Stage,
 ) {
     let have_flow = anim_state.as_ref().map_or(false, |anim| {
-        anim.num_alive_in() > 0 && anim.num_alive_out() > 0
+        anim.num_alive_out() > 0
     });
 
     let max_size = 2.5 * PIPE_THICKNESS;
@@ -600,8 +600,9 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
+            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
             let bridge_length =
-                bridge_length_anim(0.05, 0.6, anim_state.activation.is_some()).eval(tick_time.tick_progress());
+                bridge_length_anim(0.05, 0.6, activation.is_some()).eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
@@ -626,8 +627,9 @@ pub fn render_block(
                 translation * transform * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
             let scaling = na::Vector3::new(0.65, 0.95, 0.95);
 
-            let kind_color = match anim_state.activation.or(kind) {
-                Some(kind) => blip_color(kind),
+            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
+            let kind_color = match activation.or(kind.as_ref()) {
+                Some(kind) => blip_color(*kind),
                 None => inactive_blip_duplicator_color(),
             };
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
@@ -638,7 +640,7 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_length =
-                bridge_length_anim(0.05, 0.4, anim_state.activation.is_some()).eval(tick_time.tick_progress());
+                bridge_length_anim(0.05, 0.4, activation.is_some()).eval(tick_time.tick_progress());
 
             for &dir in &[out_dirs.0, out_dirs.1] {
                 render_bridge(
@@ -658,8 +660,9 @@ pub fn render_block(
         Block::BlipWindSource {
             button_dir,
         } => {
+            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
             let cube_color = block_color(
-                &if anim_state.activation.is_some() {
+                &if activation.is_some() {
                     wind_source_color()
                 } else {
                     inactive_blip_wind_source_color()
@@ -667,7 +670,7 @@ pub fn render_block(
                 alpha,
             );
 
-            let render_list = if anim_state.activation.is_some() {
+            let render_list = if activation.is_some() {
                 &mut out.solid_glow
             } else {
                 &mut out.solid
@@ -684,7 +687,7 @@ pub fn render_block(
             });
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            if anim_state.activation.is_some() {
+            if activation.is_some() {
                 out.lights.push(Light {
                     position: *center,
                     attenuation: na::Vector3::new(1.0, 0.0, 3.0),
@@ -693,7 +696,7 @@ pub fn render_block(
                 });
             }
 
-            let button_length = if anim_state.activation.is_some() { 0.025 } else { 0.075 };
+            let button_length = if activation.is_some() { 0.025 } else { 0.075 };
             render_bridge(
                 &Bridge {
                     center: *center,
@@ -740,7 +743,7 @@ pub fn render_block(
         } => {
             let is_wind_active = anim_state
                 .as_ref()
-                .map_or(false, |anim| anim.wind_out(Dir3::X_POS).is_alive());
+                .map_or(false, |anim| anim.wind_out[Dir3::X_POS].is_alive());
             let active_blip_kind = match activated {
                 None => None,
                 Some(level::Input::Blip(kind)) => Some(kind),
@@ -804,6 +807,7 @@ pub fn render_block(
             );
 
             // Foolish stuff to transition to the next expected color mid-tick
+            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
             let old_expected_kind = outputs.last().copied();
             let next_expected_kind = if outputs.len() > 1 {
                 outputs.get(outputs.len() - 2).copied()
@@ -814,10 +818,10 @@ pub fn render_block(
             let kind_transition_anim =
                 pareen::constant(old_expected_kind).seq(kind_transition_time, next_expected_kind);
             let expected_kind =
-                pareen::cond(anim_state.activation.is_some(), kind_transition_anim, old_expected_kind)
+                pareen::cond(activation.is_some(), kind_transition_anim, old_expected_kind)
                     .eval(tick_time.tick_progress());
 
-            let newly_completed = outputs.len() == 1 && anim_state.activation == outputs.last().copied();
+            let newly_completed = outputs.len() == 1 && activation.copied() == outputs.last().copied();
             let was_completed = outputs.is_empty() && anim_state.is_some();
             let newly_completed_anim = pareen::constant(false).seq(0.45, newly_completed);
             let completed = pareen::cond(was_completed, true, newly_completed_anim)
@@ -854,8 +858,9 @@ pub fn render_block(
             kind,
             ..
         } => {
-            let kind_color = match anim_state.activation.or(kind) {
-                Some(kind) => blip_color(kind),
+            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
+            let kind_color = match activation.or(kind.as_ref()) {
+                Some(kind) => blip_color(*kind),
                 None => inactive_blip_duplicator_color(),
             };
             let pipe_color = block_color(&pipe_color(), alpha);
@@ -876,7 +881,7 @@ pub fn render_block(
             );
             render_half_pipe(center, transform, out_dir, &pipe_color, &mut out.solid);
 
-            let render_list = if anim_state.activation.is_some() {
+            let render_list = if activation.is_some() {
                 &mut out.solid_glow
             } else {
                 &mut out.solid

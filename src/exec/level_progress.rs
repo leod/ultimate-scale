@@ -74,7 +74,6 @@ impl InputsOutputsProgress {
                             Block::Output {
                                 index,
                                 outputs,
-                                activated,
                                 failed,
                                 ..
                             } if *index == i => {
@@ -82,14 +81,14 @@ impl InputsOutputsProgress {
                                 // outputs that need to come out of the machine.
                                 let mut remaining = outputs.len();
 
-                                // If `activated` matches the next expected
+                                /*// If `activated` matches the next expected
                                 // output, there has been one more progress.
                                 if remaining > 0
                                     && activated.is_some()
                                     && *activated == outputs.last().copied()
                                 {
                                     remaining -= 1;
-                                }
+                                }*/
 
                                 Some(if spec.len() >= remaining {
                                     (spec.len() - remaining, *failed)

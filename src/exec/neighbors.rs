@@ -1,7 +1,7 @@
 use std::ops::Index;
 
 use crate::machine::grid::{Dir3, DirMap3};
-use crate::machine::BlockIndex;
+use crate::machine::{Machine, BlockIndex};
 
 pub struct NeighborMap(Vec<DirMap3<Option<BlockIndex>>>);
 
@@ -14,23 +14,15 @@ impl NeighborMap {
                 machine
                     .blocks
                     .indices
-                    .get(pos + dir.to_vector())
-                    .flatten()
+                    .get(&(pos + dir.to_vector()))
                     .cloned()
+                    .flatten()
             })
-        }))
+        }).collect())
     }
 
     pub fn lookup(&self, block_index: BlockIndex, dir: Dir3) -> Option<BlockIndex> {
-        self.0[block_index][dir.to_index()]
-    }
-
-    pub fn iter(&self, block_index: BlockIndex) -> impl Iterator<Item = (Dir3, BlockIndex)> {
-        let neighbors = &self.0[block_index];
-
-        self.0[block_index]
-            .iter()
-            .filter_map(|(dir, neighbor_index)| neighbor_index.map(|i| (dir, *i)))
+        self.0[block_index][dir]
     }
 }
 

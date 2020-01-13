@@ -286,25 +286,25 @@ impl Block {
 
     pub fn is_activatable(&self, blip_kind: BlipKind) -> bool {
         match self {
-            Block::BlipDuplicator { kind, .. } => kind == None || kind == Some(blip_kind),
+            Block::BlipDuplicator { kind, .. } => *kind == None || *kind == Some(blip_kind),
             Block::BlipWindSource { .. } => true,
             Block::Output { .. } => true,
-            Block::DetectorBlipDuplicator { kind } => kind == None || kind == Some(blip_kind),
+            Block::DetectorBlipDuplicator { kind, .. } => *kind == None || *kind == Some(blip_kind),
             _ => false,
         }
     }
 
-    pub fn wind_holes_in(&self) -> impl Iterator<Item = Dir3> {
+    pub fn wind_holes_in(&self) -> impl Iterator<Item = Dir3> + '_ {
         Dir3::ALL
             .iter()
-            .filter(|dir| self.has_wind_hole_in(**dir))
+            .filter(move |dir| self.has_wind_hole_in(**dir))
             .copied()
     }
 
-    pub fn wind_holes_out(&self) -> impl Iterator<Item = Dir3> {
+    pub fn wind_holes_out(&self) -> impl Iterator<Item = Dir3> + '_ {
         Dir3::ALL
             .iter()
-            .filter(|dir| self.has_wind_hole_out(**dir))
+            .filter(move |dir| self.has_wind_hole_out(**dir))
             .copied()
     }
 }

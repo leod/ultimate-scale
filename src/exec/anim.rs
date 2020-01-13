@@ -1,5 +1,5 @@
 use crate::exec::{Exec, Activation};
-use crate::machine::grid::{Dir3, DirMap3};
+use crate::machine::grid::DirMap3;
 use crate::machine::BlockIndex;
 
 /// Stages in the lifecycle of wind in some direction in a block. Used for
@@ -59,8 +59,6 @@ impl AnimState {
     /// Returns the AnimState of one block based on the previous and the
     /// current simulation WindState.
     pub fn from_exec_block(exec: &Exec, block_index: BlockIndex) -> Self {
-        let machine = exec.machine();
-
         let wind_out = DirMap3::from_fn(|dir| {
             WindLife::from_states(
                 exec.blocks().wind_out[block_index][dir],
@@ -68,7 +66,7 @@ impl AnimState {
             )
         });
 
-        let out_deadend = exec.neighbor_map()[block_index].map(|(dir, neighbor_index)| {
+        let out_deadend = exec.neighbor_map()[block_index].map(|dir, &neighbor_index| {
             if let Some(neighbor_index) = neighbor_index {
                 let neighbor_block = exec.machine().block_at_index(neighbor_index);
 
@@ -85,27 +83,15 @@ impl AnimState {
             }
         });
 
-        WindAnimState {
+        Self {
             wind_out,
             out_deadend,
             activation: exec.blocks().activation[block_index],
-            next_activation: exec.blocks().next_activation[block_index],
+            next_activation: exec.next_blocks().activation[block_index],
         }
     }
 
-    pub fn wind_out(&self, dir: Dir3) -> WindLife {
-        self.wind_out[dir.to_index()]
-    }
-
-    pub fn out_deadend(&self, dir: Dir3) -> Option<WindDeadend> {
-        self.out_deadend[dir.to_index()]
-    }
-
-    pub fn num_alive_in(&self) -> usize {
-        self.wind_in.iter().filter(|anim| anim.is_alive()).count()
-    }
-
     pub fn num_alive_out(&self) -> usize {
-        self.wind_out.iter().filter(|anim| anim.is_alive()).count()
+        self.wind_out.values().filter(|anim| anim.is_alive()).count()
     }
 }

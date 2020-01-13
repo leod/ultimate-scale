@@ -80,13 +80,9 @@ impl<T> VecOption<T> {
         num
     }
 
-    pub fn contains(&self, index: usize) -> bool {
-        index < self.data.len() && self.data[index].is_some()
-    }
-
-    pub fn retain(&mut self, f: impl FnMut(&T) -> bool) {
+    pub fn retain(&mut self, mut f: impl FnMut(&T) -> bool) {
         for i in 0..self.data.len() {
-            let remove = self.data[i].map_or(false, |elem| !f(elem));
+            let remove = self.data[i].as_ref().map_or(false, |elem| !f(elem));
 
             if remove {
                 self.remove(i);

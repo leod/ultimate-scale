@@ -181,8 +181,8 @@ impl<T> DirMap3<T> {
         self.keys().zip(self.values())
     }
 
-    pub fn map<U>(self, f: impl Fn(Dir3, T) -> U) -> DirMap3<U> {
-        DirMap3::from_fn(|dir| f(self[dir]))
+    pub fn map<U>(&self, f: impl Fn(Dir3, &T) -> U) -> DirMap3<U> {
+        DirMap3::from_fn(|dir| f(dir, &self[dir]))
     }
 }
 
