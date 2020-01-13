@@ -334,7 +334,7 @@ pub fn render_wind_mills(
                     // The wind will start moving inside of the block, so
                     // delay mill rotation until the wind reaches the
                     // outside.
-                    angle().squeeze(0.0, wind_time_offset..=1.0)
+                    angle().squeeze_and_surround(wind_time_offset..=1.0, 0.0)
                 },
                 WindLife::Existing => {
                     angle()
@@ -342,7 +342,7 @@ pub fn render_wind_mills(
                 WindLife::Disappearing => {
                     // Stop mill rotation when wind reaches the inside of
                     // the block.
-                    angle().squeeze(0.0, 0.0..=wind_time_offset)
+                    angle().squeeze_and_surround(0.0..=wind_time_offset, 0.0)
                 },
             );
 
