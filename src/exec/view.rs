@@ -275,7 +275,7 @@ impl ExecView {
 
                     // Rotate blip if it is moving
                     let delta: na::Vector3<f32> = na::convert(next_pos - blip.pos);
-                    let rot = (-pareen::quarter_circle::<_, f32>()).map(move |angle| {
+                    let twist = (-pareen::quarter_circle::<_, f32>()).map(move |angle| {
                         let angle = if blip.status.is_spawning() {
                             0.0
                         } else {
@@ -284,12 +284,17 @@ impl ExecView {
                         na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
                     });
 
-                    pos.zip(rot)
+                    let (pitch, yaw) = blip.next_orient().to_pitch_yaw_x();
+                    let orient = na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+
+                    pos.zip(twist * orient)
                 },
             );
 
             let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
-            let transform = na::Matrix4::new_translation(&pos.coords) * rot;
+            let transform = na::Matrix4::new_translation(&pos.coords) 
+                * rot
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.7, 0.7));
 
             let color = render::machine::blip_color(blip.kind);
             let size = size_factor * 0.22;
