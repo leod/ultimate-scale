@@ -115,6 +115,10 @@ impl Blip {
     fn next_orient(&self) -> Dir3 {
         self.move_dir.unwrap_or(self.orient)
     }
+
+    fn is_turning(&self) -> bool {
+        self.move_dir.map_or(false, |dir| dir != self.orient)
+    }
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]

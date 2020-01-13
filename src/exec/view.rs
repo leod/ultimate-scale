@@ -243,44 +243,51 @@ impl ExecView {
             let size_factor = size_anim.eval(time.tick_progress());
 
             let center = render::machine::block_center(&blip.pos);
+            let (pitch, yaw) = blip.orient.to_pitch_yaw_x();
+            let (next_pitch, next_yaw) = blip.next_orient().to_pitch_yaw_x();
+            let orient = na::UnitQuaternion::from_euler_angles(0.0, pitch, yaw);
+            let next_orient = na::UnitQuaternion::from_euler_angles(0.0, next_pitch, next_yaw);
+
             let pos_rot_anim = pareen::constant(blip.move_dir).map_or(
-                (center, na::Matrix4::identity()),
+                (center, orient.to_homogeneous()),
                 |move_dir| {
                     let next_pos = blip.pos + move_dir.to_vector();
 
                     // Interpolate blip position if it is moving
                     let next_center = render::machine::block_center(&next_pos);
-                    let pos = pareen::lerp(center, next_center);
+                    let pos_anim = pareen::lerp(center, next_center);
 
-                    // Rotate blip if it is moving
+                    // Orient the blip
+                    let orient_anim =
+                        pareen::fun(move |t| orient.slerp(&next_orient, t).to_homogeneous());
+
+                    // Twist the blip around movement direction (if it is moving)
                     let delta: na::Vector3<f32> = na::convert(next_pos - blip.pos);
-                    /*let twist = (-pareen::quarter_circle::<_, f32>()).map(move |angle| {
-                        let angle = if blip.status.is_spawning() {
-                            0.0
-                        } else {
-                            angle
-                        };
-                        na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
-                    });*/
+                    let twist_anim = || {
+                        pareen::cond(
+                            blip.status.is_spawning(),
+                            0.0,
+                            -pareen::quarter_circle::<_, f32>(),
+                        )
+                        .map(move |angle| {
+                            na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
+                        }) * next_orient.to_homogeneous()
+                    };
 
-                    let (pitch, yaw) = blip.orient.to_pitch_yaw_x();
-                    let (next_pitch, next_yaw) = blip.next_orient().to_pitch_yaw_x();
-                    let orient = na::UnitQuaternion::from_euler_angles(0.0, pitch, yaw);
-                    let next_orient = na::UnitQuaternion::from_euler_angles(0.0, next_pitch, next_yaw);
-
-                    let rot = pareen::fun(move |t|
-                        orient.nlerp(&next_orient, t).to_homogeneous()
+                    let rot_anim = pareen::cond(
+                        blip.is_turning(),
+                        orient_anim.seq_squeeze(0.3, twist_anim()),
+                        twist_anim(),
                     );
 
-                    //pos.zip(twist * rot)
-                    pos.zip(rot)
+                    pos_anim.zip(rot_anim)
                 },
             );
 
             let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
-            let transform = na::Matrix4::new_translation(&pos.coords) 
+            let transform = na::Matrix4::new_translation(&pos.coords)
                 * rot
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.7, 0.7));
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 0.8));
 
             let color = render::machine::blip_color(blip.kind);
             let size = size_factor * 0.22;
@@ -330,4 +337,3 @@ fn blip_spawn_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
 fn blip_die_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
     blip_spawn_anim().backwards(1.0).map_time(|t| t * t)
 }
-
