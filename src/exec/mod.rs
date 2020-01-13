@@ -44,10 +44,10 @@ pub enum BlipStatus {
 
 impl BlipStatus {
     fn is_spawning(self) -> bool {
-        if let BlipStatus::Spawning(_) = self {
-            true
-        } else {
-            false
+        match self {
+            BlipStatus::Spawning(_) => true,
+            BlipStatus::LiveToDie => true,
+            _ => false,
         }
     }
 

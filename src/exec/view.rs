@@ -276,6 +276,11 @@ impl ExecView {
                     // Rotate blip if it is moving
                     let delta: na::Vector3<f32> = na::convert(next_pos - blip.pos);
                     let rot = (-pareen::quarter_circle::<_, f32>()).map(move |angle| {
+                        let angle = if blip.status.is_spawning() {
+                            0.0
+                        } else {
+                            angle
+                        };
                         na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
                     });
 
