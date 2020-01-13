@@ -392,11 +392,12 @@ fn blip_move_dir(
 
     let block_move_out = neighbor_map[block_index].map(|dir, neighbor_index| {
         neighbor_index.map_or(false, |neighbor_index| {
+            let neighbor_block = machine.block_at_index(neighbor_index);
+
             next_wind_out[block_index][dir]
                 && block.has_move_hole(dir)
-                && machine
-                    .block_at_index(neighbor_index)
-                    .has_move_hole(dir.invert())
+                && neighbor_block.has_move_hole(dir.invert())
+                && neighbor_block.has_wind_hole_in(dir.invert())
         })
     });
     let block_wind_in = neighbor_map[block_index].map(|dir, neighbor_index| {
