@@ -240,6 +240,7 @@ impl Exec {
                 blip,
                 &self.machine,
                 &self.neighbor_map,
+                &self.blocks.wind_out,
                 &self.next_blocks.wind_out,
             );
         }
@@ -383,6 +384,7 @@ fn blip_move_dir(
     blip: &Blip,
     machine: &Machine,
     neighbor_map: &NeighborMap,
+    wind_out: &[DirMap3<bool>],
     next_wind_out: &[DirMap3<bool>],
 ) -> Option<Dir3> {
     let (block_index, placed_block) = machine.get_with_index(&blip.pos)?;
@@ -399,21 +401,31 @@ fn blip_move_dir(
     });
     let block_wind_in = neighbor_map[block_index].map(|dir, neighbor_index| {
         neighbor_index.map_or(false, |neighbor_index| {
-            block.has_wind_hole_in(dir) && next_wind_out[neighbor_index][dir.invert()]
+            block.has_wind_hole_in(dir) && wind_out[neighbor_index][dir.invert()]
         })
     });
 
+    let num_move_out: usize = block_move_out.values().map(|flow| *flow as usize).sum();
     let num_wind_in: usize = block_wind_in.values().map(|flow| *flow as usize).sum();
 
     match num_wind_in {
-        1 => block_wind_in
-            .iter()
-            .find(|(_, flow)| **flow)
-            .and_then(|(dir, _)| {
-                find_dir_ccw_xy(dir.invert(), |dir| {
-                    !block_wind_in[dir] && block_move_out[dir]
-                })
-            }),
+        1 => {
+            if num_move_out > 1 {
+                block_wind_in
+                    .iter()
+                    .find(|(_, flow)| **flow)
+                    .and_then(|(dir, _)| {
+                        find_dir_ccw_xy(dir.invert(), |dir| {
+                            !block_wind_in[dir] && block_move_out[dir]
+                        })
+                    })
+            } else {
+                Dir3::ALL
+                    .iter()
+                    .cloned()
+                    .find(|dir| !block_wind_in[*dir] && block_move_out[*dir])
+            }
+        }
         3 => {
             let all_wind_in_xy = block_wind_in
                 .iter()
