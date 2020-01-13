@@ -13,7 +13,7 @@ use std::mem;
 use rand::Rng;
 
 use crate::machine::grid::{Axis3, Dir3, DirMap3, Point3, Vector3};
-use crate::machine::{level, BlipKind, Block, Machine, TickNum, BlockIndex};
+use crate::machine::{level, BlipKind, Block, BlockIndex, Machine, TickNum};
 use crate::util::vec_option::VecOption;
 
 use neighbors::NeighborMap;
@@ -96,7 +96,10 @@ impl Blip {
     }
 
     fn next_pos(&self) -> Point3 {
-        self.pos + self.move_dir.map_or(Vector3::zeros(), |dir| dir.to_vector())
+        self.pos
+            + self
+                .move_dir
+                .map_or(Vector3::zeros(), |dir| dir.to_vector())
     }
 }
 
@@ -296,7 +299,9 @@ impl Exec {
         for (_, blip) in self.blips.iter_mut() {
             let mut kill = false;
 
-            if let Some((next_block_index, next_block)) = self.machine.get_with_index(&blip.next_pos()) {
+            if let Some((next_block_index, next_block)) =
+                self.machine.get_with_index(&blip.next_pos())
+            {
                 if self.next_blip_count[next_block_index] > 1 {
                     // We ran into another blip.
                     kill = true;
@@ -348,7 +353,7 @@ fn spawn_or_advect_wind(
         _ => {
             // Check if we got any wind in flow from our neighbors in the
             // old state
-            let block_wind_in = neighbor_map[block_index].clone().map(|dir, neighbor_index| {
+            let block_wind_in = neighbor_map[block_index].map(|dir, neighbor_index| {
                 neighbor_index.map_or(false, |neighbor_index| {
                     block.has_wind_hole_in(dir) && wind_out[neighbor_index][dir.invert()]
                 })
@@ -356,8 +361,8 @@ fn spawn_or_advect_wind(
 
             if block_wind_in.values().any(|flow| *flow) {
                 // Forward in flow to our outgoing wind hole directions
-                neighbor_map[block_index].clone().map(|dir, neighbor_index| {
-                    neighbor_index.map_or(true, |_| {
+                neighbor_map[block_index].map(|dir, neighbor_index| {
+                    neighbor_index.map_or(false, |_| {
                         block.has_wind_hole_out(dir) && !block_wind_in[dir]
                     })
                 })
@@ -383,7 +388,7 @@ fn blip_move_dir(
     let (block_index, placed_block) = machine.get_with_index(&blip.pos)?;
     let block = &placed_block.block;
 
-    let block_move_out = neighbor_map[block_index].clone().map(|dir, neighbor_index| {
+    let block_move_out = neighbor_map[block_index].map(|dir, neighbor_index| {
         neighbor_index.map_or(false, |neighbor_index| {
             next_wind_out[block_index][dir]
                 && block.has_move_hole(dir)
@@ -392,7 +397,7 @@ fn blip_move_dir(
                     .has_move_hole(dir.invert())
         })
     });
-    let block_wind_in = neighbor_map[block_index].clone().map(|dir, neighbor_index| {
+    let block_wind_in = neighbor_map[block_index].map(|dir, neighbor_index| {
         neighbor_index.map_or(false, |neighbor_index| {
             block.has_wind_hole_in(dir) && next_wind_out[neighbor_index][dir.invert()]
         })
@@ -401,16 +406,14 @@ fn blip_move_dir(
     let num_wind_in: usize = block_wind_in.values().map(|flow| *flow as usize).sum();
 
     match num_wind_in {
-        1 => {
-            block_wind_in
-                .iter()
-                .find(|(_, flow)| **flow)
-                .and_then(|(dir, _)| {
-                    find_dir_ccw_xy(dir.invert(), |dir| {
-                        !block_wind_in[dir] && block_move_out[dir]
-                    })
+        1 => block_wind_in
+            .iter()
+            .find(|(_, flow)| **flow)
+            .and_then(|(dir, _)| {
+                find_dir_ccw_xy(dir.invert(), |dir| {
+                    !block_wind_in[dir] && block_move_out[dir]
                 })
-        }
+            }),
         3 => {
             let all_wind_in_xy = block_wind_in
                 .iter()
