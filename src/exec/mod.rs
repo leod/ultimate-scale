@@ -12,7 +12,7 @@ use std::mem;
 
 use rand::Rng;
 
-use crate::machine::grid::{Axis3, Dir3, DirMap3, Point3, Vector3};
+use crate::machine::grid::{Dir3, DirMap3, Point3, Vector3};
 use crate::machine::{level, BlipKind, Block, BlockIndex, Machine, TickNum};
 use crate::util::vec_option::VecOption;
 
@@ -77,6 +77,9 @@ pub struct Blip {
     /// The blip's current position on the grid.
     pub pos: Point3,
 
+    /// The blip's orientation. Determines movement preferences.
+    pub orient: Dir3,
+
     /// The direction in which the blip moved last tick, if any.
     pub move_dir: Option<Dir3>,
 
@@ -86,10 +89,17 @@ pub struct Blip {
 }
 
 impl Blip {
-    fn new(kind: BlipKind, pos: Point3, move_dir: Option<Dir3>, spawn_mode: BlipSpawnMode) -> Self {
+    fn new(
+        kind: BlipKind,
+        pos: Point3,
+        orient: Dir3,
+        move_dir: Option<Dir3>,
+        spawn_mode: BlipSpawnMode,
+    ) -> Self {
         Blip {
             kind,
             pos,
+            orient,
             move_dir,
             status: BlipStatus::Spawning(spawn_mode),
         }
@@ -234,6 +244,7 @@ impl Exec {
 
             if let Some(move_dir) = blip.move_dir {
                 blip.pos = blip.pos + move_dir.to_vector();
+                blip.orient = move_dir;
             }
 
             blip.move_dir = blip_move_dir(
@@ -407,30 +418,14 @@ fn blip_move_dir(
         })
     });
 
+    let num_move_out: usize = block_move_out.values().map(|flow| *flow as usize).sum();
+
     let can_move = |dir: Dir3| block_move_out[dir] && !block_wind_in[dir];
 
-    let num_move_out: usize = block_move_out.values().map(|flow| *flow as usize).sum();
-    let num_wind_in: usize = block_wind_in.values().map(|flow| *flow as usize).sum();
-
-    match (num_move_out, num_wind_in) {
-        (1, _) => Dir3::ALL.iter().cloned().find(|dir| can_move(*dir)),
-        (_, 1) => block_wind_in
-            .iter()
-            .find(|(_, flow)| **flow)
-            .and_then(|(dir, _)| find_dir_ccw_xy(dir.invert(), can_move)),
-        (_, 3) => {
-            let all_wind_in_xy = block_wind_in
-                .iter()
-                .all(|(dir, flow)| !flow || dir.0 != Axis3::Z);
-
-            if all_wind_in_xy {
-                Dir3::ALL_XY.iter().cloned().find(|dir| can_move(*dir))
-            } else {
-                // TODO: I don't think this can actually happen with our Block cases.
-                None
-            }
-        }
-        _ => None,
+    if num_move_out == 1 {
+        Dir3::ALL.iter().cloned().find(|dir| can_move(*dir))
+    } else {
+        find_dir_ccw_xy(blip.orient, can_move)
     }
 }
 
@@ -471,16 +466,18 @@ fn run_activated_block(
             blips.add(Blip::new(
                 *kind,
                 *block_pos,
+                *out_dir,
                 Some(*out_dir),
                 BlipSpawnMode::Quick,
             ));
         }
         Block::BlipDuplicator { out_dirs, .. } => {
-            for &dir in &[out_dirs.0, out_dirs.1] {
+            for &out_dir in &[out_dirs.0, out_dirs.1] {
                 blips.add(Blip::new(
                     blip_kind,
                     *block_pos,
-                    Some(dir),
+                    out_dir,
+                    Some(out_dir),
                     BlipSpawnMode::Quick,
                 ));
             }

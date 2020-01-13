@@ -452,10 +452,6 @@ impl Machine {
             .map(|id| (id, &self.blocks.data[id].1))
     }
 
-    pub fn block_pos_at_index(&self, index: BlockIndex) -> Point3 {
-        self.blocks.data[index].0
-    }
-
     pub fn block_at_index(&self, index: BlockIndex) -> &Block {
         &self.blocks.data[index].1.block
     }
