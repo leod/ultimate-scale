@@ -400,43 +400,31 @@ fn blip_move_dir(
                 && neighbor_block.has_wind_hole_in(dir.invert())
         })
     });
+
     let block_wind_in = neighbor_map[block_index].map(|dir, neighbor_index| {
         neighbor_index.map_or(false, |neighbor_index| {
             block.has_wind_hole_in(dir) && wind_out[neighbor_index][dir.invert()]
         })
     });
 
+    let can_move = |dir: Dir3| block_move_out[dir] && !block_wind_in[dir];
+
     let num_move_out: usize = block_move_out.values().map(|flow| *flow as usize).sum();
     let num_wind_in: usize = block_wind_in.values().map(|flow| *flow as usize).sum();
 
-    match num_wind_in {
-        1 => {
-            if num_move_out > 1 {
-                block_wind_in
-                    .iter()
-                    .find(|(_, flow)| **flow)
-                    .and_then(|(dir, _)| {
-                        find_dir_ccw_xy(dir.invert(), |dir| {
-                            !block_wind_in[dir] && block_move_out[dir]
-                        })
-                    })
-            } else {
-                Dir3::ALL
-                    .iter()
-                    .cloned()
-                    .find(|dir| !block_wind_in[*dir] && block_move_out[*dir])
-            }
-        }
-        3 => {
+    match (num_move_out, num_wind_in) {
+        (1, _) => Dir3::ALL.iter().cloned().find(|dir| can_move(*dir)),
+        (_, 1) => block_wind_in
+            .iter()
+            .find(|(_, flow)| **flow)
+            .and_then(|(dir, _)| find_dir_ccw_xy(dir.invert(), can_move)),
+        (_, 3) => {
             let all_wind_in_xy = block_wind_in
                 .iter()
                 .all(|(dir, flow)| !flow || dir.0 != Axis3::Z);
 
             if all_wind_in_xy {
-                Dir3::ALL_XY
-                    .iter()
-                    .cloned()
-                    .find(|dir| !block_wind_in[*dir] && block_move_out[*dir])
+                Dir3::ALL_XY.iter().cloned().find(|dir| can_move(*dir))
             } else {
                 // TODO: I don't think this can actually happen with our Block cases.
                 None
