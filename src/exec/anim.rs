@@ -1,4 +1,4 @@
-use crate::exec::{Exec, Activation};
+use crate::exec::{Activation, Exec};
 use crate::machine::grid::DirMap3;
 use crate::machine::BlockIndex;
 
@@ -92,6 +92,9 @@ impl AnimState {
     }
 
     pub fn num_alive_out(&self) -> usize {
-        self.wind_out.values().filter(|anim| anim.is_alive()).count()
+        self.wind_out
+            .values()
+            .filter(|anim| anim.is_alive())
+            .count()
     }
 }

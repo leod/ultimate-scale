@@ -439,9 +439,9 @@ pub fn render_pulsator(
     color: &na::Vector4<f32>,
     out: &mut Stage,
 ) {
-    let have_flow = anim_state.as_ref().map_or(false, |anim| {
-        anim.num_alive_out() > 0
-    });
+    let have_flow = anim_state
+        .as_ref()
+        .map_or(false, |anim| anim.num_alive_out() > 0);
 
     let max_size = 2.5 * PIPE_THICKNESS;
     let size_anim = pareen::cond(
@@ -617,11 +617,7 @@ pub fn render_block(
                 out,
             );
         }
-        Block::BlipDuplicator {
-            out_dirs,
-            kind,
-            ..
-        } => {
+        Block::BlipDuplicator { out_dirs, kind, .. } => {
             let (pitch, yaw) = out_dirs.0.to_pitch_yaw_x();
             let cube_transform =
                 translation * transform * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
@@ -657,9 +653,7 @@ pub fn render_block(
                 );
             }
         }
-        Block::BlipWindSource {
-            button_dir,
-        } => {
+        Block::BlipWindSource { button_dir } => {
             let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
             let cube_color = block_color(
                 &if activation.is_some() {
@@ -817,11 +811,15 @@ pub fn render_block(
             let kind_transition_time = 0.6;
             let kind_transition_anim =
                 pareen::constant(old_expected_kind).seq(kind_transition_time, next_expected_kind);
-            let expected_kind =
-                pareen::cond(activation.is_some(), kind_transition_anim, old_expected_kind)
-                    .eval(tick_time.tick_progress());
+            let expected_kind = pareen::cond(
+                activation.is_some(),
+                kind_transition_anim,
+                old_expected_kind,
+            )
+            .eval(tick_time.tick_progress());
 
-            let newly_completed = outputs.len() == 1 && activation.copied() == outputs.last().copied();
+            let newly_completed =
+                outputs.len() == 1 && activation.copied() == outputs.last().copied();
             let was_completed = outputs.is_empty() && anim_state.is_some();
             let newly_completed_anim = pareen::constant(false).seq(0.45, newly_completed);
             let completed = pareen::cond(was_completed, true, newly_completed_anim)

@@ -293,20 +293,6 @@ impl Block {
             _ => false,
         }
     }
-
-    pub fn wind_holes_in(&self) -> impl Iterator<Item = Dir3> + '_ {
-        Dir3::ALL
-            .iter()
-            .filter(move |dir| self.has_wind_hole_in(**dir))
-            .copied()
-    }
-
-    pub fn wind_holes_out(&self) -> impl Iterator<Item = Dir3> + '_ {
-        Dir3::ALL
-            .iter()
-            .filter(move |dir| self.has_wind_hole_out(**dir))
-            .copied()
-    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
