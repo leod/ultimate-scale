@@ -5,7 +5,7 @@ use rendology::{basic_obj, line, BasicObj, Light};
 use crate::machine::grid::{self, Dir3, Sign};
 use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
 
-use crate::exec::anim::{WindAnimState, WindLife};
+use crate::exec::anim::{AnimState, WindLife};
 use crate::exec::{Exec, TickTime};
 
 use crate::render::Stage;
@@ -312,7 +312,7 @@ pub fn render_wind_mills(
     wind_mills: &WindMills,
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
-    wind_anim_state: &Option<WindAnimState>,
+    anim_state: &Option<AnimState>,
     transform: &na::Matrix4<f32>,
     out: &mut Stage,
 ) {
@@ -321,7 +321,7 @@ pub fn render_wind_mills(
             continue;
         }
 
-        let roll_anim = pareen::constant(wind_anim_state.as_ref()).map_or(0.0, |state| {
+        let roll_anim = pareen::constant(anim_state.as_ref()).map_or(0.0, |state| {
             let wind_time_offset = wind_mills.offset + wind_mills.length;
 
             let angle = || pareen::quarter_circle();
@@ -433,13 +433,13 @@ pub fn render_outline(
 
 pub fn render_pulsator(
     tick_time: &TickTime,
-    wind_anim_state: &Option<WindAnimState>,
+    anim_state: &Option<AnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: &na::Vector4<f32>,
     out: &mut Stage,
 ) {
-    let have_flow = wind_anim_state.as_ref().map_or(false, |anim| {
+    let have_flow = anim_state.as_ref().map_or(false, |anim| {
         anim.num_alive_in() > 0 && anim.num_alive_out() > 0
     });
 
@@ -468,7 +468,7 @@ pub fn render_pulsator(
 pub fn render_block(
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
-    wind_anim_state: &Option<WindAnimState>,
+    anim_state: &Option<AnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     alpha: f32,
@@ -485,7 +485,7 @@ pub fn render_block(
 
             // Pulsator to hide our shame of wind direction change
             if dir_a.0 != dir_b.0 {
-                render_pulsator(tick_time, wind_anim_state, center, transform, &color, out);
+                render_pulsator(tick_time, anim_state, center, transform, &color, out);
             }
         }
         Block::PipeMergeXY => {
@@ -510,7 +510,7 @@ pub fn render_block(
                 ..Default::default()
             });
 
-            render_pulsator(tick_time, wind_anim_state, center, transform, &color, out);
+            render_pulsator(tick_time, anim_state, center, transform, &color, out);
         }
         Block::FunnelXY { flow_dir } => {
             let (pitch, yaw) = flow_dir.invert().to_pitch_yaw_x();
@@ -544,7 +544,7 @@ pub fn render_block(
             let cube_transform = translation * transform;
             let scaling = na::Vector3::new(0.6, 0.6, 0.6);
 
-            let render_list = if wind_anim_state.is_some() {
+            let render_list = if anim_state.is_some() {
                 &mut out.solid_glow
             } else {
                 &mut out.solid
@@ -557,7 +557,7 @@ pub fn render_block(
 
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            if wind_anim_state.is_some() {
+            if anim_state.is_some() {
                 out.lights.push(Light {
                     position: *center,
                     attenuation: na::Vector3::new(1.0, 0.0, 3.0),
@@ -575,7 +575,7 @@ pub fn render_block(
                 },
                 placed_block,
                 tick_time,
-                wind_anim_state,
+                anim_state,
                 transform,
                 out,
             );
@@ -584,7 +584,6 @@ pub fn render_block(
             out_dir,
             kind,
             num_spawns,
-            activated,
         } => {
             let cube_color = block_color(&blip_color(kind), alpha);
             let (pitch, yaw) = out_dir.to_pitch_yaw_x();
@@ -602,7 +601,7 @@ pub fn render_block(
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
             let bridge_length =
-                bridge_length_anim(0.05, 0.6, activated.is_some()).eval(tick_time.tick_progress());
+                bridge_length_anim(0.05, 0.6, anim_state.activation.is_some()).eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
@@ -620,7 +619,6 @@ pub fn render_block(
         Block::BlipDuplicator {
             out_dirs,
             kind,
-            activated,
             ..
         } => {
             let (pitch, yaw) = out_dirs.0.to_pitch_yaw_x();
@@ -628,7 +626,7 @@ pub fn render_block(
                 translation * transform * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
             let scaling = na::Vector3::new(0.65, 0.95, 0.95);
 
-            let kind_color = match activated.or(kind) {
+            let kind_color = match anim_state.activation.or(kind) {
                 Some(kind) => blip_color(kind),
                 None => inactive_blip_duplicator_color(),
             };
@@ -640,7 +638,7 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_length =
-                bridge_length_anim(0.05, 0.4, activated.is_some()).eval(tick_time.tick_progress());
+                bridge_length_anim(0.05, 0.4, anim_state.activation.is_some()).eval(tick_time.tick_progress());
 
             for &dir in &[out_dirs.0, out_dirs.1] {
                 render_bridge(
@@ -659,10 +657,9 @@ pub fn render_block(
         }
         Block::BlipWindSource {
             button_dir,
-            activated,
         } => {
             let cube_color = block_color(
-                &if activated {
+                &if anim_state.activation.is_some() {
                     wind_source_color()
                 } else {
                     inactive_blip_wind_source_color()
@@ -670,7 +667,7 @@ pub fn render_block(
                 alpha,
             );
 
-            let render_list = if activated {
+            let render_list = if anim_state.activation.is_some() {
                 &mut out.solid_glow
             } else {
                 &mut out.solid
@@ -687,7 +684,7 @@ pub fn render_block(
             });
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            if activated {
+            if anim_state.activation.is_some() {
                 out.lights.push(Light {
                     position: *center,
                     attenuation: na::Vector3::new(1.0, 0.0, 3.0),
@@ -696,7 +693,7 @@ pub fn render_block(
                 });
             }
 
-            let button_length = if activated { 0.025 } else { 0.075 };
+            let button_length = if anim_state.activation.is_some() { 0.025 } else { 0.075 };
             render_bridge(
                 &Bridge {
                     center: *center,
@@ -719,7 +716,7 @@ pub fn render_block(
                 },
                 placed_block,
                 tick_time,
-                wind_anim_state,
+                anim_state,
                 transform,
                 out,
             );
@@ -741,7 +738,7 @@ pub fn render_block(
         Block::Input {
             out_dir, activated, ..
         } => {
-            let is_wind_active = wind_anim_state
+            let is_wind_active = anim_state
                 .as_ref()
                 .map_or(false, |anim| anim.wind_out(Dir3::X_POS).is_alive());
             let active_blip_kind = match activated {
@@ -789,7 +786,6 @@ pub fn render_block(
             in_dir,
             ref outputs,
             failed,
-            activated,
             ..
         } => {
             render_half_pipe(
@@ -818,11 +814,11 @@ pub fn render_block(
             let kind_transition_anim =
                 pareen::constant(old_expected_kind).seq(kind_transition_time, next_expected_kind);
             let expected_kind =
-                pareen::cond(activated.is_some(), kind_transition_anim, old_expected_kind)
+                pareen::cond(anim_state.activation.is_some(), kind_transition_anim, old_expected_kind)
                     .eval(tick_time.tick_progress());
 
-            let newly_completed = outputs.len() == 1 && activated == outputs.last().copied();
-            let was_completed = outputs.is_empty() && wind_anim_state.is_some();
+            let newly_completed = outputs.len() == 1 && anim_state.activation == outputs.last().copied();
+            let was_completed = outputs.is_empty() && anim_state.is_some();
             let newly_completed_anim = pareen::constant(false).seq(0.45, newly_completed);
             let completed = pareen::cond(was_completed, true, newly_completed_anim)
                 .eval(tick_time.tick_progress());
@@ -855,11 +851,10 @@ pub fn render_block(
         Block::DetectorBlipDuplicator {
             out_dir,
             flow_axis,
-            activated,
             kind,
             ..
         } => {
-            let kind_color = match activated.or(kind) {
+            let kind_color = match anim_state.activation.or(kind) {
                 Some(kind) => blip_color(kind),
                 None => inactive_blip_duplicator_color(),
             };
@@ -881,7 +876,7 @@ pub fn render_block(
             );
             render_half_pipe(center, transform, out_dir, &pipe_color, &mut out.solid);
 
-            let render_list = if activated.is_some() {
+            let render_list = if anim_state.activation.is_some() {
                 &mut out.solid_glow
             } else {
                 &mut out.solid
@@ -933,12 +928,12 @@ pub fn render_machine<'a>(
         let transform = placed_block_transform(&placed_block);
         let center = block_center(&block_pos);
 
-        let wind_anim_state = exec.map(|exec| WindAnimState::from_exec_block(exec, block_index));
+        let anim_state = exec.map(|exec| AnimState::from_exec_block(exec, block_index));
 
         render_block(
             &placed_block,
             tick_time,
-            &wind_anim_state,
+            &anim_state,
             &center,
             &transform,
             1.0,
