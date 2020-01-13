@@ -111,6 +111,10 @@ impl Blip {
                 .move_dir
                 .map_or(Vector3::zeros(), |dir| dir.to_vector())
     }
+
+    fn next_orient(&self) -> Dir3 {
+        self.move_dir.unwrap_or(self.orient)
+    }
 }
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
