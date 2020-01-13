@@ -266,15 +266,15 @@ impl ExecView {
             let center = render::machine::block_center(&blip.pos);
             let pos_rot_anim = pareen::constant(blip.move_dir).map_or(
                 (center, na::Matrix4::identity()),
-                |old_move_dir| {
-                    let old_pos = blip.pos - old_move_dir.to_vector();
+                |move_dir| {
+                    let next_pos = blip.pos + move_dir.to_vector();
 
                     // Interpolate blip position if it is moving
-                    let old_center = render::machine::block_center(&old_pos);
-                    let pos = pareen::lerp(old_center, center);
+                    let next_center = render::machine::block_center(&next_pos);
+                    let pos = pareen::lerp(center, next_center);
 
                     // Rotate blip if it is moving
-                    let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
+                    let delta: na::Vector3<f32> = na::convert(next_pos - blip.pos);
                     let rot = (-pareen::quarter_circle::<_, f32>()).map(move |angle| {
                         na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
                     });
