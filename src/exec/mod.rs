@@ -291,7 +291,7 @@ impl Exec {
             }
         }
 
-        // 7) Determine next activations based on blips and update blip status
+        // 6) Determine next activations based on blips and update blip status
         //    based on next position.
         for activation in self.next_blocks.activation.iter_mut() {
             *activation = None;
