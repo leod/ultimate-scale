@@ -9,11 +9,11 @@ use rendology::{basic_obj, BasicObj, Camera, Light};
 
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
-use crate::exec::anim::{WindAnimState, WindDeadend, WindLife};
+use crate::exec::anim::{AnimState, WindDeadend, WindLife};
 use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
-use crate::machine::{grid, level, BlipKind, Machine};
+use crate::machine::{grid, level, Machine};
 use crate::render::{self, Stage};
 
 #[derive(Debug, Clone)]
@@ -98,7 +98,8 @@ impl ExecView {
         match button {
             glutin::MouseButton::Left if state == glutin::ElementState::Pressed => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    Exec::try_spawn_blip(
+                    // TODO
+                    /*Exec::try_spawn_blip(
                         false,
                         BlipSpawnMode::Ease,
                         BlipKind::A,
@@ -106,12 +107,13 @@ impl ExecView {
                         &self.exec.machine.blocks.indices,
                         &mut self.exec.blip_state,
                         &mut self.exec.blips,
-                    );
+                    );*/
                 }
             }
             glutin::MouseButton::Right if state == glutin::ElementState::Pressed => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    Exec::try_spawn_blip(
+                    // TODO
+                    /*Exec::try_spawn_blip(
                         false,
                         BlipSpawnMode::Ease,
                         BlipKind::B,
@@ -119,7 +121,7 @@ impl ExecView {
                         &self.exec.machine.blocks.indices,
                         &mut self.exec.blip_state,
                         &mut self.exec.blips,
-                    );
+                    );*/
                 }
             }
             _ => (),
@@ -174,11 +176,11 @@ impl ExecView {
         let blocks = &self.exec.machine().blocks;
 
         for (block_index, (block_pos, placed_block)) in blocks.data.iter() {
-            let anim_state = WindAnimState::from_exec_block(&self.exec, block_index);
+            let anim_state = AnimState::from_exec_block(&self.exec, block_index);
 
             for &dir in &Dir3::ALL {
                 // Draw half or none of the wind if it points towards a deadend
-                let max = match anim_state.out_deadend(dir) {
+                let max = match anim_state.out_deadend[dir] {
                     Some(WindDeadend::Block) => {
                         // Don't draw wind towards block deadends
                         continue;
@@ -194,7 +196,7 @@ impl ExecView {
                     None => 1.0,
                 };
 
-                match anim_state.wind_out(dir) {
+                match anim_state.wind_out[dir] {
                     WindLife::None => {}
                     WindLife::Appearing => {
                         // Interpolate, i.e. draw partial line
@@ -243,16 +245,16 @@ impl ExecView {
                             Self::blip_spawn_anim().squeeze(0.0, 0.75..=1.0),
                         BlipSpawnMode::Quick =>
                             Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5),
-                        BlipSpawnMode::LiveToDie => {
-                            let spawn = Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5);
-                            let live = 1.0;
-                            let die = die_anim().squeeze(1.0, 0.0..=0.35);
-
-                            spawn.seq(0.5, live).seq(0.65, die)
-                        }
                     )
                 }
                 BlipStatus::Existing => 1.0,
+                BlipStatus::LiveToDie => {
+                    let spawn = Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5);
+                    let live = 1.0;
+                    let die = die_anim().squeeze(1.0, 0.0..=0.35);
+
+                    spawn.seq(0.5, live).seq(0.65, die)
+                }
                 BlipStatus::Dying => {
                     // Animate killing the blip
                     die_anim().squeeze(1.0, 0.4..=1.0)
@@ -262,7 +264,7 @@ impl ExecView {
             let size_factor = size_anim.eval(time.tick_progress());
 
             let center = render::machine::block_center(&blip.pos);
-            let pos_rot_anim = pareen::constant(blip.old_move_dir).map_or(
+            let pos_rot_anim = pareen::constant(blip.move_dir).map_or(
                 (center, na::Matrix4::identity()),
                 |old_move_dir| {
                     let old_pos = blip.pos - old_move_dir.to_vector();

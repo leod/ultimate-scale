@@ -126,7 +126,6 @@ impl Default for Config {
                         out_dir: Dir3::X_POS,
                         kind: BlipKind::A,
                         num_spawns: None,
-                        activated: None,
                     },
                 ),
                 (
@@ -135,7 +134,6 @@ impl Default for Config {
                         out_dir: Dir3::X_POS,
                         kind: BlipKind::A,
                         num_spawns: Some(1),
-                        activated: None,
                     },
                 ),
                 (
@@ -143,7 +141,6 @@ impl Default for Config {
                     Block::BlipDuplicator {
                         out_dirs: (Dir3::X_NEG, Dir3::X_POS),
                         kind: None,
-                        activated: None,
                     },
                 ),
                 (
@@ -151,14 +148,12 @@ impl Default for Config {
                     Block::BlipDuplicator {
                         out_dirs: (Dir3::X_NEG, Dir3::X_POS),
                         kind: Some(BlipKind::A),
-                        activated: None,
                     },
                 ),
                 (
                     ModifiedKey::new(VirtualKeyCode::Key8),
                     Block::BlipWindSource {
                         button_dir: Dir3::Y_NEG,
-                        activated: false,
                     },
                 ),
                 (
@@ -194,7 +189,6 @@ impl Default for Config {
                         out_dir: Dir3::X_NEG,
                         flow_axis: Axis3::Y,
                         kind: Some(BlipKind::A),
-                        activated: None,
                     },
                 ),
                 (
@@ -203,7 +197,6 @@ impl Default for Config {
                         out_dir: Dir3::X_NEG,
                         flow_axis: Axis3::Y,
                         kind: None,
-                        activated: None,
                     },
                 ),
                 (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),

@@ -1,10 +1,10 @@
 use rand::Rng;
 
 use crate::edit::piece::{Piece, Transform};
-use crate::exec::{BlipIndex, BlipSpawnMode, BlipStatus, Exec, WindState};
-use crate::machine::grid::{Dir3, Point3, Vector3};
+use crate::exec::{BlipIndex, BlipSpawnMode, BlipStatus, Exec};
+use crate::machine::grid::{Dir3, Point3};
 use crate::machine::string_util::blocks_from_string;
-use crate::machine::{grid, BlipKind, Block, Machine, PlacedBlock};
+use crate::machine::{grid, Block, Machine, PlacedBlock};
 
 /// Test that wind flows one grid block per tick.
 #[test]
