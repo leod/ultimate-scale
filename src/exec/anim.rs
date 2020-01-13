@@ -1,4 +1,4 @@
-use crate::exec::Exec;
+use crate::exec::{Exec, Activation};
 use crate::machine::grid::{Dir3, DirMap3};
 use crate::machine::BlockIndex;
 
@@ -47,14 +47,16 @@ impl WindLife {
 }
 
 /// Animation state for wind in all directions in a block. Used for animation
-/// purposes.
-pub struct WindAnimState {
+/// purposes. Also stores activation state.
+pub struct AnimState {
     pub wind_out: DirMap3<WindLife>,
     pub out_deadend: DirMap3<Option<WindDeadend>>,
+    pub activation: Activation,
+    pub next_activation: Activation,
 }
 
-impl WindAnimState {
-    /// Returns the WindAnimState of one block based on the previous and the
+impl AnimState {
+    /// Returns the AnimState of one block based on the previous and the
     /// current simulation WindState.
     pub fn from_exec_block(exec: &Exec, block_index: BlockIndex) -> Self {
         let machine = exec.machine();
@@ -86,6 +88,8 @@ impl WindAnimState {
         WindAnimState {
             wind_out,
             out_deadend,
+            activation: exec.blocks().activation[block_index],
+            next_activation: exec.blocks().next_activation[block_index],
         }
     }
 
