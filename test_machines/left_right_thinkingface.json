@@ -866,7 +866,7 @@
     [
       [
         6,
-        15,
+        12,
         0
       ],
       {
@@ -874,7 +874,7 @@
           "BlipSpawn": {
             "out_dir": [
               "Y",
-              "Neg"
+              "Pos"
             ],
             "kind": "A",
             "num_spawns": null
