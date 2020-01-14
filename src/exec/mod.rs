@@ -385,9 +385,10 @@ fn spawn_or_advect_wind(
             if block_wind_in.values().any(|flow| *flow) {
                 // Forward in flow to our outgoing wind hole directions
                 neighbor_map[block_index].map(|dir, neighbor_index| {
-                    neighbor_index.map_or(false, |_| {
-                        block.has_wind_hole_out(dir) && !block_wind_in[dir]
-                    })
+                    let hole_out = block.has_wind_hole_out(dir);
+                    let no_wind_in = neighbor_index.map_or(true, |_| !block_wind_in[dir]);
+
+                    hole_out && no_wind_in
                 })
             } else {
                 DirMap3::from_fn(|_| false)
