@@ -157,6 +157,7 @@ impl Dir3 {
 #[derive(PartialEq, Eq, Clone, Debug, Default)]
 pub struct DirMap3<T>(pub [T; Dir3::NUM_INDICES]);
 
+#[allow(dead_code)]
 impl<T> DirMap3<T> {
     pub fn from_fn(f: impl Fn(Dir3) -> T) -> Self {
         Self([
