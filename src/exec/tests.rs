@@ -134,18 +134,39 @@ fn test_wind_sliver_propagation() {
             for x in 1..=10 {
                 // Note that the blip wind source is at x=1, where wind flows
                 // out at i=2.
-                assert_eq!(next_wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS), i == x + 1);
+                assert_eq!(
+                    next_wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS),
+                    i == x + 1
+                );
             }
 
             // Flow up starts after 10 updates.
-            assert_eq!(next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG), i == 8 + 1);
-            assert_eq!(next_wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG), i == 9 + 1);
-            assert_eq!(next_wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG), i == 10 + 1);
+            assert_eq!(
+                next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG),
+                i == 8 + 1
+            );
+            assert_eq!(
+                next_wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG),
+                i == 9 + 1
+            );
+            assert_eq!(
+                next_wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG),
+                i == 10 + 1
+            );
 
             // Flow down starts after 10 updates.
-            assert_eq!(next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS), i == 8 + 1);
-            assert_eq!(next_wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS), i == 9 + 1);
-            assert_eq!(next_wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS), i == 10 + 1);
+            assert_eq!(
+                next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS),
+                i == 8 + 1
+            );
+            assert_eq!(
+                next_wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS),
+                i == 9 + 1
+            );
+            assert_eq!(
+                next_wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS),
+                i == 10 + 1
+            );
         }
     });
 }
@@ -237,8 +258,7 @@ fn next_wind_out(exec: &Exec, p: Point3, d: Dir3) -> bool {
 }
 
 fn blip_index(exec: &Exec, p: Point3) -> Option<usize> {
-    exec
-        .blips()
+    exec.blips()
         .iter()
         .find(|(_, blip)| blip.pos == p)
         .map(|(blip_index, _)| blip_index)
