@@ -189,13 +189,13 @@ fn test_blip_duplicator_and_single_blip_movement() {
             // i=1: Blip is at (2,0).
             // etc.
             for x in 1..=8 {
-                assert_eq!(blip_index(exec, t * (x, 0, 0)).is_some(), i == x - 1);
+                assert_eq!(next_blip_index(exec, t * (x, 0, 0)).is_some(), i == x - 1);
             }
 
             // i=8: Blip enters blip duplicator.
             // i=9: Two output blips are spawned.
-            assert_eq!(blip_index(exec, t * (7, 1, 0)).is_some(), i >= 9);
-            assert_eq!(blip_index(exec, t * (9, 1, 0)).is_some(), i >= 9);
+            assert_eq!(next_blip_index(exec, t * (7, 1, 0)).is_some(), i >= 9);
+            assert_eq!(next_blip_index(exec, t * (9, 1, 0)).is_some(), i >= 9);
         }
     });
 }
@@ -221,7 +221,7 @@ fn test_blip_duplicator_inversion_and_blip_movement() {
             // i=1: First blip is at (2,0).
             // etc.
             for x in 1..=8 {
-                assert_eq!(blip_index(exec, t * (x, 0, 0)).is_some(), i >= x - 1);
+                assert_eq!(next_blip_index(exec, t * (x, 0, 0)).is_some(), i >= x - 1);
             }
 
             // i=8: First blip enters duplicator.
@@ -231,8 +231,8 @@ fn test_blip_duplicator_inversion_and_blip_movement() {
             //       enters duplicator. For visualization purposes, the first
             //       two output blips *still live*, but they are marked as
             //       dying. The actual removal happens in the next tick.
-            let left_blip = blip_index(exec, t * (7, 1, 0));
-            let right_blip = blip_index(exec, t * (9, 1, 0));
+            let left_blip = next_blip_index(exec, t * (7, 1, 0));
+            let right_blip = next_blip_index(exec, t * (9, 1, 0));
 
             assert_eq!(left_blip.is_some(), i >= 9);
             assert_eq!(right_blip.is_some(), i >= 9);
@@ -256,11 +256,11 @@ fn next_wind_out(exec: &Exec, p: Point3, d: Dir3) -> bool {
     exec.next_blocks().wind_out[block_index][d]
 }
 
-fn blip_index(exec: &Exec, p: Point3) -> Option<usize> {
+fn next_blip_index(exec: &Exec, p: Point3) -> Option<usize> {
     exec.blips()
         .iter()
         .find(|(_, blip)| blip.next_pos() == p)
-        .map(|(blip_index, _)| blip_index)
+        .map(|(next_blip_index, _)| next_blip_index)
 }
 
 fn test_transform_invariant<T>(blocks: &[(Point3, Block)], test: T)
