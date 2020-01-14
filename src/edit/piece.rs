@@ -81,6 +81,10 @@ impl Piece {
         self.blocks.iter().map(|(pos, block)| (*pos, block.clone()))
     }
 
+    pub fn blocks(&self) -> &[(grid::Point3, PlacedBlock)] {
+        &self.blocks
+    }
+
     pub fn transform(&mut self, transform: &Transform) {
         for (pos, placed_block) in self.blocks.iter_mut() {
             *pos = transform * *pos;

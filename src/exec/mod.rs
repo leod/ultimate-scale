@@ -7,7 +7,6 @@ mod tests;
 pub mod view;
 
 use std::cmp;
-use std::iter;
 use std::mem;
 
 use rand::Rng;
@@ -395,12 +394,6 @@ fn spawn_or_advect_wind(
             }
         }
     }
-}
-
-fn find_dir_ccw_xy(initial_dir: Dir3, f: impl Fn(Dir3) -> bool) -> Option<Dir3> {
-    iter::successors(Some(initial_dir), |dir| Some(dir.rotated_ccw_xy()))
-        .take(4)
-        .find(|dir| f(*dir))
 }
 
 fn blip_move_dir(
