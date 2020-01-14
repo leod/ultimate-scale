@@ -508,6 +508,15 @@ fn run_activated_block(
                 BlipSpawnMode::Quick,
             ));
         }
+        Block::DetectorBlipDuplicator { out_dir, .. } => {
+            blips.add(Blip::new(
+                blip_kind,
+                *block_pos,
+                *out_dir,
+                Some(*out_dir),
+                BlipSpawnMode::Quick,
+            ));
+        }
         _ => (),
     }
 }
