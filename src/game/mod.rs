@@ -14,11 +14,10 @@ use rendology::{Camera, Light};
 use crate::config::{self, Config};
 use crate::edit::Editor;
 use crate::edit_camera_view::{EditCameraView, EditCameraViewInput};
-use crate::exec::level_progress::InputsOutputsProgress;
 use crate::exec::play::{self, Play};
-use crate::exec::{ExecView, LevelStatus};
+use crate::exec::{ExecView, LevelProgress, LevelStatus};
 use crate::input_state::InputState;
-use crate::machine::{level, Machine};
+use crate::machine::Machine;
 use crate::render;
 use crate::util::stats;
 
@@ -36,9 +35,8 @@ pub struct Game {
     play: Play,
     exec: Option<(play::Status, ExecView)>,
 
-    /// Current example to show for the level inputs/outputs. Optionally, store
-    /// the progress through the inputs/outputs when executing.
-    inputs_outputs_example: Option<(level::InputsOutputs, Option<InputsOutputsProgress>)>,
+    /// Current example to show for the level inputs/outputs.
+    level_example: Option<LevelProgress>,
 
     elapsed_time: Duration,
     fps: stats::Variable,
@@ -76,14 +74,13 @@ impl Game {
         .map_err(CreationError::RenderPipeline)?;
         let render_stage = render::Stage::default();
 
+        let level_example = initial_machine.level.as_ref().map(|level| {
+            let inputs_outputs = level.spec.gen_inputs_outputs(&mut rand::thread_rng());
+            LevelProgress::new(None, inputs_outputs)
+        });
+
         let editor = Editor::new(&config.editor, initial_machine);
         let play = Play::new(&config.play);
-
-        let inputs_outputs_example = editor
-            .machine()
-            .level
-            .as_ref()
-            .map(|level| (level.spec.gen_inputs_outputs(&mut rand::thread_rng()), None));
 
         Ok(Game {
             config: config.clone(),
@@ -95,7 +92,7 @@ impl Game {
             editor,
             play,
             exec: None,
-            inputs_outputs_example,
+            level_example,
             elapsed_time: Default::default(),
             fps: stats::Variable::new(Duration::from_secs(1)),
             show_config_ui: false,
@@ -210,7 +207,7 @@ impl Game {
                         for _ in 0..*num_ticks_since_last_update {
                             exec.run_tick();
 
-                            if exec.level_status() != LevelStatus::Running {
+                            if exec.next_level_status() != LevelStatus::Running {
                                 *s = play::Status::Finished { time: time.clone() };
                                 break;
                             }

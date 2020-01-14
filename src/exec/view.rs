@@ -10,10 +10,10 @@ use rendology::{basic_obj, BasicObj, Camera, Light};
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
 use crate::exec::anim::{AnimState, WindDeadend, WindLife};
-use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelStatus, TickTime};
+use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
-use crate::machine::{grid, level, Machine};
+use crate::machine::{grid, Machine};
 use crate::render::{self, Stage};
 
 #[derive(Debug, Clone)]
@@ -63,11 +63,23 @@ impl ExecView {
     }
 
     pub fn level_status(&self) -> LevelStatus {
-        self.exec.level_status()
+        self.exec
+            .level_progress()
+            .map_or(LevelStatus::Running, LevelProgress::status)
     }
 
-    pub fn inputs_outputs(&self) -> Option<&level::InputsOutputs> {
-        self.exec.inputs_outputs()
+    pub fn next_level_status(&self) -> LevelStatus {
+        self.exec
+            .next_level_progress()
+            .map_or(LevelStatus::Running, LevelProgress::status)
+    }
+
+    pub fn level_progress(&self) -> Option<&LevelProgress> {
+        self.exec.level_progress()
+    }
+
+    pub fn next_level_progress(&self) -> Option<&LevelProgress> {
+        self.exec.next_level_progress()
     }
 
     pub fn exec(&self) -> &Exec {

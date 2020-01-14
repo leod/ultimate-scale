@@ -200,7 +200,7 @@ impl Play {
                 // We only advance through the tick partially, so that the
                 // last blips are still seen at the stop. This is especially
                 // useful to see why a level was failed.
-                let progress_limit = 0.5;
+                let progress_limit = 0.7;
 
                 let mut new_time = time.clone();
 
