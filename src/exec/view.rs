@@ -227,8 +227,8 @@ impl ExecView {
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
                     pareen::anim_match!(mode;
-                        BlipSpawnMode::Ease =>
-                            pareen::constant(0.0).seq_squeeze(0.75, blip_spawn_anim()),
+                        /*BlipSpawnMode::Ease =>
+                            pareen::constant(0.0).seq_squeeze(0.75, blip_spawn_anim()),*/
                         BlipSpawnMode::Quick =>
                             blip_spawn_anim().seq_squeeze(0.5, 1.0),
                     )
