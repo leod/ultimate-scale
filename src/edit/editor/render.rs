@@ -126,7 +126,7 @@ impl Editor {
                             render::machine::render_block(
                                 &placed_block,
                                 &TickTime::zero(),
-                                &None,
+                                None,
                                 None,
                                 None,
                                 &block_center,
@@ -216,7 +216,7 @@ impl Editor {
             render::machine::render_block(
                 &placed_block,
                 &TickTime::zero(),
-                &None,
+                None,
                 None,
                 None,
                 &block_center,
