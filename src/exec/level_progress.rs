@@ -1,116 +1,134 @@
-use crate::exec::Exec;
-use crate::machine::{level, Block};
+use crate::exec::{Exec, Activation};
+use crate::machine::{Block, BlockIndex};
+use crate::machine::level::InputsOutputs;
 
-/// `InputsOutputsProgress` stores the progress through the current
-/// `InputsOutputs` example while executing. The state is entirely derived from
-/// the machine's execution state. We store it, so that the user can see where
-/// execution failed even while editing afterwards.
-pub struct InputsOutputsProgress {
-    /// How many inputs have been fed by index?
-    ///
-    /// This vector has the same length as the level's `InputOutputs::inputs`.
-    pub inputs: Vec<usize>,
-
-    /// How many outputs have been correctly fed by index?
-    ///
-    /// This vector has the same length as the level's `InputOutputs::outputs`.
-    pub outputs: Vec<usize>,
-
-    /// Which outputs have failed (in their last time step)?
-    ///
-    /// This vector has the same length as the level's `InputOutputs::outputs`.
-    pub outputs_failed: Vec<bool>,
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+pub enum LevelStatus {
+    Running,
+    Completed,
+    Failed,
 }
 
-impl InputsOutputsProgress {
-    pub fn new_from_exec(example: &level::InputsOutputs, exec: &Exec) -> Self {
-        let machine = exec.machine();
-        let inputs = example
+pub struct Input {
+    pub block_index: Option<BlockIndex>,
+    pub num_fed: usize,
+}
+
+pub struct Output {
+    pub block_index: Option<BlockIndex>,
+    pub num_fed: usize,
+    pub failed: bool,
+}
+
+/// `LevelProgress` stores the progress through the current `InputsOutputs`
+/// example while executing.
+pub struct LevelProgress {
+    /// The `InputsOutputs` that were generated.
+    pub inputs_outputs: InputsOutputs,
+
+    /// States of each input.
+    ///
+    /// This vector has the same length as the level's `InputOutputs::inputs`.
+    pub inputs: Vec<Input>,
+
+    /// States of each output.
+    ///
+    /// This vector has the same length as the level's `InputOutputs::outputs`.
+    pub outputs: Vec<Output>,
+}
+
+impl LevelProgress {
+    pub fn new(machine: &Machine, inputs_outputs: InputsOutputs) -> Self {
+        let inputs = inputs_outputs
             .inputs
             .iter()
-            .enumerate()
-            .map(|(i, spec)| {
-                let progress = machine
-                    .blocks
-                    .data
-                    .values()
-                    .find_map(|(_block_pos, block)| {
-                        // Block::Input index is assumed to be unique within
-                        // the machine
-                        match &block.block {
-                            Block::Input { index, inputs, .. } if *index == i => {
-                                // Note that `inputs` here stores the remaining
-                                // inputs that will be fed into the machine.
-                                Some(if spec.len() >= inputs.len() {
-                                    spec.len() - inputs.len()
-                                } else {
-                                    // This case can only happen if `example`
-                                    // comes from the wrong source, ignore
-                                    0
-                                })
-                            }
-                            _ => None,
+            .enumerate() 
+            .map(|(i, _)| {
+                let block_index = machine
+                    .iter_blocks()
+                    .find(|(_, (_, block))| {
+                        if let Block::Input { index, .. } = block.block {
+                            *index == i
+                        } else {
+                            false
                         }
-                    });
+                    })
+                    .map(|(block_index, _)| block_index);
 
-                // Just show no progress if we ever have missing input blocks
-                progress.unwrap_or(0)
-            })
-            .collect();
+                Input {
+                    block_index,
+                    num_fed: 0,
+                }
+            });
 
-        let outputs_and_failed = example
+        let outputs = inputs_outputs
             .outputs
             .iter()
-            .enumerate()
-            .map(|(i, spec)| {
-                let progress = machine
-                    .blocks
-                    .data
-                    .values()
-                    .find_map(|(_block_pos, block)| {
-                        // Block::Output index is assumed to be unique within
-                        // the machine
-                        match &block.block {
-                            Block::Output {
-                                index,
-                                outputs,
-                                failed,
-                                ..
-                            } if *index == i => {
-                                // Note that `outputs` here stores the remaining
-                                // outputs that need to come out of the machine.
-                                let mut remaining = outputs.len();
-
-                                /*// If `activated` matches the next expected
-                                // output, there has been one more progress.
-                                if remaining > 0
-                                    && activated.is_some()
-                                    && *activated == outputs.last().copied()
-                                {
-                                    remaining -= 1;
-                                }*/
-
-                                Some(if spec.len() >= remaining {
-                                    (spec.len() - remaining, *failed)
-                                } else {
-                                    // This case can only happen if `example`
-                                    // comes from the wrong source, ignore
-                                    (0, false)
-                                })
-                            }
-                            _ => None,
+            .enumerate() 
+            .map(|(i, _)| {
+                let block_index = machine
+                    .iter_blocks()
+                    .find(|(_, (_, block))| {
+                        if let Block::Output { index, .. } = block.block {
+                            *index == i
+                        } else {
+                            false
                         }
-                    });
+                    })
+                    .map(|(block_index, _)| block_index);
 
-                // Just show no progress if we ever have missing input blocks
-                progress.unwrap_or((0, false))
-            })
-            .collect::<Vec<_>>();
+                Output {
+                    block_index,
+                    num_fed: 0,
+                    failed: false,
+                }
+            });
 
         Self {
+            inputs_outputs,
             inputs,
-            outputs: outputs_and_failed.iter().map(|(a, _)| *a).collect(),
-            outputs_failed: outputs_and_failed.iter().map(|(_, b)| *b).collect(),
+            outputs,
+        }
+    }
+
+    pub fn next_input(&mut self, index: usize) -> Option<BlipKind> {
+        self.inputs.get_mut(index).and_then(|input| {
+            let spec = &self.inputs_outputs.inputs[index];
+
+            if input.num_fed < spec.len() {
+                input.num_fed += 1;
+
+                spec[inputs.num_fed - 1]
+            } else {
+                None
+            }
+        })
+    }
+
+    pub fn feed_output(&mut self, index: usize, blip_kind: BlipKind) {
+        if let Some(output) = self.outputs.get_mut(index) {
+            let spec = &self.inputs_outputs.outputs[index];
+
+            if output.num_fed < spec.len() && spec[output.num_fed] == blip_kind {
+                output.num_fed += 1;
+            } else {
+                output.failed = true;
+            }
+        }
+    }
+
+    pub fn status(&self) -> LevelStatus {
+        let any_failed = self.outputs.any(|output| output.failed);
+        let all_finished = self.outputs.enumerate().all(|(index, output)|
+            output.num_fed == self.inputs_outputs.outputs[index].len()
+        );
+
+        if any_failed {
+            LevelStatus::Failed
+        } else if all_finished {
+            LevelStatus::Completed
+        } else {
+            LevelStatus::Running
         }
     }
 }

@@ -4,8 +4,7 @@ use imgui::{im_str, ImString};
 
 use rendology::fxaa;
 
-use crate::exec::level_progress::InputsOutputsProgress;
-use crate::exec::LevelStatus;
+use crate::exec::{LevelProgress, LevelStatus};
 use crate::game::Game;
 use crate::machine::level;
 use crate::render;
@@ -147,7 +146,7 @@ impl Game {
 
                     let status = "Status: ".to_string()
                         + &if let Some((_, exec)) = self.exec.as_ref() {
-                            match exec.level_status() {
+                            match exec.level_progress().status() {
                                 LevelStatus::Running => "Running".to_string(),
                                 LevelStatus::Completed => "Completed!".to_string(),
                                 LevelStatus::Failed => "Failed".to_string(),

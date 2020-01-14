@@ -74,22 +74,10 @@ pub enum Block {
     Input {
         out_dir: Dir3,
         index: usize,
-
-        #[serde(skip)]
-        inputs: Vec<Option<level::Input>>,
-        #[serde(skip)]
-        activated: Option<level::Input>,
     },
     Output {
         in_dir: Dir3,
         index: usize,
-
-        #[serde(skip)]
-        outputs: Vec<BlipKind>,
-
-        /// Only for visualization, store if this output failed.
-        #[serde(skip)]
-        failed: bool,
     },
     DetectorBlipDuplicator {
         out_dir: Dir3,
