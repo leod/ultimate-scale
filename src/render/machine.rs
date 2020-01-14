@@ -600,7 +600,7 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
-            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
+            let activation = anim_state.and_then(|s| s.activation.as_ref());
             let bridge_length =
                 bridge_length_anim(0.05, 0.6, activation.is_some()).eval(tick_time.tick_progress());
 
@@ -623,7 +623,7 @@ pub fn render_block(
                 translation * transform * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
             let scaling = na::Vector3::new(0.65, 0.95, 0.95);
 
-            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
+            let activation = anim_state.and_then(|s| s.activation.as_ref());
             let kind_color = match activation.or(kind.as_ref()) {
                 Some(kind) => blip_color(*kind),
                 None => inactive_blip_duplicator_color(),
@@ -654,7 +654,7 @@ pub fn render_block(
             }
         }
         Block::BlipWindSource { button_dir } => {
-            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
+            let activation = anim_state.and_then(|s| s.activation.as_ref());
             let cube_color = block_color(
                 &if activation.is_some() {
                     wind_source_color()
@@ -736,7 +736,7 @@ pub fn render_block(
             let is_wind_active = anim_state
                 .as_ref()
                 .map_or(false, |anim| anim.wind_out[Dir3::X_POS].is_alive());
-            let active_blip_kind = anim_state.as_ref().map_or(None, |anim| anim.activation);
+            let active_blip_kind = anim_state.map_or(None, |anim| anim.activation);
 
             let angle_anim = pareen::cond(is_wind_active, pareen::half_circle(), 0.0)
                 + std::f32::consts::PI / 4.0;
@@ -844,7 +844,7 @@ pub fn render_block(
             kind,
             ..
         } => {
-            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
+            let activation = anim_state.and_then(|s| s.activation.as_ref());
             let kind_color = match activation.or(kind.as_ref()) {
                 Some(kind) => blip_color(*kind),
                 None => inactive_blip_duplicator_color(),
