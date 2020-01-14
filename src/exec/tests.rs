@@ -26,7 +26,6 @@ fn test_straight_wind_propagation() {
 
             // Pipe has outgoing wind to the right.
             for x in 1..=i.min(10) {
-                println!("{}, {}", x, i);
                 assert!(next_wind_out(exec, t * (x, 0, 0), t * Dir3::X_POS));
             }
 
@@ -239,14 +238,14 @@ fn test_blip_duplicator_inversion_and_blip_movement() {
             assert_eq!(right_blip.is_some(), i >= 9);
 
             if i >= 9 {
-                let status = if (i - 9) % 2 == 0 {
-                    BlipStatus::Spawning(BlipSpawnMode::Ease)
-                } else {
-                    BlipStatus::Dying
+                if (i - 9) % 2 == 0 {
+                    let status = BlipStatus::Spawning(BlipSpawnMode::Quick);
+
+                    assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
+                    assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
                 };
 
-                assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
-                assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
+                // TODO: Test the rest of BlipStatus
             }
         }
     });
@@ -260,7 +259,7 @@ fn next_wind_out(exec: &Exec, p: Point3, d: Dir3) -> bool {
 fn blip_index(exec: &Exec, p: Point3) -> Option<usize> {
     exec.blips()
         .iter()
-        .find(|(_, blip)| blip.pos == p)
+        .find(|(_, blip)| blip.next_pos() == p)
         .map(|(blip_index, _)| blip_index)
 }
 
