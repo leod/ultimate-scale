@@ -1,5 +1,5 @@
 pub mod anim;
-pub mod level_progress;
+pub mod level;
 pub mod neighbors;
 pub mod play;
 #[cfg(test)]
@@ -13,15 +13,14 @@ use std::mem;
 use rand::Rng;
 
 use crate::machine::grid::{Dir3, DirMap3, Point3, Vector3};
-use crate::machine::{level, BlipKind, Block, BlockIndex, Machine, TickNum};
+use crate::machine::{BlipKind, Block, BlockIndex, Machine, TickNum};
 use crate::util::vec_option::VecOption;
 
 use neighbors::NeighborMap;
-use level_progress::{LevelProgress, LevelStatus};
 
+pub use level::{LevelProgress, LevelStatus};
 pub use play::TickTime;
 pub use view::ExecView;
-pub use level::{LevelProgress, LevelStatus};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct BlipMovement {
@@ -151,6 +150,7 @@ pub struct Exec {
     neighbor_map: NeighborMap,
 
     level_progress: Option<LevelProgress>,
+    next_level_progress: Option<LevelProgress>,
 
     blips: VecOption<Blip>,
 
@@ -166,11 +166,11 @@ impl Exec {
         machine.gc();
 
         let neighbor_map = NeighborMap::new_from_machine(&machine);
-        let inputs_outputs = machine
-            .level
-            .as_ref()
-            .map(|level| level.spec.gen_inputs_outputs(rng));
-        let level_progress = LevelProgress::new(&machine, inputs_outputs);
+        let level_progress = machine.level.as_ref().map(|level| {
+            let inputs_outputs = level.spec.gen_inputs_outputs(rng);
+            LevelProgress::new(Some(&machine), inputs_outputs)
+        });
+        let next_level_progress = level_progress.clone();
         let blocks = BlocksState::new_initial(&machine);
         let next_blocks = BlocksState::new_initial(&machine);
         let next_blip_count = vec![0; machine.num_blocks()];
@@ -180,6 +180,7 @@ impl Exec {
             machine,
             neighbor_map,
             level_progress,
+            next_level_progress,
             blips: VecOption::new(),
             blocks,
             next_blocks,
@@ -195,8 +196,12 @@ impl Exec {
         &self.neighbor_map
     }
 
-    pub fn level_progress(&self) -> &LevelProgress {
-        &self.level_progress
+    pub fn level_progress(&self) -> Option<&LevelProgress> {
+        self.level_progress.as_ref()
+    }
+
+    pub fn next_level_progress(&self) -> Option<&LevelProgress> {
+        self.next_level_progress.as_ref()
     }
 
     pub fn blips(&self) -> &VecOption<Blip> {
@@ -212,7 +217,10 @@ impl Exec {
     }
 
     pub fn update(&mut self) {
-        // 1) Spawn and move wind.
+        // 1) Update level state.
+        self.level_progress = self.next_level_progress.clone();
+
+        // 2) Spawn and move wind.
         mem::swap(&mut self.blocks.wind_out, &mut self.next_blocks.wind_out);
 
         for block_index in 0..self.machine.num_blocks() {
@@ -225,10 +233,10 @@ impl Exec {
             );
         }
 
-        // 2) Remove dead blips.
+        // 3) Remove dead blips.
         self.blips.retain(|blip| !blip.status.is_dead());
 
-        // 3) Perform blip movement as it was defined in the previous update,
+        // 4) Perform blip movement as it was defined in the previous update,
         //    then determine new blip movement direction.
         for (_, blip) in self.blips.iter_mut() {
             // At this point, there are only non-dead blips. Blips that spawned
@@ -249,7 +257,7 @@ impl Exec {
             );
         }
 
-        // 4) At each block, count blips that will be there next tick, after
+        // 5) At each block, count blips that will be there next tick, after
         //    movement.
         for count in self.next_blip_count.iter_mut() {
             *count = 0;
@@ -263,7 +271,7 @@ impl Exec {
             }
         }
 
-        // 5) Run effects of blocks that are activated in this tick.
+        // 6) Run effects of blocks that are activated in this tick.
         mem::swap(
             &mut self.blocks.activation,
             &mut self.next_blocks.activation,
@@ -282,13 +290,7 @@ impl Exec {
             }
 
             if let Some(blip_kind) = self.blocks.activation[block_index] {
-                run_activated_block(
-                    block_pos,
-                    &placed_block.block,
-                    blip_kind,
-                    &mut self.level_progress,
-                    &mut self.blips,
-                );
+                run_activated_block(block_pos, &placed_block.block, blip_kind, &mut self.blips);
             }
         }
 
@@ -302,7 +304,7 @@ impl Exec {
             }
         }
 
-        // 6) Determine next activations based on blips and update blip status
+        // 7) Determine next activations based on blips and update blip status
         //    based on next position.
         for activation in self.next_blocks.activation.iter_mut() {
             *activation = None;
@@ -338,6 +340,16 @@ impl Exec {
                 blip.status = blip.status.kill();
             }
         }
+
+        // 8) Determine the next level progress based on block activations.
+        //    This allows us to see if the level will be completed or failed
+        //    next tick, so we can stop the playback early, allowing the player
+        //    to see which blips exactly caused completion or failure.
+        self.next_level_progress = self.level_progress.as_ref().map(|progress| {
+            let mut next_progress = progress.clone();
+            next_progress.update_outputs(&self.next_blocks.activation);
+            next_progress
+        });
 
         self.cur_tick += 1;
     }
@@ -442,7 +454,7 @@ fn self_activate_block(
             kind,
             ref mut num_spawns,
         } => {
-            if let Some(neighbor_index) = neighbor_map.lookup(block_index, *out_dir) {
+            if let Some(neighbor_index) = neighbor_map[block_index][*out_dir] {
                 // The blip spawn acts only if there is no blip at the output position.
                 if next_blip_count[neighbor_index] == 0 && num_spawns.map_or(true, |n| n > 0) {
                     *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
@@ -450,14 +462,11 @@ fn self_activate_block(
                 }
             }
         }
-        Block::Input {
-            out_dir,
-            index,
-        } => {
-            if let Some(neighbor_index) = neighbor_map.lookup(block_index, *out_dir) {
+        Block::Input { out_dir, index } => {
+            if let Some(neighbor_index) = neighbor_map[block_index][*out_dir] {
                 // The input acts only if there is no blip at the output position.
                 if next_blip_count[neighbor_index] == 0 {
-                    return level_progress.as_mut().and_then(|p| p.next_input(index));
+                    return level_progress.as_mut().and_then(|p| p.feed_input(*index));
                 }
             }
         }
@@ -471,7 +480,6 @@ fn run_activated_block(
     block_pos: &Point3,
     block: &Block,
     blip_kind: BlipKind,
-    level_progress: &mut Option<LevelProgress>,
     blips: &mut VecOption<Blip>,
 ) {
     match block {
@@ -495,21 +503,14 @@ fn run_activated_block(
                 ));
             }
         }
-        Block::Input { out_dir, index } => {
+        Block::Input { out_dir, .. } => {
             blips.add(Blip::new(
-                *kind,
+                blip_kind,
                 *block_pos,
+                *out_dir,
                 Some(*out_dir),
                 BlipSpawnMode::Quick,
             ));
-        }
-        Block::Output { index } => {
-            if let Some(level_progress) = level_progress.as_mut() {
-                level_progress.feed_output(
-                    index,
-                    blip_kind,
-                );
-            }
         }
         _ => (),
     }

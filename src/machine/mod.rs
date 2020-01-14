@@ -46,10 +46,6 @@ impl fmt::Display for BlipKind {
 pub type TickNum = usize;
 
 /// Definition of a block in the machine.
-///
-/// This definition is somewhat "dirty" in that it also contains state that is
-/// only needed at execution time -- e.g. the `activated` fields in some of the
-/// blocks. Consider this an artifact of us not using an ECS.
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     Pipe(Dir3, Dir3),
@@ -370,8 +366,6 @@ impl Machine {
                     block: Block::Input {
                         out_dir: Dir3::X_POS,
                         index,
-                        inputs: Vec::new(),
-                        activated: None,
                     },
                 }),
             );
@@ -386,8 +380,6 @@ impl Machine {
                     block: Block::Output {
                         in_dir: Dir3::X_NEG,
                         index,
-                        outputs: Vec::new(),
-                        failed: false,
                     },
                 }),
             );

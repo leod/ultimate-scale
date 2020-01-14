@@ -3,10 +3,10 @@ use nalgebra as na;
 use rendology::{basic_obj, line, BasicObj, Light};
 
 use crate::machine::grid::{self, Dir3, Sign};
-use crate::machine::{level, BlipKind, Block, Machine, PlacedBlock};
+use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
 use crate::exec::anim::{AnimState, WindLife};
-use crate::exec::{Exec, TickTime};
+use crate::exec::{Exec, LevelProgress, TickTime};
 
 use crate::render::Stage;
 
@@ -469,6 +469,8 @@ pub fn render_block(
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
     anim_state: &Option<AnimState>,
+    level_progress: Option<&LevelProgress>,
+    next_level_progress: Option<&LevelProgress>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     alpha: f32,
@@ -732,16 +734,11 @@ pub fn render_block(
                 out,
             );
         }
-        Block::Input {
-            out_dir, activated, ..
-        } => {
+        Block::Input { out_dir, .. } => {
             let is_wind_active = anim_state
                 .as_ref()
                 .map_or(false, |anim| anim.wind_out[Dir3::X_POS].is_alive());
-            let active_blip_kind = match activated {
-                None => None,
-                Some(level::Input::Blip(kind)) => Some(kind),
-            };
+            let active_blip_kind = anim_state.as_ref().map_or(None, |anim| anim.activation);
 
             let angle_anim = pareen::cond(is_wind_active, pareen::half_circle(), 0.0)
                 + std::f32::consts::PI / 4.0;
@@ -779,12 +776,7 @@ pub fn render_block(
                 out,
             );
         }
-        Block::Output {
-            in_dir,
-            ref outputs,
-            failed,
-            ..
-        } => {
+        Block::Output { in_dir, index, .. } => {
             render_half_pipe(
                 center,
                 transform,
@@ -800,45 +792,34 @@ pub fn render_block(
                 &mut out.solid,
             );
 
-            // Foolish stuff to transition to the next expected color mid-tick
-            let activation = anim_state.as_ref().and_then(|s| s.activation.as_ref());
-            let old_expected_kind = outputs.last().copied();
-            let next_expected_kind = if outputs.len() > 1 {
-                outputs.get(outputs.len() - 2).copied()
-            } else {
-                None
+            let status_color = |progress: Option<&LevelProgress>| {
+                let (failed, completed) = progress
+                    .and_then(|progress| {
+                        progress.outputs.get(index).map(|output| {
+                            let num_expected = progress.inputs_outputs.outputs[index].len();
+                            let completed = output.num_fed == num_expected;
+
+                            (output.failed, completed)
+                        })
+                    })
+                    .unwrap_or((false, false));
+
+                output_status_color(failed, completed)
             };
-            let kind_transition_time = 0.6;
-            let kind_transition_anim =
-                pareen::constant(old_expected_kind).seq(kind_transition_time, next_expected_kind);
-            let expected_kind = pareen::cond(
-                activation.is_some(),
-                kind_transition_anim,
-                old_expected_kind,
-            )
-            .eval(tick_time.tick_progress());
 
-            let newly_completed =
-                outputs.len() == 1 && activation.copied() == outputs.last().copied();
-            let was_completed = outputs.is_empty() && anim_state.is_some();
-            let newly_completed_anim = pareen::constant(false).seq(0.45, newly_completed);
-            let completed = pareen::cond(was_completed, true, newly_completed_anim)
-                .eval(tick_time.tick_progress());
+            let expected_output =
+                level_progress.and_then(|progress| progress.expected_output(index));
+            let next_expected_output =
+                next_level_progress.and_then(|next_progress| next_progress.expected_output(index));
 
-            let status_color = output_status_color(failed, completed);
-            let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));
-            let floor_scaling =
-                na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.8, 0.15));
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
-                transform: translation * floor_translation * transform * floor_scaling,
-                color: block_color(&status_color, alpha),
-                ..Default::default()
-            });
+            let expected_color_anim = pareen::constant(expected_output)
+                .seq(0.6, next_expected_output)
+                .map(|kind| kind.map_or(impatient_bridge_color(), blip_color))
+                .map(|color| block_color(&color, alpha));
 
-            let expected_next_color = block_color(
-                &expected_kind.map_or(impatient_bridge_color(), blip_color),
-                alpha,
-            );
+            let status_color_anim = pareen::constant(status_color(level_progress))
+                .seq(0.45, status_color(next_level_progress))
+                .map(|color| block_color(&color, alpha));
 
             let thingy_translation =
                 na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.3));
@@ -846,7 +827,16 @@ pub fn render_block(
                 na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.2, 0.2, 0.4));
             out.solid_glow[BasicObj::Cube].add(basic_obj::Instance {
                 transform: translation * thingy_translation * transform * thingy_scaling,
-                color: expected_next_color,
+                color: expected_color_anim.eval(tick_time.tick_progress()),
+                ..Default::default()
+            });
+
+            let floor_translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, -0.5));
+            let floor_scaling =
+                na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.8, 0.8, 0.15));
+            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+                transform: translation * floor_translation * transform * floor_scaling,
+                color: status_color_anim.eval(tick_time.tick_progress()),
                 ..Default::default()
             });
         }
@@ -932,11 +922,15 @@ pub fn render_machine<'a>(
         let center = block_center(&block_pos);
 
         let anim_state = exec.map(|exec| AnimState::from_exec_block(exec, block_index));
+        let level_progress = exec.and_then(|exec| exec.level_progress());
+        let next_level_progress = exec.and_then(|exec| exec.next_level_progress());
 
         render_block(
             &placed_block,
             tick_time,
             &anim_state,
+            level_progress,
+            next_level_progress,
             &center,
             &transform,
             1.0,

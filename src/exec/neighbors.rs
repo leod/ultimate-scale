@@ -1,6 +1,6 @@
 use std::ops::Index;
 
-use crate::machine::grid::{Dir3, DirMap3};
+use crate::machine::grid::DirMap3;
 use crate::machine::{BlockIndex, Machine};
 
 pub struct NeighborMap(Vec<DirMap3<Option<BlockIndex>>>);
@@ -24,10 +24,6 @@ impl NeighborMap {
                 })
                 .collect(),
         )
-    }
-
-    pub fn lookup(&self, block_index: BlockIndex, dir: Dir3) -> Option<BlockIndex> {
-        self.0[block_index][dir]
     }
 }
 
