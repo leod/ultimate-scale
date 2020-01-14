@@ -78,14 +78,6 @@ impl ExecView {
         self.exec.level_progress()
     }
 
-    pub fn next_level_progress(&self) -> Option<&LevelProgress> {
-        self.exec.next_level_progress()
-    }
-
-    pub fn exec(&self) -> &Exec {
-        &self.exec
-    }
-
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(*input),

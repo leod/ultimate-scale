@@ -81,6 +81,7 @@ impl Piece {
         self.blocks.iter().map(|(pos, block)| (*pos, block.clone()))
     }
 
+    #[allow(dead_code)]
     pub fn blocks(&self) -> &[(grid::Point3, PlacedBlock)] {
         &self.blocks
     }
