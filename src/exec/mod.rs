@@ -17,9 +17,11 @@ use crate::machine::{level, BlipKind, Block, BlockIndex, Machine, TickNum};
 use crate::util::vec_option::VecOption;
 
 use neighbors::NeighborMap;
+use level_progress::{LevelProgress, LevelStatus};
 
 pub use play::TickTime;
 pub use view::ExecView;
+pub use level::{LevelProgress, LevelStatus};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct BlipMovement {
@@ -121,13 +123,6 @@ impl Blip {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
-pub enum LevelStatus {
-    Running,
-    Completed,
-    Failed,
-}
-
 pub type Activation = Option<BlipKind>;
 
 pub struct BlocksState {
@@ -155,8 +150,7 @@ pub struct Exec {
     machine: Machine,
     neighbor_map: NeighborMap,
 
-    inputs_outputs: Option<level::InputsOutputs>,
-    level_status: LevelStatus,
+    level_progress: Option<LevelProgress>,
 
     blips: VecOption<Blip>,
 
@@ -176,11 +170,7 @@ impl Exec {
             .level
             .as_ref()
             .map(|level| level.spec.gen_inputs_outputs(rng));
-
-        if let Some(inputs_outputs) = inputs_outputs.as_ref() {
-            initialize_inputs_outputs(inputs_outputs, &mut machine);
-        }
-
+        let level_progress = LevelProgress::new(&machine, inputs_outputs);
         let blocks = BlocksState::new_initial(&machine);
         let next_blocks = BlocksState::new_initial(&machine);
         let next_blip_count = vec![0; machine.num_blocks()];
@@ -189,8 +179,7 @@ impl Exec {
             cur_tick: 0,
             machine,
             neighbor_map,
-            level_status: LevelStatus::Running,
-            inputs_outputs,
+            level_progress,
             blips: VecOption::new(),
             blocks,
             next_blocks,
@@ -206,12 +195,8 @@ impl Exec {
         &self.neighbor_map
     }
 
-    pub fn level_status(&self) -> LevelStatus {
-        self.level_status
-    }
-
-    pub fn inputs_outputs(&self) -> Option<&level::InputsOutputs> {
-        self.inputs_outputs.as_ref()
+    pub fn level_progress(&self) -> &LevelProgress {
+        &self.level_progress
     }
 
     pub fn blips(&self) -> &VecOption<Blip> {
@@ -288,6 +273,7 @@ impl Exec {
             if let Some(kind) = self_activate_block(
                 block_index,
                 &mut placed_block.block,
+                &mut self.level_progress,
                 &self.neighbor_map,
                 &self.next_blip_count,
             ) {
@@ -296,7 +282,13 @@ impl Exec {
             }
 
             if let Some(blip_kind) = self.blocks.activation[block_index] {
-                run_activated_block(block_pos, &placed_block.block, blip_kind, &mut self.blips);
+                run_activated_block(
+                    block_pos,
+                    &placed_block.block,
+                    blip_kind,
+                    &mut self.level_progress,
+                    &mut self.blips,
+                );
             }
         }
 
@@ -440,6 +432,7 @@ fn blip_move_dir(
 fn self_activate_block(
     block_index: BlockIndex,
     block: &mut Block,
+    level_progress: &mut Option<LevelProgress>,
     neighbor_map: &NeighborMap,
     next_blip_count: &[usize],
 ) -> Option<BlipKind> {
@@ -450,10 +443,21 @@ fn self_activate_block(
             ref mut num_spawns,
         } => {
             if let Some(neighbor_index) = neighbor_map.lookup(block_index, *out_dir) {
-                // The blip spawn only acts if there is no blip at the output position.
+                // The blip spawn acts only if there is no blip at the output position.
                 if next_blip_count[neighbor_index] == 0 && num_spawns.map_or(true, |n| n > 0) {
                     *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
                     return Some(*kind);
+                }
+            }
+        }
+        Block::Input {
+            out_dir,
+            index,
+        } => {
+            if let Some(neighbor_index) = neighbor_map.lookup(block_index, *out_dir) {
+                // The input acts only if there is no blip at the output position.
+                if next_blip_count[neighbor_index] == 0 {
+                    return level_progress.as_mut().and_then(|p| p.next_input(index));
                 }
             }
         }
@@ -467,6 +471,7 @@ fn run_activated_block(
     block_pos: &Point3,
     block: &Block,
     blip_kind: BlipKind,
+    level_progress: &mut Option<LevelProgress>,
     blips: &mut VecOption<Blip>,
 ) {
     match block {
@@ -490,40 +495,22 @@ fn run_activated_block(
                 ));
             }
         }
+        Block::Input { out_dir, index } => {
+            blips.add(Blip::new(
+                *kind,
+                *block_pos,
+                Some(*out_dir),
+                BlipSpawnMode::Quick,
+            ));
+        }
+        Block::Output { index } => {
+            if let Some(level_progress) = level_progress.as_mut() {
+                level_progress.feed_output(
+                    index,
+                    blip_kind,
+                );
+            }
+        }
         _ => (),
-    }
-}
-
-fn initialize_inputs_outputs(inputs_outputs: &level::InputsOutputs, machine: &mut Machine) {
-    for (i, input_spec) in inputs_outputs.inputs.iter().enumerate() {
-        for (_, (_, block)) in machine.blocks.data.iter_mut() {
-            match &mut block.block {
-                Block::Input { index, inputs, .. } if *index == i => {
-                    // We reverse the inputs so that we can use Vec::pop
-                    // during execution to get the next input.
-                    *inputs = input_spec.iter().copied().rev().collect();
-
-                    // Block::Input index is assumed to be unique
-                    break;
-                }
-                _ => (),
-            }
-        }
-    }
-
-    for (i, output_spec) in inputs_outputs.outputs.iter().enumerate() {
-        for (_, (_, block)) in machine.blocks.data.iter_mut() {
-            match &mut block.block {
-                Block::Output { index, outputs, .. } if *index == i => {
-                    // We reverse the outputs so that we can use Vec::pop
-                    // during execution to get the next expected output.
-                    *outputs = output_spec.iter().copied().rev().collect();
-
-                    // Block::Output index is assumed to be unique
-                    break;
-                }
-                _ => (),
-            }
-        }
     }
 }
