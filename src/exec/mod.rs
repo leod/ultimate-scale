@@ -256,31 +256,16 @@ impl Exec {
             );
         }
 
-        // 5) At each block, count blips that will be there next tick, after
-        //    movement.
-        for count in self.next_blip_count.iter_mut() {
-            *count = 0;
-        }
-
-        for (_, blip) in self.blips.iter() {
-            debug_assert!(!blip.status.is_spawning());
-
-            if let Some(next_block_index) = self.machine.get_index(&blip.next_pos()) {
-                self.next_blip_count[next_block_index] += 1;
-            }
-        }
-
-        // 6) Run effects of blocks that are activated in this tick.
+        // 5) Run effects of blocks that are activated in this tick.
         mem::swap(
             &mut self.blocks.activation,
             &mut self.next_blocks.activation,
         );
 
         for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
-            if let Some(kind) = self_activate_block(
-                &mut placed_block.block,
-                self.level_progress.as_mut(),
-            ) {
+            if let Some(kind) =
+                self_activate_block(&mut placed_block.block, self.level_progress.as_mut())
+            {
                 self.blocks.activation[block_index] =
                     cmp::max(self.blocks.activation[block_index], Some(kind));
             }
@@ -290,13 +275,15 @@ impl Exec {
             }
         }
 
-        // The block activations may have spawned new blips. These need to be
-        // counted, lest we lose control over our population.
+        // 6) At each block, count blips that will be there next tick, after
+        //    movement.
+        for count in self.next_blip_count.iter_mut() {
+            *count = 0;
+        }
+
         for (_, blip) in self.blips.iter() {
-            if blip.status.is_spawning() {
-                if let Some(next_block_index) = self.machine.get_index(&blip.next_pos()) {
-                    self.next_blip_count[next_block_index] += 1;
-                }
+            if let Some(next_block_index) = self.machine.get_index(&blip.next_pos()) {
+                self.next_blip_count[next_block_index] += 1;
             }
         }
 
