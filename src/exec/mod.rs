@@ -30,7 +30,7 @@ pub struct BlipMovement {
 /// Ways that blips can enter live.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum BlipSpawnMode {
-    Ease,
+    //Ease,
     Quick,
 }
 

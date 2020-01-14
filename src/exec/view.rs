@@ -227,8 +227,8 @@ impl ExecView {
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
                     pareen::anim_match!(mode;
-                        BlipSpawnMode::Ease =>
-                            pareen::constant(0.0).seq_squeeze(0.75, blip_spawn_anim()),
+                        /*BlipSpawnMode::Ease =>
+                            pareen::constant(0.0).seq_squeeze(0.75, blip_spawn_anim()),*/
                         BlipSpawnMode::Quick =>
                             blip_spawn_anim().seq_squeeze(0.5, 1.0),
                     )
@@ -262,8 +262,12 @@ impl ExecView {
                     let pos_anim = pareen::lerp(center, next_center);
 
                     // Orient the blip
-                    let orient_anim =
-                        pareen::fun(move |t| orient.slerp(&next_orient, t).to_homogeneous());
+                    let orient_anim = pareen::fun(move |t| {
+                        orient
+                            .try_slerp(&next_orient, t, 0.001)
+                            .unwrap_or(next_orient.clone())
+                            .to_homogeneous()
+                    });
 
                     // Twist the blip around movement direction (if it is moving)
                     let delta: na::Vector3<f32> = na::convert(next_pos - blip.pos);
