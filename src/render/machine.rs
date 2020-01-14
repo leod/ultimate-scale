@@ -312,7 +312,7 @@ pub fn render_wind_mills(
     wind_mills: &WindMills,
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
-    anim_state: &Option<AnimState>,
+    anim_state: Option<&AnimState>,
     transform: &na::Matrix4<f32>,
     out: &mut Stage,
 ) {
@@ -321,7 +321,7 @@ pub fn render_wind_mills(
             continue;
         }
 
-        let roll_anim = pareen::constant(anim_state.as_ref()).map_or(0.0, |state| {
+        let roll_anim = pareen::constant(anim_state).map_or(0.0, |state| {
             let wind_time_offset = wind_mills.offset + wind_mills.length;
 
             let angle = || pareen::quarter_circle();
@@ -433,15 +433,13 @@ pub fn render_outline(
 
 pub fn render_pulsator(
     tick_time: &TickTime,
-    anim_state: &Option<AnimState>,
+    anim_state: Option<&AnimState>,
     center: &na::Point3<f32>,
     transform: &na::Matrix4<f32>,
     color: &na::Vector4<f32>,
     out: &mut Stage,
 ) {
-    let have_flow = anim_state
-        .as_ref()
-        .map_or(false, |anim| anim.num_alive_out() > 0);
+    let have_flow = anim_state.map_or(false, |anim| anim.num_alive_out() > 0);
 
     let max_size = 2.5 * PIPE_THICKNESS;
     let size_anim = pareen::cond(
@@ -468,7 +466,7 @@ pub fn render_pulsator(
 pub fn render_block(
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
-    anim_state: &Option<AnimState>,
+    anim_state: Option<&AnimState>,
     level_progress: Option<&LevelProgress>,
     next_level_progress: Option<&LevelProgress>,
     center: &na::Point3<f32>,
@@ -928,7 +926,7 @@ pub fn render_machine<'a>(
         render_block(
             &placed_block,
             tick_time,
-            &anim_state,
+            anim_state.as_ref(),
             level_progress,
             next_level_progress,
             &center,
