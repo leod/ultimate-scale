@@ -30,7 +30,7 @@ pub struct BlipMovement {
 /// Ways that blips can enter live.
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum BlipSpawnMode {
-    Ease,
+    //Ease,
     Quick,
 }
 
@@ -278,11 +278,8 @@ impl Exec {
 
         for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
             if let Some(kind) = self_activate_block(
-                block_index,
                 &mut placed_block.block,
-                &mut self.level_progress,
-                &self.neighbor_map,
-                &self.next_blip_count,
+                self.level_progress.as_mut(),
             ) {
                 self.blocks.activation[block_index] =
                     cmp::max(self.blocks.activation[block_index], Some(kind));
@@ -438,38 +435,25 @@ fn blip_move_dir(
 }
 
 fn self_activate_block(
-    block_index: BlockIndex,
     block: &mut Block,
-    level_progress: &mut Option<LevelProgress>,
-    neighbor_map: &NeighborMap,
-    next_blip_count: &[usize],
+    level_progress: Option<&mut LevelProgress>,
 ) -> Option<BlipKind> {
     match block {
         Block::BlipSpawn {
-            out_dir,
             kind,
             ref mut num_spawns,
+            ..
         } => {
-            if let Some(neighbor_index) = neighbor_map[block_index][*out_dir] {
-                // The blip spawn acts only if there is no blip at the output position.
-                if next_blip_count[neighbor_index] == 0 && num_spawns.map_or(true, |n| n > 0) {
-                    *num_spawns = num_spawns.map_or(None, |n| Some(n - 1));
-                    return Some(*kind);
-                }
+            if num_spawns.map_or(true, |n| n > 0) {
+                *num_spawns = num_spawns.map(|n| n - 1);
+                Some(*kind)
+            } else {
+                None
             }
         }
-        Block::Input { out_dir, index } => {
-            if let Some(neighbor_index) = neighbor_map[block_index][*out_dir] {
-                // The input acts only if there is no blip at the output position.
-                if next_blip_count[neighbor_index] == 0 {
-                    return level_progress.as_mut().and_then(|p| p.feed_input(*index));
-                }
-            }
-        }
-        _ => (),
+        Block::Input { index, .. } => level_progress.and_then(|p| p.feed_input(*index)),
+        _ => None,
     }
-
-    None
 }
 
 fn run_activated_block(
