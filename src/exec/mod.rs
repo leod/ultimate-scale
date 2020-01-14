@@ -434,10 +434,12 @@ fn blip_move_dir(
 
     let can_move = |dir: Dir3| block_move_out[dir] && !block_wind_in[dir];
 
-    if num_move_out == 1 {
+    if can_move(blip.orient) {
+        Some(blip.orient)
+    } else if num_move_out == 1 {
         Dir3::ALL.iter().cloned().find(|dir| can_move(*dir))
     } else {
-        find_dir_ccw_xy(blip.orient, can_move)
+        None
     }
 }
 
