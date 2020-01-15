@@ -9,11 +9,11 @@ use rendology::{basic_obj, BasicObj, Camera, Light};
 
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
-use crate::exec::anim::{WindAnimState, WindDeadend, WindLife};
-use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelStatus, TickTime};
+use crate::exec::anim::{AnimState, WindDeadend, WindLife};
+use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
-use crate::machine::{grid, level, BlipKind, Machine};
+use crate::machine::{grid, Machine};
 use crate::render::{self, Stage};
 
 #[derive(Debug, Clone)]
@@ -62,16 +62,14 @@ impl ExecView {
         self.exec.update();
     }
 
-    pub fn level_status(&self) -> LevelStatus {
-        self.exec.level_status()
+    pub fn next_level_status(&self) -> LevelStatus {
+        self.exec
+            .next_level_progress()
+            .map_or(LevelStatus::Running, LevelProgress::status)
     }
 
-    pub fn inputs_outputs(&self) -> Option<&level::InputsOutputs> {
-        self.exec.inputs_outputs()
-    }
-
-    pub fn exec(&self) -> &Exec {
-        &self.exec
+    pub fn level_progress(&self) -> Option<&LevelProgress> {
+        self.exec.level_progress()
     }
 
     pub fn on_event(&mut self, event: &WindowEvent) {
@@ -98,7 +96,8 @@ impl ExecView {
         match button {
             glutin::MouseButton::Left if state == glutin::ElementState::Pressed => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    Exec::try_spawn_blip(
+                    // TODO
+                    /*Exec::try_spawn_blip(
                         false,
                         BlipSpawnMode::Ease,
                         BlipKind::A,
@@ -106,12 +105,13 @@ impl ExecView {
                         &self.exec.machine.blocks.indices,
                         &mut self.exec.blip_state,
                         &mut self.exec.blips,
-                    );
+                    );*/
                 }
             }
             glutin::MouseButton::Right if state == glutin::ElementState::Pressed => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    Exec::try_spawn_blip(
+                    // TODO
+                    /*Exec::try_spawn_blip(
                         false,
                         BlipSpawnMode::Ease,
                         BlipKind::B,
@@ -119,7 +119,7 @@ impl ExecView {
                         &self.exec.machine.blocks.indices,
                         &mut self.exec.blip_state,
                         &mut self.exec.blips,
-                    );
+                    );*/
                 }
             }
             _ => (),
@@ -174,11 +174,11 @@ impl ExecView {
         let blocks = &self.exec.machine().blocks;
 
         for (block_index, (block_pos, placed_block)) in blocks.data.iter() {
-            let anim_state = WindAnimState::from_exec_block(&self.exec, block_index);
+            let anim_state = AnimState::from_exec_block(&self.exec, block_index);
 
             for &dir in &Dir3::ALL {
                 // Draw half or none of the wind if it points towards a deadend
-                let max = match anim_state.out_deadend(dir) {
+                let max = match anim_state.out_deadend[dir] {
                     Some(WindDeadend::Block) => {
                         // Don't draw wind towards block deadends
                         continue;
@@ -194,7 +194,7 @@ impl ExecView {
                     None => 1.0,
                 };
 
-                match anim_state.wind_out(dir) {
+                match anim_state.wind_out[dir] {
                     WindLife::None => {}
                     WindLife::Appearing => {
                         // Interpolate, i.e. draw partial line
@@ -215,74 +215,81 @@ impl ExecView {
         }
     }
 
-    fn blip_spawn_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
-        // Natural cubic spline interpolation of these points:
-        //  0 0
-        //  0.4 0.3
-        //  0.8 1.2
-        //  1 1
-        //
-        // Using this tool:
-        //     https://tools.timodenk.com/cubic-spline-interpolation
-        pareen::cubic(&[4.4034, 0.0, -4.5455e-2, 0.0])
-            .switch(0.4, pareen::cubic(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]))
-            .switch(
-                0.8,
-                pareen::cubic(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
-            )
-    }
-
     fn render_blips(&self, time: &TickTime, out: &mut Stage) {
         for (_index, blip) in self.exec.blips().iter() {
-            let die_anim = || Self::blip_spawn_anim().backwards(1.0).map_time(|t| t * t);
             let size_anim = pareen::anim_match!(blip.status;
                 BlipStatus::Spawning(mode) => {
                     // Animate spawning the blip
                     pareen::anim_match!(mode;
-                        BlipSpawnMode::Ease =>
-                            Self::blip_spawn_anim().squeeze(0.0, 0.75..=1.0),
+                        /*BlipSpawnMode::Ease =>
+                            pareen::constant(0.0).seq_squeeze(0.75, blip_spawn_anim()),*/
                         BlipSpawnMode::Quick =>
-                            Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5),
-                        BlipSpawnMode::LiveToDie => {
-                            let spawn = Self::blip_spawn_anim().squeeze(1.0, 0.0..=0.5);
-                            let live = 1.0;
-                            let die = die_anim().squeeze(1.0, 0.0..=0.35);
-
-                            spawn.seq(0.5, live).seq(0.65, die)
-                        }
+                            blip_spawn_anim().seq_squeeze(0.5, 1.0),
                     )
                 }
                 BlipStatus::Existing => 1.0,
-                BlipStatus::Dying => {
-                    // Animate killing the blip
-                    die_anim().squeeze(1.0, 0.4..=1.0)
+                BlipStatus::LiveToDie => {
+                    let live = blip_spawn_anim().squeeze(0.0..=0.5);
+                    let to = 1.0;
+                    let die = blip_die_anim().squeeze(0.0..=0.35);
+
+                    live.seq(0.5, to).seq(0.65, die)
                 }
+                BlipStatus::Dying => pareen::constant(1.0).seq_squeeze(0.4, blip_die_anim()),
             );
 
             let size_factor = size_anim.eval(time.tick_progress());
 
             let center = render::machine::block_center(&blip.pos);
-            let pos_rot_anim = pareen::constant(blip.old_move_dir).map_or(
-                (center, na::Matrix4::identity()),
-                |old_move_dir| {
-                    let old_pos = blip.pos - old_move_dir.to_vector();
+            let (pitch, yaw) = blip.orient.to_pitch_yaw_x();
+            let (next_pitch, next_yaw) = blip.next_orient().to_pitch_yaw_x();
+            let orient = na::UnitQuaternion::from_euler_angles(0.0, pitch, yaw);
+            let next_orient = na::UnitQuaternion::from_euler_angles(0.0, next_pitch, next_yaw);
+
+            let pos_rot_anim = pareen::constant(blip.move_dir).map_or(
+                (center, orient.to_homogeneous()),
+                |move_dir| {
+                    let next_pos = blip.pos + move_dir.to_vector();
 
                     // Interpolate blip position if it is moving
-                    let old_center = render::machine::block_center(&old_pos);
-                    let pos = pareen::lerp(old_center, center);
+                    let next_center = render::machine::block_center(&next_pos);
+                    let pos_anim = pareen::lerp(center, next_center);
 
-                    // Rotate blip if it is moving
-                    let delta: na::Vector3<f32> = na::convert(blip.pos - old_pos);
-                    let rot = (-pareen::quarter_circle::<_, f32>()).map(move |angle| {
-                        na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
+                    // Orient the blip
+                    let orient_anim = pareen::fun(move |t| {
+                        orient
+                            .try_slerp(&next_orient, t, 0.001)
+                            .unwrap_or(next_orient.clone())
+                            .to_homogeneous()
                     });
 
-                    pos.zip(rot)
+                    // Twist the blip around movement direction (if it is moving)
+                    let delta: na::Vector3<f32> = na::convert(next_pos - blip.pos);
+                    let twist_anim = || {
+                        pareen::cond(
+                            blip.status.is_spawning(),
+                            0.0,
+                            -pareen::quarter_circle::<_, f32>(),
+                        )
+                        .map(move |angle| {
+                            na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
+                        }) * next_orient.to_homogeneous()
+                    };
+
+                    let rot_anim = pareen::cond(
+                        blip.is_turning(),
+                        orient_anim.seq_squeeze(0.3, twist_anim()),
+                        twist_anim(),
+                    );
+
+                    pos_anim.zip(rot_anim)
                 },
             );
 
             let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
-            let transform = na::Matrix4::new_translation(&pos.coords) * rot;
+            let transform = na::Matrix4::new_translation(&pos.coords)
+                * rot
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 0.8));
 
             let color = render::machine::blip_color(blip.kind);
             let size = size_factor * 0.22;
@@ -310,4 +317,25 @@ impl ExecView {
             });
         }
     }
+}
+
+fn blip_spawn_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
+    // Natural cubic spline interpolation of these points:
+    //  0 0
+    //  0.4 0.3
+    //  0.8 1.2
+    //  1 1
+    //
+    // Using this tool:
+    //     https://tools.timodenk.com/cubic-spline-interpolation
+    pareen::cubic(&[4.4034, 0.0, -4.5455e-2, 0.0])
+        .switch(0.4, pareen::cubic(&[-1.2642e1, 2.0455e1, -8.1364, 1.0909]))
+        .switch(
+            0.8,
+            pareen::cubic(&[1.6477e1, -4.9432e1, 4.7773e1, -1.3818e1]),
+        )
+}
+
+fn blip_die_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
+    blip_spawn_anim().backwards(1.0).map_time(|t| t * t)
 }

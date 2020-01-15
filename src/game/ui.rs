@@ -4,8 +4,7 @@ use imgui::{im_str, ImString};
 
 use rendology::fxaa;
 
-use crate::exec::level_progress::InputsOutputsProgress;
-use crate::exec::LevelStatus;
+use crate::exec::{LevelProgress, LevelStatus};
 use crate::game::Game;
 use crate::machine::level;
 use crate::render;
@@ -124,12 +123,7 @@ impl Game {
                 // During execution, set the shown example to the generated
                 // one. Also remember the progress, so that it can still be
                 // shown after execution.
-                if let Some(example) = exec.inputs_outputs() {
-                    self.inputs_outputs_example = Some((
-                        example.clone(),
-                        Some(InputsOutputsProgress::new_from_exec(example, exec.exec())),
-                    ));
-                }
+                self.level_example = exec.level_progress().cloned();
             }
 
             // UI allows generating new example when not executing
@@ -147,7 +141,7 @@ impl Game {
 
                     let status = "Status: ".to_string()
                         + &if let Some((_, exec)) = self.exec.as_ref() {
-                            match exec.level_status() {
+                            match exec.next_level_status() {
                                 LevelStatus::Running => "Running".to_string(),
                                 LevelStatus::Completed => "Completed!".to_string(),
                                 LevelStatus::Failed => "Failed".to_string(),
@@ -161,42 +155,41 @@ impl Game {
                     imgui::TreeNode::new(ui, im_str!("Show example"))
                         .opened(false, imgui::Condition::FirstUseEver)
                         .build(|| {
-                            if let Some((example, progress)) = self.inputs_outputs_example.as_ref()
-                            {
-                                self.ui_show_example(example, progress.as_ref(), ui);
+                            if let Some(example) = self.level_example.as_ref() {
+                                self.ui_show_example(example, ui);
                             }
 
                             if self.exec.is_none() && ui.button(im_str!("Generate"), [80.0, 20.0]) {
                                 updated_example =
                                     self.editor.machine().level.as_ref().map(|level| {
-                                        level.spec.gen_inputs_outputs(&mut rand::thread_rng())
+                                        let inputs_outputs =
+                                            level.spec.gen_inputs_outputs(&mut rand::thread_rng());
+                                        LevelProgress::new(None, inputs_outputs)
                                     });
                             }
                         });
                 });
 
             if let Some(example) = updated_example {
-                self.inputs_outputs_example = Some((example, None));
+                self.level_example = Some(example);
             }
         }
     }
 
-    fn ui_show_example(
-        &self,
-        example: &level::InputsOutputs,
-        progress: Option<&InputsOutputsProgress>,
-        ui: &imgui::Ui,
-    ) {
-        for (index, row) in example.inputs.iter().enumerate() {
-            let input_progress = progress
-                .and_then(|progress| progress.inputs.get(index).copied())
-                .unwrap_or(0);
+    fn ui_show_example(&self, example: &LevelProgress, ui: &imgui::Ui) {
+        for (index, (row, progress)) in example
+            .inputs_outputs
+            .inputs
+            .iter()
+            .zip(example.inputs.iter())
+            .enumerate()
+        {
             let input_failed = false; // Input can't fail
 
             self.ui_show_blip_row(
                 &format!("In {}", index),
                 row.iter().copied(),
-                input_progress,
+                progress.num_fed,
                 input_failed,
                 ui,
             );
@@ -204,19 +197,18 @@ impl Game {
 
         //ui.separator();
 
-        for (index, row) in example.outputs.iter().enumerate() {
-            let output_progress = progress
-                .and_then(|progress| progress.outputs.get(index).copied())
-                .unwrap_or(0);
-            let output_failed = progress
-                .and_then(|progress| progress.outputs_failed.get(index).copied())
-                .unwrap_or(false);
-
+        for (index, (row, progress)) in example
+            .inputs_outputs
+            .outputs
+            .iter()
+            .zip(example.outputs.iter())
+            .enumerate()
+        {
             self.ui_show_blip_row(
                 &format!("Out {}", index),
                 row.iter().map(|kind| Some(level::Input::Blip(*kind))),
-                output_progress,
-                output_failed,
+                progress.num_fed,
+                progress.failed,
                 ui,
             );
         }

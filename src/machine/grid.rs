@@ -89,6 +89,8 @@ impl Dir3 {
         Dir3::Z_NEG,
     ];
 
+    pub const ALL_XY: [Dir3; 4] = [Dir3::X_POS, Dir3::X_NEG, Dir3::Y_POS, Dir3::Y_NEG];
+
     pub fn to_vector(self) -> Vector3 {
         self.0.to_vector() * self.1.to_number()
     }
@@ -149,6 +151,53 @@ impl Dir3 {
             Dir3(Axis3::Z, Sign::Pos) => (-std::f32::consts::PI / 2.0, 0.0),
             Dir3(Axis3::Z, Sign::Neg) => (std::f32::consts::PI / 2.0, 0.0),
         }
+    }
+}
+
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
+pub struct DirMap3<T>(pub [T; Dir3::NUM_INDICES]);
+
+#[allow(dead_code)]
+impl<T> DirMap3<T> {
+    pub fn from_fn(f: impl Fn(Dir3) -> T) -> Self {
+        Self([
+            f(Dir3::ALL[0]),
+            f(Dir3::ALL[1]),
+            f(Dir3::ALL[2]),
+            f(Dir3::ALL[3]),
+            f(Dir3::ALL[4]),
+            f(Dir3::ALL[5]),
+        ])
+    }
+
+    pub fn keys(&self) -> impl Iterator<Item = Dir3> {
+        Dir3::ALL.iter().cloned()
+    }
+
+    pub fn values(&self) -> impl Iterator<Item = &T> {
+        self.0.iter()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (Dir3, &T)> {
+        self.keys().zip(self.values())
+    }
+
+    pub fn map<U>(&self, f: impl Fn(Dir3, &T) -> U) -> DirMap3<U> {
+        DirMap3::from_fn(|dir| f(dir, &self[dir]))
+    }
+}
+
+impl<T> Index<Dir3> for DirMap3<T> {
+    type Output = T;
+
+    fn index(&self, dir: Dir3) -> &T {
+        &self.0[dir.to_index()]
+    }
+}
+
+impl<T> IndexMut<Dir3> for DirMap3<T> {
+    fn index_mut(&mut self, dir: Dir3) -> &mut T {
+        &mut self.0[dir.to_index()]
     }
 }
 

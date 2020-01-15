@@ -57,6 +57,7 @@ impl<T> VecOption<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn values(&self) -> impl Iterator<Item = &T> {
         self.iter().map(|(_index, value)| value)
     }
@@ -80,14 +81,18 @@ impl<T> VecOption<T> {
         num
     }
 
-    pub fn contains(&self, index: usize) -> bool {
-        index < self.data.len() && self.data[index].is_some()
-    }
-}
+    pub fn retain(&mut self, mut f: impl FnMut(&T) -> bool) {
+        for i in 0..self.data.len() {
+            let remove = self.data[i].as_ref().map_or(false, |elem| !f(elem));
 
-impl<T: Clone> VecOption<T> {
+            if remove {
+                self.remove(i);
+            }
+        }
+    }
+
     pub fn gc(&mut self) {
-        self.data = self.data.iter().filter(|x| x.is_some()).cloned().collect();
+        self.data.retain(Option::is_some);
         self.free.clear();
     }
 }

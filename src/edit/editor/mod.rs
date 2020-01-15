@@ -704,12 +704,12 @@ impl Editor {
                 let is_connected = |pos: grid::Point3, dir: grid::Dir3| {
                     let tentative = blocks
                         .get(&(pos + dir.to_vector()))
-                        .map(|neighbor| neighbor.has_wind_hole(dir.invert()))
+                        .map(|neighbor| neighbor.block.has_wind_hole(dir.invert()))
                         .unwrap_or(false);
                     let existing = self
                         .machine
                         .get(&(pos + dir.to_vector()))
-                        .map(|neighbor| neighbor.has_wind_hole(dir.invert()))
+                        .map(|neighbor| neighbor.block.has_wind_hole(dir.invert()))
                         .unwrap_or(false);
 
                     tentative || existing
