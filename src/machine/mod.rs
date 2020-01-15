@@ -1,5 +1,6 @@
 pub mod grid;
 pub mod level;
+#[cfg(test)]
 pub mod string_util;
 
 use std::fmt;
@@ -11,7 +12,7 @@ use crate::util::vec_option::VecOption;
 use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
 use level::Level;
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum BlipKind {
     A,
     B,
@@ -46,10 +47,6 @@ impl fmt::Display for BlipKind {
 pub type TickNum = usize;
 
 /// Definition of a block in the machine.
-///
-/// This definition is somewhat "dirty" in that it also contains state that is
-/// only needed at execution time -- e.g. the `activated` fields in some of the
-/// blocks. Consider this an artifact of us not using an ECS.
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub enum Block {
     Pipe(Dir3, Dir3),
@@ -62,53 +59,27 @@ pub enum Block {
         out_dir: Dir3,
         kind: BlipKind,
         num_spawns: Option<usize>,
-
-        #[serde(skip)]
-        activated: Option<TickNum>,
     },
     BlipDuplicator {
         out_dirs: (Dir3, Dir3),
         kind: Option<BlipKind>,
-
-        #[serde(skip)]
-        activated: Option<BlipKind>,
     },
     BlipWindSource {
         button_dir: Dir3,
-
-        #[serde(skip)]
-        activated: bool,
     },
     Solid,
     Input {
         out_dir: Dir3,
         index: usize,
-
-        #[serde(skip)]
-        inputs: Vec<Option<level::Input>>,
-        #[serde(skip)]
-        activated: Option<level::Input>,
     },
     Output {
         in_dir: Dir3,
         index: usize,
-
-        #[serde(skip)]
-        outputs: Vec<BlipKind>,
-        #[serde(skip)]
-        activated: Option<BlipKind>,
-
-        /// Only for visualization, store if this output failed.
-        #[serde(skip)]
-        failed: bool,
     },
     DetectorBlipDuplicator {
         out_dir: Dir3,
         flow_axis: Axis3,
         kind: Option<BlipKind>,
-
-        #[serde(skip)]
-        activated: Option<BlipKind>,
     },
 }
 
@@ -275,6 +246,7 @@ impl Block {
                 dir != *button_dir
             }
             Block::Output { .. } => false,
+            Block::Solid => false,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -287,6 +259,26 @@ impl Block {
             _ => self.has_wind_hole(dir),
         }
     }
+
+    pub fn is_blip_killer(&self) -> bool {
+        match self {
+            Block::BlipDuplicator { .. } => true,
+            Block::BlipWindSource { .. } => true,
+            Block::Solid => true,
+            Block::Output { .. } => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_activatable(&self, blip_kind: BlipKind) -> bool {
+        match self {
+            Block::BlipDuplicator { kind, .. } => *kind == None || *kind == Some(blip_kind),
+            Block::BlipWindSource { .. } => true,
+            Block::Output { .. } => true,
+            Block::DetectorBlipDuplicator { kind, .. } => *kind == None || *kind == Some(blip_kind),
+            _ => false,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
@@ -294,7 +286,7 @@ pub struct PlacedBlock {
     pub block: Block,
 }
 
-impl PlacedBlock {
+/*impl PlacedBlock {
     pub fn has_wind_hole(&self, dir: Dir3) -> bool {
         self.block.has_wind_hole(dir)
     }
@@ -310,23 +302,7 @@ impl PlacedBlock {
     pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
         self.block.has_wind_hole_out(dir)
     }
-
-    pub fn wind_holes_in(&self) -> Vec<Dir3> {
-        Dir3::ALL
-            .iter()
-            .filter(|dir| self.has_wind_hole_in(**dir))
-            .copied()
-            .collect()
-    }
-
-    pub fn wind_holes_out(&self) -> Vec<Dir3> {
-        Dir3::ALL
-            .iter()
-            .filter(|dir| self.has_wind_hole_out(**dir))
-            .copied()
-            .collect()
-    }
-}
+}*/
 
 pub type BlockIndex = usize;
 
@@ -392,8 +368,6 @@ impl Machine {
                     block: Block::Input {
                         out_dir: Dir3::X_POS,
                         index,
-                        inputs: Vec::new(),
-                        activated: None,
                     },
                 }),
             );
@@ -408,9 +382,6 @@ impl Machine {
                     block: Block::Output {
                         in_dir: Dir3::X_NEG,
                         index,
-                        outputs: Vec::new(),
-                        activated: None,
-                        failed: false,
                     },
                 }),
             );
@@ -451,6 +422,10 @@ impl Machine {
             .map(move |id| &mut self.blocks.data[id].1)
     }
 
+    pub fn get_index(&self, p: &Point3) -> Option<BlockIndex> {
+        self.blocks.indices.get(p).and_then(|id| *id)
+    }
+
     pub fn get_with_index(&self, p: &Point3) -> Option<(BlockIndex, &PlacedBlock)> {
         self.blocks
             .indices
@@ -459,8 +434,8 @@ impl Machine {
             .map(|id| (id, &self.blocks.data[id].1))
     }
 
-    pub fn block_pos_at_index(&self, index: BlockIndex) -> Point3 {
-        self.blocks.data[index].0
+    pub fn block_at_index(&self, index: BlockIndex) -> &Block {
+        &self.blocks.data[index].1.block
     }
 
     pub fn set(&mut self, p: &Point3, block: Option<PlacedBlock>) {

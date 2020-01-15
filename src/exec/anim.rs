@@ -1,5 +1,5 @@
-use crate::exec::Exec;
-use crate::machine::grid::Dir3;
+use crate::exec::{Activation, Exec};
+use crate::machine::grid::DirMap3;
 use crate::machine::BlockIndex;
 
 /// Stages in the lifecycle of wind in some direction in a block. Used for
@@ -47,72 +47,54 @@ impl WindLife {
 }
 
 /// Animation state for wind in all directions in a block. Used for animation
-/// purposes.
-pub struct WindAnimState {
-    pub wind_in: [WindLife; Dir3::NUM_INDICES],
-    pub wind_out: [WindLife; Dir3::NUM_INDICES],
-    pub out_deadend: [Option<WindDeadend>; Dir3::NUM_INDICES],
+/// purposes. Also stores activation state.
+pub struct AnimState {
+    pub wind_out: DirMap3<WindLife>,
+    pub out_deadend: DirMap3<Option<WindDeadend>>,
+    pub activation: Activation,
+    pub next_activation: Activation,
 }
 
-impl WindAnimState {
-    /// Returns the WindAnimState of one block based on the previous and the
+impl AnimState {
+    /// Returns the AnimState of one block based on the previous and the
     /// current simulation WindState.
     pub fn from_exec_block(exec: &Exec, block_index: BlockIndex) -> Self {
-        let machine = exec.machine();
+        let wind_out = DirMap3::from_fn(|dir| {
+            WindLife::from_states(
+                exec.blocks().wind_out[block_index][dir],
+                exec.next_blocks().wind_out[block_index][dir],
+            )
+        });
 
-        let mut wind_in = [WindLife::None; Dir3::NUM_INDICES];
-        let mut wind_out = [WindLife::None; Dir3::NUM_INDICES];
-        let mut out_deadend = [None; Dir3::NUM_INDICES];
+        let out_deadend = exec.neighbor_map()[block_index].map(|dir, &neighbor_index| {
+            if let Some(neighbor_index) = neighbor_index {
+                let neighbor_block = exec.machine().block_at_index(neighbor_index);
 
-        for &dir in &Dir3::ALL {
-            // Outgoing wind
-            wind_out[dir.to_index()] = WindLife::from_states(
-                exec.old_wind_state()[block_index].wind_out(dir),
-                exec.wind_state()[block_index].wind_out(dir),
-            );
-
-            // Incoming wind
-            let neighbor_pos = machine.block_pos_at_index(block_index) + dir.to_vector();
-            let neighbor_block = machine.get_with_index(&neighbor_pos);
-            if let Some((neighbor_index, neighbor_block)) = neighbor_block {
-                // If neighboring block has no wind connection in this
-                // direction, we won't show wind.
-                out_deadend[dir.to_index()] = if !neighbor_block.has_wind_hole_in(dir.invert()) {
+                if !neighbor_block.has_wind_hole_in(dir.invert()) {
+                    // If neighboring block has no wind connection in this
+                    // direction, we won't show wind.
                     Some(WindDeadend::Block)
                 } else {
                     None
-                };
-
-                wind_in[dir.to_index()] = WindLife::from_states(
-                    exec.old_wind_state()[neighbor_index].wind_out(dir.invert()),
-                    exec.wind_state()[neighbor_index].wind_out(dir.invert()),
-                );
+                }
             } else {
                 // No block, will show wind partially.
-                out_deadend[dir.to_index()] = Some(WindDeadend::Space);
+                Some(WindDeadend::Space)
             }
-        }
+        });
 
-        WindAnimState {
-            wind_in,
+        Self {
             wind_out,
             out_deadend,
+            activation: exec.blocks().activation[block_index],
+            next_activation: exec.next_blocks().activation[block_index],
         }
-    }
-
-    pub fn wind_out(&self, dir: Dir3) -> WindLife {
-        self.wind_out[dir.to_index()]
-    }
-
-    pub fn out_deadend(&self, dir: Dir3) -> Option<WindDeadend> {
-        self.out_deadend[dir.to_index()]
-    }
-
-    pub fn num_alive_in(&self) -> usize {
-        self.wind_in.iter().filter(|anim| anim.is_alive()).count()
     }
 
     pub fn num_alive_out(&self) -> usize {
-        self.wind_out.iter().filter(|anim| anim.is_alive()).count()
+        self.wind_out
+            .values()
+            .filter(|anim| anim.is_alive())
+            .count()
     }
 }

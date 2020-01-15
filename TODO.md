@@ -8,15 +8,12 @@
     - For example, don't move grid on Z, but show a smaller grid on top
 - Fast scrolling when zoomed out
 
-## Execution
-- Define deterministic priorities when spawning blips
-- Define blip movement priorities based on wind
-
 ## Rendering
 - Render block inputs
 - Particles
 - Culling
 - Unify glow on / glow off calls
+- Don't use `from_euler_angles` so much
 
 ## Gameplay
 - Campaign mode

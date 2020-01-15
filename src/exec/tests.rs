@@ -1,10 +1,10 @@
 use rand::Rng;
 
 use crate::edit::piece::{Piece, Transform};
-use crate::exec::{BlipIndex, BlipSpawnMode, BlipStatus, Exec, WindState};
-use crate::machine::grid::{Dir3, Point3, Vector3};
+use crate::exec::{BlipSpawnMode, BlipStatus, Exec};
+use crate::machine::grid::{Dir3, Point3};
 use crate::machine::string_util::blocks_from_string;
-use crate::machine::{grid, BlipKind, Block, Machine, PlacedBlock};
+use crate::machine::{grid, Block, Machine, PlacedBlock};
 
 /// Test that wind flows one grid block per tick.
 #[test]
@@ -21,25 +21,25 @@ fn test_straight_wind_propagation() {
 
             // Wind source has outgoing wind everywhere.
             for &d in &Dir3::ALL {
-                assert!(wind_out(exec, t * (0, 0, 0), d));
+                assert!(next_wind_out(exec, t * (0, 0, 0), d));
             }
 
             // Pipe has outgoing wind to the right.
             for x in 1..=i.min(10) {
-                assert!(wind_out(exec, t * (x, 0, 0), t * Dir3::X_POS));
+                assert!(next_wind_out(exec, t * (x, 0, 0), t * Dir3::X_POS));
             }
 
             // To the right, there is no wind yet.
             for x in i + 1..=10 {
                 for &d in &Dir3::ALL {
-                    assert!(!wind_out(exec, t * (x, 0, 0), d));
+                    assert!(!next_wind_out(exec, t * (x, 0, 0), d));
                 }
             }
 
             // And to the bottom, there never is any wind.
             for x in 0..=10 {
                 for &d in &Dir3::ALL {
-                    assert!(!wind_out(exec, t * (x, 1, 0), d));
+                    assert!(!next_wind_out(exec, t * (x, 1, 0), d));
                 }
             }
         }
@@ -60,13 +60,13 @@ fn test_funnel_wind_propagation() {
 
             // Pipes up to the funnel get outgoing wind (after some time).
             for x in 1..i.min(5) {
-                assert!(wind_out(exec, t * (x, 0, 0), t * Dir3::X_POS));
+                assert!(next_wind_out(exec, t * (x, 0, 0), t * Dir3::X_POS));
             }
 
             // The funnel and pipes to the right never have any outgoing wind.
             for x in 5..=10 {
                 for &d in &Dir3::ALL {
-                    assert!(!wind_out(exec, t * (x, 0, 0), d));
+                    assert!(!next_wind_out(exec, t * (x, 0, 0), d));
                 }
             }
         }
@@ -91,18 +91,18 @@ fn test_merge_xy_wind_propagation() {
 
             // Flow to the right.
             for x in 1..=i.min(10) {
-                assert!(wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS));
+                assert!(next_wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS));
             }
 
             // Flow up starts after 9 updates.
-            assert_eq!(wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG), i >= 8);
-            assert_eq!(wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG), i >= 9);
-            assert_eq!(wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG), i >= 10);
+            assert_eq!(next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG), i >= 8);
+            assert_eq!(next_wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG), i >= 9);
+            assert_eq!(next_wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG), i >= 10);
 
             // Flow down starts after 9 updates.
-            assert_eq!(wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS), i >= 8);
-            assert_eq!(wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS), i >= 9);
-            assert_eq!(wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS), i >= 10);
+            assert_eq!(next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS), i >= 8);
+            assert_eq!(next_wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS), i >= 9);
+            assert_eq!(next_wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS), i >= 10);
         }
     });
 }
@@ -133,18 +133,39 @@ fn test_wind_sliver_propagation() {
             for x in 1..=10 {
                 // Note that the blip wind source is at x=1, where wind flows
                 // out at i=2.
-                assert_eq!(wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS), i == x + 1);
+                assert_eq!(
+                    next_wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS),
+                    i == x + 1
+                );
             }
 
             // Flow up starts after 10 updates.
-            assert_eq!(wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG), i == 8 + 1);
-            assert_eq!(wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG), i == 9 + 1);
-            assert_eq!(wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG), i == 10 + 1);
+            assert_eq!(
+                next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG),
+                i == 8 + 1
+            );
+            assert_eq!(
+                next_wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG),
+                i == 9 + 1
+            );
+            assert_eq!(
+                next_wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG),
+                i == 10 + 1
+            );
 
             // Flow down starts after 10 updates.
-            assert_eq!(wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS), i == 8 + 1);
-            assert_eq!(wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS), i == 9 + 1);
-            assert_eq!(wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS), i == 10 + 1);
+            assert_eq!(
+                next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS),
+                i == 8 + 1
+            );
+            assert_eq!(
+                next_wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS),
+                i == 9 + 1
+            );
+            assert_eq!(
+                next_wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS),
+                i == 10 + 1
+            );
         }
     });
 }
@@ -168,13 +189,13 @@ fn test_blip_duplicator_and_single_blip_movement() {
             // i=1: Blip is at (2,0).
             // etc.
             for x in 1..=8 {
-                assert_eq!(blip_index(exec, t * (x, 0, 0)).is_some(), i == x - 1);
+                assert_eq!(next_blip_index(exec, t * (x, 0, 0)).is_some(), i == x - 1);
             }
 
             // i=8: Blip enters blip duplicator.
             // i=9: Two output blips are spawned.
-            assert_eq!(blip_index(exec, t * (7, 1, 0)).is_some(), i >= 9);
-            assert_eq!(blip_index(exec, t * (9, 1, 0)).is_some(), i >= 9);
+            assert_eq!(next_blip_index(exec, t * (7, 1, 0)).is_some(), i >= 9);
+            assert_eq!(next_blip_index(exec, t * (9, 1, 0)).is_some(), i >= 9);
         }
     });
 }
@@ -200,7 +221,7 @@ fn test_blip_duplicator_inversion_and_blip_movement() {
             // i=1: First blip is at (2,0).
             // etc.
             for x in 1..=8 {
-                assert_eq!(blip_index(exec, t * (x, 0, 0)).is_some(), i >= x - 1);
+                assert_eq!(next_blip_index(exec, t * (x, 0, 0)).is_some(), i >= x - 1);
             }
 
             // i=8: First blip enters duplicator.
@@ -210,34 +231,36 @@ fn test_blip_duplicator_inversion_and_blip_movement() {
             //       enters duplicator. For visualization purposes, the first
             //       two output blips *still live*, but they are marked as
             //       dying. The actual removal happens in the next tick.
-            let left_blip = blip_index(exec, t * (7, 1, 0));
-            let right_blip = blip_index(exec, t * (9, 1, 0));
+            let left_blip = next_blip_index(exec, t * (7, 1, 0));
+            let right_blip = next_blip_index(exec, t * (9, 1, 0));
 
             assert_eq!(left_blip.is_some(), i >= 9);
             assert_eq!(right_blip.is_some(), i >= 9);
 
             if i >= 9 {
-                let status = if (i - 9) % 2 == 0 {
-                    BlipStatus::Spawning(BlipSpawnMode::Ease)
-                } else {
-                    BlipStatus::Dying
+                if (i - 9) % 2 == 0 {
+                    let status = BlipStatus::Spawning(BlipSpawnMode::Quick);
+
+                    assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
+                    assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
                 };
 
-                assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
-                assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
+                // TODO: Test the rest of BlipStatus
             }
         }
     });
 }
 
-fn wind_out(exec: &Exec, p: Point3, d: Dir3) -> bool {
-    let (block_index, _block) = exec.machine().get_with_index(&p).unwrap();
-    exec.wind_state()[block_index].wind_out(d)
+fn next_wind_out(exec: &Exec, p: Point3, d: Dir3) -> bool {
+    let block_index = exec.machine().get_index(&p).unwrap();
+    exec.next_blocks().wind_out[block_index][d]
 }
 
-fn blip_index(exec: &Exec, p: Point3) -> Option<BlipIndex> {
-    let (block_index, _block) = exec.machine().get_with_index(&p).unwrap();
-    exec.blip_state()[block_index].blip_index
+fn next_blip_index(exec: &Exec, p: Point3) -> Option<usize> {
+    exec.blips()
+        .iter()
+        .find(|(_, blip)| blip.next_pos() == p)
+        .map(|(next_blip_index, _)| next_blip_index)
 }
 
 fn test_transform_invariant<T>(blocks: &[(Point3, Block)], test: T)
