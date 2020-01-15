@@ -246,6 +246,7 @@ impl Block {
                 dir != *button_dir
             }
             Block::Output { .. } => false,
+            Block::Solid => false,
             _ => self.has_wind_hole(dir),
         }
     }

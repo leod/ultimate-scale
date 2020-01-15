@@ -141,7 +141,7 @@ impl Game {
 
                     let status = "Status: ".to_string()
                         + &if let Some((_, exec)) = self.exec.as_ref() {
-                            match exec.level_status() {
+                            match exec.next_level_status() {
                                 LevelStatus::Running => "Running".to_string(),
                                 LevelStatus::Completed => "Completed!".to_string(),
                                 LevelStatus::Failed => "Failed".to_string(),

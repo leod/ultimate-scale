@@ -62,12 +62,6 @@ impl ExecView {
         self.exec.update();
     }
 
-    pub fn level_status(&self) -> LevelStatus {
-        self.exec
-            .level_progress()
-            .map_or(LevelStatus::Running, LevelProgress::status)
-    }
-
     pub fn next_level_status(&self) -> LevelStatus {
         self.exec
             .next_level_progress()
