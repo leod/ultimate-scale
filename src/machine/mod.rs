@@ -81,6 +81,7 @@ pub enum Block {
         flow_axis: Axis3,
         kind: Option<BlipKind>,
     },
+    Air,
 }
 
 impl Block {
@@ -118,6 +119,7 @@ impl Block {
                 "Picky detector blip copier".to_string()
             }
             Block::DetectorBlipDuplicator { kind: None, .. } => "Detector blip copier".to_string(),
+            Block::Air => "Air".to_string(),
         }
     }
 
@@ -145,10 +147,11 @@ impl Block {
                 "Produces two copies of a specific kind of blip that may activate it.\n\nDESTROYS blips that are in its way!"
             }
             Block::BlipWindSource { .. } => "Spawns one thrust of wind when activated by a blip.",
-            Block::Solid => "Eats blips.",
+            Block::Solid => "Prevents blip movement.",
             Block::Input { .. } => "Input of the machine.",
             Block::Output { .. } => "Output of the machine.",
             Block::DetectorBlipDuplicator { .. } => "TODO.",
+            Block::Air => "Allows blips to fall freely.",
         }
     }
 
@@ -204,6 +207,7 @@ impl Block {
                 // Hack
                 *flow_axis = f(Dir3(*flow_axis, Sign::Pos)).0;
             }
+            Block::Air => (),
         }
     }
 
@@ -218,13 +222,14 @@ impl Block {
             Block::WindSource => true,
             Block::BlipSpawn { .. } => false,
             Block::BlipDuplicator { out_dirs, .. } => dir != out_dirs.0 && dir != out_dirs.1,
-            Block::Solid => true,
+            Block::Solid => false,
             Block::BlipWindSource { .. } => true,
             Block::Input { out_dir, .. } => dir == *out_dir,
             Block::Output { in_dir, .. } => dir == *in_dir,
             Block::DetectorBlipDuplicator {
                 out_dir, flow_axis, ..
             } => dir.0 == *flow_axis || dir == *out_dir,
+            Block::Air => false,
         }
     }
 
@@ -233,6 +238,7 @@ impl Block {
             Block::FunnelXY { flow_dir, .. } => dir == *flow_dir,
             Block::WindSource => false,
             Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
+            Block::Air => true,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -247,6 +253,7 @@ impl Block {
             }
             Block::Output { .. } => false,
             Block::Solid => false,
+            Block::Air => false,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -256,7 +263,17 @@ impl Block {
             Block::BlipDuplicator { out_dirs, .. } => dir != out_dirs.0 && dir != out_dirs.1,
             Block::BlipWindSource { button_dir, .. } => dir == *button_dir,
             Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
+            Block::Air => true,
             _ => self.has_wind_hole(dir),
+        }
+    }
+
+    pub fn has_blip_spawn(&self, dir: Dir3) -> bool {
+        match self {
+            Block::BlipSpawn { out_dir, .. } => dir == *out_dir,
+            Block::BlipDuplicator { out_dirs, .. } => dir == out_dirs.0 || dir == out_dirs.1,
+            Block::DetectorBlipDuplicator { out_dir, .. } => dir == *out_dir,
+            _ => false,
         }
     }
 
@@ -439,6 +456,8 @@ impl Machine {
     }
 
     pub fn set(&mut self, p: &Point3, block: Option<PlacedBlock>) {
+        assert!(self.is_valid_pos(p));
+
         self.remove(p);
 
         if let Some(block) = block {
