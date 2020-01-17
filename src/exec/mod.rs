@@ -325,7 +325,15 @@ impl Exec {
                     kill = true;
                 }
 
-                if blip.move_dir.is_some() || blip.status.is_spawning() {
+                let is_move_blocked = blip.move_dir.map_or(false, |move_dir| {
+                    !next_block.block.has_move_hole(move_dir.invert())
+                });
+
+                if is_move_blocked && !next_block.block.is_pipe() {
+                    // The blip is moving into a block that does not have an
+                    // opening in this direction.
+                    kill = true;
+                } else if blip.move_dir.is_some() || blip.status.is_spawning() {
                     if next_block.block.is_activatable(blip.kind) {
                         // This block's effect will run in the next tick.
                         self.next_blocks.activation[next_block_index] = cmp::max(
@@ -468,11 +476,8 @@ fn blip_move_dir(
     let can_move = |dir: Dir3| block_move_out[dir] && !block_wind_in[dir];
 
     if let Block::Air = block {
-        if !block_wind_in[Dir3::Z_NEG] {
-            Some(Dir3::Z_NEG)
-        } else {
-            None
-        }
+        // The only way is DOWN!
+        Some(Dir3::Z_NEG)
     } else if can_move(blip.orient) {
         Some(blip.orient)
     } else if num_move_out == 1 {
