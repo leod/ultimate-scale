@@ -81,6 +81,7 @@ pub enum Block {
         flow_axis: Axis3,
         kind: Option<BlipKind>,
     },
+    Air,
 }
 
 impl Block {
@@ -118,6 +119,7 @@ impl Block {
                 "Picky detector blip copier".to_string()
             }
             Block::DetectorBlipDuplicator { kind: None, .. } => "Detector blip copier".to_string(),
+            Block::Air => "Air".to_string(),
         }
     }
 
@@ -149,6 +151,7 @@ impl Block {
             Block::Input { .. } => "Input of the machine.",
             Block::Output { .. } => "Output of the machine.",
             Block::DetectorBlipDuplicator { .. } => "TODO.",
+            Block::Air => "Allows blips to fall freely.",
         }
     }
 
@@ -204,6 +207,7 @@ impl Block {
                 // Hack
                 *flow_axis = f(Dir3(*flow_axis, Sign::Pos)).0;
             }
+            Block::Air => (),
         }
     }
 
@@ -225,6 +229,7 @@ impl Block {
             Block::DetectorBlipDuplicator {
                 out_dir, flow_axis, ..
             } => dir.0 == *flow_axis || dir == *out_dir,
+            Block::Air => false,
         }
     }
 
@@ -233,6 +238,7 @@ impl Block {
             Block::FunnelXY { flow_dir, .. } => dir == *flow_dir,
             Block::WindSource => false,
             Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
+            Block::Air => true,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -247,6 +253,7 @@ impl Block {
             }
             Block::Output { .. } => false,
             Block::Solid => false,
+            Block::Air => false,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -256,6 +263,7 @@ impl Block {
             Block::BlipDuplicator { out_dirs, .. } => dir != out_dirs.0 && dir != out_dirs.1,
             Block::BlipWindSource { button_dir, .. } => dir == *button_dir,
             Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
+            Block::Air => true,
             _ => self.has_wind_hole(dir),
         }
     }
@@ -439,6 +447,8 @@ impl Machine {
     }
 
     pub fn set(&mut self, p: &Point3, block: Option<PlacedBlock>) {
+        assert!(self.is_valid_pos(p));
+
         self.remove(p);
 
         if let Some(block) = block {

@@ -1,6 +1,6 @@
 use crate::exec::{Activation, Exec};
 use crate::machine::grid::DirMap3;
-use crate::machine::BlockIndex;
+use crate::machine::{Block, BlockIndex};
 
 /// Stages in the lifecycle of wind in some direction in a block. Used for
 /// animation purposes.
@@ -74,6 +74,9 @@ impl AnimState {
                     // If neighboring block has no wind connection in this
                     // direction, we won't show wind.
                     Some(WindDeadend::Block)
+                } else if let Block::Air = neighbor_block {
+                    // Show wind only partially into air
+                    Some(WindDeadend::Space)
                 } else {
                     None
                 }
