@@ -337,6 +337,7 @@ impl Exec {
                     kill = kill || next_block.block.is_blip_killer();
                 }
             } else {
+                // Blip is out of bounds or not on a block.
                 kill = true;
             }
 
@@ -466,7 +467,13 @@ fn blip_move_dir(
 
     let can_move = |dir: Dir3| block_move_out[dir] && !block_wind_in[dir];
 
-    if can_move(blip.orient) {
+    if let Block::Air = block {
+        if !block_wind_in[Dir3::Z_NEG] {
+            Some(Dir3::Z_NEG)
+        } else {
+            None
+        }
+    } else if can_move(blip.orient) {
         Some(blip.orient)
     } else if num_move_out == 1 {
         Dir3::ALL.iter().cloned().find(|dir| can_move(*dir))
