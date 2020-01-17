@@ -7,12 +7,15 @@ mod tests;
 pub mod view;
 
 use std::cmp;
+use std::collections::HashSet;
 use std::mem;
+
+use log::info;
 
 use rand::Rng;
 
 use crate::machine::grid::{Dir3, DirMap3, Point3, Vector3};
-use crate::machine::{BlipKind, Block, BlockIndex, Machine, TickNum};
+use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 
 use neighbors::NeighborMap;
@@ -163,6 +166,8 @@ impl Exec {
     pub fn new<R: Rng + ?Sized>(mut machine: Machine, rng: &mut R) -> Exec {
         // Make the machine's blocks contiguous in memory.
         machine.gc();
+
+        initialize_air_blocks(&mut machine);
 
         let neighbor_map = NeighborMap::new_from_machine(&machine);
         let level_progress = machine.level.as_ref().map(|level| {
@@ -351,6 +356,39 @@ impl Exec {
         });
 
         self.cur_tick += 1;
+    }
+}
+
+fn initialize_air_blocks(machine: &mut Machine) {
+    let air_blocks: HashSet<_> = {
+        let machine: &Machine = machine;
+
+        machine
+            .iter_blocks()
+            .flat_map(|(_, (pos, block))| {
+                Dir3::ALL.iter().flat_map(move |dir| {
+                    let mut result = Vec::new();
+
+                    if block.block.has_wind_hole_out(*dir) && block.block.has_move_hole(*dir) {
+                        let mut iter_pos = pos + dir.to_vector();
+
+                        while machine.is_valid_pos(&iter_pos) && !machine.is_block_at(&iter_pos) {
+                            result.push(iter_pos);
+                            iter_pos.z -= 1;
+                        }
+                    }
+
+                    result
+                })
+            })
+            .collect()
+    };
+
+    info!("Adding {} air blocks to machine", air_blocks.len());
+
+    for pos in air_blocks {
+        assert!(!machine.is_block_at(&pos));
+        machine.set(&pos, Some(PlacedBlock { block: Block::Air }));
     }
 }
 

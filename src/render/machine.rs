@@ -882,6 +882,7 @@ pub fn render_block(
                 render_list,
             );
         }
+        Block::Air => (),
     }
 }
 
