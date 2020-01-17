@@ -378,7 +378,10 @@ fn initialize_air_blocks(machine: &mut Machine) {
                 Dir3::ALL.iter().flat_map(move |dir| {
                     let mut result = Vec::new();
 
-                    if block.block.has_wind_hole_out(*dir) && block.block.has_move_hole(*dir) {
+                    let build_air = (block.block.has_wind_hole_out(*dir) && block.block.has_move_hole(*dir))
+                        || block.block.has_blip_spawn(*dir);
+
+                    if build_air{
                         let mut iter_pos = pos + dir.to_vector();
 
                         while machine.is_valid_pos(&iter_pos) && !machine.is_block_at(&iter_pos) {
@@ -475,7 +478,7 @@ fn blip_move_dir(
 
     let can_move = |dir: Dir3| block_move_out[dir] && !block_wind_in[dir];
 
-    if let Block::Air = block {
+    if *block == Block::Air {
         // The only way is DOWN!
         Some(Dir3::Z_NEG)
     } else if can_move(blip.orient) {

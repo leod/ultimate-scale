@@ -268,6 +268,15 @@ impl Block {
         }
     }
 
+    pub fn has_blip_spawn(&self, dir: Dir3) -> bool {
+        match self {
+            Block::BlipSpawn { out_dir, .. } => dir == *out_dir,
+            Block::BlipDuplicator { out_dirs, .. } => dir == out_dirs.0 || dir == out_dirs.1,
+            Block::DetectorBlipDuplicator { out_dir, .. } => dir == *out_dir,
+            _ => false,
+        }
+    }
+
     pub fn is_blip_killer(&self) -> bool {
         match self {
             Block::BlipDuplicator { .. } => true,
