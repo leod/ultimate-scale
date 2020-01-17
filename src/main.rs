@@ -53,7 +53,8 @@ fn main() {
         )
         .get_matches();
 
-    let config: config::Config = Default::default();
+    let mut config: config::Config = Default::default();
+    config.render_pipeline.hdr = Some(1.0);
     info!("Running with config: {:?}", config);
 
     info!("Opening glutin window");
