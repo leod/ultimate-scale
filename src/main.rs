@@ -63,7 +63,7 @@ fn main() {
         let window_builder = glutin::WindowBuilder::new()
             .with_dimensions(config.view.window_size)
             .with_title("Ultimate Scale!");
-            //.with_fullscreen(Some(events_loop.get_primary_monitor()));
+        //.with_fullscreen(Some(events_loop.get_primary_monitor()));
         let context_builder = glutin::ContextBuilder::new();
         glium::Display::new(window_builder, context_builder, &events_loop).unwrap()
     };
