@@ -147,7 +147,7 @@ impl Block {
                 "Produces two copies of a specific kind of blip that may activate it.\n\nDESTROYS blips that are in its way!"
             }
             Block::BlipWindSource { .. } => "Spawns one thrust of wind when activated by a blip.",
-            Block::Solid => "Eats blips.",
+            Block::Solid => "Prevents blip movement.",
             Block::Input { .. } => "Input of the machine.",
             Block::Output { .. } => "Output of the machine.",
             Block::DetectorBlipDuplicator { .. } => "TODO.",
@@ -222,7 +222,7 @@ impl Block {
             Block::WindSource => true,
             Block::BlipSpawn { .. } => false,
             Block::BlipDuplicator { out_dirs, .. } => dir != out_dirs.0 && dir != out_dirs.1,
-            Block::Solid => true,
+            Block::Solid => false,
             Block::BlipWindSource { .. } => true,
             Block::Input { out_dir, .. } => dir == *out_dir,
             Block::Output { in_dir, .. } => dir == *in_dir,
