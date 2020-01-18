@@ -691,7 +691,7 @@ pub fn render_block(
             })
             .eval(tick_time.tick_progress());
 
-            let button_color = kind.map_or(button_color(), |kind| blip_color(kind));
+            let button_color = kind.map_or(button_color(), blip_color);
 
             for &dir in &Dir3::ALL {
                 if dir == out_dirs.0 || dir == out_dirs.1 {
@@ -754,7 +754,7 @@ pub fn render_block(
             let button_length_anim = pareen::cond(
                 next_activation.is_some(),
                 pareen::constant(activation.is_some())
-                    .seq(1.0 - 0.7 / 2.0, next_activation.is_some()),
+                    .seq(0.85, next_activation.is_some()),
                 activation.is_some(),
             )
             .map(|a| {

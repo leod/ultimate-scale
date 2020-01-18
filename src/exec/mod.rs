@@ -43,6 +43,7 @@ pub enum BlipSpawnMode {
 pub enum BlipDieMode {
     PopEarly,
     PopMiddle,
+    PressButton,
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
@@ -74,9 +75,8 @@ impl BlipStatus {
         *self = match *self {
             BlipStatus::Spawning(spawn_mode) => BlipStatus::LiveToDie(spawn_mode, new_die_mode),
             BlipStatus::Existing => BlipStatus::Dying(new_die_mode),
-            BlipStatus::LiveToDie(spawn_mode, die_mode) => {
-                BlipStatus::LiveToDie(spawn_mode, die_mode.min(new_die_mode))
-            }
+            BlipStatus::LiveToDie(spawn_mode, die_mode) =>
+                BlipStatus::LiveToDie(spawn_mode, die_mode.min(new_die_mode)),
             BlipStatus::Dying(die_mode) => BlipStatus::Dying(die_mode.min(new_die_mode)),
         }
     }
@@ -352,7 +352,9 @@ impl Exec {
                     }
 
                     if next_block.block.is_blip_killer() {
-                        blip.status.kill(BlipDieMode::PopMiddle);
+                        //let die_mode = if next_block.block.is_activatable(blip.kind) {
+                            //BlipDieMode::PopEarly
+                        blip.status.kill(BlipDieMode::PressButton);
                     }
                 }
             } else {
