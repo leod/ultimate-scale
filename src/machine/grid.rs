@@ -152,6 +152,19 @@ impl Dir3 {
             Dir3(Axis3::Z, Sign::Neg) => (std::f32::consts::PI / 2.0, 0.0),
         }
     }
+
+    /// Returns a rotation matrix that rotates the x axis to point in our
+    /// direction.
+    pub fn to_rotation_mat_x(self) -> na::Matrix4<f32> {
+        // TODO: Don't need pitch/yaw since this is just axis-to-axis rotation.
+        let (pitch, yaw) = self.to_pitch_yaw_x();
+        na::Matrix4::from_euler_angles(0.0, pitch, yaw)
+    }
+
+    pub fn to_quaternion_x(self) -> na::UnitQuaternion<f32> {
+        let (pitch, yaw) = self.to_pitch_yaw_x();
+        na::UnitQuaternion::from_euler_angles(0.0, pitch, yaw)
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Default)]
