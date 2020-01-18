@@ -731,7 +731,7 @@ pub fn render_block(
             let is_wind_active = anim_state
                 .as_ref()
                 .map_or(false, |anim| anim.wind_out[Dir3::X_POS].is_alive());
-            let active_blip_kind = anim_state.map_or(None, |anim| anim.activation);
+            let active_blip_kind = anim_state.and_then(|anim| anim.activation);
 
             let angle_anim = pareen::cond(is_wind_active, pareen::half_circle(), 0.0)
                 + std::f32::consts::PI / 4.0;
