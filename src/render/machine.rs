@@ -753,8 +753,7 @@ pub fn render_block(
 
             let button_length_anim = pareen::cond(
                 next_activation.is_some(),
-                pareen::constant(activation.is_some())
-                    .seq(0.85, next_activation.is_some()),
+                pareen::constant(activation.is_some()).seq(0.85, next_activation.is_some()),
                 activation.is_some(),
             )
             .map(|a| {
