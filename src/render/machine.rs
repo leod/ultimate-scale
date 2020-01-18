@@ -603,8 +603,8 @@ pub fn render_block(
 
             let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.25 };
             let activation = anim_state.and_then(|s| s.activation.as_ref());
-            let bridge_length =
-                bridge_length_anim(0.05, 0.6, activation.is_some()).eval(tick_time.tick_progress());
+            let bridge_length = bridge_length_anim(0.05, 0.35, activation.is_some())
+                .eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
@@ -621,32 +621,41 @@ pub fn render_block(
         }
         Block::BlipDuplicator { out_dirs, kind, .. } => {
             let cube_transform = translation * transform * out_dirs.0.to_rotation_mat_x();
-            let scaling = na::Vector3::new(0.45, 0.6, 0.6);
-
             let activation = anim_state.and_then(|s| s.activation.as_ref());
             let next_activation = anim_state.and_then(|s| s.next_activation.as_ref());
             let kind_color = activation
                 .cloned()
                 .map_or_else(inactive_blip_duplicator_color, blip_color);
 
+            let scaling_anim = pareen::cond(
+                activation.is_some(),
+                pareen::circle::<_, f32>().sin() * pareen::half_circle().sin().powf(2.0f32),
+                0.0,
+            ) * 0.1
+                + 1.0;
+            let size_anim =
+                scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.45, 0.6, 0.6));
+            let size = size_anim.eval(tick_time.tick_progress());
+
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
-                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
                 color: block_color(&kind_color, alpha),
                 ..Default::default()
             });
-            render_outline(&cube_transform, &scaling, alpha, out);
+            render_outline(&cube_transform, &size, alpha, out);
 
             let bridge_length =
                 bridge_length_anim(0.05, 0.3, activation.is_some()).eval(tick_time.tick_progress());
+            let button_size = (scaling_anim.as_ref() * 0.25).eval(tick_time.tick_progress());
 
             for &dir in &[out_dirs.0, out_dirs.1] {
                 render_bridge(
                     &Bridge {
                         center: *center,
                         dir,
-                        offset: 0.45 / 2.0,
+                        offset: size.x / 2.0,
                         length: bridge_length,
-                        size: 0.25,
+                        size: button_size,
                         color: block_color(&impatient_bridge_color(), alpha),
                     },
                     transform,
@@ -657,7 +666,7 @@ pub fn render_block(
             let button_length = pareen::cond(
                 next_activation.is_some(),
                 pareen::constant(activation.is_some())
-                    .seq(1.0 - 0.6 / 2.0, next_activation.is_some()),
+                    .seq(1.0 - size.y / 2.0, next_activation.is_some()),
                 activation.is_some(),
             )
             .map(|a| {
@@ -680,9 +689,9 @@ pub fn render_block(
                     &Bridge {
                         center: *center,
                         dir,
-                        offset: 0.6 / 2.0,
+                        offset: size.y / 2.0,
                         length: button_length,
-                        size: 0.35,
+                        size: button_size,
                         color: block_color(&button_color, alpha),
                     },
                     transform,
