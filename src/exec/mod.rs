@@ -248,7 +248,7 @@ impl Exec {
             blip.status = BlipStatus::Existing;
 
             if let Some(move_dir) = blip.move_dir {
-                blip.pos = blip.pos + move_dir.to_vector();
+                blip.pos += move_dir.to_vector();
                 blip.orient = move_dir;
             }
 

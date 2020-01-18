@@ -255,7 +255,7 @@ impl ExecView {
                     let orient_anim = pareen::fun(move |t| {
                         orient
                             .try_slerp(&next_orient, t, 0.001)
-                            .unwrap_or(next_orient.clone())
+                            .unwrap_or_else(|| next_orient.clone())
                             .to_homogeneous()
                     });
 
