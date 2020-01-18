@@ -239,6 +239,19 @@ pub fn render_xy_grid(
     }
 }
 
+pub fn blip_spawn_scaling_anim(
+    activation: Option<BlipKind>,
+) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
+    // Hann window applied to sin
+    let anim = pareen::cond(
+        activation.is_some(),
+        pareen::circle::<_, f32>().sin() * pareen::half_circle().sin().powf(2.0f32),
+        0.0,
+    );
+
+    anim * 0.1 + 1.0
+}
+
 pub fn bridge_length_anim(
     min: f32,
     max: f32,
@@ -588,51 +601,51 @@ pub fn render_block(
             kind,
             num_spawns,
         } => {
+            let activation = anim_state.and_then(|s| s.activation);
+            let scaling_anim = blip_spawn_scaling_anim(activation);
+
             let cube_color = block_color(&blip_color(kind), alpha);
             let cube_transform = translation
                 * transform
                 * out_dir.to_rotation_mat_x()
-                * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0));
-            let scaling = na::Vector3::new(0.65, 0.6, 0.6);
+                * na::Matrix4::new_translation(&na::Vector3::new(-0.25 / 2.0, 0.0, 0.0));
+
+            let size_anim =
+                scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.5, 0.6, 0.6));
+            let size = size_anim.eval(tick_time.tick_progress());
+
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
-                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
                 color: cube_color,
                 ..Default::default()
             });
-            render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.25 };
-            let activation = anim_state.and_then(|s| s.activation.as_ref());
-            let bridge_length = bridge_length_anim(0.05, 0.35, activation.is_some())
-                .eval(tick_time.tick_progress());
+            render_outline(&cube_transform, &size, alpha, out);
 
-            render_bridge(
-                &Bridge {
+            let bridge_size_anim =
+                pareen::cond(num_spawns.is_some(), 0.15, 0.25) * scaling_anim.as_ref();
+            let bridge_length_anim = bridge_length_anim(0.05, 0.45, activation.is_some());
+
+            let bridge_anim = bridge_size_anim.zip(bridge_length_anim).zip(size).map(
+                |((bridge_size, bridge_length), size)| Bridge {
                     center: *center,
                     dir: out_dir,
-                    offset: 0.65 / 2.0 - 0.35 / 2.0,
+                    offset: size.x / 2.0 - 0.25 / 2.0,
                     length: bridge_length,
                     size: bridge_size,
                     color: block_color(&patient_bridge_color(), alpha),
                 },
-                transform,
-                out,
             );
+
+            render_bridge(&bridge_anim.eval(tick_time.tick_progress()), transform, out);
         }
         Block::BlipDuplicator { out_dirs, kind, .. } => {
             let cube_transform = translation * transform * out_dirs.0.to_rotation_mat_x();
-            let activation = anim_state.and_then(|s| s.activation.as_ref());
-            let next_activation = anim_state.and_then(|s| s.next_activation.as_ref());
-            let kind_color = activation
-                .cloned()
-                .map_or_else(inactive_blip_duplicator_color, blip_color);
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
+            let kind_color = activation.map_or_else(inactive_blip_duplicator_color, blip_color);
 
-            let scaling_anim = pareen::cond(
-                activation.is_some(),
-                pareen::circle::<_, f32>().sin() * pareen::half_circle().sin().powf(2.0f32),
-                0.0,
-            ) * 0.1
-                + 1.0;
+            let scaling_anim = blip_spawn_scaling_anim(activation);
             let size_anim =
                 scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.45, 0.6, 0.6));
             let size = size_anim.eval(tick_time.tick_progress());

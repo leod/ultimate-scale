@@ -6532,6 +6532,118 @@
           }
         }
       }
+    ],
+    [
+      [
+        5,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Neg"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": "A"
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        1,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "Pipe": [
+            [
+              "Y",
+              "Pos"
+            ],
+            [
+              "X",
+              "Pos"
+            ]
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        2,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
     ]
   ],
   "level": {
