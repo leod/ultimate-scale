@@ -35,6 +35,7 @@ pub struct BlipMovement {
 pub enum BlipSpawnMode {
     //Ease,
     Quick,
+    Bridge,
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
@@ -539,7 +540,7 @@ fn run_activated_block(
                 *block_pos,
                 *out_dir,
                 Some(*out_dir),
-                BlipSpawnMode::Quick,
+                BlipSpawnMode::Bridge,
             ));
         }
         Block::BlipDuplicator { out_dirs, .. } => {
@@ -549,7 +550,7 @@ fn run_activated_block(
                     *block_pos,
                     out_dir,
                     Some(out_dir),
-                    BlipSpawnMode::Quick,
+                    BlipSpawnMode::Bridge,
                 ));
             }
         }
@@ -559,7 +560,7 @@ fn run_activated_block(
                 *block_pos,
                 *out_dir,
                 Some(*out_dir),
-                BlipSpawnMode::Quick,
+                BlipSpawnMode::Bridge,
             ));
         }
         Block::DetectorBlipDuplicator { out_dir, .. } => {
