@@ -16,6 +16,8 @@ pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 6.5;
 pub const OUTLINE_MARGIN: f32 = 0.000;
 pub const BRIDGE_MARGIN: f32 = 0.005;
+pub const BUTTON_LENGTH_MIN: f32 = 0.025;
+pub const BUTTON_LENGTH_MAX: f32 = 0.065;
 
 const GAMMA: f32 = 2.2;
 
@@ -77,6 +79,10 @@ pub fn patient_bridge_color() -> na::Vector3<f32> {
 
 pub fn impatient_bridge_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.9, 0.9, 0.9))
+}
+
+pub fn button_color() -> na::Vector3<f32> {
+    gamma_correct(&na::Vector3::new(0.8, 0.8, 0.8))
 }
 
 pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
@@ -587,7 +593,7 @@ pub fn render_block(
                 * transform
                 * out_dir.to_rotation_mat_x()
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0));
-            let scaling = na::Vector3::new(0.65, 0.95, 0.95);
+            let scaling = na::Vector3::new(0.65, 0.6, 0.6);
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: cube_color,
@@ -595,7 +601,7 @@ pub fn render_block(
             });
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
+            let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.25 };
             let activation = anim_state.and_then(|s| s.activation.as_ref());
             let bridge_length =
                 bridge_length_anim(0.05, 0.6, activation.is_some()).eval(tick_time.tick_progress());
@@ -615,13 +621,13 @@ pub fn render_block(
         }
         Block::BlipDuplicator { out_dirs, kind, .. } => {
             let cube_transform = translation * transform * out_dirs.0.to_rotation_mat_x();
-            let scaling = na::Vector3::new(0.65, 0.95, 0.95);
+            let scaling = na::Vector3::new(0.45, 0.6, 0.6);
 
             let activation = anim_state.and_then(|s| s.activation.as_ref());
-            let kind_color = match activation.or(kind.as_ref()) {
-                Some(kind) => blip_color(*kind),
-                None => inactive_blip_duplicator_color(),
-            };
+            let next_activation = anim_state.and_then(|s| s.next_activation.as_ref());
+            let kind_color = activation
+                .cloned()
+                .map_or_else(inactive_blip_duplicator_color, blip_color);
 
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
@@ -631,17 +637,53 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             let bridge_length =
-                bridge_length_anim(0.05, 0.4, activation.is_some()).eval(tick_time.tick_progress());
+                bridge_length_anim(0.05, 0.3, activation.is_some()).eval(tick_time.tick_progress());
 
             for &dir in &[out_dirs.0, out_dirs.1] {
                 render_bridge(
                     &Bridge {
                         center: *center,
                         dir,
-                        offset: 0.65 / 2.0,
+                        offset: 0.45 / 2.0,
                         length: bridge_length,
-                        size: 0.3,
+                        size: 0.25,
                         color: block_color(&impatient_bridge_color(), alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
+
+            let button_length = pareen::cond(
+                next_activation.is_some(),
+                pareen::constant(activation.is_some())
+                    .seq(1.0 - 0.6 / 2.0, next_activation.is_some()),
+                activation.is_some(),
+            )
+            .map(|a| {
+                if a {
+                    BUTTON_LENGTH_MIN
+                } else {
+                    BUTTON_LENGTH_MAX
+                }
+            })
+            .eval(tick_time.tick_progress());
+
+            let button_color = kind.map_or(button_color(), |kind| blip_color(kind));
+
+            for &dir in &Dir3::ALL {
+                if dir == out_dirs.0 || dir == out_dirs.1 {
+                    continue;
+                }
+
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: 0.6 / 2.0,
+                        length: button_length,
+                        size: 0.35,
+                        color: block_color(&button_color, alpha),
                     },
                     transform,
                     out,
@@ -650,6 +692,8 @@ pub fn render_block(
         }
         Block::BlipWindSource { button_dir } => {
             let activation = anim_state.and_then(|s| s.activation.as_ref());
+            let next_activation = anim_state.and_then(|s| s.next_activation.as_ref());
+
             let cube_color = block_color(
                 &if activation.is_some() {
                     wind_source_color()
@@ -668,7 +712,7 @@ pub fn render_block(
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0));
-            let scaling = na::Vector3::new(0.75, 0.75, 0.75);
+            let scaling = na::Vector3::new(0.7, 0.7, 0.7);
             render_list[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: cube_color,
@@ -685,15 +729,28 @@ pub fn render_block(
                 });
             }
 
-            let button_length = if activation.is_some() { 0.025 } else { 0.075 };
+            let button_length_anim = pareen::cond(
+                next_activation.is_some(),
+                pareen::constant(activation.is_some())
+                    .seq(1.0 - 0.7 / 2.0, next_activation.is_some()),
+                activation.is_some(),
+            )
+            .map(|a| {
+                if a {
+                    BUTTON_LENGTH_MIN
+                } else {
+                    BUTTON_LENGTH_MAX
+                }
+            });
+
             render_bridge(
                 &Bridge {
                     center: *center,
                     dir: button_dir,
-                    offset: 0.75 / 2.0,
-                    length: button_length,
+                    offset: 0.7 / 2.0,
+                    length: button_length_anim.eval(tick_time.tick_progress()),
                     size: 0.5,
-                    color: block_color(&impatient_bridge_color(), alpha),
+                    color: block_color(&button_color(), alpha),
                 },
                 transform,
                 out,
