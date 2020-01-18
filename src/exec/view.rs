@@ -10,7 +10,9 @@ use rendology::{basic_obj, BasicObj, Camera, Light};
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
 use crate::exec::anim::{AnimState, WindDeadend, WindLife};
-use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime};
+use crate::exec::{
+    BlipDieMode, BlipSpawnMode, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime,
+};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, Machine};
@@ -228,14 +230,19 @@ impl ExecView {
                     )
                 }
                 BlipStatus::Existing => 1.0,
-                BlipStatus::LiveToDie => {
+                BlipStatus::LiveToDie(spawn_mode, die_mode) => {
                     let live = blip_spawn_anim().squeeze(0.0..=0.5);
                     let to = 1.0;
                     let die = blip_die_anim().squeeze(0.0..=0.35);
 
                     live.seq(0.5, to).seq(0.65, die)
                 }
-                BlipStatus::Dying => pareen::constant(1.0).seq_squeeze(0.4, blip_die_anim()),
+                BlipStatus::Dying(die_mode) => {
+                    pareen::anim_match!(die_mode;
+                        BlipDieMode::PopEarly => blip_die_anim().seq_squeeze(0.6, 0.0),
+                        BlipDieMode::PopMiddle => pareen::constant(1.0).seq_squeeze(0.4, blip_die_anim()),
+                    )
+                }
             );
 
             let size_factor = size_anim.eval(time.tick_progress());
