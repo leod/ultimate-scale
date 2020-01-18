@@ -534,7 +534,7 @@ pub fn render_block(
                 * transform
                 * flow_dir.invert().to_rotation_mat_x()
                 * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0));
-            let scaling = na::Vector3::new(0.8, 0.6, 0.6);
+            let scaling = na::Vector3::new(0.7, 0.45, 0.45);
 
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
@@ -543,12 +543,12 @@ pub fn render_block(
             });
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let input_size = 0.4;
+            let input_size = 0.3;
             let input_transform = translation
                 * transform
                 * flow_dir.invert().to_rotation_mat_x()
-                * na::Matrix4::new_translation(&na::Vector3::new(-0.3, 0.0, 0.0));
-            let scaling = &na::Vector3::new(0.9, input_size, input_size);
+                * na::Matrix4::new_translation(&na::Vector3::new(-0.4, 0.0, 0.0));
+            let scaling = &na::Vector3::new(0.3, input_size, input_size);
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
                 transform: input_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: block_color(&funnel_out_color(), alpha),
