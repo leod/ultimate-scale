@@ -71,6 +71,14 @@ impl BlipStatus {
         }
     }
 
+    fn is_pressing_button(self) -> bool {
+        match self {
+            BlipStatus::Dying(BlipDieMode::PressButton) => true,
+            BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => true,
+            _ => false,
+        }
+    }
+
     fn kill(&mut self, new_die_mode: BlipDieMode) {
         *self = match *self {
             BlipStatus::Spawning(spawn_mode) => BlipStatus::LiveToDie(spawn_mode, new_die_mode),
