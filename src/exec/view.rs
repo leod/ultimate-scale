@@ -155,10 +155,8 @@ impl ExecView {
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
 
         // The cylinder object points in the direction of the x axis
-        let (pitch, yaw) = in_dir.invert().to_pitch_yaw_x();
-
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
-            * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+            * in_dir.invert().to_rotation_mat_x();
 
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
             out.wind.add(render::wind::Instance {
@@ -241,10 +239,8 @@ impl ExecView {
             let size_factor = size_anim.eval(time.tick_progress());
 
             let center = render::machine::block_center(&blip.pos);
-            let (pitch, yaw) = blip.orient.to_pitch_yaw_x();
-            let (next_pitch, next_yaw) = blip.next_orient().to_pitch_yaw_x();
-            let orient = na::UnitQuaternion::from_euler_angles(0.0, pitch, yaw);
-            let next_orient = na::UnitQuaternion::from_euler_angles(0.0, next_pitch, next_yaw);
+            let orient = blip.orient.to_quaternion_x();
+            let next_orient = blip.next_orient().to_quaternion_x();
 
             let pos_rot_anim = pareen::constant(blip.move_dir).map_or(
                 (center, orient.to_homogeneous()),

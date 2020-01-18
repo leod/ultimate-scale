@@ -257,13 +257,12 @@ pub struct Bridge {
 pub fn render_bridge(bridge: &Bridge, transform: &na::Matrix4<f32>, out: &mut Stage) {
     let translation = na::Matrix4::new_translation(&bridge.center.coords);
     let dir_offset: na::Vector3<f32> = na::convert(bridge.dir.to_vector());
-    let (pitch, yaw) = bridge.dir.to_pitch_yaw_x();
     let output_transform = translation
         * transform
         * na::Matrix4::new_translation(
             &(dir_offset * (0.5 * bridge.length + bridge.offset + BRIDGE_MARGIN)),
         )
-        * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+        * bridge.dir.to_rotation_mat_x();
     let scaling = na::Vector3::new(bridge.length, bridge.size, bridge.size);
     out.solid[BasicObj::Cube].add(basic_obj::Instance {
         transform: output_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
@@ -382,8 +381,7 @@ pub fn render_half_pipe(
         na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.5, PIPE_THICKNESS, PIPE_THICKNESS));
     let offset = na::Matrix4::new_translation(&na::Vector3::new(-0.25, 0.0, 0.0));
 
-    let (pitch, yaw) = dir.invert().to_pitch_yaw_x();
-    let rotation = na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+    let rotation = dir.invert().to_rotation_mat_x();
 
     out[BasicObj::Cube].add(basic_obj::Instance {
         transform: translation * transform * rotation * offset * scaling,
@@ -513,10 +511,9 @@ pub fn render_block(
             render_pulsator(tick_time, anim_state, center, transform, &color, out);
         }
         Block::FunnelXY { flow_dir } => {
-            let (pitch, yaw) = flow_dir.invert().to_pitch_yaw_x();
             let cube_transform = translation
                 * transform
-                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
+                * flow_dir.invert().to_rotation_mat_x()
                 * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0));
             let scaling = na::Vector3::new(0.8, 0.6, 0.6);
 
@@ -530,7 +527,7 @@ pub fn render_block(
             let input_size = 0.4;
             let input_transform = translation
                 * transform
-                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
+                * flow_dir.invert().to_rotation_mat_x()
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.3, 0.0, 0.0));
             let scaling = &na::Vector3::new(0.9, input_size, input_size);
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
@@ -586,10 +583,9 @@ pub fn render_block(
             num_spawns,
         } => {
             let cube_color = block_color(&blip_color(kind), alpha);
-            let (pitch, yaw) = out_dir.to_pitch_yaw_x();
             let cube_transform = translation
                 * transform
-                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
+                * out_dir.to_rotation_mat_x()
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0));
             let scaling = na::Vector3::new(0.65, 0.95, 0.95);
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
@@ -618,9 +614,7 @@ pub fn render_block(
             );
         }
         Block::BlipDuplicator { out_dirs, kind, .. } => {
-            let (pitch, yaw) = out_dirs.0.to_pitch_yaw_x();
-            let cube_transform =
-                translation * transform * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+            let cube_transform = translation * transform * out_dirs.0.to_rotation_mat_x();
             let scaling = na::Vector3::new(0.65, 0.95, 0.95);
 
             let activation = anim_state.and_then(|s| s.activation.as_ref());
@@ -628,6 +622,7 @@ pub fn render_block(
                 Some(kind) => blip_color(*kind),
                 None => inactive_blip_duplicator_color(),
             };
+
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: block_color(&kind_color, alpha),
