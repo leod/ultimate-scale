@@ -463,10 +463,13 @@ fn blip_move_dir(
         neighbor_index.map_or(false, |neighbor_index| {
             let neighbor_block = machine.block_at_index(neighbor_index);
 
-            next_wind_out[block_index][dir]
-                && block.has_move_hole(dir)
-                && neighbor_block.has_move_hole(dir.invert())
-                && neighbor_block.has_wind_hole_in(dir.invert())
+            let can_move_out = next_wind_out[block_index][dir] && block.has_move_hole(dir);
+
+            let can_move_in = dir == Dir3::Z_NEG
+                || (neighbor_block.has_move_hole(dir.invert())
+                    && neighbor_block.has_wind_hole_in(dir.invert()));
+
+            can_move_out && can_move_in
         })
     });
 
