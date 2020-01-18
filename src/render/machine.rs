@@ -16,8 +16,8 @@ pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 6.5;
 pub const OUTLINE_MARGIN: f32 = 0.000;
 pub const BRIDGE_MARGIN: f32 = 0.005;
-pub const BUTTON_LENGTH_MIN: f32 = 0.025;
-pub const BUTTON_LENGTH_MAX: f32 = 0.065;
+pub const BUTTON_LENGTH_MIN: f32 = 0.02;
+pub const BUTTON_LENGTH_MAX: f32 = 0.055;
 
 const GAMMA: f32 = 2.2;
 
@@ -624,7 +624,7 @@ pub fn render_block(
 
             let bridge_size_anim =
                 pareen::cond(num_spawns.is_some(), 0.15, 0.25) * scaling_anim.as_ref();
-            let bridge_length_anim = bridge_length_anim(0.05, 0.45, activation.is_some());
+            let bridge_length_anim = bridge_length_anim(0.05, 0.4, activation.is_some());
 
             let bridge_anim = bridge_size_anim.zip(bridge_length_anim).zip(size).map(
                 |((bridge_size, bridge_length), size)| Bridge {
@@ -734,7 +734,7 @@ pub fn render_block(
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0));
-            let scaling = na::Vector3::new(0.7, 0.7, 0.7);
+            let scaling = na::Vector3::new(0.6, 0.6, 0.6);
             render_list[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: cube_color,
@@ -769,9 +769,9 @@ pub fn render_block(
                 &Bridge {
                     center: *center,
                     dir: button_dir,
-                    offset: 0.7 / 2.0,
+                    offset: 0.6 / 2.0,
                     length: button_length_anim.eval(tick_time.tick_progress()),
-                    size: 0.5,
+                    size: 0.4,
                     color: block_color(&button_color(), alpha),
                 },
                 transform,
@@ -781,7 +781,7 @@ pub fn render_block(
             render_wind_mills(
                 &WindMills {
                     center: *center,
-                    offset: 0.75 / 2.0,
+                    offset: 0.6 / 2.0,
                     length: 0.075,
                     color: block_color(&wind_mill_color(), alpha),
                 },

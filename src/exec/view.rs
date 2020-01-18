@@ -223,6 +223,8 @@ impl ExecView {
                             pareen::constant(0.0).seq_squeeze(0.75, blip_spawn_anim()),*/
                         BlipSpawnMode::Quick =>
                             blip_spawn_anim().seq_squeeze(0.5, 1.0),
+                        BlipSpawnMode::Bridge =>
+                            blip_spawn_anim().seq_squeeze(0.5, 1.0),
                     )
                 }
                 BlipStatus::Existing => 1.0,
