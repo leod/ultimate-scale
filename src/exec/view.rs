@@ -362,8 +362,12 @@ fn blip_pos_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f32>)
         pareen::constant(0.0)
             .switch(
                 0.3,
-                render::machine::bridge_length_anim(0.0, 1.0, true)
-                    .seq_continue(0.9, |length| pareen::lerp(length, 1.0).squeeze(0.0..=0.1)),
+                render::machine::bridge_length_anim(0.0, 1.0, true).seq_ease_in_out(
+                    0.7,
+                    easer::functions::Quad,
+                    0.3,
+                    1.0,
+                ), //.seq_continue(0.9, |length| pareen::lerp(length, 1.0).squeeze(0.0..=0.1)),
             )
             .into_box(),
         pareen::id(),
@@ -425,7 +429,7 @@ fn press_button_blip_pos_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::
         .map(|(pos, _)| pos)
         .seq_continue(halfway_time, move |halfway_pos| {
             pareen::lerp(halfway_pos, halfway_time)
-                .squeeze(0.0..=0.2)
+                .squeeze(0.0..=0.25)
                 .map(|p| p.min(0.55))
         })
         .into_box();
