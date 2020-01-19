@@ -257,7 +257,32 @@ pub fn bridge_length_anim(
     max: f32,
     activated: bool,
 ) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
-    pareen::cond(activated, pareen::half_circle().cos().abs(), 1.0).scale_min_max(min, max)
+    //pareen::cond(activated, pareen::half_circle().cos().abs(), 1.0).scale_min_max(min, max)
+    // Natural cubic spline interpolation at these points:
+    //  0 1
+    //  0.25 0
+    //  0.5 0.4
+    //  0.9 0.5
+    //  1.0 1
+    pareen::cond(
+        activated,
+        pareen::cubic(&[2.6716e1, 0.0, -5.6697, 1.0])
+            .switch(
+                0.25,
+                pareen::cubic(&[-4.3978e1, 5.3020e1, -1.8925e1, 2.1046]),
+            )
+            .switch(
+                0.5,
+                pareen::cubic(&[2.6979e1, -5.3416e1, 3.4293e1, -6.7651]),
+            )
+            .switch(
+                0.9,
+                pareen::cubic(&[-6.4762e1, 1.9429e2, -1.8864e2, 6.0115e1]),
+            )
+            .scale_min_max(min, max * 1.2)
+            .into_box(),
+        max,
+    )
 }
 
 pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {

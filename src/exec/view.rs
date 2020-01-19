@@ -344,7 +344,23 @@ fn blip_pos_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (na::Point3<f32>, na::M
 
             // Interpolate blip position if it is moving
             let next_center = render::machine::block_center(&next_pos);
-            let pos_anim = pareen::lerp(center, next_center);
+
+            let pos_anim = pareen::cond(
+                blip.status == BlipStatus::Spawning(BlipSpawnMode::Bridge),
+                pareen::lerp(center, next_center)
+                    .map_time_anim(
+                        pareen::constant(0.0).switch(
+                            0.3,
+                            render::machine::bridge_length_anim(0.0, 1.0, true)
+                                .seq_continue(0.9, |length| {
+                                    pareen::lerp(length, 1.0).squeeze(0.0..=0.1)
+                                }),
+                        ),
+                    )
+                    .into_box(),
+                pareen::lerp(center, next_center),
+            )
+            .into_box();
 
             // Orient the blip
             let orient_anim = pareen::fun(move |t| {
@@ -377,7 +393,7 @@ fn press_button_blip_pos_rot_anim(
     blip: Blip,
 ) -> pareen::AnimBox<f32, (na::Point3<f32>, na::Matrix4<f32>)> {
     let pos_rot_anim = blip_pos_rot_anim(blip.clone());
-    let halfway_time = 0.5;
+    let halfway_time = 0.55;
     let (_, hold_rot) = pos_rot_anim.eval(1.0);
 
     // Stop in front of the button.
