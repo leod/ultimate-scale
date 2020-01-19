@@ -10,7 +10,9 @@ use rendology::{basic_obj, BasicObj, Camera, Light};
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
 use crate::exec::anim::{AnimState, WindDeadend, WindLife};
-use crate::exec::{BlipSpawnMode, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime};
+use crate::exec::{
+    Blip, BlipDieMode, BlipSpawnMode, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime,
+};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, Machine};
@@ -155,10 +157,8 @@ impl ExecView {
         let in_vector: na::Vector3<f32> = na::convert(in_dir.to_vector());
 
         // The cylinder object points in the direction of the x axis
-        let (pitch, yaw) = in_dir.invert().to_pitch_yaw_x();
-
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
-            * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+            * in_dir.invert().to_rotation_mat_x();
 
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
             out.wind.add(render::wind::Instance {
@@ -195,7 +195,7 @@ impl ExecView {
                 };
 
                 match anim_state.wind_out[dir] {
-                    WindLife::None => {}
+                    WindLife::None => (),
                     WindLife::Appearing => {
                         // Interpolate, i.e. draw partial line
                         let out_t = time.tick_progress();
@@ -217,76 +217,37 @@ impl ExecView {
 
     fn render_blips(&self, time: &TickTime, out: &mut Stage) {
         for (_index, blip) in self.exec.blips().iter() {
-            let size_anim = pareen::anim_match!(blip.status;
-                BlipStatus::Spawning(mode) => {
-                    // Animate spawning the blip
-                    pareen::anim_match!(mode;
-                        /*BlipSpawnMode::Ease =>
-                            pareen::constant(0.0).seq_squeeze(0.75, blip_spawn_anim()),*/
-                        BlipSpawnMode::Quick =>
-                            blip_spawn_anim().seq_squeeze(0.5, 1.0),
-                    )
-                }
-                BlipStatus::Existing => 1.0,
-                BlipStatus::LiveToDie => {
-                    let live = blip_spawn_anim().squeeze(0.0..=0.5);
-                    let to = 1.0;
-                    let die = blip_die_anim().squeeze(0.0..=0.35);
+            /*let size_anim = pareen::cond(
+                blip.status.is_pressing_button(),
+                pareen::constant(1.0)
+                    .seq(0.55, pareen::lerp(1.0, 0.9).squeeze(0.0..=0.2)).into_box(),
+                1.0,
+            ) * blip_size_anim(blip.status);*/
+            let size_anim = blip_size_anim(blip.status);
 
-                    live.seq(0.5, to).seq(0.65, die)
-                }
-                BlipStatus::Dying => pareen::constant(1.0).seq_squeeze(0.4, blip_die_anim()),
-            );
-
-            let size_factor = size_anim.eval(time.tick_progress());
+            let pos_rot_anim = pareen::cond(
+                blip.status.is_pressing_button(),
+                press_button_blip_pos_rot_anim(blip.clone()),
+                blip_pos_rot_anim(blip.clone()),
+            )
+            .into_box();
 
             let center = render::machine::block_center(&blip.pos);
-            let (pitch, yaw) = blip.orient.to_pitch_yaw_x();
-            let (next_pitch, next_yaw) = blip.next_orient().to_pitch_yaw_x();
-            let orient = na::UnitQuaternion::from_euler_angles(0.0, pitch, yaw);
-            let next_orient = na::UnitQuaternion::from_euler_angles(0.0, next_pitch, next_yaw);
-
-            let pos_rot_anim = pareen::constant(blip.move_dir).map_or(
-                (center, orient.to_homogeneous()),
-                |move_dir| {
+            let pos_anim = pareen::constant(blip.move_dir)
+                .map_or(center, |move_dir| {
                     let next_pos = blip.pos + move_dir.to_vector();
-
-                    // Interpolate blip position if it is moving
                     let next_center = render::machine::block_center(&next_pos);
-                    let pos_anim = pareen::lerp(center, next_center);
+                    pareen::lerp(center, next_center)
+                })
+                .map_time_anim(pos_rot_anim.as_ref().map(|(pos, _)| pos));
 
-                    // Orient the blip
-                    let orient_anim = pareen::fun(move |t| {
-                        orient
-                            .try_slerp(&next_orient, t, 0.001)
-                            .unwrap_or(next_orient.clone())
-                            .to_homogeneous()
-                    });
+            let pos = pos_anim.eval(time.tick_progress());
+            let rot = pos_rot_anim
+                .as_ref()
+                .map(|(_, rot)| rot)
+                .eval(time.tick_progress());
+            let size_factor = size_anim.eval(time.tick_progress());
 
-                    // Twist the blip around movement direction (if it is moving)
-                    let delta: na::Vector3<f32> = na::convert(next_pos - blip.pos);
-                    let twist_anim = || {
-                        pareen::cond(
-                            blip.status.is_spawning(),
-                            0.0,
-                            -pareen::quarter_circle::<_, f32>(),
-                        )
-                        .map(move |angle| {
-                            na::Rotation3::new(delta.normalize() * angle).to_homogeneous()
-                        }) * next_orient.to_homogeneous()
-                    };
-
-                    let rot_anim = pareen::cond(
-                        blip.is_turning(),
-                        orient_anim.seq_squeeze(0.3, twist_anim()),
-                        twist_anim(),
-                    );
-
-                    pos_anim.zip(rot_anim)
-                },
-            );
-
-            let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
             let transform = na::Matrix4::new_translation(&pos.coords)
                 * rot
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 0.8));
@@ -338,4 +299,148 @@ fn blip_spawn_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
 
 fn blip_die_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
     blip_spawn_anim().backwards(1.0).map_time(|t| t * t)
+}
+
+// NOTE: Here, we use `AnimBox` instead of generics. Without this, we get HUGE
+// compile times, up to 5 minutes. Apparently, with explicit types, the
+// compiler's `type_length_limit` is breached. Increasing the limit helps, but
+// does not fix the compile times.
+//
+// Of course, using `Box` everywhere probably has performance implications.
+// I don't think it will matter for now, and the reduced compile times are
+// worth it. However, this is not a nice situation, since it means we have to
+// be careful with nested `pareen` usage.
+
+fn blip_twist_anim(blip: Blip) -> pareen::AnimBox<f32, na::Matrix4<f32>> {
+    pareen::constant(blip.move_dir)
+        .map_or(na::Matrix4::identity(), move |move_dir| {
+            (-pareen::quarter_circle::<_, f32>()).map(move |angle| {
+                let delta: na::Vector3<f32> = na::convert(move_dir.to_vector());
+                na::Rotation3::new(delta * angle).to_homogeneous()
+            })
+        })
+        .into_box()
+}
+
+fn blip_size_anim(status: BlipStatus) -> pareen::AnimBox<f32, f32> {
+    match status {
+        BlipStatus::Spawning(mode) => {
+            // Animate spawning the blip
+            match mode {
+                /*BlipSpawnMode::Ease =>
+                pareen::constant(0.0).seq_squeeze(0.75, blip_spawn_anim()),*/
+                BlipSpawnMode::Quick => blip_spawn_anim().seq_squeeze(0.5, 1.0).into_box(),
+                BlipSpawnMode::Bridge => blip_spawn_anim().seq_squeeze(0.5, 1.0).into_box(),
+            }
+        }
+        BlipStatus::Existing => pareen::constant(1.0).into_box(),
+        BlipStatus::LiveToDie(spawn_mode, die_mode) => {
+            blip_size_anim(BlipStatus::Spawning(spawn_mode))
+                .switch(0.5, blip_size_anim(BlipStatus::Dying(die_mode)))
+                .into_box()
+        }
+        BlipStatus::Dying(die_mode) => match die_mode {
+            BlipDieMode::PopEarly => blip_die_anim().seq_squeeze(0.6, 0.0).into_box(),
+            BlipDieMode::PopMiddle => pareen::constant(1.0)
+                .seq_squeeze(0.85, blip_die_anim())
+                .into_box(),
+            BlipDieMode::PressButton => pareen::constant(1.0)
+                .seq_squeeze(0.85, blip_die_anim())
+                .into_box(),
+        },
+    }
+}
+
+fn blip_pos_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f32>)> {
+    let blip = blip.clone();
+    let orient = blip.orient.to_quaternion_x();
+    let next_orient = blip.next_orient().to_quaternion_x();
+
+    // Move the blip
+    let pos_anim = pareen::cond(
+        blip.status.is_bridge_spawning(),
+        pareen::constant(0.0)
+            .switch(
+                0.3,
+                render::machine::bridge_length_anim(0.0, 1.0, true).seq_ease_in_out(
+                    0.7,
+                    easer::functions::Quad,
+                    0.3,
+                    1.0,
+                ), //.seq_continue(0.9, |length| pareen::lerp(length, 1.0).squeeze(0.0..=0.1)),
+            )
+            .into_box(),
+        pareen::id(),
+    )
+    .into_box();
+
+    // Rotate the blip
+    let orient_anim = pareen::fun(move |t| {
+        let rotation = blip.orient.quaternion_between(blip.next_orient());
+        let next_orient = rotation * orient;
+        orient
+            .try_slerp(&next_orient, t, 0.001)
+            .unwrap_or_else(|| next_orient.clone())
+            .to_homogeneous()
+    });
+
+    let twist_anim = || {
+        pareen::cond(
+            blip.status.is_spawning(),
+            na::Matrix4::identity(),
+            blip_twist_anim(blip.clone()),
+        )
+    };
+
+    let rot_anim = pareen::cond(
+        blip.is_turning(),
+        orient_anim.seq_squeeze(0.3, twist_anim() * next_orient.to_homogeneous()),
+        twist_anim() * next_orient.to_homogeneous(),
+    );
+
+    pos_anim.zip(rot_anim).into_box()
+}
+
+fn press_button_blip_pos_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f32>)> {
+    let pos_rot_anim = blip_pos_rot_anim(blip.clone());
+    let halfway_time = 0.55;
+    let (_, hold_rot) = pos_rot_anim.eval(1.0);
+
+    // Stop in front of the button.
+    let normal_anim = pos_rot_anim.map(|(_, rot)| rot);
+
+    // Quickly reset to a horizontal.
+    let reach_anim = blip_pos_rot_anim(blip.clone())
+        .map(|(_, rot)| rot)
+        .map_time(move |t| halfway_time + t * 10.0);
+    let reach_time = 1.0 / 20.0;
+
+    // Then hold for a while.
+    let hold_anim = pareen::constant(na::Matrix4::identity());
+    let hold_time = 0.15;
+
+    // Twist frantically.
+    let twist_anim = blip_twist_anim(blip.clone()).map_time(|t| t * 12.0);
+    //let twist_time = 1.0 / 8.0;
+
+    // Then hold again.
+    //let finish_anim = pareen::constant(na::Matrix4::identity());
+
+    // Combine all:
+    let pos_anim = blip_pos_rot_anim(blip.clone())
+        .map(|(pos, _)| pos)
+        .seq_continue(halfway_time, move |halfway_pos| {
+            pareen::lerp(halfway_pos, halfway_time)
+                .squeeze(0.0..=0.25)
+                .map(|p| p.min(0.55))
+        })
+        .into_box();
+
+    //let rot_anim = twist_anim.seq_box(twist_time, finish_anim);
+    let rot_anim = twist_anim;
+    let rot_anim = hold_anim.seq_box(hold_time, rot_anim) * pareen::constant(hold_rot);
+    let rot_anim = reach_anim.seq_box(reach_time, rot_anim);
+    let rot_anim = normal_anim.seq_box(halfway_time, rot_anim);
+
+    pos_anim.zip(rot_anim).into_box()
 }

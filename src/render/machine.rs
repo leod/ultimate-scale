@@ -16,6 +16,8 @@ pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 6.5;
 pub const OUTLINE_MARGIN: f32 = 0.000;
 pub const BRIDGE_MARGIN: f32 = 0.005;
+pub const BUTTON_LENGTH_MIN: f32 = 0.02;
+pub const BUTTON_LENGTH_MAX: f32 = 0.055;
 
 const GAMMA: f32 = 2.2;
 
@@ -77,6 +79,10 @@ pub fn patient_bridge_color() -> na::Vector3<f32> {
 
 pub fn impatient_bridge_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.9, 0.9, 0.9))
+}
+
+pub fn button_color() -> na::Vector3<f32> {
+    gamma_correct(&na::Vector3::new(0.8, 0.8, 0.8))
 }
 
 pub fn output_status_color(failed: bool, completed: bool) -> na::Vector3<f32> {
@@ -233,12 +239,56 @@ pub fn render_xy_grid(
     }
 }
 
+pub fn blip_spawn_scaling_anim(
+    activation: Option<BlipKind>,
+) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
+    // Hann window applied to sin
+    /*let anim = pareen::cond(
+        activation.is_some(),
+        pareen::circle::<_, f32>().sin() * pareen::half_circle().sin().powf(2.0f32),
+        0.0,
+    );
+
+    anim * 0.03 + 1.0*/
+
+    let t = pareen::constant(1.0).seq(0.0, bridge_length_anim(0.0, 1.0, activation.is_some()));
+    //.seq_ease_in_out(0.9, easer::functions::Circ, 0.1, 1.0);
+
+    (-t + 0.5) * (1.0 / 15.0) + 1.0
+}
+
 pub fn bridge_length_anim(
     min: f32,
     max: f32,
     activated: bool,
 ) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
-    pareen::cond(activated, pareen::half_circle().cos().abs(), 1.0).scale_min_max(min, max)
+    //pareen::cond(activated, pareen::half_circle().cos().abs(), 1.0).scale_min_max(min, max)
+
+    // Natural cubic spline interpolation at these points:
+    //  0 1
+    //  0.25 0
+    //  0.5 0.4
+    //  0.9 0.5
+    //  1.0 1
+    pareen::cond(
+        activated,
+        pareen::cubic(&[2.6716e1, 0.0, -5.6697, 1.0])
+            .switch(
+                0.25,
+                pareen::cubic(&[-4.3978e1, 5.3020e1, -1.8925e1, 2.1046]),
+            )
+            .switch(
+                0.5,
+                pareen::cubic(&[2.6979e1, -5.3416e1, 3.4293e1, -6.7651]),
+            )
+            .switch(
+                0.9,
+                pareen::cubic(&[-6.4762e1, 1.9429e2, -1.8864e2, 6.0115e1]),
+            )
+            .scale_min_max(min, max)
+            .into_box(),
+        max,
+    )
 }
 
 pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
@@ -257,13 +307,12 @@ pub struct Bridge {
 pub fn render_bridge(bridge: &Bridge, transform: &na::Matrix4<f32>, out: &mut Stage) {
     let translation = na::Matrix4::new_translation(&bridge.center.coords);
     let dir_offset: na::Vector3<f32> = na::convert(bridge.dir.to_vector());
-    let (pitch, yaw) = bridge.dir.to_pitch_yaw_x();
     let output_transform = translation
         * transform
         * na::Matrix4::new_translation(
             &(dir_offset * (0.5 * bridge.length + bridge.offset + BRIDGE_MARGIN)),
         )
-        * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+        * bridge.dir.to_rotation_mat_x();
     let scaling = na::Vector3::new(bridge.length, bridge.size, bridge.size);
     out.solid[BasicObj::Cube].add(basic_obj::Instance {
         transform: output_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
@@ -382,8 +431,7 @@ pub fn render_half_pipe(
         na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.5, PIPE_THICKNESS, PIPE_THICKNESS));
     let offset = na::Matrix4::new_translation(&na::Vector3::new(-0.25, 0.0, 0.0));
 
-    let (pitch, yaw) = dir.invert().to_pitch_yaw_x();
-    let rotation = na::Matrix4::from_euler_angles(0.0, pitch, yaw);
+    let rotation = dir.invert().to_rotation_mat_x();
 
     out[BasicObj::Cube].add(basic_obj::Instance {
         transform: translation * transform * rotation * offset * scaling,
@@ -513,12 +561,11 @@ pub fn render_block(
             render_pulsator(tick_time, anim_state, center, transform, &color, out);
         }
         Block::FunnelXY { flow_dir } => {
-            let (pitch, yaw) = flow_dir.invert().to_pitch_yaw_x();
             let cube_transform = translation
                 * transform
-                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
+                * flow_dir.invert().to_rotation_mat_x()
                 * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0));
-            let scaling = na::Vector3::new(0.8, 0.6, 0.6);
+            let scaling = na::Vector3::new(0.7, 0.45, 0.45);
 
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
@@ -527,12 +574,12 @@ pub fn render_block(
             });
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let input_size = 0.4;
+            let input_size = 0.3;
             let input_transform = translation
                 * transform
-                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
-                * na::Matrix4::new_translation(&na::Vector3::new(-0.3, 0.0, 0.0));
-            let scaling = &na::Vector3::new(0.9, input_size, input_size);
+                * flow_dir.invert().to_rotation_mat_x()
+                * na::Matrix4::new_translation(&na::Vector3::new(-0.4, 0.0, 0.0));
+            let scaling = &na::Vector3::new(0.3, input_size, input_size);
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
                 transform: input_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: block_color(&funnel_out_color(), alpha),
@@ -585,68 +632,111 @@ pub fn render_block(
             kind,
             num_spawns,
         } => {
+            let activation = anim_state.and_then(|s| s.activation);
+            let scaling_anim = blip_spawn_scaling_anim(activation);
+
             let cube_color = block_color(&blip_color(kind), alpha);
-            let (pitch, yaw) = out_dir.to_pitch_yaw_x();
             let cube_transform = translation
                 * transform
-                * na::Matrix4::from_euler_angles(0.0, pitch, yaw)
-                * na::Matrix4::new_translation(&na::Vector3::new(-0.35 / 2.0, 0.0, 0.0));
-            let scaling = na::Vector3::new(0.65, 0.95, 0.95);
+                * out_dir.to_rotation_mat_x()
+                * na::Matrix4::new_translation(&na::Vector3::new(-0.25 / 2.0, 0.0, 0.0));
+
+            let size_anim =
+                scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.5, 0.6, 0.6));
+            let size = size_anim.eval(tick_time.tick_progress());
+
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
-                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
                 color: cube_color,
                 ..Default::default()
             });
-            render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_size = if num_spawns.is_some() { 0.15 } else { 0.3 };
-            let activation = anim_state.and_then(|s| s.activation.as_ref());
-            let bridge_length =
-                bridge_length_anim(0.05, 0.6, activation.is_some()).eval(tick_time.tick_progress());
+            render_outline(&cube_transform, &size, alpha, out);
 
-            render_bridge(
-                &Bridge {
+            let bridge_size_anim =
+                pareen::cond(num_spawns.is_some(), 0.15, 0.25) * scaling_anim.as_ref();
+            let bridge_length_anim = bridge_length_anim(0.05, 0.4, activation.is_some());
+
+            let bridge_anim = bridge_size_anim.zip(bridge_length_anim).zip(size).map(
+                |((bridge_size, bridge_length), size)| Bridge {
                     center: *center,
                     dir: out_dir,
-                    offset: 0.65 / 2.0 - 0.35 / 2.0,
+                    offset: size.x / 2.0 - 0.25 / 2.0,
                     length: bridge_length,
                     size: bridge_size,
                     color: block_color(&patient_bridge_color(), alpha),
                 },
-                transform,
-                out,
             );
+
+            render_bridge(&bridge_anim.eval(tick_time.tick_progress()), transform, out);
         }
         Block::BlipDuplicator { out_dirs, kind, .. } => {
-            let (pitch, yaw) = out_dirs.0.to_pitch_yaw_x();
-            let cube_transform =
-                translation * transform * na::Matrix4::from_euler_angles(0.0, pitch, yaw);
-            let scaling = na::Vector3::new(0.65, 0.95, 0.95);
+            let cube_transform = translation * transform * out_dirs.0.to_rotation_mat_x();
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
+            let kind_color = activation.map_or_else(inactive_blip_duplicator_color, blip_color);
 
-            let activation = anim_state.and_then(|s| s.activation.as_ref());
-            let kind_color = match activation.or(kind.as_ref()) {
-                Some(kind) => blip_color(*kind),
-                None => inactive_blip_duplicator_color(),
-            };
+            let scaling_anim = blip_spawn_scaling_anim(activation);
+            let size_anim =
+                scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.45, 0.6, 0.6));
+            let size = size_anim.eval(tick_time.tick_progress());
+
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
-                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
                 color: block_color(&kind_color, alpha),
                 ..Default::default()
             });
-            render_outline(&cube_transform, &scaling, alpha, out);
+            render_outline(&cube_transform, &size, alpha, out);
 
             let bridge_length =
-                bridge_length_anim(0.05, 0.4, activation.is_some()).eval(tick_time.tick_progress());
+                bridge_length_anim(0.05, 0.3, activation.is_some()).eval(tick_time.tick_progress());
+            let button_size = (scaling_anim.as_ref() * 0.25).eval(tick_time.tick_progress());
 
             for &dir in &[out_dirs.0, out_dirs.1] {
                 render_bridge(
                     &Bridge {
                         center: *center,
                         dir,
-                        offset: 0.65 / 2.0,
+                        offset: size.x / 2.0,
                         length: bridge_length,
-                        size: 0.3,
+                        size: button_size,
                         color: block_color(&impatient_bridge_color(), alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
+
+            let button_length = pareen::cond(
+                next_activation.is_some(),
+                pareen::constant(activation.is_some())
+                    .seq(1.0 - size.y / 2.0, next_activation.is_some()),
+                activation.is_some(),
+            )
+            .map(|a| {
+                if a {
+                    BUTTON_LENGTH_MIN
+                } else {
+                    BUTTON_LENGTH_MAX
+                }
+            })
+            .eval(tick_time.tick_progress());
+
+            let button_color = kind.map_or(button_color(), blip_color);
+
+            for &dir in &Dir3::ALL {
+                if dir == out_dirs.0 || dir == out_dirs.1 {
+                    continue;
+                }
+
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: size.y / 2.0,
+                        length: button_length,
+                        size: button_size,
+                        color: block_color(&button_color, alpha),
                     },
                     transform,
                     out,
@@ -655,6 +745,8 @@ pub fn render_block(
         }
         Block::BlipWindSource { button_dir } => {
             let activation = anim_state.and_then(|s| s.activation.as_ref());
+            let next_activation = anim_state.and_then(|s| s.next_activation.as_ref());
+
             let cube_color = block_color(
                 &if activation.is_some() {
                     wind_source_color()
@@ -673,7 +765,7 @@ pub fn render_block(
             let cube_transform = translation
                 * transform
                 * na::Matrix4::new_translation(&na::Vector3::new(0.0, 0.0, 0.0));
-            let scaling = na::Vector3::new(0.75, 0.75, 0.75);
+            let scaling = na::Vector3::new(0.6, 0.6, 0.6);
             render_list[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: cube_color,
@@ -690,15 +782,27 @@ pub fn render_block(
                 });
             }
 
-            let button_length = if activation.is_some() { 0.025 } else { 0.075 };
+            let button_length_anim = pareen::cond(
+                next_activation.is_some(),
+                pareen::constant(activation.is_some()).seq(0.85, next_activation.is_some()),
+                activation.is_some(),
+            )
+            .map(|a| {
+                if a {
+                    BUTTON_LENGTH_MIN
+                } else {
+                    BUTTON_LENGTH_MAX
+                }
+            });
+
             render_bridge(
                 &Bridge {
                     center: *center,
                     dir: button_dir,
-                    offset: 0.75 / 2.0,
-                    length: button_length,
-                    size: 0.5,
-                    color: block_color(&impatient_bridge_color(), alpha),
+                    offset: 0.6 / 2.0,
+                    length: button_length_anim.eval(tick_time.tick_progress()),
+                    size: 0.4,
+                    color: block_color(&button_color(), alpha),
                 },
                 transform,
                 out,
@@ -707,7 +811,7 @@ pub fn render_block(
             render_wind_mills(
                 &WindMills {
                     center: *center,
-                    offset: 0.75 / 2.0,
+                    offset: 0.6 / 2.0,
                     length: 0.075,
                     color: block_color(&wind_mill_color(), alpha),
                 },
@@ -736,7 +840,7 @@ pub fn render_block(
             let is_wind_active = anim_state
                 .as_ref()
                 .map_or(false, |anim| anim.wind_out[Dir3::X_POS].is_alive());
-            let active_blip_kind = anim_state.map_or(None, |anim| anim.activation);
+            let active_blip_kind = anim_state.and_then(|anim| anim.activation);
 
             let angle_anim = pareen::cond(is_wind_active, pareen::half_circle(), 0.0)
                 + std::f32::consts::PI / 4.0;
@@ -758,7 +862,7 @@ pub fn render_block(
             });
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_length = bridge_length_anim(0.05, 0.35, active_blip_kind.is_some())
+            let bridge_length = bridge_length_anim(0.1, 0.35, active_blip_kind.is_some())
                 .eval(tick_time.tick_progress());
 
             render_bridge(

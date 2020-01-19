@@ -73,7 +73,11 @@ impl AnimState {
                 if !neighbor_block.has_wind_hole_in(dir.invert()) {
                     // If neighboring block has no wind connection in this
                     // direction, we won't show wind.
-                    Some(WindDeadend::Block)
+                    if neighbor_block.is_pipe() {
+                        Some(WindDeadend::Space)
+                    } else {
+                        Some(WindDeadend::Block)
+                    }
                 } else if let Block::Air = neighbor_block {
                     // Show wind only partially into air
                     Some(WindDeadend::Space)

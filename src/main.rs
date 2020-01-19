@@ -1,5 +1,5 @@
 // Needed for pareen stuff
-#![type_length_limit = "60000000"]
+#![type_length_limit = "600000000"]
 
 //#![feature(type_alias_impl_trait)]
 
