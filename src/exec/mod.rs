@@ -35,39 +35,66 @@ pub struct BlipMovement {
 pub enum BlipSpawnMode {
     //Ease,
     Quick,
+    Bridge,
+}
+
+/// Ways that blips can leave live.
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
+pub enum BlipDieMode {
+    PopEarly,
+    PopMiddle,
+    PressButton,
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum BlipStatus {
     Spawning(BlipSpawnMode),
     Existing,
-    LiveToDie,
-    Dying,
+    LiveToDie(BlipSpawnMode, BlipDieMode),
+    Dying(BlipDieMode),
 }
 
 impl BlipStatus {
     fn is_spawning(self) -> bool {
         match self {
             BlipStatus::Spawning(_) => true,
-            BlipStatus::LiveToDie => true,
+            BlipStatus::LiveToDie(_, _) => true,
             _ => false,
         }
     }
 
     fn is_dead(self) -> bool {
         match self {
-            BlipStatus::Dying => true,
-            BlipStatus::LiveToDie => true,
+            BlipStatus::Dying(_) => true,
+            BlipStatus::LiveToDie(_, _) => true,
             _ => false,
         }
     }
 
-    fn kill(self) -> Self {
+    fn is_pressing_button(self) -> bool {
         match self {
-            BlipStatus::Spawning(_) => BlipStatus::LiveToDie,
-            BlipStatus::Existing => BlipStatus::Dying,
-            BlipStatus::LiveToDie => BlipStatus::LiveToDie,
-            BlipStatus::Dying => BlipStatus::Dying,
+            BlipStatus::Dying(BlipDieMode::PressButton) => true,
+            BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => true,
+            _ => false,
+        }
+    }
+
+    fn is_bridge_spawning(self) -> bool {
+        match self {
+            BlipStatus::Spawning(BlipSpawnMode::Bridge) => true,
+            BlipStatus::LiveToDie(BlipSpawnMode::Bridge, _) => true,
+            _ => false,
+        }
+    }
+
+    fn kill(&mut self, new_die_mode: BlipDieMode) {
+        *self = match *self {
+            BlipStatus::Spawning(spawn_mode) => BlipStatus::LiveToDie(spawn_mode, new_die_mode),
+            BlipStatus::Existing => BlipStatus::Dying(new_die_mode),
+            BlipStatus::LiveToDie(spawn_mode, die_mode) => {
+                BlipStatus::LiveToDie(spawn_mode, die_mode.min(new_die_mode))
+            }
+            BlipStatus::Dying(die_mode) => BlipStatus::Dying(die_mode.min(new_die_mode)),
         }
     }
 }
@@ -248,7 +275,7 @@ impl Exec {
             blip.status = BlipStatus::Existing;
 
             if let Some(move_dir) = blip.move_dir {
-                blip.pos = blip.pos + move_dir.to_vector();
+                blip.pos += move_dir.to_vector();
                 blip.orient = move_dir;
             }
 
@@ -310,19 +337,18 @@ impl Exec {
 
         // 7) Determine next activations based on blips and update blip status
         //    based on next position.
+        //    Any code that modifies a blip's state to be dying is here.
         for activation in self.next_blocks.activation.iter_mut() {
             *activation = None;
         }
 
         for (_, blip) in self.blips.iter_mut() {
-            let mut kill = false;
-
             if let Some((next_block_index, next_block)) =
                 self.machine.get_with_index(&blip.next_pos())
             {
                 if self.next_blip_count[next_block_index] > 1 {
                     // We ran into another blip.
-                    kill = true;
+                    blip.status.kill(BlipDieMode::PopMiddle);
                 }
 
                 let is_move_blocked = blip.move_dir.map_or(false, |move_dir| {
@@ -332,7 +358,7 @@ impl Exec {
                 if is_move_blocked && !next_block.block.is_pipe() {
                     // The blip is moving into a block that does not have an
                     // opening in this direction.
-                    kill = true;
+                    blip.status.kill(BlipDieMode::PopMiddle);
                 } else if blip.move_dir.is_some() || blip.status.is_spawning() {
                     if next_block.block.is_activatable(blip.kind) {
                         // This block's effect will run in the next tick.
@@ -342,15 +368,15 @@ impl Exec {
                         );
                     }
 
-                    kill = kill || next_block.block.is_blip_killer();
+                    if next_block.block.is_blip_killer() {
+                        //let die_mode = if next_block.block.is_activatable(blip.kind) {
+                        //BlipDieMode::PopEarly
+                        blip.status.kill(BlipDieMode::PressButton);
+                    }
                 }
             } else {
                 // Blip is out of bounds or not on a block.
-                kill = true;
-            }
-
-            if kill {
-                blip.status = blip.status.kill();
+                blip.status.kill(BlipDieMode::PopEarly);
             }
         }
 
@@ -462,10 +488,13 @@ fn blip_move_dir(
         neighbor_index.map_or(false, |neighbor_index| {
             let neighbor_block = machine.block_at_index(neighbor_index);
 
-            next_wind_out[block_index][dir]
-                && block.has_move_hole(dir)
-                && neighbor_block.has_move_hole(dir.invert())
-                && neighbor_block.has_wind_hole_in(dir.invert())
+            let can_move_out = next_wind_out[block_index][dir] && block.has_move_hole(dir);
+
+            let can_move_in = dir == Dir3::Z_NEG
+                || (neighbor_block.has_move_hole(dir.invert())
+                    && neighbor_block.has_wind_hole_in(dir.invert()));
+
+            can_move_out && can_move_in
         })
     });
 
@@ -539,7 +568,7 @@ fn run_activated_block(
                 *block_pos,
                 *out_dir,
                 Some(*out_dir),
-                BlipSpawnMode::Quick,
+                BlipSpawnMode::Bridge,
             ));
         }
         Block::BlipDuplicator { out_dirs, .. } => {
@@ -549,7 +578,7 @@ fn run_activated_block(
                     *block_pos,
                     out_dir,
                     Some(out_dir),
-                    BlipSpawnMode::Quick,
+                    BlipSpawnMode::Bridge,
                 ));
             }
         }
@@ -559,7 +588,7 @@ fn run_activated_block(
                 *block_pos,
                 *out_dir,
                 Some(*out_dir),
-                BlipSpawnMode::Quick,
+                BlipSpawnMode::Bridge,
             ));
         }
         Block::DetectorBlipDuplicator { out_dir, .. } => {
