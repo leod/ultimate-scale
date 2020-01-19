@@ -243,13 +243,18 @@ pub fn blip_spawn_scaling_anim(
     activation: Option<BlipKind>,
 ) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
     // Hann window applied to sin
-    let anim = pareen::cond(
+    /*let anim = pareen::cond(
         activation.is_some(),
         pareen::circle::<_, f32>().sin() * pareen::half_circle().sin().powf(2.0f32),
         0.0,
     );
 
-    anim * 0.03 + 1.0
+    anim * 0.03 + 1.0*/
+
+    let t = pareen::constant(1.0).seq(0.0, bridge_length_anim(0.0, 1.0, activation.is_some()));
+    //.seq_ease_in_out(0.9, easer::functions::Circ, 0.1, 1.0);
+
+    (-t + 0.5) * (1.0 / 15.0) + 1.0
 }
 
 pub fn bridge_length_anim(
@@ -258,6 +263,7 @@ pub fn bridge_length_anim(
     activated: bool,
 ) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
     //pareen::cond(activated, pareen::half_circle().cos().abs(), 1.0).scale_min_max(min, max)
+
     // Natural cubic spline interpolation at these points:
     //  0 1
     //  0.25 0

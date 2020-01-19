@@ -18,7 +18,8 @@ imgui-glium-renderer = "0.2.0"
 imgui-winit-support = "0.2.0"
 maplit = "1.0"
 rand = "0.7"
-pareen = { path = "../pareen" }
+pareen = { path = "../pareen", features = ["easer"] }
+easer = "0.2"
 #pareen = { git = "https://github.com/leod/pareen.git", branch = "box" }
 #pareen = "0.2"
 coarse-prof = "0.2"
