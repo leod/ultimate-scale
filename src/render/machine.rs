@@ -249,7 +249,7 @@ pub fn blip_spawn_scaling_anim(
         0.0,
     );
 
-    anim * 0.1 + 1.0
+    anim * 0.03 + 1.0
 }
 
 pub fn bridge_length_anim(
@@ -279,7 +279,7 @@ pub fn bridge_length_anim(
                 0.9,
                 pareen::cubic(&[-6.4762e1, 1.9429e2, -1.8864e2, 6.0115e1]),
             )
-            .scale_min_max(min, max * 1.2)
+            .scale_min_max(min, max)
             .into_box(),
         max,
     )
@@ -856,7 +856,7 @@ pub fn render_block(
             });
             render_outline(&cube_transform, &scaling, alpha, out);
 
-            let bridge_length = bridge_length_anim(0.05, 0.35, active_blip_kind.is_some())
+            let bridge_length = bridge_length_anim(0.1, 0.35, active_blip_kind.is_some())
                 .eval(tick_time.tick_progress());
 
             render_bridge(
