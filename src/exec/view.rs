@@ -376,6 +376,8 @@ fn blip_pos_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f32>)
 
     // Rotate the blip
     let orient_anim = pareen::fun(move |t| {
+        let rotation = blip.orient.quaternion_between(blip.next_orient());
+        let next_orient = rotation * orient;
         orient
             .try_slerp(&next_orient, t, 0.001)
             .unwrap_or_else(|| next_orient.clone())
