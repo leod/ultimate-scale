@@ -79,6 +79,14 @@ impl BlipStatus {
         }
     }
 
+    fn is_bridge_spawning(self) -> bool {
+        match self {
+            BlipStatus::Spawning(BlipSpawnMode::Bridge) => true,
+            BlipStatus::LiveToDie(BlipSpawnMode::Bridge, _) => true,
+            _ => false,
+        }
+    }
+
     fn kill(&mut self, new_die_mode: BlipDieMode) {
         *self = match *self {
             BlipStatus::Spawning(spawn_mode) => BlipStatus::LiveToDie(spawn_mode, new_die_mode),
