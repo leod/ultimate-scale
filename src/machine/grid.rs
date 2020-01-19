@@ -165,6 +165,21 @@ impl Dir3 {
         let (pitch, yaw) = self.to_pitch_yaw_x();
         na::UnitQuaternion::from_euler_angles(0.0, pitch, yaw)
     }
+
+    pub fn quaternion_between(self, other: Dir3) -> na::UnitQuaternion<f32> {
+        // https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
+
+        let v0: na::Vector3<f32> = na::convert(self.to_vector());
+        let v1: na::Vector3<f32> = na::convert(other.to_vector());
+
+        let d = v0.dot(&v1);
+        let c = v0.cross(&v1);
+        let s = ((1.0 + d) * 2.0).sqrt();
+
+        let coords = na::Vector4::new(c.x / s, c.y / s, c.z / s, s * 0.5);
+
+        na::UnitQuaternion::from_quaternion(na::Quaternion::from(coords))
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Default)]
