@@ -5,9 +5,10 @@ use nalgebra as na;
 
 use coarse_prof::profile;
 
+use rendology::particle::Particle;
 use rendology::pipeline::CreationError;
 use rendology::{
-    basic_obj, line, BasicObj, Camera, Drawable, Instancing, InstancingMode, Light, Mesh,
+    basic_obj, line, particle, BasicObj, Camera, Drawable, Instancing, InstancingMode, Light, Mesh,
     PlainScenePass, RenderList, SceneCore, ShadedScenePass, ShadedScenePassSetup, ShadowPass,
 };
 
@@ -21,6 +22,8 @@ pub struct Stage {
 
     pub plain: basic_obj::RenderList<basic_obj::Instance>,
     pub lines: RenderList<line::Instance>,
+
+    pub new_particles: RenderList<Particle>,
 
     /// Screen-space stuff.
     pub ortho: basic_obj::RenderList<basic_obj::Instance>,
@@ -40,6 +43,7 @@ impl Stage {
         self.lights.clear();
         self.plain.clear();
         self.lines.clear();
+        self.new_particles.clear();
         self.ortho.clear();
     }
 }
@@ -60,6 +64,9 @@ pub struct Pipeline {
 
     plain_scene_pass: PlainScenePass<basic_obj::Core>,
     line_scene_pass: PlainScenePass<line::Core>,
+
+    particle_system: particle::System,
+    particle_scene_pass: PlainScenePass<particle::Shader>,
 
     solid_instancing: basic_obj::Instancing<basic_obj::Instance>,
     solid_glow_instancing: basic_obj::Instancing<basic_obj::Instance>,
@@ -121,6 +128,13 @@ impl Pipeline {
         let line_scene_pass =
             rendology.create_plain_scene_pass(facade, line::Core, InstancingMode::Vertex)?;
 
+        let particle_system = particle::System::create(facade, &Default::default())?;
+        let particle_scene_pass = rendology.create_plain_scene_pass(
+            facade,
+            particle_system.shader(),
+            InstancingMode::Uniforms,
+        )?;
+
         let solid_instancing = basic_obj::Instancing::create(facade)?;
         let solid_glow_instancing = basic_obj::Instancing::create(facade)?;
         let wind_instancing = Instancing::create(facade)?;
@@ -139,6 +153,8 @@ impl Pipeline {
             wind_scene_pass,
             plain_scene_pass,
             line_scene_pass,
+            particle_system,
+            particle_scene_pass,
             solid_instancing,
             solid_glow_instancing,
             wind_instancing,
@@ -151,11 +167,14 @@ impl Pipeline {
         &mut self,
         facade: &F,
         context: &Context,
+        time: f32,
         stage: &Stage,
         target: &mut S,
     ) -> Result<(), rendology::DrawError> {
         {
             profile!("update_instances");
+
+            self.particle_system.spawn(stage.new_particles.as_slice());
 
             self.solid_instancing.update(facade, &stage.solid)?;
             self.solid_glow_instancing
@@ -197,6 +216,22 @@ impl Pipeline {
             blend: glium::Blend::alpha_blending(),
             ..Default::default()
         };
+        let particle_draw_params = glium::DrawParameters {
+            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+            depth: glium::Depth {
+                test: glium::DepthTest::IfLessOrEqual,
+                write: false,
+                ..Default::default()
+            },
+            blend: glium::Blend {
+                color: glium::BlendingFunction::Addition {
+                    source: glium::LinearBlendingFactor::SourceAlpha,
+                    destination: glium::LinearBlendingFactor::One,
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
 
         let wind_color = machine::wind_source_color();
         let wind_stripe_color = machine::wind_stripe_color();
@@ -211,6 +246,9 @@ impl Pipeline {
             ),
         };
         let wind_mesh = self.basic_obj_resources.mesh(BasicObj::TessellatedCylinder);
+
+        let particle_params = particle::Params { time };
+        self.particle_system.set_current_time(time);
 
         self.rendology
             .start_frame(facade, (0.0, 0.0, 0.0), context.rendology.clone(), target)?
@@ -263,6 +301,12 @@ impl Pipeline {
                 &self.plain_instancing.as_drawable(&self.basic_obj_resources),
                 &(),
                 &plain_draw_params,
+            )?
+            .draw(
+                &self.particle_scene_pass,
+                &self.particle_system,
+                &particle_params,
+                &particle_draw_params,
             )?
             .postprocess()?
             .plain_scene_pass()
