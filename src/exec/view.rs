@@ -164,7 +164,7 @@ impl ExecView {
             (prev_time.tick_progress(), time.tick_progress())
         };
 
-        let sub_tick_duration = 0.01;
+        let sub_tick_duration = 0.05;
         let times = {
             let mut v = Vec::new();
             let mut current = (progress_start / sub_tick_duration).ceil() * sub_tick_duration;
@@ -187,12 +187,16 @@ impl ExecView {
                     na::Vector3::new(-1.0, -1.0, -1.0),
                 ];
 
-                let speed = 0.2;
+                let mut speed = 0.5;
+
+                if blip.status.is_pressing_button() && progress > 0.55 {
+                    speed = 0.0;
+                }
                 let velocity = speed * rot.transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0));
 
                 for corner in &corners {
-                    let corner_pos = pos + rot.transform_vector(corner) * 0.1;
-                    let life_duration = 1.0 / speed; //(1.0 - progress) / speed;
+                    let corner_pos = pos + rot.transform_vector(corner) * 0.07;
+                    let life_duration = 2.0;
 
                     let particle = Particle {
                         spawn_time: time.num_ticks_passed as f32 + progress,
@@ -200,7 +204,7 @@ impl ExecView {
                         start_pos: corner_pos,
                         velocity,
                         color: render::machine::blip_color(blip.kind),
-                        size: na::Vector2::new(0.03, 0.03),
+                        size: na::Vector2::new(0.04, 0.04),
                     };
 
                     render_out.new_particles.add(particle);
