@@ -164,35 +164,48 @@ impl ExecView {
             (prev_time.tick_progress(), time.tick_progress())
         };
 
-        let sub_tick_rate = 10.0;
+        let sub_tick_duration = 0.01;
         let times = {
             let mut v = Vec::new();
-            let mut current = progress_start;
+            let mut current = (progress_start / sub_tick_duration).ceil() * sub_tick_duration;
             while current < progress_end {
                 v.push(current);
-                current += 1.0 / sub_tick_rate;
+                current += sub_tick_duration;
             }
             v
         };
 
         for blip in self.exec.blips().values() {
             for &progress in &times {
-                let pos_anim = blip_pos_rot_anim(blip.clone()).map(|(pos, _)| pos);
-                let pos = pos_anim.eval(progress);
+                let pos_rot_anim = blip_pos_rot_anim(blip.clone());
+                let (pos, rot) = pos_rot_anim.eval(progress);
 
-                let particle = Particle {
-                    spawn_time: time.num_ticks_passed as f32 + progress,
-                    life_duration: 5.0,
-                    start_pos: pos,
-                    velocity: blip
-                        .move_dir
-                        .map_or(na::Vector3::z(), |dir| na::convert(dir.to_vector()))
-                        / 5.0,
-                    color: render::machine::blip_color(blip.kind),
-                    size: na::Vector2::new(0.1, 0.1),
-                };
+                let corners = [
+                    na::Vector3::new(-1.0, 1.0, 1.0),
+                    na::Vector3::new(-1.0, -1.0, 1.0),
+                    na::Vector3::new(-1.0, 1.0, -1.0),
+                    na::Vector3::new(-1.0, -1.0, -1.0),
+                ];
 
-                render_out.new_particles.add(particle);
+                for corner in &corners {
+                    let corner_pos = pos + rot.transform_vector(corner) * 0.1;
+                    let speed = 0.2;
+                    let life_duration = 1.0 / speed; //(1.0 - progress) / speed;
+
+                    let particle = Particle {
+                        spawn_time: time.num_ticks_passed as f32 + progress,
+                        life_duration,
+                        start_pos: corner_pos,
+                        velocity: blip
+                            .move_dir
+                            .map_or(na::Vector3::z(), |dir| na::convert(dir.to_vector()))
+                            * speed,
+                        color: render::machine::blip_color(blip.kind),
+                        size: na::Vector2::new(0.03, 0.03),
+                    };
+
+                    render_out.new_particles.add(particle);
+                }
             }
         }
     }
