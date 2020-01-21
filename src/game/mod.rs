@@ -201,6 +201,8 @@ impl Game {
             (true, None) => {
                 // Stop execution
                 self.exec = None;
+
+                self.render_pipeline.clear_particles();
             }
             (true, Some(play_status)) => {
                 // Advance execution

@@ -162,6 +162,10 @@ impl Pipeline {
             line_instancing,
         })
     }
+    
+    pub fn clear_particles(&mut self) {
+        self.particle_system.clear();
+    }
 
     pub fn draw_frame<F: glium::backend::Facade, S: glium::Surface>(
         &mut self,
