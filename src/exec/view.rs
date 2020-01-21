@@ -187,19 +187,18 @@ impl ExecView {
                     na::Vector3::new(-1.0, -1.0, -1.0),
                 ];
 
+                let speed = 0.2;
+                let velocity = speed * rot.transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0));
+
                 for corner in &corners {
                     let corner_pos = pos + rot.transform_vector(corner) * 0.1;
-                    let speed = 0.2;
                     let life_duration = 1.0 / speed; //(1.0 - progress) / speed;
 
                     let particle = Particle {
                         spawn_time: time.num_ticks_passed as f32 + progress,
                         life_duration,
                         start_pos: corner_pos,
-                        velocity: blip
-                            .move_dir
-                            .map_or(na::Vector3::z(), |dir| na::convert(dir.to_vector()))
-                            * speed,
+                        velocity,
                         color: render::machine::blip_color(blip.kind),
                         size: na::Vector2::new(0.03, 0.03),
                     };
