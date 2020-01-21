@@ -63,6 +63,13 @@ impl BlipStatus {
         }
     }
 
+    pub fn is_existing(self) -> bool {
+        match self {
+            BlipStatus::Existing => true,
+            _ => false,
+        }
+    }
+
     fn is_dead(self) -> bool {
         match self {
             BlipStatus::Dying(_) => true,

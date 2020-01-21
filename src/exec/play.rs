@@ -53,7 +53,7 @@ impl TickTime {
         }
     }
 
-    pub fn as_f32(&self) -> f32 {
+    pub fn to_f32(&self) -> f32 {
         self.num_ticks_passed as f32 + self.next_tick_timer.progress()
     }
 
@@ -64,7 +64,7 @@ impl TickTime {
 
 impl fmt::Display for TickTime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:.2}", self.as_f32())
+        write!(f, "{:.2}", self.to_f32())
     }
 }
 
@@ -76,6 +76,9 @@ pub enum Status {
         /// Number of execution ticks that have passed run since the last
         /// update.
         num_ticks_since_last_update: usize,
+
+        /// Time of the last update.
+        prev_time: Option<TickTime>,
 
         /// TickTime since starting the simulation.
         time: TickTime,
@@ -175,6 +178,7 @@ impl Play {
 
                 Some(Status::Playing {
                     num_ticks_since_last_update,
+                    prev_time: Some(time.clone()),
                     time: new_time,
                 })
             }
@@ -182,6 +186,7 @@ impl Play {
                 info!("Resuming exec at time {}", time);
                 Some(Status::Playing {
                     num_ticks_since_last_update: 0,
+                    prev_time: None,
                     time: time.clone(),
                 })
             }
@@ -219,6 +224,7 @@ impl Play {
                 info!("Starting exec");
                 Some(Status::Playing {
                     num_ticks_since_last_update: 0,
+                    prev_time: None,
                     time: TickTime {
                         num_ticks_passed: 0,
                         next_tick_timer: Timer::new(tick_period),

@@ -14,7 +14,7 @@ use rendology::{Camera, Light};
 use crate::config::{self, Config};
 use crate::edit::Editor;
 use crate::edit_camera_view::{EditCameraView, EditCameraViewInput};
-use crate::exec::play::{self, Play};
+use crate::exec::play::{self, Play, TickTime};
 use crate::exec::{ExecView, LevelProgress, LevelStatus};
 use crate::input_state::InputState;
 use crate::machine::Machine;
@@ -132,8 +132,6 @@ impl Game {
         {
             profile!("render");
 
-            self.render_stage.clear();
-
             if let Some((play_status, exec)) = self.exec.as_mut() {
                 exec.render(&play_status.time(), &mut self.render_stage);
             } else {
@@ -166,8 +164,19 @@ impl Game {
             ..Default::default()
         });
 
-        self.render_pipeline
-            .draw_frame(display, &render_context, &self.render_stage, target)?;
+        let time = self
+            .exec
+            .as_ref()
+            .map_or(0.0, |(play_status, _)| play_status.time().to_f32());
+        self.render_pipeline.draw_frame(
+            display,
+            &render_context,
+            time,
+            &self.render_stage,
+            target,
+        )?;
+
+        self.render_stage.clear();
 
         Ok(())
     }
@@ -200,11 +209,29 @@ impl Game {
 
                     if let play::Status::Playing {
                         num_ticks_since_last_update,
-                        ref mut time,
+                        prev_time,
+                        time,
                         ..
-                    } = s
+                    } = s.clone()
                     {
-                        for _ in 0..*num_ticks_since_last_update {
+                        let mut last_transduce_time = prev_time.clone();
+
+                        if num_ticks_since_last_update > 0 {
+                            // Finish off transducing the previous tick.
+                            if let Some(prev_time) = prev_time.as_ref() {
+                                let mut end_of_last_tick = prev_time.clone();
+                                end_of_last_tick.next_tick_timer.set_progress(1.0);
+
+                                exec.transduce(
+                                    prev_time,
+                                    &end_of_last_tick,
+                                    &mut self.render_stage,
+                                );
+                                last_transduce_time = Some(end_of_last_tick);
+                            }
+                        }
+
+                        for _ in 0..num_ticks_since_last_update {
                             exec.run_tick();
 
                             if exec.next_level_status() != LevelStatus::Running {
@@ -212,6 +239,10 @@ impl Game {
                                 break;
                             }
                         }
+
+                        let last_transduce_time = last_transduce_time.unwrap_or(TickTime::zero());
+
+                        exec.transduce(&last_transduce_time, &time, &mut self.render_stage);
                     }
                 }
             }
