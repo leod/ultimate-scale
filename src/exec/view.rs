@@ -180,13 +180,15 @@ impl ExecView {
                 continue;
             }
 
+            let pos_rot_anim = blip_pos_rot_anim(blip.clone());
+
             for &progress in &times {
                 let spawn = match blip.status {
                     BlipStatus::Spawning(_) => progress >= 0.5,
                     BlipStatus::Existing => false,
-                    BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => progress >= 0.55,
+                    BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => progress >= 0.65,
                     BlipStatus::LiveToDie(_, _) => progress >= 0.5 && progress <= 0.8,
-                    BlipStatus::Dying(BlipDieMode::PressButton) => progress >= 0.55,
+                    BlipStatus::Dying(BlipDieMode::PressButton) => progress >= 0.65,
                     BlipStatus::Dying(_) => false,
                 };
 
@@ -194,7 +196,6 @@ impl ExecView {
                     continue;
                 }
 
-                let pos_rot_anim = blip_pos_rot_anim(blip.clone());
                 let (pos, rot) = pos_rot_anim.eval(progress);
 
                 let corners = [
