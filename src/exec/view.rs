@@ -195,20 +195,15 @@ impl ExecView {
                     continue;
                 }
 
-                let mut speed = 0.1;
-                if blip.status.is_pressing_button() && progress > 0.55 {
-                    speed = 0.0;
-                }
                 let back = rot
                     .transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0))
                     .normalize();
-                let side = rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0));
-                //let velocity = 3.0 * side;
 
                 for corner in &corners {
-                    //let corner_pos = pos + rot.transform_vector(corner) * 0.04 + back * 0.05;
-                    let velocity = rot.transform_vector(corner) * 3.0;
-                    let life_duration = 3.0 / 9.0;
+                    let direction = rot.transform_vector(corner) * 2.0; //+ back * (1.0 + progress.sin() * 0.5);
+                                                                        //let start_pos = pos + back * (0.2 + (progress * std::f32::consts::PI).sin() * 0.1);
+                    let velocity = direction.normalize() * 3.0;
+                    let life_duration = velocity.norm() / 9.0;
 
                     let particle = Particle {
                         spawn_time: time.num_ticks_passed as f32 + progress,
@@ -242,6 +237,7 @@ impl ExecView {
             * in_dir.invert().to_rotation_mat_x();
 
         for &phase in &[0.0, 0.25, 0.5, 0.75] {
+            //for &phase in &[0.0] {
             out.wind.add(render::wind::Instance {
                 transform,
                 start: in_t,
@@ -456,7 +452,8 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f3
                 ), //.seq_continue(0.9, |length| pareen::lerp(length, 1.0).squeeze(0.0..=0.1)),
             )
             .into_box(),
-        pareen::id(),
+        (-(pareen::id().powf(2.0) * 2.0f32 * std::f32::consts::PI).cos() * 0.5 + 0.5)
+            .map_time(|t| t * 0.75),
     )
     .into_box();
 
@@ -471,11 +468,12 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f3
     });
 
     let twist_anim = || {
-        pareen::cond(
+        pareen::constant(na::Matrix4::identity())
+        /*pareen::cond(
             blip.status.is_spawning(),
             na::Matrix4::identity(),
             blip_twist_anim(blip.clone()),
-        )
+        )*/
     };
 
     let rot_anim = pareen::cond(
