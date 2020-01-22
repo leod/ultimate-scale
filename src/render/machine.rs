@@ -10,7 +10,7 @@ use crate::exec::{Exec, LevelProgress, TickTime};
 
 use crate::render::Stage;
 
-pub const PIPE_THICKNESS: f32 = 0.05;
+pub const PIPE_THICKNESS: f32 = 0.04;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 6.5;
@@ -489,7 +489,7 @@ pub fn render_pulsator(
 ) {
     let have_flow = anim_state.map_or(false, |anim| anim.num_alive_out() > 0);
 
-    let max_size = 2.5 * PIPE_THICKNESS;
+    let max_size = 3.5 * PIPE_THICKNESS;
     let size_anim = pareen::cond(
         have_flow,
         pareen::half_circle().sin().powi(2) * 0.08f32 + 1.0,
