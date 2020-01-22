@@ -272,9 +272,9 @@ pub fn bridge_length_anim(
     //  1.0 1
     pareen::cond(
         activated,
-        pareen::cubic(&[2.6716e1, 0.0, -5.6697, 1.0])
+        pareen::cubic(&[0.0, 4.1860e1, -1.2946e1, 1.0])
             .switch(
-                0.25,
+                0.15,
                 pareen::cubic(&[-4.3978e1, 5.3020e1, -1.8925e1, 2.1046]),
             )
             .switch(
