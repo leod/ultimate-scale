@@ -6,7 +6,7 @@ use nalgebra as na;
 use glium::glutin::{self, WindowEvent};
 
 use rendology::particle::Particle;
-use rendology::{basic_obj, BasicObj, Camera, Light};
+use rendology::{basic_obj, BasicObj, Camera, Light, RenderList};
 
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
@@ -16,7 +16,7 @@ use crate::exec::{
 };
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
-use crate::machine::{grid, Machine};
+use crate::machine::{grid, BlipKind, Machine};
 use crate::render;
 
 #[derive(Debug, Clone)]
@@ -182,6 +182,31 @@ impl ExecView {
 
             let pos_rot_anim = blip_pos_rot_anim(blip.clone());
 
+            if let Some(die_mode) = blip.status.die_mode() {
+                // Can't use `blip_die_time` here since the animation is not
+                // always played at the same speed
+                let die_time = match die_mode {
+                    BlipDieMode::PopEarly => 0.45,
+                    _ => 0.9,
+                };
+
+                if die_mode != BlipDieMode::PressButton
+                    && die_time >= progress_start
+                    && die_time <= progress_end
+                {
+                    let dir: na::Vector3<f32> =
+                        na::convert(blip.move_dir.map_or(na::Vector3::zeros(), Dir3::to_vector));
+
+                    Self::kill_particles(
+                        time.num_ticks_passed as f32 + die_time,
+                        blip.kind,
+                        &(pos_rot_anim.eval(die_time).0 + dir * 0.2),
+                        &-dir,
+                        &mut render_out.new_particles,
+                    );
+                }
+            }
+
             for &progress in &times {
                 let spawn = match blip.status {
                     BlipStatus::Spawning(_) => progress >= 0.5,
@@ -234,6 +259,48 @@ impl ExecView {
                     render_out.new_particles.add(particle);
                 }
             }
+        }
+    }
+
+    fn kill_particles(
+        spawn_time: f32,
+        kind: BlipKind,
+        pos: &na::Point3<f32>,
+        tangent: &na::Vector3<f32>,
+        out: &mut RenderList<Particle>,
+    ) {
+        let smallest_unit =
+            if tangent.x.abs() <= tangent.y.abs() && tangent.x.abs() <= tangent.z.abs() {
+                na::Vector3::x()
+            } else if tangent.y.abs() <= tangent.x.abs() && tangent.y.abs() <= tangent.z.abs() {
+                na::Vector3::y()
+            } else {
+                na::Vector3::z()
+            };
+        let x_unit = tangent.cross(&smallest_unit).normalize();
+        let y_unit = tangent.cross(&x_unit).normalize();
+
+        for _ in 0..1000 {
+            let radius = rand::random::<f32>() * 0.7;
+            let angle = rand::random::<f32>() * std::f32::consts::PI * 2.0;
+
+            let life_duration = rand::random::<f32>() * 0.9;
+            let velocity = radius
+                * (angle.cos() * x_unit
+                    + angle.sin() * y_unit
+                    + 3.0 * radius * tangent.normalize());
+            let friction = 4.0 * radius;
+
+            let particle = Particle {
+                spawn_time,
+                life_duration,
+                start_pos: *pos,
+                velocity,
+                color: render::machine::blip_color(kind),
+                size: na::Vector2::new(0.01, 0.01),
+                friction: velocity.norm() / life_duration,
+            };
+            out.add(particle);
         }
     }
 

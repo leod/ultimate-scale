@@ -27,3 +27,6 @@
 - Something about buffering?
 
 ### Hard
+
+## Other
+- Revise `TickTime`, manipulating it is needlessly tedious
