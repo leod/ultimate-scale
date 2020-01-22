@@ -1,6 +1,6 @@
 use nalgebra as na;
 
-use rendology::{basic_obj, shader, Context, SceneCore};
+use rendology::{basic_obj, shader, Context, CoreInput, SceneCore};
 
 #[derive(Debug, Clone)]
 pub struct Params {
@@ -53,24 +53,26 @@ const V_INSTANCE_END: (&str, shader::VertexOutDef) = (
 
 pub struct Core;
 
-impl SceneCore for Core {
+impl CoreInput for Core {
     type Params = Params;
     type Instance = Instance;
     type Vertex = basic_obj::Vertex;
+}
 
+impl SceneCore for Core {
     fn scene_core(&self) -> shader::Core<(Context, Params), Instance, basic_obj::Vertex> {
         let vertex = shader::VertexCore::empty()
             .with_defs(
                 "
                 const float PI = 3.141592;
                 const float radius = 0.04;
-                const float scale = 0.0105;
+                const float scale = 0.0155;
                 ",
             )
             .with_body(
                 "
-                float angle = (position.x + 0.5) * PI
-                    + params_tick_progress * PI / 2.0
+                float angle = (position.x + 0.5) * PI * 2.0
+                    + params_tick_progress * PI * 2.0
                     + instance_phase;
 
                 float rot_s = sin(angle);

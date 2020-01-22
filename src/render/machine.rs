@@ -39,7 +39,7 @@ pub fn wind_stripe_color() -> na::Vector3<f32> {
 
 pub fn blip_color(kind: BlipKind) -> na::Vector3<f32> {
     gamma_correct(&match kind {
-        BlipKind::A => na::Vector3::new(0.2, 0.2, 0.8),
+        BlipKind::A => na::Vector3::new(0.0, 128.0, 255.0) / 255.0,
         BlipKind::B => na::Vector3::new(0.0, 0.737, 0.361),
     })
 }

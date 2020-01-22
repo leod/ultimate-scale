@@ -57,7 +57,6 @@ impl<T> VecOption<T> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn values(&self) -> impl Iterator<Item = &T> {
         self.iter().map(|(_index, value)| value)
     }
