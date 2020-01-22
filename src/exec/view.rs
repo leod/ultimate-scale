@@ -241,7 +241,8 @@ impl ExecView {
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * in_dir.invert().to_rotation_mat_x();
 
-        for &phase in &[0.0, 0.25, 0.5, 0.75] {
+        //for &phase in &[0.0, 0.25, 0.5, 0.75] {
+        for &phase in &[0.0] {
             out.wind.add(render::wind::Instance {
                 transform,
                 start: in_t,
@@ -456,7 +457,8 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f3
                 ), //.seq_continue(0.9, |length| pareen::lerp(length, 1.0).squeeze(0.0..=0.1)),
             )
             .into_box(),
-        pareen::id(),
+        normal_move_anim(blip.clone()),
+        //pareen::id(),
     )
     .into_box();
 
@@ -471,10 +473,11 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f3
     });
 
     let twist_anim = || {
+        let boop = normal_move_anim(blip.clone()) - pareen::id::<f32, f32>();
         pareen::cond(
             blip.status.is_spawning(),
             na::Matrix4::identity(),
-            blip_twist_anim(blip.clone()),
+            blip_twist_anim(blip.clone()).map_time_anim(boop),
         )
     };
 
@@ -485,6 +488,12 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f3
     );
 
     move_anim.zip(rot_anim).into_box()
+}
+
+fn normal_move_anim(blip: Blip) -> pareen::AnimBox<f32, f32> {
+    ((pareen::fun(|t| (t - 0.5) * std::f32::consts::PI).sin() + 1.0) * 0.5)
+        .powf(2.0)
+        .into_box()
 }
 
 fn press_button_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f32>)> {

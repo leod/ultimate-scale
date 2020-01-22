@@ -71,8 +71,8 @@ impl SceneCore for Core {
             )
             .with_body(
                 "
-                float angle = (position.x + 0.5) * PI
-                    + params_tick_progress * PI / 2.0
+                float angle = (position.x + 0.5) * 2.0 * PI
+                    + params_tick_progress * 2.0 * PI
                     + instance_phase;
 
                 float rot_s = sin(angle);
