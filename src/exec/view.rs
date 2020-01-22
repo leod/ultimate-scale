@@ -186,8 +186,8 @@ impl ExecView {
                 // Can't use `blip_die_time` here since the animation is not
                 // always played at the same speed
                 let die_time = match die_mode {
-                    BlipDieMode::PopEarly => 0.45,
-                    _ => 0.9,
+                    BlipDieMode::PopEarly => 0.3,
+                    _ => 0.8,
                 };
 
                 if die_mode != BlipDieMode::PressButton
@@ -280,16 +280,13 @@ impl ExecView {
         let x_unit = tangent.cross(&smallest_unit).normalize();
         let y_unit = tangent.cross(&x_unit).normalize();
 
-        for _ in 0..1000 {
-            let radius = rand::random::<f32>() * 0.7;
+        for _ in 0..2500 {
+            let radius = rand::random::<f32>() * 0.45;
             let angle = rand::random::<f32>() * std::f32::consts::PI * 2.0;
 
-            let life_duration = rand::random::<f32>() * 0.9;
+            let life_duration = rand::random::<f32>() * 0.7;
             let velocity = radius
-                * (angle.cos() * x_unit
-                    + angle.sin() * y_unit
-                    + 3.0 * radius * tangent.normalize());
-            let friction = 4.0 * radius;
+                * (4.0 * angle.cos() * x_unit + 4.0 * angle.sin() * y_unit + tangent.normalize());
 
             let particle = Particle {
                 spawn_time,
@@ -297,7 +294,7 @@ impl ExecView {
                 start_pos: *pos,
                 velocity,
                 color: render::machine::blip_color(kind),
-                size: na::Vector2::new(0.01, 0.01),
+                size: na::Vector2::new(0.013, 0.013),
                 friction: velocity.norm() / life_duration,
             };
             out.add(particle);
@@ -482,7 +479,7 @@ fn blip_size_anim(status: BlipStatus) -> pareen::AnimBox<f32, f32> {
         BlipStatus::Dying(die_mode) => match die_mode {
             BlipDieMode::PopEarly => blip_die_anim().seq_squeeze(0.6, 0.0).into_box(),
             BlipDieMode::PopMiddle => pareen::constant(1.0)
-                .seq_squeeze(0.85, blip_die_anim())
+                .seq_squeeze(0.65, blip_die_anim())
                 .into_box(),
             BlipDieMode::PressButton => pareen::constant(1.0)
                 .seq_squeeze(0.85, blip_die_anim())
