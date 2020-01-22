@@ -1034,7 +1034,7 @@ checksum = "2439c63f3f6139d1b57529d16bc3b8bb855230c8efcc5d3a896c8bea7c3b1e84"
 [[package]]
 name = "rendology"
 version = "0.4.1"
-source = "git+https://github.com/leod/rendology.git?branch=particles#f22fd231646f3c992b3eff3f00cee90944e54887"
+source = "git+https://github.com/leod/rendology.git?branch=particles#d7182264f22c2cf24a142a6d14a2906b29326e51"
 dependencies = [
  "coarse-prof",
  "glium",

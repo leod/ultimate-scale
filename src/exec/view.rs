@@ -185,10 +185,10 @@ impl ExecView {
                 let (pos, rot) = pos_rot_anim.eval(progress);
 
                 let corners = [
-                    na::Vector3::new(-1.0, 1.0, 1.0),
-                    na::Vector3::new(-1.0, -1.0, 1.0),
-                    na::Vector3::new(-1.0, 1.0, -1.0),
-                    na::Vector3::new(-1.0, -1.0, -1.0),
+                    na::Vector3::new(0.0, 0.0, 1.0),
+                    na::Vector3::new(0.0, 0.0, -1.0),
+                    na::Vector3::new(0.0, 1.0, 0.0),
+                    na::Vector3::new(0.0, -1.0, 0.0),
                 ];
 
                 if blip.status.is_spawning() && progress < 0.5 {
@@ -202,19 +202,22 @@ impl ExecView {
                 let back = rot
                     .transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0))
                     .normalize();
-                let velocity = speed * back;
+                let side = rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0));
+                //let velocity = 3.0 * side;
 
                 for corner in &corners {
-                    let corner_pos = pos + rot.transform_vector(corner) * 0.04 + back * 0.05;
-                    let life_duration = 2.0;
+                    //let corner_pos = pos + rot.transform_vector(corner) * 0.04 + back * 0.05;
+                    let velocity = rot.transform_vector(corner) * 3.0;
+                    let life_duration = 3.0 / 9.0;
 
                     let particle = Particle {
                         spawn_time: time.num_ticks_passed as f32 + progress,
                         life_duration,
-                        start_pos: corner_pos,
+                        start_pos: pos,
                         velocity,
                         color: render::machine::blip_color(blip.kind),
                         size: na::Vector2::new(0.02, 0.02),
+                        friction: 9.0,
                     };
 
                     render_out.new_particles.add(particle);
