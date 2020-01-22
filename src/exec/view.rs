@@ -164,7 +164,7 @@ impl ExecView {
             (prev_time.tick_progress(), time.tick_progress())
         };
 
-        let sub_tick_duration = 0.01;
+        let sub_tick_duration = 0.005;
         let times = {
             let mut v = Vec::new();
             let mut current = (progress_start / sub_tick_duration).ceil() * sub_tick_duration;
@@ -181,6 +181,19 @@ impl ExecView {
             }
 
             for &progress in &times {
+                let spawn = match blip.status {
+                    BlipStatus::Spawning(_) => progress >= 0.5,
+                    BlipStatus::Existing => false,
+                    BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => progress >= 0.55,
+                    BlipStatus::LiveToDie(_, _) => progress >= 0.5 && progress <= 0.8,
+                    BlipStatus::Dying(BlipDieMode::PressButton) => progress >= 0.55,
+                    BlipStatus::Dying(_) => false,
+                };
+
+                if !spawn {
+                    continue;
+                }
+
                 let pos_rot_anim = blip_pos_rot_anim(blip.clone());
                 let (pos, rot) = pos_rot_anim.eval(progress);
 
@@ -191,24 +204,21 @@ impl ExecView {
                     na::Vector3::new(0.0, -1.0, 0.0),
                 ];
 
-                if blip.status.is_spawning() && progress < 0.5 {
-                    continue;
-                }
-
-                let mut speed = 0.1;
-                if blip.status.is_pressing_button() && progress > 0.55 {
-                    speed = 0.0;
-                }
                 let back = rot
                     .transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0))
                     .normalize();
                 let side = rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0));
                 //let velocity = 3.0 * side;
+                let speed = match blip.status {
+                    BlipStatus::Spawning(_) => 2.0,
+                    _ => 3.0,
+                };
+                let friction = 9.0;
 
                 for corner in &corners {
                     //let corner_pos = pos + rot.transform_vector(corner) * 0.04 + back * 0.05;
-                    let velocity = rot.transform_vector(corner) * 3.0;
-                    let life_duration = 3.0 / 9.0;
+                    let velocity = rot.transform_vector(corner) * speed;
+                    let life_duration = speed / friction;
 
                     let particle = Particle {
                         spawn_time: time.num_ticks_passed as f32 + progress,
@@ -217,7 +227,7 @@ impl ExecView {
                         velocity,
                         color: render::machine::blip_color(blip.kind),
                         size: na::Vector2::new(0.02, 0.02),
-                        friction: 9.0,
+                        friction,
                     };
 
                     render_out.new_particles.add(particle);
@@ -241,7 +251,7 @@ impl ExecView {
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * in_dir.invert().to_rotation_mat_x();
 
-        for &phase in &[0.0, 0.25, 0.5, 0.75] {
+        for &phase in &[0.0] {
             out.wind.add(render::wind::Instance {
                 transform,
                 start: in_t,
@@ -472,7 +482,8 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f3
 
     let twist_anim = || {
         pareen::cond(
-            blip.status.is_spawning(),
+            //blip.status.is_spawning(),
+            true,
             na::Matrix4::identity(),
             blip_twist_anim(blip.clone()),
         )
