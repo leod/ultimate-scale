@@ -183,8 +183,6 @@ impl ExecView {
             let pos_rot_anim = blip_pos_rot_anim(blip.clone());
 
             if let Some(die_mode) = blip.status.die_mode() {
-                // Can't use `blip_die_time` here since the animation is not
-                // always played at the same speed
                 let die_time = match die_mode {
                     BlipDieMode::PopEarly => 0.3,
                     _ => 0.8,
@@ -512,6 +510,20 @@ fn blip_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f32>
     .into_box()
 }
 
+fn blip_spawn_move_anim() -> pareen::AnimBox<f32, f32> {
+    pareen::constant(0.0)
+        .switch(
+            0.3,
+            render::machine::bridge_length_anim(0.0, 1.0, true).seq_ease_in_out(
+                0.7,
+                easer::functions::Quad,
+                0.3,
+                1.0,
+            ), //.seq_continue(0.9, |length| pareen::lerp(length, 1.0).squeeze(0.0..=0.1)),
+        )
+        .into_box()
+}
+
 fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f32>)> {
     let blip = blip.clone();
     let orient = blip.orient.to_quaternion_x();
@@ -520,18 +532,12 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Matrix4<f3
     // Move the blip
     let move_anim = pareen::cond(
         blip.status.is_bridge_spawning(),
-        pareen::constant(0.0)
-            .switch(
-                0.3,
-                render::machine::bridge_length_anim(0.0, 1.0, true).seq_ease_in_out(
-                    0.7,
-                    easer::functions::Quad,
-                    0.3,
-                    1.0,
-                ), //.seq_continue(0.9, |length| pareen::lerp(length, 1.0).squeeze(0.0..=0.1)),
-            )
-            .into_box(),
-        pareen::id(),
+        blip_spawn_move_anim(),
+        pareen::cond(
+            blip.is_turning(),
+            pareen::constant(0.0).seq_ease_in(0.3, easer::functions::Quad, 0.7, 1.0),
+            pareen::id(),
+        ),
     )
     .into_box();
 
