@@ -234,7 +234,7 @@ impl ExecView {
                 let side = rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0));
                 //let velocity = 3.0 * side;
                 let speed = match blip.status {
-                    BlipStatus::Spawning(_) => 2.0,
+                    BlipStatus::Spawning(_) => 2.15,
                     _ => 3.0,
                 };
                 let friction = 9.0;
@@ -525,6 +525,13 @@ fn blip_spawn_move_anim() -> pareen::AnimBox<f32, f32> {
         .into_box()
 }
 
+fn accelerate() -> pareen::AnimBox<f32, f32> {
+    //pareen::fun(|t: f32| t.powf(4.0) - 3.0 * t.powf(3.0) + 3.0 * t.powf(2.0)).into_box()
+    (pareen::id().powf(2.0f32) * 2.0)
+        .switch(0.5, pareen::id())
+        .into_box()
+}
+
 fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
     let blip = blip.clone();
     let orient = blip.orient.to_quaternion_x();
@@ -536,7 +543,8 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::UnitQuater
         blip_spawn_move_anim(),
         pareen::cond(
             blip.is_turning(),
-            pareen::constant(0.0).seq_ease_in(0.3, easer::functions::Quad, 0.7, 1.0),
+            pareen::constant(0.0).seq_squeeze(0.2, accelerate()),
+            //pareen::constant(0.0).seq_ease_in(0.2, easer::functions::Quad, 0.6, pareen::fun(|t| t + 0.8)),
             pareen::id(),
         ),
     )
@@ -562,7 +570,7 @@ fn normal_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::UnitQuater
 
     let rot_anim = pareen::cond(
         blip.is_turning(),
-        orient_anim.seq_squeeze(0.3, twist_anim() * next_orient),
+        orient_anim.seq_squeeze(0.2, twist_anim() * next_orient),
         twist_anim() * next_orient,
     );
 
