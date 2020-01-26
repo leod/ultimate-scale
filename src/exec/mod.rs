@@ -104,6 +104,14 @@ impl BlipStatus {
             BlipStatus::Dying(die_mode) => BlipStatus::Dying(die_mode.min(new_die_mode)),
         }
     }
+
+    fn die_mode(self) -> Option<BlipDieMode> {
+        match self {
+            BlipStatus::LiveToDie(_, die_mode) => Some(die_mode),
+            BlipStatus::Dying(die_mode) => Some(die_mode),
+            _ => None,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]

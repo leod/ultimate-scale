@@ -3,7 +3,8 @@
 Ultimate Scale is a puzzle game in which you build machines to solve problems.
 
 Current state
-- [Building and copying a simple clock](https://streamable.com/zyv3t)
+- [Adding particles](https://www.youtube.com/watch?v=JEqprzO00yE)
+- [Building and copying a simple clock](https://www.youtube.com/watch?v=GPzpeh87GWQ)
 
 Some older videos: 
 - [Unary multiplication by three](https://streamable.com/xnobu)
