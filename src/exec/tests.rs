@@ -239,7 +239,7 @@ fn test_blip_duplicator_inversion_and_blip_movement() {
 
             if i >= 9 {
                 if (i - 9) % 2 == 0 {
-                    let status = BlipStatus::Spawning(BlipSpawnMode::Quick);
+                    let status = BlipStatus::Spawning(BlipSpawnMode::Bridge);
 
                     assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
                     assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
