@@ -9,8 +9,6 @@
 - Fast scrolling when zoomed out
 
 ## Rendering
-- Render block inputs
-- Particles
 - Culling
 - Unify glow on / glow off calls
 - Don't use `from_euler_angles` so much
@@ -29,3 +27,6 @@
 - Something about buffering?
 
 ### Hard
+
+## Other
+- Revise `TickTime`, manipulating it is needlessly tedious

@@ -10,7 +10,7 @@ use crate::exec::{Exec, LevelProgress, TickTime};
 
 use crate::render::Stage;
 
-pub const PIPE_THICKNESS: f32 = 0.05;
+pub const PIPE_THICKNESS: f32 = 0.04;
 pub const MILL_THICKNESS: f32 = 0.2;
 pub const MILL_DEPTH: f32 = 0.09;
 pub const OUTLINE_THICKNESS: f32 = 6.5;
@@ -373,7 +373,7 @@ pub fn render_wind_mills(
         let roll_anim = pareen::constant(anim_state).map_or(0.0, |state| {
             let wind_time_offset = wind_mills.offset + wind_mills.length;
 
-            let angle = || pareen::quarter_circle();
+            let angle = || pareen::circle();
 
             // TODO: There is a problem with this animation in that it is
             //       faster when wind is appearing/disappearing.
@@ -402,7 +402,7 @@ pub fn render_wind_mills(
 
         let roll = roll_anim.eval(tick_time.tick_progress());
 
-        for &phase in &[0.0, 0.25] {
+        for &phase in &[0.0, 0.5] {
             render_mill(
                 &Mill {
                     center: wind_mills.center,
@@ -410,7 +410,7 @@ pub fn render_wind_mills(
                     length: wind_mills.length,
                     color: wind_mills.color,
                     dir,
-                    roll: roll + 2.0 * phase * std::f32::consts::PI,
+                    roll: roll + phase * std::f32::consts::PI,
                 },
                 transform,
                 out,
@@ -489,7 +489,7 @@ pub fn render_pulsator(
 ) {
     let have_flow = anim_state.map_or(false, |anim| anim.num_alive_out() > 0);
 
-    let max_size = 2.5 * PIPE_THICKNESS;
+    let max_size = 3.5 * PIPE_THICKNESS;
     let size_anim = pareen::cond(
         have_flow,
         pareen::half_circle().sin().powi(2) * 0.08f32 + 1.0,
@@ -617,7 +617,7 @@ pub fn render_block(
                 &WindMills {
                     center: *center,
                     offset: 0.3,
-                    length: 0.075,
+                    length: 0.1,
                     color: block_color(&wind_mill_color(), alpha),
                 },
                 placed_block,
@@ -812,7 +812,7 @@ pub fn render_block(
                 &WindMills {
                     center: *center,
                     offset: 0.6 / 2.0,
-                    length: 0.075,
+                    length: 0.1,
                     color: block_color(&wind_mill_color(), alpha),
                 },
                 placed_block,

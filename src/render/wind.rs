@@ -65,13 +65,13 @@ impl SceneCore for Core {
             .with_defs(
                 "
                 const float PI = 3.141592;
-                const float radius = 0.04;
+                const float radius = 0.05;
                 const float scale = 0.0155;
                 ",
             )
             .with_body(
                 "
-                float angle = (position.x + 0.5) * PI * 2.0
+                float angle = (position.x + 0.5) * PI * 4.0
                     + params_tick_progress * PI * 2.0
                     + instance_phase;
 
@@ -79,9 +79,13 @@ impl SceneCore for Core {
                 float rot_c = cos(angle);
                 mat2 rot_m = mat2(rot_c, -rot_s, rot_s, rot_c);
 
+                float radius_scale = 1.0;
+                //radius_scale *= 0.5 - position.x - instance_start;
+                //radius_scale *= instance_end - 0.5 - position.x;
+
                 vec3 scaled_pos = position;
                 scaled_pos.yz *= scale;
-                scaled_pos.z += radius;
+                scaled_pos.z += radius * radius_scale;
 
                 vec3 rot_normal = normal;
                 scaled_pos.yz = rot_m * scaled_pos.yz;
