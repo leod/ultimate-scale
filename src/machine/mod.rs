@@ -109,9 +109,9 @@ impl Block {
                 num_spawns: Some(_),
                 ..
             } => "Blip spawn".to_string(),
-            Block::BlipDuplicator { kind: Some(_), .. } => "Picky blip copier".to_string(),
-            Block::BlipDuplicator { kind: None, .. } => "Blip copier".to_string(),
-            Block::BlipWindSource { .. } => "Blipped wind spawn".to_string(),
+            Block::BlipDuplicator { kind: Some(_), .. } => "Picky copier".to_string(),
+            Block::BlipDuplicator { kind: None, .. } => "Copier".to_string(),
+            Block::BlipWindSource { .. } => "Wind button".to_string(),
             Block::Solid => "Solid".to_string(),
             Block::Input { .. } => "Input".to_string(),
             Block::Output { .. } => "Output".to_string(),

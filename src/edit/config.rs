@@ -122,9 +122,8 @@ impl Default for Config {
             select_key: ModifiedKey::new(VirtualKeyCode::Key1),
             pipe_tool_key: ModifiedKey::new(VirtualKeyCode::Key2),
             block_keys: vec![
-                (ModifiedKey::new(VirtualKeyCode::Key3), Block::WindSource),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key4),
+                    ModifiedKey::new(VirtualKeyCode::Key3),
                     Block::BlipSpawn {
                         out_dir: Dir3::X_POS,
                         kind: BlipKind::A,
@@ -132,7 +131,22 @@ impl Default for Config {
                     },
                 ),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key5),
+                    ModifiedKey::new(VirtualKeyCode::Key4),
+                    Block::BlipDuplicator {
+                        out_dirs: (Dir3::X_NEG, Dir3::X_POS),
+                        kind: None,
+                    },
+                ),
+                (ModifiedKey::new(VirtualKeyCode::Key5), Block::WindSource),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key6),
+                    Block::FunnelXY {
+                        flow_dir: Dir3::X_POS,
+                    },
+                ),
+                (ModifiedKey::new(VirtualKeyCode::Key7), Block::Solid),
+                (
+                    ModifiedKey::ctrl(VirtualKeyCode::Key3),
                     Block::BlipSpawn {
                         out_dir: Dir3::X_POS,
                         kind: BlipKind::A,
@@ -140,32 +154,19 @@ impl Default for Config {
                     },
                 ),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key7),
-                    Block::BlipDuplicator {
-                        out_dirs: (Dir3::X_NEG, Dir3::X_POS),
-                        kind: None,
-                    },
-                ),
-                (
-                    ModifiedKey::new(VirtualKeyCode::Key6),
+                    ModifiedKey::ctrl(VirtualKeyCode::Key4),
                     Block::BlipDuplicator {
                         out_dirs: (Dir3::X_NEG, Dir3::X_POS),
                         kind: Some(BlipKind::A),
                     },
                 ),
                 (
-                    ModifiedKey::new(VirtualKeyCode::Key8),
+                    ModifiedKey::ctrl(VirtualKeyCode::Key5),
                     Block::BlipWindSource {
                         button_dir: Dir3::Y_NEG,
                     },
                 ),
-                (
-                    ModifiedKey::new(VirtualKeyCode::Key9),
-                    Block::FunnelXY {
-                        flow_dir: Dir3::X_POS,
-                    },
-                ),
-                (
+                /*(
                     ModifiedKey::ctrl(VirtualKeyCode::Key1),
                     Block::Pipe(Dir3::Y_NEG, Dir3::Y_POS),
                 ),
@@ -185,8 +186,8 @@ impl Default for Config {
                     ModifiedKey::ctrl(VirtualKeyCode::Key5),
                     Block::Pipe(Dir3::Z_POS, Dir3::X_POS),
                 ),
-                (ModifiedKey::ctrl(VirtualKeyCode::Key6), Block::PipeMergeXY),
-                (
+                (ModifiedKey::ctrl(VirtualKeyCode::Key1), Block::PipeMergeXY),*/
+                /*(
                     ModifiedKey::ctrl(VirtualKeyCode::Key6),
                     Block::DetectorBlipDuplicator {
                         out_dir: Dir3::X_NEG,
@@ -201,8 +202,7 @@ impl Default for Config {
                         flow_axis: Axis3::Y,
                         kind: None,
                     },
-                ),
-                (ModifiedKey::ctrl(VirtualKeyCode::Key9), Block::Solid),
+                ),*/
             ],
             layer_keys: vec![
                 (ModifiedKey::new(VirtualKeyCode::F1), 0),

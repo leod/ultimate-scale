@@ -219,5 +219,18 @@ impl Editor {
             );
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
+
+        ui.same_line(0.0);
+
+        if ui.button(im_str!("Color"), [BUTTON_W, BUTTON_H]) {
+            self.action_next_kind();
+        }
+        if ui.is_item_hovered() {
+            let text = format!(
+                "Changes color of selected blocks where applicable (i.e. blip spawns and copiers).\n\nShortcut: {}",
+                self.config.block_kind_key,
+            );
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
     }
 }
