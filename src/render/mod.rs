@@ -1,3 +1,4 @@
+pub mod floor;
 pub mod machine;
 pub mod wind;
 
@@ -14,6 +15,7 @@ use rendology::{
 
 #[derive(Default)]
 pub struct Stage {
+    pub floor: RenderList<floor::Instance>,
     pub solid: basic_obj::RenderList<basic_obj::Instance>,
     pub solid_glow: basic_obj::RenderList<basic_obj::Instance>,
     pub wind: RenderList<wind::Instance>,
@@ -37,6 +39,7 @@ pub struct Context {
 
 impl Stage {
     pub fn clear(&mut self) {
+        self.floor.clear();
         self.solid.clear();
         self.solid_glow.clear();
         self.wind.clear();
@@ -49,6 +52,7 @@ impl Stage {
 }
 
 pub struct Pipeline {
+    floor_mesh: Mesh<floor::Vertex>,
     basic_obj_resources: basic_obj::Resources,
     line_mesh: Mesh<line::Point>,
     plain_program: glium::Program,
@@ -58,6 +62,7 @@ pub struct Pipeline {
     solid_shadow_pass: Option<ShadowPass<basic_obj::Core>>,
     wind_shadow_pass: Option<ShadowPass<wind::Core>>,
 
+    floor_scene_pass: ShadedScenePass<floor::Core>,
     solid_scene_pass: ShadedScenePass<basic_obj::Core>,
     solid_glow_scene_pass: ShadedScenePass<basic_obj::Core>,
     wind_scene_pass: ShadedScenePass<wind::Core>,
@@ -81,6 +86,7 @@ impl Pipeline {
         config: &rendology::Config,
         target_size: (u32, u32),
     ) -> Result<Self, CreationError> {
+        let floor_mesh = floor::create_mesh(facade)?;
         let basic_obj_resources = basic_obj::Resources::create(facade)?;
         let line_mesh = line::create_mesh(facade)?;
         let plain_program = basic_obj::Core
@@ -95,6 +101,15 @@ impl Pipeline {
         let wind_shadow_pass =
             rendology.create_shadow_pass(facade, wind::Core, InstancingMode::Vertex)?;
 
+        let floor_scene_pass = rendology.create_shaded_scene_pass(
+            facade,
+            floor::Core,
+            InstancingMode::Uniforms,
+            ShadedScenePassSetup {
+                draw_shadowed: true,
+                draw_glowing: false,
+            },
+        )?;
         let solid_scene_pass = rendology.create_shaded_scene_pass(
             facade,
             basic_obj::Core,
@@ -142,12 +157,14 @@ impl Pipeline {
         let line_instancing = Instancing::create(facade)?;
 
         Ok(Self {
+            floor_mesh,
             basic_obj_resources,
             line_mesh,
             plain_program,
             rendology,
             solid_shadow_pass,
             wind_shadow_pass,
+            floor_scene_pass,
             solid_scene_pass,
             solid_glow_scene_pass,
             wind_scene_pass,
@@ -277,6 +294,12 @@ impl Pipeline {
                 &shaded_draw_params,
             )?
             .shaded_scene_pass()
+            .draw(
+                &self.floor_scene_pass,
+                &stage.floor.as_drawable(&self.floor_mesh),
+                &(),
+                &shaded_draw_params,
+            )?
             .draw(
                 &self.solid_scene_pass,
                 &self.solid_instancing.as_drawable(&self.basic_obj_resources),

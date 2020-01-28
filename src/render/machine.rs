@@ -8,7 +8,7 @@ use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 use crate::exec::anim::{AnimState, WindLife};
 use crate::exec::{Exec, LevelProgress, TickTime};
 
-use crate::render::Stage;
+use crate::render::{floor, Stage};
 
 pub const PIPE_THICKNESS: f32 = 0.04;
 pub const MILL_THICKNESS: f32 = 0.2;
@@ -1017,13 +1017,8 @@ pub fn render_machine<'a>(
     filter: impl Fn(&'a grid::Point3) -> bool,
     out: &mut Stage,
 ) {
-    let floor_size = na::Vector3::new(machine.size().x as f32, machine.size().y as f32, 1.0);
-
-    let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
-    out.solid[BasicObj::Quad].add(basic_obj::Instance {
-        transform: floor_transform,
-        color: block_color(&floor_color(), 1.0),
-        ..Default::default()
+    out.floor.add(floor::Instance {
+        size: na::Vector2::new(machine.size().x as f32, machine.size().y as f32),
     });
 
     for (block_index, (block_pos, placed_block)) in machine.iter_blocks() {

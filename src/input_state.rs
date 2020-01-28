@@ -64,7 +64,6 @@ impl InputState {
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
-                dbg!(self.hi_dpi_factor);
                 self.mouse_window_pos =
                     na::convert(na::Point2::new(position.x, position.y) * self.hi_dpi_factor);
             }
