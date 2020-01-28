@@ -2,7 +2,7 @@ use imgui::{im_str, ImString};
 
 use crate::edit::{Editor, Mode};
 
-const BUTTON_H: f32 = 20.0;
+const BUTTON_H: f32 = 25.0;
 const BUTTON_W: f32 = 66.25;
 const BG_ALPHA: f32 = 0.8;
 
@@ -11,9 +11,11 @@ impl Editor {
         imgui::Window::new(im_str!("Editor"))
             .horizontal_scrollbar(true)
             .always_auto_resize(true)
-            .position([10.0, 10.0], imgui::Condition::FirstUseEver)
+            .position([0.0, 0.0], imgui::Condition::FirstUseEver)
+            .movable(false)
             .bg_alpha(BG_ALPHA)
             .content_size([200.0, 0.0])
+            .collapsible(false)
             .build(&ui, || {
                 imgui::TreeNode::new(ui, im_str!("Modes"))
                     .opened(true, imgui::Condition::FirstUseEver)

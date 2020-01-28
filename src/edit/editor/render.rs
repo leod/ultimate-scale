@@ -110,7 +110,7 @@ impl Editor {
                         self.render_block_wireframe(
                             &mouse_grid_pos,
                             0.015,
-                            &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
+                            &na::Vector4::new(0.2, 0.5, 0.2, 1.0),
                             out,
                         );
 
@@ -233,7 +233,7 @@ impl Editor {
                 self.render_block_wireframe(
                     &pos,
                     0.015,
-                    &na::Vector4::new(0.5, 0.5, 0.5, 1.0),
+                    &na::Vector4::new(0.7, 0.7, 0.7, 1.0),
                     out,
                 );
             } else if !self.machine.is_valid_pos(&pos) || self.machine.is_block_at(&pos) {

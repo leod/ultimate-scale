@@ -85,7 +85,7 @@ fn main() {
 
     {
         let hidpi_factor = imgui_platform.hidpi_factor();
-        let font_size = (14.0 * hidpi_factor) as f32;
+        let font_size = (18.0 * hidpi_factor) as f32;
 
         // Include some special characters in the glyph ranges
         let glyph_ranges = imgui::FontGlyphRanges::from_slice(&[
