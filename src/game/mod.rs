@@ -129,6 +129,9 @@ impl Game {
         display: &glium::backend::glutin::Display,
         target: &mut S,
     ) -> Result<(), rendology::DrawError> {
+        self.camera.viewport_size.x = target.get_dimensions().0 as f32;
+        self.camera.viewport_size.y = target.get_dimensions().1 as f32;
+
         {
             profile!("render");
 
@@ -294,8 +297,6 @@ impl Game {
         self.config.view.window_size = new_window_size;
 
         self.camera.projection = Self::perspective_matrix(&self.config.view, new_window_size);
-        self.camera.viewport_size =
-            na::Vector2::new(new_window_size.width as f32, new_window_size.height as f32);
 
         Ok(())
     }
