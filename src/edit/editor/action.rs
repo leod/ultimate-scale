@@ -227,13 +227,29 @@ impl Editor {
     }
 
     pub fn action_next_kind(&mut self) {
+        let mut edit = None;
+
         match &mut self.mode {
             Mode::PlacePiece { piece, .. } => {
+                piece.set_next_kind();
+            }
+            Mode::Select { selection, .. } => {
+                if !selection.is_empty() {
+                    edit = Some(Edit::NextKind(selection.clone()));
+                } else if let Some(mouse_block_pos) = self.mouse_block_pos {
+                    edit = Some(Edit::NextKind(vec![mouse_block_pos]));
+                }
+            }
+            Mode::DragAndDrop { piece, .. } => {
                 piece.set_next_kind();
             }
             _ => {
                 // No op in other modes.
             }
         };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
+        }
     }
 }

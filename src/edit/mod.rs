@@ -25,6 +25,9 @@ pub enum Edit {
     /// Rotate blocks counterclockwise.
     RotateCCWXY(Vec<grid::Point3>),
 
+    /// Switch to the next kind.
+    NextKind(Vec<grid::Point3>),
+
     /// Run two edits in sequence.
     Pair(Box<Edit>, Box<Edit>),
 }
@@ -80,6 +83,23 @@ impl Edit {
                     Edit::NoOp
                 } else {
                     Edit::RotateCWXY(points)
+                }
+            }
+            Edit::NextKind(points) => {
+                for p in &points {
+                    if let Some(placed_block) = machine.get_mut(p) {
+                        if let Some(kind) = placed_block.block.kind() {
+                            placed_block.block.set_kind(kind.next());
+                        }
+                    }
+                }
+
+                if points.is_empty() {
+                    Edit::NoOp
+                } else {
+                    // TODO: Undo for `Edit::NextKinds` needs to change if we
+                    // ever add more blip kinds.
+                    Edit::NextKind(points)
                 }
             }
             Edit::Pair(a, b) => {
