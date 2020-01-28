@@ -39,11 +39,11 @@ impl Editor {
 
         render::machine::render_machine(&self.machine, &TickTime::zero(), None, filter, out);
 
-        render::machine::render_xy_grid(
+        /*render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + GRID_OFFSET_Z,
             &mut out.lines,
-        );
+        );*/
 
         match &self.mode {
             Mode::Select { selection, .. } => {
