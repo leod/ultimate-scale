@@ -7,7 +7,7 @@ pub mod piece;
 use std::collections::HashMap;
 
 use crate::machine::grid;
-use crate::machine::{Machine, PlacedBlock};
+use crate::machine::{Block, Machine, PlacedBlock};
 
 pub use config::Config;
 pub use editor::Editor;
@@ -44,12 +44,22 @@ impl Edit {
                     .filter(|(p, _block)| machine.is_valid_pos(p))
                     .collect::<HashMap<_, _>>();
 
-                let previous_blocks = valid_blocks
+                let previous_blocks: HashMap<_, _> = valid_blocks
                     .keys()
                     .map(|p| (*p, machine.get(p).cloned()))
                     .collect();
 
-                if previous_blocks == valid_blocks {
+                // Make sure that we conserve input and output blocks.
+                let counts_before = (
+                    count_inputs(previous_blocks.values()),
+                    count_outputs(previous_blocks.values()),
+                );
+                let counts_after = (
+                    count_inputs(valid_blocks.values()),
+                    count_outputs(valid_blocks.values()),
+                );
+
+                if previous_blocks == valid_blocks || counts_before != counts_after {
                     Edit::NoOp
                 } else {
                     for (p, block) in valid_blocks.iter() {
@@ -125,4 +135,26 @@ impl Edit {
             (a, b) => Edit::Pair(Box::new(a), Box::new(b)),
         }
     }
+}
+
+pub fn count_inputs<'a>(blocks: impl Iterator<Item = &'a Option<PlacedBlock>>) -> usize {
+    blocks
+        .map(|block| match block {
+            Some(PlacedBlock {
+                block: Block::Input { .. },
+            }) => 1,
+            _ => 0,
+        })
+        .sum()
+}
+
+pub fn count_outputs<'a>(blocks: impl Iterator<Item = &'a Option<PlacedBlock>>) -> usize {
+    blocks
+        .map(|block| match block {
+            Some(PlacedBlock {
+                block: Block::Output { .. },
+            }) => 1,
+            _ => 0,
+        })
+        .sum()
 }
