@@ -2,10 +2,13 @@ use std::collections::HashSet;
 
 use nalgebra as na;
 
-use glium::glutin::{ElementState, MouseButton, VirtualKeyCode, WindowEvent};
+use glium::glutin::{self, ElementState, MouseButton, VirtualKeyCode, WindowEvent};
 
 /// Keep track of pressed keys and mouse buttons.
 pub struct InputState {
+    /// The current DPI factor as reported by winit.
+    hi_dpi_factor: f64, 
+
     /// Currently pressed keys.
     pressed_keys: HashSet<VirtualKeyCode>,
 
@@ -17,8 +20,9 @@ pub struct InputState {
 }
 
 impl InputState {
-    pub fn new() -> Self {
+    pub fn new(window: &glutin::Window) -> Self {
         Self {
+            hi_dpi_factor: window.get_hidpi_factor(),
             pressed_keys: HashSet::new(),
             pressed_buttons: HashSet::new(),
             mouse_window_pos: na::Point2::origin(),
@@ -60,7 +64,8 @@ impl InputState {
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
-                self.mouse_window_pos = na::Point2::new(position.x as f32, position.y as f32);
+                dbg!(self.hi_dpi_factor);
+                self.mouse_window_pos = na::convert(na::Point2::new(position.x, position.y) * self.hi_dpi_factor);
             }
             WindowEvent::KeyboardInput { input, .. } => {
                 if let Some(keycode) = input.virtual_keycode {
@@ -82,6 +87,9 @@ impl InputState {
                     self.pressed_buttons.remove(button);
                 }
             },
+            WindowEvent::HiDpiFactorChanged(hi_dpi_factor) => {
+                self.hi_dpi_factor = *hi_dpi_factor;
+            }
             _ => (),
         }
     }

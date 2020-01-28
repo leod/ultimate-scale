@@ -177,7 +177,7 @@ fn main() {
         Machine::new_sandbox(grid_size)
     };
 
-    let mut input_state = InputState::new();
+    let mut input_state = InputState::new(window);
 
     let mut game = Game::create(&display, &config, initial_machine).unwrap();
 
