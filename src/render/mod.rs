@@ -230,7 +230,7 @@ impl Pipeline {
             backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
             depth: glium::Depth {
                 test: glium::DepthTest::IfLessOrEqual,
-                write: false,
+                write: true,
                 ..Default::default()
             },
             blend: glium::Blend::alpha_blending(),

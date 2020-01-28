@@ -450,16 +450,14 @@ pub fn render_half_pipe(
     });
 }
 
-pub fn render_outline(
-    cube_transform: &na::Matrix4<f32>,
-    scaling: &na::Vector3<f32>,
-    alpha: f32,
+pub fn render_line_wireframe(
+    thickness: f32,
+    color: &na::Vector4<f32>,
+    transform: &na::Matrix4<f32>,
     out: &mut Stage,
 ) {
-    let transform = cube_transform
-        * na::Matrix4::new_nonuniform_scaling(
-            &(scaling + na::Vector3::new(OUTLINE_MARGIN, OUTLINE_MARGIN, OUTLINE_MARGIN)),
-        );
+    // TODO: This code is from the early prototype for outlines. Will need to
+    // optimize this!
 
     for (start, end) in CUBOID_WIREFRAME_LINES.iter() {
         let start: na::Point3<f32> = na::convert(na::Point3::from_slice(start));
@@ -475,18 +473,31 @@ pub fn render_outline(
             na::Vector4::new(line_start.x, line_start.y, line_start.z, 1.0),
         ]);
 
-        //out.solid[BasicObj::TessellatedCylinder].add(basic_obj::Instance {
-        /*out.plain[BasicObj::LineX].add(basic_obj::Instance {
-            transform: line_transform,
-            color: block_color(&outline_color(), alpha),
-            ..Default::default()
-        });*/
         out.lines.add(line::Instance {
             transform: line_transform,
-            color: block_color(&outline_color(), alpha),
-            thickness: OUTLINE_THICKNESS,
+            color: *color,
+            thickness,
         });
     }
+}
+
+pub fn render_outline(
+    cube_transform: &na::Matrix4<f32>,
+    scaling: &na::Vector3<f32>,
+    alpha: f32,
+    out: &mut Stage,
+) {
+    let transform = cube_transform
+        * na::Matrix4::new_nonuniform_scaling(
+            &(scaling + na::Vector3::new(OUTLINE_MARGIN, OUTLINE_MARGIN, OUTLINE_MARGIN)),
+        );
+
+    render_line_wireframe(
+        OUTLINE_THICKNESS,
+        &block_color(&outline_color(), alpha),
+        &transform,
+        out,
+    );
 }
 
 pub fn render_pulsator(

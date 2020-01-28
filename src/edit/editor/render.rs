@@ -8,7 +8,7 @@ use crate::exec::TickTime;
 use crate::machine::{grid, Block, PlacedBlock};
 use crate::render::{self, Stage};
 
-pub const GRID_OFFSET_Z: f32 = 0.02;
+pub const GRID_OFFSET_Z: f32 = 0.00;
 
 impl Editor {
     pub fn render(&mut self, out: &mut Stage) -> Result<(), glium::DrawError> {
@@ -48,10 +48,15 @@ impl Editor {
             Mode::Select { selection, .. } => {
                 self.render_selection(selection, false, out);
 
-                if let Some(mouse_block_pos) = self.mouse_block_pos {
+                // Only render wireframe at current position if not already selected.
+                let mouse_block_pos = self
+                    .mouse_block_pos
+                    .filter(|p| selection.iter().all(|s| s != p));
+
+                if let Some(mouse_block_pos) = mouse_block_pos {
                     self.render_block_wireframe(
                         &mouse_block_pos,
-                        0.015,
+                        9.0,
                         &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
                         out,
                     );
@@ -112,56 +117,62 @@ impl Editor {
                 blocks,
                 ..
             } => {
-                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    if self.machine.is_valid_pos(&mouse_grid_pos) {
-                        self.render_block_wireframe(
-                            &mouse_grid_pos,
-                            0.015,
-                            &na::Vector4::new(0.2, 0.5, 0.2, 1.0),
-                            out,
-                        );
-                        self.render_base(&mouse_grid_pos, na::Vector2::new(1, 1), out);
-
-                        if last_pos.is_none() && self.machine.get(&mouse_grid_pos).is_none() {
-                            let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
-                            for _ in 0..*rotation_xy {
-                                block.mutate_dirs(|dir| dir.rotated_cw_xy());
-                            }
-                            let placed_block = PlacedBlock { block };
-                            let block_center = render::machine::block_center(&mouse_grid_pos);
-                            let block_transform =
-                                render::machine::placed_block_transform(&placed_block);
-                            render::machine::render_block(
-                                &placed_block,
-                                &TickTime::zero(),
-                                None,
-                                None,
-                                None,
-                                &block_center,
-                                &block_transform,
-                                0.8,
-                                out,
-                            );
-                        }
-                    }
-                }
+                let mouse_grid_pos = self.mouse_grid_pos.filter(|p| self.machine.is_valid_pos(p));
 
                 if let Some(last_pos) = last_pos {
+                    // Pipe tool is running.
                     self.render_block_wireframe(
                         &last_pos,
-                        0.02,
+                        17.0,
                         &na::Vector4::new(0.2, 0.7, 0.2, 1.0),
                         out,
                     );
 
                     self.render_tentative_blocks(
-                        blocks.iter().map(|(pos, block)| (*pos, block.clone())),
-                        true,
+                        blocks
+                            .iter()
+                            .map(|(pos, block)| (*pos, block.clone())),
+                        false,
                         out,
                     );
 
                     for (pos, _) in blocks.iter() {
-                        self.render_base(pos, na::Vector2::new(1, 1), out);
+                        if *pos != *last_pos {
+                            self.render_block_wireframe(&pos, 10.0, &na::Vector4::new(0.7, 0.7, 0.7, 1.0), out);
+                        } else {
+                            self.render_base(pos, na::Vector2::new(1, 1), out);
+                        }
+                    }
+                } else if let Some(mouse_grid_pos) = mouse_grid_pos {
+                    // Pipe tool has not started yet.
+                    self.render_block_wireframe(
+                        &mouse_grid_pos,
+                        12.0,
+                        &na::Vector4::new(0.2, 0.6, 0.2, 1.0),
+                        out,
+                    );
+                    self.render_base(&mouse_grid_pos, na::Vector2::new(1, 1), out);
+
+                    if self.machine.get(&mouse_grid_pos).is_none() {
+                        let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
+                        for _ in 0..*rotation_xy {
+                            block.mutate_dirs(|dir| dir.rotated_cw_xy());
+                        }
+                        let placed_block = PlacedBlock { block };
+                        let block_center = render::machine::block_center(&mouse_grid_pos);
+                        let block_transform =
+                            render::machine::placed_block_transform(&placed_block);
+                        render::machine::render_block(
+                            &placed_block,
+                            &TickTime::zero(),
+                            None,
+                            None,
+                            None,
+                            &block_center,
+                            &block_transform,
+                            0.8,
+                            out,
+                        );
                     }
                 }
             }
@@ -171,52 +182,21 @@ impl Editor {
     }
 
     fn render_selection(&self, selection: &[grid::Point3], highlight_last: bool, out: &mut Stage) {
-        for (i, &grid_pos) in selection.iter().enumerate() {
+        for (i, grid_pos) in selection.iter().enumerate() {
             let color = if highlight_last && i + 1 == selection.len() {
                 na::Vector4::new(0.9, 0.9, 0.0, 1.0)
             } else {
                 na::Vector4::new(0.9, 0.5, 0.0, 1.0)
             };
 
-            let grid_pos_float: na::Point3<f32> = na::convert(grid_pos);
-
-            render::machine::render_cuboid_wireframe(
-                &render::machine::Cuboid {
-                    center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_Z),
-                    size: na::Vector3::new(1.0, 1.0, 1.0),
-                },
-                0.025,
-                &color,
-                &mut out.plain,
-            );
+            self.render_block_wireframe(grid_pos, 15.0, &color, out);
         }
-    }
-
-    fn render_block_wireframe(
-        &self,
-        pos: &grid::Point3,
-        thickness: f32,
-        color: &na::Vector4<f32>,
-        out: &mut Stage,
-    ) {
-        let pos: na::Point3<f32> = na::convert(*pos);
-
-        render::machine::render_cuboid_wireframe(
-            &render::machine::Cuboid {
-                // Slight z offset so that there is less overlap with e.g. the floor
-                center: pos + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_Z),
-                size: na::Vector3::new(1.0, 1.0, 1.0),
-            },
-            thickness,
-            color,
-            &mut out.plain,
-        );
     }
 
     fn render_tentative_blocks(
         &self,
         blocks: impl Iterator<Item = (grid::Point3, PlacedBlock)>,
-        wireframe_all: bool,
+        show_invalid: bool,
         out: &mut Stage,
     ) -> bool {
         let mut any_pos_valid = false;
@@ -239,26 +219,31 @@ impl Editor {
 
             // TODO: Render tentative blocks as non-shadowed?
 
-            any_pos_valid = any_pos_valid || self.machine.is_valid_pos(&pos);
+            let is_valid = self.machine.is_valid_pos(&pos) && !self.machine.is_block_at(&pos);
+            any_pos_valid = any_pos_valid || is_valid;
 
-            if wireframe_all {
-                self.render_block_wireframe(
-                    &pos,
-                    0.015,
-                    &na::Vector4::new(0.7, 0.7, 0.7, 1.0),
-                    out,
-                );
-            } else if !self.machine.is_valid_pos(&pos) || self.machine.is_block_at(&pos) {
-                self.render_block_wireframe(
-                    &pos,
-                    0.020,
-                    &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
-                    out,
-                );
+            if show_invalid && !is_valid {
+                self.render_block_wireframe(&pos, 20.0, &na::Vector4::new(0.9, 0.0, 0.0, 1.0), out);
             }
         }
 
         any_pos_valid
+    }
+
+    fn render_block_wireframe(
+        &self,
+        pos: &grid::Point3,
+        thickness: f32,
+        color: &na::Vector4<f32>,
+        out: &mut Stage,
+    ) {
+        let pos: na::Point3<f32> = na::convert(*pos);
+        let size = na::Vector3::new(1.0, 1.0, 1.0);
+        let center = pos + size / 2.0 + na::Vector3::z() * GRID_OFFSET_Z;
+        let transform = na::Matrix4::new_translation(&center.coords)
+            * na::Matrix4::new_nonuniform_scaling(&size);
+
+        render::machine::render_line_wireframe(thickness, color, &transform, out);
     }
 
     fn render_base(&self, min_pos: &grid::Point3, size: na::Vector2<isize>, out: &mut Stage) {
@@ -266,12 +251,14 @@ impl Editor {
             let start = na::Point3::new(min_pos.x as f32, min_pos.y as f32, z as f32);
             let size = na::Vector3::new(size.x as f32, size.y as f32, 1.0);
             let center = start + size / 2.0 + na::Vector3::z() * GRID_OFFSET_Z;
+            let transform = na::Matrix4::new_translation(&center.coords)
+                * na::Matrix4::new_nonuniform_scaling(&size);
 
-            render::machine::render_cuboid_wireframe(
-                &render::machine::Cuboid { center, size },
-                0.010,
+            render::machine::render_line_wireframe(
+                5.0,
                 &na::Vector4::new(0.915, 0.554, 0.547, 1.0),
-                &mut out.plain,
+                &transform,
+                out,
             );
         }
     }
@@ -288,7 +275,7 @@ impl Editor {
         let blocks = piece
             .iter()
             .map(|(pos, block)| (pos + piece_pos.coords, block));
-        let any_pos_valid = self.render_tentative_blocks(blocks, false, out);
+        let any_pos_valid = self.render_tentative_blocks(blocks, true, out);
 
         // Show how far above zero the piece is.
         self.render_piece_base(piece, piece_pos, out);
@@ -301,15 +288,14 @@ impl Editor {
 
             let wire_size = piece_max - piece_min + na::Vector3::new(1.0, 1.0, 1.0);
             let wire_center = piece_min + wire_size / 2.0;
+            let transform = na::Matrix4::new_translation(&wire_center.coords)
+                * na::Matrix4::new_nonuniform_scaling(&wire_size);
 
-            render::machine::render_cuboid_wireframe(
-                &render::machine::Cuboid {
-                    center: wire_center + na::Vector3::z() * GRID_OFFSET_Z,
-                    size: wire_size,
-                },
-                0.015,
+            render::machine::render_line_wireframe(
+                10.0,
                 &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
-                &mut out.plain,
+                &transform,
+                out,
             );
         }
     }
