@@ -585,7 +585,17 @@ impl Editor {
         if let Some(block_pos) = block_pos {
             // Clicked on a block!
 
-            if modifiers.shift && !selection.is_empty() {
+            if modifiers.shift && selection.is_empty() {
+                // Shift with an empty selection means to always go into rect select.
+                let start_pos = input_state.mouse_window_pos();
+
+                Mode::RectSelect {
+                    existing_selection: Vec::new(),
+                    new_selection: Vec::new(),
+                    start_pos,
+                    end_pos: start_pos,
+                }
+            } else if modifiers.shift && !selection.is_empty() {
                 // Shift: Select in a line from the last to the current grid
                 // position.
 
