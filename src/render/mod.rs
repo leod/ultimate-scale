@@ -207,7 +207,6 @@ impl Pipeline {
                 ..Default::default()
             },
             polygon_offset: scene_offset,
-            blend: glium::Blend::alpha_blending(),
             ..Default::default()
         };
         let line_draw_params = glium::DrawParameters {

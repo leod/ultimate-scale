@@ -42,7 +42,7 @@ impl Editor {
         render::machine::render_xy_grid(
             &self.machine.size(),
             self.current_layer as f32 + GRID_OFFSET_Z,
-            &mut out.plain,
+            &mut out.lines,
         );
 
         match &self.mode {

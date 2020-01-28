@@ -214,27 +214,37 @@ pub fn render_cuboid_wireframe(
 pub fn render_xy_grid(
     size: &grid::Vector3,
     z: f32,
-    out: &mut basic_obj::RenderList<basic_obj::Instance>,
+    out: &mut rendology::RenderList<line::Instance>,
+    //out: &mut basic_obj::RenderList<basic_obj::Instance>,
 ) {
-    let color = block_color(&grid_color(), 0.0);
+    let color = block_color(&grid_color(), 1.0);
+    let thickness = 6.5;
 
     for x in 0..=size.x {
-        let translation = na::Matrix4::new_translation(&na::Vector3::new(x as f32, 0.0, z));
-        let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::y() * (size.y as f32)));
-        out[BasicObj::LineY].add(basic_obj::Instance {
-            transform: translation * scaling,
+        let transform = na::Matrix4::from_columns(&[
+            na::Vector4::new(0.0, size.y as f32, 0.0, 0.0),
+            na::Vector4::zeros(),
+            na::Vector4::zeros(),
+            na::Vector4::new(x as f32, 0.0, z, 1.0),
+        ]);
+        out.add(line::Instance {
+            transform,
             color,
-            ..Default::default()
+            thickness,
         });
     }
 
     for y in 0..=size.y {
-        let translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, y as f32, z));
-        let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::x() * (size.x as f32)));
-        out[BasicObj::LineX].add(basic_obj::Instance {
-            transform: translation * scaling,
+        let transform = na::Matrix4::from_columns(&[
+            na::Vector4::new(size.x as f32, 0.0, 0.0, 0.0),
+            na::Vector4::zeros(),
+            na::Vector4::zeros(),
+            na::Vector4::new(0.0, y as f32, z, 1.0),
+        ]);
+        out.add(line::Instance {
+            transform,
             color,
-            ..Default::default()
+            thickness,
         });
     }
 }
