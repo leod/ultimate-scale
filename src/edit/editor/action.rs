@@ -76,6 +76,13 @@ impl Editor {
                 piece.shift(&grid::Vector3::y());
             }
 
+            // If we are placing in an upper layer, it could be that the piece
+            // sticks out at the top. Shift down if that is the case.
+            let max_z = piece.blocks().iter().map(|(p, _)| p.z).max().unwrap_or(0)
+                + self.mouse_grid_pos.map_or(0, |p| p.z);
+            let too_high = (max_z - self.machine().size().z + 1).max(0);
+            piece.shift(&(grid::Vector3::new(0, 0, -too_high)));
+
             self.mode = Mode::PlacePiece { piece };
         }
     }
