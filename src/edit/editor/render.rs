@@ -8,8 +8,7 @@ use crate::exec::TickTime;
 use crate::machine::{grid, Block, PlacedBlock};
 use crate::render::{self, Stage};
 
-pub const GRID_OFFSET_Z: f32 = 0.01;
-pub const GRID_OFFSET_2_Z: f32 = 0.02;
+pub const GRID_OFFSET_Z: f32 = 0.02;
 
 impl Editor {
     pub fn render(&mut self, out: &mut Stage) -> Result<(), glium::DrawError> {
@@ -18,7 +17,7 @@ impl Editor {
         let grid_size: na::Vector3<f32> = na::convert(self.machine.size());
         render::machine::render_cuboid_wireframe(
             &render::machine::Cuboid {
-                center: na::Point3::from(grid_size / 2.0) + na::Vector3::z() * GRID_OFFSET_2_Z,
+                center: na::Point3::from(grid_size / 2.0) + na::Vector3::z() * GRID_OFFSET_Z,
                 size: grid_size,
             },
             0.1,
@@ -56,10 +55,18 @@ impl Editor {
                         &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
                         out,
                     );
+
+                    self.render_base(&mouse_block_pos, na::Vector2::new(1, 1), out);
                 }
             }
-            Mode::SelectClickedOnBlock { selection, .. } => {
+            Mode::SelectClickedOnBlock {
+                selection,
+                dragged_block_pos,
+                ..
+            } => {
                 self.render_selection(selection, false, out);
+
+                self.render_base(dragged_block_pos, na::Vector2::new(1, 1), out);
             }
             Mode::RectSelect {
                 existing_selection,
@@ -113,6 +120,7 @@ impl Editor {
                             &na::Vector4::new(0.2, 0.5, 0.2, 1.0),
                             out,
                         );
+                        self.render_base(&mouse_grid_pos, na::Vector2::new(1, 1), out);
 
                         if last_pos.is_none() && self.machine.get(&mouse_grid_pos).is_none() {
                             let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
@@ -151,6 +159,10 @@ impl Editor {
                         true,
                         out,
                     );
+
+                    for (pos, _) in blocks.iter() {
+                        self.render_base(pos, na::Vector2::new(1, 1), out);
+                    }
                 }
             }
         }
@@ -170,7 +182,7 @@ impl Editor {
 
             render::machine::render_cuboid_wireframe(
                 &render::machine::Cuboid {
-                    center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_2_Z),
+                    center: grid_pos_float + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_Z),
                     size: na::Vector3::new(1.0, 1.0, 1.0),
                 },
                 0.025,
@@ -192,7 +204,7 @@ impl Editor {
         render::machine::render_cuboid_wireframe(
             &render::machine::Cuboid {
                 // Slight z offset so that there is less overlap with e.g. the floor
-                center: pos + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_2_Z),
+                center: pos + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_Z),
                 size: na::Vector3::new(1.0, 1.0, 1.0),
             },
             thickness,
@@ -249,11 +261,37 @@ impl Editor {
         any_pos_valid
     }
 
+    fn render_base(&self, min_pos: &grid::Point3, size: na::Vector2<isize>, out: &mut Stage) {
+        for z in 0..min_pos.z {
+            let start = na::Point3::new(min_pos.x as f32, min_pos.y as f32, z as f32);
+            let size = na::Vector3::new(size.x as f32, size.y as f32, 1.0);
+            let center = start + size / 2.0 + na::Vector3::z() * GRID_OFFSET_Z;
+
+            render::machine::render_cuboid_wireframe(
+                &render::machine::Cuboid { center, size },
+                0.010,
+                &na::Vector4::new(0.915, 0.554, 0.547, 1.0),
+                &mut out.plain,
+            );
+        }
+    }
+
+    fn render_piece_base(&self, piece: &Piece, piece_pos: &grid::Point3, out: &mut Stage) {
+        self.render_base(
+            &(piece.min_pos() + piece_pos.coords),
+            na::Vector2::new(piece.extent().x, piece.extent().y),
+            out,
+        );
+    }
+
     fn render_piece_to_place(&self, piece: &Piece, piece_pos: &grid::Point3, out: &mut Stage) {
         let blocks = piece
             .iter()
             .map(|(pos, block)| (pos + piece_pos.coords, block));
         let any_pos_valid = self.render_tentative_blocks(blocks, false, out);
+
+        // Show how far above zero the piece is.
+        self.render_piece_base(piece, piece_pos, out);
 
         // Show wireframe around whole piece only if there is at
         // least one block we can place at a valid position.
@@ -266,7 +304,7 @@ impl Editor {
 
             render::machine::render_cuboid_wireframe(
                 &render::machine::Cuboid {
-                    center: wire_center + na::Vector3::z() * GRID_OFFSET_2_Z,
+                    center: wire_center + na::Vector3::z() * GRID_OFFSET_Z,
                     size: wire_size,
                 },
                 0.015,
