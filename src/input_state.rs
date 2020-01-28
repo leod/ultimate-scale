@@ -7,7 +7,7 @@ use glium::glutin::{self, ElementState, MouseButton, VirtualKeyCode, WindowEvent
 /// Keep track of pressed keys and mouse buttons.
 pub struct InputState {
     /// The current DPI factor as reported by winit.
-    hi_dpi_factor: f64, 
+    hi_dpi_factor: f64,
 
     /// Currently pressed keys.
     pressed_keys: HashSet<VirtualKeyCode>,
@@ -65,7 +65,8 @@ impl InputState {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 dbg!(self.hi_dpi_factor);
-                self.mouse_window_pos = na::convert(na::Point2::new(position.x, position.y) * self.hi_dpi_factor);
+                self.mouse_window_pos =
+                    na::convert(na::Point2::new(position.x, position.y) * self.hi_dpi_factor);
             }
             WindowEvent::KeyboardInput { input, .. } => {
                 if let Some(keycode) = input.virtual_keycode {
