@@ -303,24 +303,6 @@ pub struct PlacedBlock {
     pub block: Block,
 }
 
-/*impl PlacedBlock {
-    pub fn has_wind_hole(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole(dir)
-    }
-
-    pub fn has_move_hole(&self, dir: Dir3) -> bool {
-        self.block.has_move_hole(dir)
-    }
-
-    pub fn has_wind_hole_in(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole_in(dir)
-    }
-
-    pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole_out(dir)
-    }
-}*/
-
 pub type BlockIndex = usize;
 
 #[derive(PartialEq, Eq, Clone, Debug)]

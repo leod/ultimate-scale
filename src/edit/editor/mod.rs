@@ -475,6 +475,8 @@ impl Editor {
             self.action_layer_up();
         } else if key == self.config.layer_down_key {
             self.action_layer_down();
+        } else if key == self.config.select_all_key {
+            self.action_select_all();
         } else if key == self.config.select_key {
             self.action_select_mode();
         } else if key == self.config.pipe_tool_key {

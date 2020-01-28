@@ -116,6 +116,15 @@ impl Editor {
         }
     }
 
+    pub fn action_select_all(&mut self) {
+        self.mode = Mode::new_selection(
+            self.machine
+                .iter_blocks()
+                .map(|(_, (pos, _))| *pos)
+                .collect(),
+        )
+    }
+
     pub fn action_select_mode(&mut self) {
         self.mode = Mode::new_select();
     }
