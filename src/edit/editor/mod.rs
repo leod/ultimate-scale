@@ -373,22 +373,7 @@ impl Editor {
             if let Some(delta_dir) = delta_dir {
                 // Change the previously placed pipe so that it points to the
                 // new tentative pipe
-                let updated_last_block = blocks.get(&last_pos).map(|placed_block| {
-                    self.pipe_tool_connect_pipe(&blocks, placed_block, &last_pos, delta_dir)
-                });
-
-                if let Some(updated_last_block) = updated_last_block {
-                    blocks.insert(last_pos, updated_last_block);
-                }
-
-                if blocks.get(&mouse_grid_pos).is_none() {
-                    let existing_new_block = self.machine.get(&mouse_grid_pos);
-
-                    if let Some(existing_new_block) = existing_new_block {
-                        blocks.insert(mouse_grid_pos, existing_new_block.clone());
-                    }
-                }
-
+                let last_block = blocks.get(&last_pos);
                 let new_block = blocks
                     .get(&mouse_grid_pos)
                     .map_or_else(|| self.machine.get(&mouse_grid_pos), |block| Some(block))
@@ -397,14 +382,42 @@ impl Editor {
                         block: Block::GeneralPipe(grid::DirMap3::from_fn(|_| false)),
                     });
 
-                let updated_new_block = self.pipe_tool_connect_pipe(
-                    &blocks,
-                    &new_block,
-                    &mouse_grid_pos,
-                    delta_dir.invert(),
-                );
+                let connect = last_block.map_or(true, |last_block| {
+                    let last_is_pipe = if let Block::GeneralPipe(_) = last_block.block {
+                        true
+                    } else {
+                        false
+                    };
+                    let new_is_pipe = if let Block::GeneralPipe(_) = new_block.block {
+                        true
+                    } else {
+                        false
+                    };
 
-                blocks.insert(mouse_grid_pos, updated_new_block);
+                    let connect_last = last_is_pipe || last_block.block.has_wind_hole(delta_dir);
+                    let connect_new =
+                        new_is_pipe || new_block.block.has_wind_hole(delta_dir.invert());
+
+                    connect_last && connect_new
+                });
+
+                if connect {
+                    if let Some(last_block) = last_block {
+                        let updated_last_block =
+                            self.pipe_tool_connect_pipe(&blocks, last_block, &last_pos, delta_dir);
+                        blocks.insert(last_pos, updated_last_block);
+                    }
+
+                    let updated_new_block = self.pipe_tool_connect_pipe(
+                        &blocks,
+                        &new_block,
+                        &mouse_grid_pos,
+                        delta_dir.invert(),
+                    );
+                    blocks.insert(mouse_grid_pos, updated_new_block);
+                } else {
+                    blocks.insert(mouse_grid_pos, new_block);
+                }
             } else {
                 // New mouse grid position is not a neighbor of last_pos
                 let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(|dir| {
