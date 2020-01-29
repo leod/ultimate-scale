@@ -590,10 +590,18 @@ pub fn render_block(
                 }
             }
 
-            /*// Pulsator to hide our shame of wind direction change
-            if dir_a.0 != dir_b.0 {*/
-            render_pulsator(tick_time, anim_state, center, transform, &color, out);
-            //}
+            // Pulsator to hide our shame of wind direction change. Only needed
+            // for non-straight pipes
+            let is_straight = {
+                let count: usize = dirs.values().map(|&enabled| enabled as usize).sum();
+                let has_straight = Dir3::ALL.iter().any(|&dir| dirs[dir] && dirs[dir.invert()]);
+
+                count == 2 && has_straight
+            };
+
+            if !is_straight {
+                render_pulsator(tick_time, anim_state, center, transform, &color, out);
+            }
         }
         Block::FunnelXY { flow_dir } => {
             let cube_transform = translation
