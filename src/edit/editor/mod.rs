@@ -389,32 +389,27 @@ impl Editor {
                     }
                 }
 
-                let updated_new_block = blocks.get(&mouse_grid_pos)
+                let new_block = blocks
+                    .get(&mouse_grid_pos)
                     .map_or_else(|| self.machine.get(&mouse_grid_pos), |block| Some(block))
-                    .map(|block| {
-                        self.pipe_tool_connect_pipe(
-                            &blocks,
-                            block,
-                            &mouse_grid_pos,
-                            delta_dir.invert(),
-                        )
+                    .cloned()
+                    .unwrap_or_else(|| PlacedBlock {
+                        block: Block::GeneralPipe(grid::DirMap3::from_fn(|_| false)),
                     });
 
-                if let Some(updated_new_block) = updated_new_block {
-                    blocks.insert(mouse_grid_pos, updated_new_block);
-                } else {
-                    blocks.insert(
-                        mouse_grid_pos,
-                        PlacedBlock {
-                            block: Block::GeneralPipe(grid::DirMap3::from_fn(
-                                |dir| dir == delta_dir || dir == delta_dir.invert(),
-                            )),
-                        },
-                    );
-                }
+                let updated_new_block = self.pipe_tool_connect_pipe(
+                    &blocks,
+                    &new_block,
+                    &mouse_grid_pos,
+                    delta_dir.invert(),
+                );
+
+                blocks.insert(mouse_grid_pos, updated_new_block);
             } else {
                 // New mouse grid position is not a neighbor of last_pos
-                let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
+                let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(|dir| {
+                    dir == grid::Dir3::Y_NEG || dir == grid::Dir3::Y_POS
+                }));
                 for _ in 0..rotation_xy {
                     block.mutate_dirs(|dir| dir.rotated_cw_xy());
                 }
@@ -550,20 +545,20 @@ impl Editor {
 
                 if let Some(mouse_grid_pos) = mouse_grid_pos {
                     // Don't overwrite existing block when starting placement
-                    let placed_block = self.machine.get(&mouse_grid_pos)
-                        .map_or_else(|| {
-                            let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(
-                                |dir| dir == grid::Dir3::Y_NEG || dir == grid::Dir3::Y_POS
-                            ));
+                    let placed_block = self.machine.get(&mouse_grid_pos).map_or_else(
+                        || {
+                            let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(|dir| {
+                                dir == grid::Dir3::Y_NEG || dir == grid::Dir3::Y_POS
+                            }));
                             for _ in 0..rotation_xy {
                                 block.mutate_dirs(|dir| dir.rotated_cw_xy());
                             }
                             PlacedBlock { block }
-                        }, |placed_block| {
-                            placed_block.clone()
-                        });
+                        },
+                        |placed_block| placed_block.clone(),
+                    );
 
-                    let blocks = maplit::hashmap! { mouse_grid_pos => placed_block }; 
+                    let blocks = maplit::hashmap! { mouse_grid_pos => placed_block };
 
                     Mode::PipeTool {
                         last_pos: Some(mouse_grid_pos),
@@ -757,7 +752,7 @@ impl Editor {
 
                 let block = Block::GeneralPipe(new_dirs);
 
-                PlacedBlock { block } 
+                PlacedBlock { block }
             }
             _ => placed_block.clone(),
         }

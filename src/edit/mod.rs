@@ -44,7 +44,7 @@ impl Edit {
                     .filter(|(p, _block)| machine.is_valid_pos(p))
                     .collect::<HashMap<_, _>>();
 
-                let previous_blocks: HashMap<_, _> = valid_blocks
+                let mut previous_blocks: HashMap<_, _> = valid_blocks
                     .keys()
                     .map(|p| (*p, machine.get(p).cloned()))
                     .collect();
@@ -64,6 +64,43 @@ impl Edit {
                 } else {
                     for (p, block) in valid_blocks.iter() {
                         machine.set(p, block.clone());
+
+                        // We may wish to update the connectivity of
+                        // neighboring blocks (specifically `GeneralPipe`).
+                        for &dir in &grid::Dir3::ALL {
+                            let neighbor_p = p + dir.to_vector();
+
+                            if valid_blocks.contains_key(&neighbor_p) {
+                                // The block at this neighbor's position is
+                                // being overwritten anyway, so we can ignore
+                                // it here.
+                                continue;
+                            }
+
+                            if block
+                                .as_ref()
+                                .map_or(false, |block| block.block.has_wind_hole(dir))
+                            {
+                                // No need to change the neighbor's connectivity.
+                                continue;
+                            }
+
+                            if let Some(neighbor_block) = machine.get_mut(&(p + dir.to_vector())) {
+                                let previous_block = neighbor_block.clone();
+
+                                if let Block::GeneralPipe(dirs) = &mut neighbor_block.block {
+                                    // Cut off this direction from the
+                                    // neighboring `GeneralPipe`.
+                                    if dirs[dir.invert()] {
+                                        dirs[dir.invert()] = false;
+                                    }
+
+                                    // And remember how to undo this.
+                                    assert!(!previous_blocks.contains_key(&neighbor_p));
+                                    previous_blocks.insert(neighbor_p, Some(previous_block));
+                                }
+                            }
+                        }
                     }
 
                     Edit::SetBlocks(previous_blocks)

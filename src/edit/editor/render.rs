@@ -129,16 +129,19 @@ impl Editor {
                     );
 
                     self.render_tentative_blocks(
-                        blocks
-                            .iter()
-                            .map(|(pos, block)| (*pos, block.clone())),
+                        blocks.iter().map(|(pos, block)| (*pos, block.clone())),
                         false,
                         out,
                     );
 
                     for (pos, _) in blocks.iter() {
                         if *pos != *last_pos {
-                            self.render_block_wireframe(&pos, 10.0, &na::Vector4::new(0.7, 0.7, 0.7, 1.0), out);
+                            self.render_block_wireframe(
+                                &pos,
+                                10.0,
+                                &na::Vector4::new(0.7, 0.7, 0.7, 1.0),
+                                out,
+                            );
                         } else {
                             self.render_base(pos, na::Vector2::new(1, 1), out);
                         }
