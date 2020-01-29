@@ -9,14 +9,18 @@ use coarse_prof::profile;
 use rendology::particle::Particle;
 use rendology::pipeline::CreationError;
 use rendology::{
-    basic_obj, line, particle, BasicObj, Camera, Drawable, Instancing, InstancingMode, Light, Mesh,
-    PlainScenePass, RenderList, SceneCore, ShadedScenePass, ShadedScenePassSetup, ShadowPass,
+    basic_obj, dither, line, particle, BasicObj, Camera, Drawable, Instancing, InstancingMode,
+    Light, Mesh, PlainScenePass, RenderList, SceneCore, ShadedScenePass, ShadedScenePassSetup,
+    ShadowPass,
 };
 
 #[derive(Default)]
 pub struct Stage {
+    pub dither: bool,
+
     pub floor: RenderList<floor::Instance>,
     pub solid: basic_obj::RenderList<basic_obj::Instance>,
+    pub solid_dither: basic_obj::RenderList<basic_obj::Instance>,
     pub solid_glow: basic_obj::RenderList<basic_obj::Instance>,
     pub wind: RenderList<wind::Instance>,
 
@@ -41,6 +45,7 @@ impl Stage {
     pub fn clear(&mut self) {
         self.floor.clear();
         self.solid.clear();
+        self.solid_dither.clear();
         self.solid_glow.clear();
         self.wind.clear();
         self.lights.clear();
@@ -48,6 +53,14 @@ impl Stage {
         self.lines.clear();
         self.new_particles.clear();
         self.ortho.clear();
+    }
+
+    pub fn solid(&mut self) -> &mut basic_obj::RenderList<basic_obj::Instance> {
+        if self.dither {
+            &mut self.solid_dither
+        } else {
+            &mut self.solid
+        }
     }
 }
 
@@ -64,6 +77,7 @@ pub struct Pipeline {
 
     floor_scene_pass: ShadedScenePass<floor::Core>,
     solid_scene_pass: ShadedScenePass<basic_obj::Core>,
+    solid_dither_scene_pass: ShadedScenePass<dither::Core<basic_obj::Core>>,
     solid_glow_scene_pass: ShadedScenePass<basic_obj::Core>,
     wind_scene_pass: ShadedScenePass<wind::Core>,
 
@@ -74,6 +88,7 @@ pub struct Pipeline {
     particle_scene_pass: PlainScenePass<particle::Shader>,
 
     solid_instancing: basic_obj::Instancing<basic_obj::Instance>,
+    solid_dither_instancing: basic_obj::Instancing<basic_obj::Instance>,
     solid_glow_instancing: basic_obj::Instancing<basic_obj::Instance>,
     wind_instancing: Instancing<wind::Instance>,
     plain_instancing: basic_obj::Instancing<basic_obj::Instance>,
@@ -119,6 +134,15 @@ impl Pipeline {
                 draw_glowing: false,
             },
         )?;
+        let solid_dither_scene_pass = rendology.create_shaded_scene_pass(
+            facade,
+            dither::Core(basic_obj::Core),
+            InstancingMode::Vertex,
+            ShadedScenePassSetup {
+                draw_shadowed: true,
+                draw_glowing: false,
+            },
+        )?;
         let solid_glow_scene_pass = rendology.create_shaded_scene_pass(
             facade,
             basic_obj::Core,
@@ -152,6 +176,7 @@ impl Pipeline {
 
         let solid_instancing = basic_obj::Instancing::create(facade)?;
         let solid_glow_instancing = basic_obj::Instancing::create(facade)?;
+        let solid_dither_instancing = basic_obj::Instancing::create(facade)?;
         let wind_instancing = Instancing::create(facade)?;
         let plain_instancing = basic_obj::Instancing::create(facade)?;
         let line_instancing = Instancing::create(facade)?;
@@ -166,6 +191,7 @@ impl Pipeline {
             wind_shadow_pass,
             floor_scene_pass,
             solid_scene_pass,
+            solid_dither_scene_pass,
             solid_glow_scene_pass,
             wind_scene_pass,
             plain_scene_pass,
@@ -173,6 +199,7 @@ impl Pipeline {
             particle_system,
             particle_scene_pass,
             solid_instancing,
+            solid_dither_instancing,
             solid_glow_instancing,
             wind_instancing,
             plain_instancing,
@@ -198,6 +225,8 @@ impl Pipeline {
             self.particle_system.spawn(stage.new_particles.as_slice());
 
             self.solid_instancing.update(facade, &stage.solid)?;
+            self.solid_dither_instancing
+                .update(facade, &stage.solid_dither)?;
             self.solid_glow_instancing
                 .update(facade, &stage.solid_glow)?;
             self.wind_instancing
@@ -282,6 +311,14 @@ impl Pipeline {
             .draw(
                 &self.solid_shadow_pass,
                 &self
+                    .solid_dither_instancing
+                    .as_drawable(&self.basic_obj_resources),
+                &(),
+                &shaded_draw_params,
+            )?
+            .draw(
+                &self.solid_shadow_pass,
+                &self
                     .solid_glow_instancing
                     .as_drawable(&self.basic_obj_resources),
                 &(),
@@ -303,6 +340,14 @@ impl Pipeline {
             .draw(
                 &self.solid_scene_pass,
                 &self.solid_instancing.as_drawable(&self.basic_obj_resources),
+                &(),
+                &shaded_draw_params,
+            )?
+            .draw(
+                &self.solid_dither_scene_pass,
+                &self
+                    .solid_dither_instancing
+                    .as_drawable(&self.basic_obj_resources),
                 &(),
                 &shaded_draw_params,
             )?

@@ -36,7 +36,16 @@ impl Editor {
             }
         };
 
-        render::machine::render_machine(&self.machine, &TickTime::zero(), None, filter, out);
+        let unfocus = |pos: &grid::Point3| pos.z != self.current_layer;
+
+        render::machine::render_machine(
+            &self.machine,
+            &TickTime::zero(),
+            None,
+            filter,
+            unfocus,
+            out,
+        );
 
         /*render::machine::render_xy_grid(
             &self.machine.size(),

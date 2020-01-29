@@ -324,7 +324,7 @@ pub fn render_bridge(bridge: &Bridge, transform: &na::Matrix4<f32>, out: &mut St
         )
         * bridge.dir.to_rotation_mat_x();
     let scaling = na::Vector3::new(bridge.length, bridge.size, bridge.size);
-    out.solid[BasicObj::Cube].add(basic_obj::Instance {
+    out.solid()[BasicObj::Cube].add(basic_obj::Instance {
         transform: output_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
         color: bridge.color,
         ..Default::default()
@@ -352,7 +352,7 @@ pub fn render_mill(mill: &Mill, transform: &na::Matrix4<f32>, out: &mut Stage) {
         )
         * na::Matrix4::from_euler_angles(mill.roll, pitch, yaw);
     let scaling = na::Vector3::new(mill.length, MILL_THICKNESS, MILL_DEPTH);
-    out.solid[BasicObj::Cube].add(basic_obj::Instance {
+    out.solid()[BasicObj::Cube].add(basic_obj::Instance {
         transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
         color: mill.color,
         ..Default::default()
@@ -492,8 +492,14 @@ pub fn render_outline(
             &(scaling + na::Vector3::new(OUTLINE_MARGIN, OUTLINE_MARGIN, OUTLINE_MARGIN)),
         );
 
+    let thickness = if out.dither {
+        OUTLINE_THICKNESS * 0.8
+    } else {
+        OUTLINE_THICKNESS
+    };
+
     render_line_wireframe(
-        OUTLINE_THICKNESS,
+        thickness,
         &block_color(&outline_color(), alpha),
         &transform,
         out,
@@ -523,7 +529,7 @@ pub fn render_pulsator(
     let cube_transform = translation * transform;
     let scaling = na::Vector3::new(size, size, size);
 
-    out.solid[BasicObj::Cube].add(basic_obj::Instance {
+    out.solid()[BasicObj::Cube].add(basic_obj::Instance {
         transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
         color: *color,
         ..Default::default()
@@ -549,8 +555,8 @@ pub fn render_block(
         Block::Pipe(dir_a, dir_b) => {
             let color = block_color(&pipe_color(), alpha);
 
-            render_half_pipe(center, transform, dir_a, &color, &mut out.solid);
-            render_half_pipe(center, transform, dir_b, &color, &mut out.solid);
+            render_half_pipe(center, transform, dir_a, &color, out.solid());
+            render_half_pipe(center, transform, dir_b, &color, out.solid());
 
             // Pulsator to hide our shame of wind direction change
             if dir_a.0 != dir_b.0 {
@@ -565,7 +571,7 @@ pub fn render_block(
                 PIPE_THICKNESS,
             ));
 
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: translation * transform * scaling,
                 color,
                 ..Default::default()
@@ -573,7 +579,7 @@ pub fn render_block(
 
             let rot_transform = transform
                 * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: translation * rot_transform * scaling,
                 color,
                 ..Default::default()
@@ -586,7 +592,7 @@ pub fn render_block(
 
             for (dir, &enabled) in dirs.iter() {
                 if enabled {
-                    render_half_pipe(center, transform, dir, &color, &mut out.solid);
+                    render_half_pipe(center, transform, dir, &color, out.solid());
                 }
             }
 
@@ -610,7 +616,7 @@ pub fn render_block(
                 * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0));
             let scaling = na::Vector3::new(0.7, 0.45, 0.45);
 
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: block_color(&funnel_in_color(), alpha),
                 ..Default::default()
@@ -623,7 +629,7 @@ pub fn render_block(
                 * flow_dir.invert().to_rotation_mat_x()
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.4, 0.0, 0.0));
             let scaling = &na::Vector3::new(0.3, input_size, input_size);
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: input_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: block_color(&funnel_out_color(), alpha),
                 ..Default::default()
@@ -637,7 +643,7 @@ pub fn render_block(
             let render_list = if anim_state.is_some() {
                 &mut out.solid_glow
             } else {
-                &mut out.solid
+                out.solid()
             };
             render_list[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
@@ -688,7 +694,7 @@ pub fn render_block(
                 scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.5, 0.6, 0.6));
             let size = size_anim.eval(tick_time.tick_progress());
 
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
                 color: cube_color,
                 ..Default::default()
@@ -724,7 +730,7 @@ pub fn render_block(
                 scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.45, 0.6, 0.6));
             let size = size_anim.eval(tick_time.tick_progress());
 
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
                 color: block_color(&kind_color, alpha),
                 ..Default::default()
@@ -802,7 +808,7 @@ pub fn render_block(
             let render_list = if activation.is_some() {
                 &mut out.solid_glow
             } else {
-                &mut out.solid
+                out.solid()
             };
 
             let cube_transform = translation
@@ -867,7 +873,7 @@ pub fn render_block(
         }
         Block::Solid => {
             let cube_transform = translation * transform;
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform,
                 color: block_color(&solid_color(), alpha),
                 ..Default::default()
@@ -898,7 +904,7 @@ pub fn render_block(
 
             let cube_transform = translation * transform * rotation;
             let scaling = na::Vector3::new(0.8, 0.6, 0.6);
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color,
                 ..Default::default()
@@ -1048,6 +1054,7 @@ pub fn render_machine<'a>(
     tick_time: &TickTime,
     exec: Option<&Exec>,
     filter: impl Fn(&'a grid::Point3) -> bool,
+    unfocus: impl Fn(&'a grid::Point3) -> bool,
     out: &mut Stage,
 ) {
     out.floor.add(floor::Instance {
@@ -1066,6 +1073,10 @@ pub fn render_machine<'a>(
         let level_progress = exec.and_then(|exec| exec.level_progress());
         let next_level_progress = exec.and_then(|exec| exec.next_level_progress());
 
+        if unfocus(&block_pos) {
+            out.dither = true;
+        }
+
         render_block(
             &placed_block,
             tick_time,
@@ -1077,5 +1088,7 @@ pub fn render_machine<'a>(
             1.0,
             out,
         );
+
+        out.dither = false;
     }
 }

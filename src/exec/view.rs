@@ -139,6 +139,7 @@ impl ExecView {
             time,
             Some(&self.exec),
             |_| true,
+            |_| false,
             out,
         );
 
