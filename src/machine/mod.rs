@@ -99,6 +99,7 @@ impl Block {
             self
         }
     }
+
     pub fn name(&self) -> String {
         match self {
             Block::Pipe(a, b) if a.0 != Axis3::Z && a.0 == b.0 => "Pipe straight".to_string(),
@@ -176,6 +177,13 @@ impl Block {
             Block::Pipe(_, _) => true,
             Block::PipeMergeXY => true,
             Block::GeneralPipe(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_air(&self) -> bool {
+        match self {
+            Block::Air => true,
             _ => false,
         }
     }
