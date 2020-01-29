@@ -182,7 +182,7 @@ impl Dir3 {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Debug, Default)]
+#[derive(PartialEq, Eq, Clone, Debug, Default, Serialize, Deserialize)]
 pub struct DirMap3<T>(pub [T; Dir3::NUM_INDICES]);
 
 #[allow(dead_code)]

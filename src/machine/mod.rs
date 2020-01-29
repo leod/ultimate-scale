@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::util::vec_option::VecOption;
 
-use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
+use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3, DirMap3};
 use level::Level;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
@@ -51,6 +51,7 @@ pub type TickNum = usize;
 pub enum Block {
     Pipe(Dir3, Dir3),
     PipeMergeXY,
+    GeneralPipe(DirMap3<bool>),
     FunnelXY {
         flow_dir: Dir3,
     },
@@ -100,6 +101,7 @@ impl Block {
             }
             Block::Pipe(_, _) => "Pipe".to_string(),
             Block::PipeMergeXY => "Pipe crossing".to_string(),
+            Block::GeneralPipe(_) => "Pipe".to_string(),
             Block::FunnelXY { .. } => "Funnel".to_string(),
             Block::WindSource => "Wind source".to_string(),
             Block::BlipSpawn {
@@ -127,6 +129,7 @@ impl Block {
         match self {
             Block::Pipe(_, _) => "Conducts both wind and blips.",
             Block::PipeMergeXY => "Four-way pipe.",
+            Block::GeneralPipe(_) => "Conducts both wind and blips.",
             Block::FunnelXY { .. } => "Conducts in only one direction.",
             Block::WindSource => "Produces a stream of wind in all directions.",
             Block::BlipSpawn {
@@ -159,6 +162,7 @@ impl Block {
         match self {
             Block::Pipe(_, _) => true,
             Block::PipeMergeXY => true,
+            Block::GeneralPipe(_) => true,
             _ => false,
         }
     }
@@ -188,6 +192,16 @@ impl Block {
                 *dir_b = f(*dir_b);
             }
             Block::PipeMergeXY => (),
+            Block::GeneralPipe(dirs) => {
+                // You best hope that `f` is bijective!
+                let mut new_dirs = DirMap3::default();
+
+                for &dir in &Dir3::ALL {
+                    new_dirs[f(dir)] = dirs[dir];
+                }
+
+                *dirs = new_dirs.clone();
+            }
             Block::FunnelXY { flow_dir, .. } => *flow_dir = f(*flow_dir),
             Block::WindSource { .. } => (),
             Block::BlipSpawn { out_dir, .. } => *out_dir = f(*out_dir),
@@ -215,6 +229,7 @@ impl Block {
         match self {
             Block::Pipe(dir_a, dir_b) => dir == *dir_a || dir == *dir_b,
             Block::PipeMergeXY => dir != Dir3::Z_NEG && dir != Dir3::Z_POS,
+            Block::GeneralPipe(dirs) => dirs[dir],
             Block::FunnelXY { flow_dir, .. } => {
                 // Has restricted cases for in/out below
                 dir == *flow_dir || dir == flow_dir.invert()

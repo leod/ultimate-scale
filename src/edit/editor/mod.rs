@@ -389,14 +389,16 @@ impl Editor {
                     }
                 }
 
-                let updated_new_block = blocks.get(&mouse_grid_pos).map(|placed_block| {
-                    self.pipe_tool_connect_pipe(
-                        &blocks,
-                        placed_block,
-                        &mouse_grid_pos,
-                        delta_dir.invert(),
-                    )
-                });
+                let updated_new_block = blocks.get(&mouse_grid_pos)
+                    .map_or_else(|| self.machine.get(&mouse_grid_pos), |block| Some(block))
+                    .map(|block| {
+                        self.pipe_tool_connect_pipe(
+                            &blocks,
+                            block,
+                            &mouse_grid_pos,
+                            delta_dir.invert(),
+                        )
+                    });
 
                 if let Some(updated_new_block) = updated_new_block {
                     blocks.insert(mouse_grid_pos, updated_new_block);
@@ -404,7 +406,9 @@ impl Editor {
                     blocks.insert(
                         mouse_grid_pos,
                         PlacedBlock {
-                            block: Block::Pipe(delta_dir, delta_dir.invert()),
+                            block: Block::GeneralPipe(grid::DirMap3::from_fn(
+                                |dir| dir == delta_dir || dir == delta_dir.invert(),
+                            )),
                         },
                     );
                 }
@@ -546,20 +550,20 @@ impl Editor {
 
                 if let Some(mouse_grid_pos) = mouse_grid_pos {
                     // Don't overwrite existing block when starting placement
-                    let blocks = if let Some(block) = self.machine.get(&mouse_grid_pos) {
-                        maplit::hashmap! {
-                            mouse_grid_pos => block.clone(),
-                        }
-                    } else {
-                        let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
-                        for _ in 0..rotation_xy {
-                            block.mutate_dirs(|dir| dir.rotated_cw_xy());
-                        }
+                    let placed_block = self.machine.get(&mouse_grid_pos)
+                        .map_or_else(|| {
+                            let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(
+                                |dir| dir == grid::Dir3::Y_NEG || dir == grid::Dir3::Y_POS
+                            ));
+                            for _ in 0..rotation_xy {
+                                block.mutate_dirs(|dir| dir.rotated_cw_xy());
+                            }
+                            PlacedBlock { block }
+                        }, |placed_block| {
+                            placed_block.clone()
+                        });
 
-                        maplit::hashmap! {
-                            mouse_grid_pos => PlacedBlock { block },
-                        }
-                    };
+                    let blocks = maplit::hashmap! { mouse_grid_pos => placed_block }; 
 
                     Mode::PipeTool {
                         last_pos: Some(mouse_grid_pos),
@@ -716,15 +720,13 @@ impl Editor {
                 let is_connected = |pos: grid::Point3, dir: grid::Dir3| {
                     let tentative = blocks
                         .get(&(pos + dir.to_vector()))
-                        .map(|neighbor| neighbor.block.has_wind_hole(dir.invert()))
-                        .unwrap_or(false);
+                        .map_or(false, |neighbor| neighbor.block.has_wind_hole(dir.invert()));
                     let existing = self
                         .machine
                         .get(&(pos + dir.to_vector()))
-                        .map(|neighbor| neighbor.block.has_wind_hole(dir.invert()))
-                        .unwrap_or(false);
+                        .map_or(false, |neighbor| neighbor.block.has_wind_hole(dir.invert()));
 
-                    tentative || existing
+                    placed_block.block.has_wind_hole(dir) && (tentative || existing)
                 };
 
                 let is_a_connected = is_connected(*block_pos, dir_a);
@@ -748,6 +750,14 @@ impl Editor {
                 };
 
                 PlacedBlock { block }
+            }
+            Block::GeneralPipe(ref dirs) => {
+                let mut new_dirs = dirs.clone();
+                new_dirs[new_dir] = true;
+
+                let block = Block::GeneralPipe(new_dirs);
+
+                PlacedBlock { block } 
             }
             _ => placed_block.clone(),
         }

@@ -581,6 +581,20 @@ pub fn render_block(
 
             render_pulsator(tick_time, anim_state, center, transform, &color, out);
         }
+        Block::GeneralPipe(ref dirs) => {
+            let color = block_color(&pipe_color(), alpha);
+
+            for (dir, &enabled) in dirs.iter() {
+                if enabled {
+                    render_half_pipe(center, transform, dir, &color, &mut out.solid);
+                }
+            }
+
+            /*// Pulsator to hide our shame of wind direction change
+            if dir_a.0 != dir_b.0 {*/
+            render_pulsator(tick_time, anim_state, center, transform, &color, out);
+            //}
+        }
         Block::FunnelXY { flow_dir } => {
             let cube_transform = translation
                 * transform
