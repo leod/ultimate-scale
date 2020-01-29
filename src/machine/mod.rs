@@ -86,6 +86,19 @@ pub enum Block {
 }
 
 impl Block {
+    pub fn replace_deprecated(self) -> Block {
+        let is_old_pipe = match &self {
+            Block::Pipe(_, _) => true,
+            Block::PipeMergeXY => true,
+            _ => false,
+        };
+
+        if is_old_pipe {
+            Block::GeneralPipe(DirMap3::from_fn(|dir| self.has_wind_hole(dir)))
+        } else {
+            self
+        }
+    }
     pub fn name(&self) -> String {
         match self {
             Block::Pipe(a, b) if a.0 != Axis3::Z && a.0 == b.0 => "Pipe straight".to_string(),
@@ -343,7 +356,10 @@ impl Machine {
         let mut data = VecOption::new();
 
         for (pos, placed_block) in slice {
-            indices[*pos] = Some(data.add((*pos, placed_block.clone())));
+            let mut placed_block = placed_block.clone();
+            placed_block.block = placed_block.block.replace_deprecated();
+
+            indices[*pos] = Some(data.add((*pos, placed_block)));
         }
 
         let blocks = Blocks { indices, data };
