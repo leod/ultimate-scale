@@ -39,11 +39,13 @@ impl Edit {
         match self {
             Edit::NoOp => Edit::NoOp,
             Edit::SetBlocks(blocks) => {
+                // What are we going to set?
                 let valid_blocks = blocks
                     .into_iter()
                     .filter(|(p, _block)| machine.is_valid_pos(p))
                     .collect::<HashMap<_, _>>();
 
+                // What is there already?
                 let mut previous_blocks: HashMap<_, _> = valid_blocks
                     .keys()
                     .map(|p| (*p, machine.get(p).cloned()))
@@ -85,19 +87,20 @@ impl Edit {
                                 continue;
                             }
 
-                            if let Some(neighbor_block) = machine.get_mut(&(p + dir.to_vector())) {
-                                let previous_block = neighbor_block.clone();
+                            if !previous_blocks.contains_key(&neighbor_p) {
+                                if let Some(neighbor_block) = machine.get_mut(&neighbor_p) {
+                                    let previous_block = neighbor_block.clone();
 
-                                if let Block::GeneralPipe(dirs) = &mut neighbor_block.block {
-                                    // Cut off this direction from the
-                                    // neighboring `GeneralPipe`.
-                                    if dirs[dir.invert()] {
-                                        dirs[dir.invert()] = false;
+                                    if let Block::GeneralPipe(dirs) = &mut neighbor_block.block {
+                                        // Cut off this direction from the
+                                        // neighboring `GeneralPipe`.
+                                        if dirs[dir.invert()] {
+                                            dirs[dir.invert()] = false;
+                                        }
+
+                                        // And remember how to undo this.
+                                        previous_blocks.insert(neighbor_p, Some(previous_block));
                                     }
-
-                                    // And remember how to undo this.
-                                    assert!(!previous_blocks.contains_key(&neighbor_p));
-                                    previous_blocks.insert(neighbor_p, Some(previous_block));
                                 }
                             }
                         }
