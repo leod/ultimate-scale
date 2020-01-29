@@ -598,14 +598,7 @@ pub fn render_block(
 
             // Pulsator to hide our shame of wind direction change. Only needed
             // for non-straight pipes
-            let is_straight = {
-                let count: usize = dirs.values().map(|&enabled| enabled as usize).sum();
-                let has_straight = Dir3::ALL.iter().any(|&dir| dirs[dir] && dirs[dir.invert()]);
-
-                count == 2 && has_straight
-            };
-
-            if !is_straight {
+            if !is_straight(dirs) {
                 render_pulsator(tick_time, anim_state, center, transform, &color, out);
             }
         }
@@ -1049,6 +1042,47 @@ pub fn placed_block_transform(_placed_block: &PlacedBlock) -> na::Matrix4<f32> {
     na::Matrix4::identity()
 }
 
+pub fn render_pillar(machine: &Machine, pos: &grid::Point3, out: &mut Stage) {
+    let mut cur = *pos;
+
+    while cur.z > 0 {
+        let mut next = cur;
+        next.z -= 1;
+
+        let is_free = |p| machine.get(&p).map_or(true, |block| block.block.is_air());
+
+        while is_free(next) && next.z >= 0 {
+            next.z -= 1;
+        }
+
+        let height = cur.z - next.z - 1;
+
+        if height > 0 && next.z >= -1 {
+            let start: na::Vector3<f32> = na::convert(cur.coords);
+            let center = start + na::Vector3::new(0.5, 0.5, -height as f32 / 2.0);
+            let transform = na::Matrix4::new_translation(&center)
+                * na::Matrix4::from_columns(&[
+                    na::Vector4::new(0.0, 0.0, 1.0, 0.0),
+                    na::Vector4::new(0.0, 1.0, 0.0, 0.0),
+                    na::Vector4::new(1.0, 0.0, 0.0, 0.0),
+                    na::Vector4::new(0.0, 0.0, 0.0, 1.0),
+                ])
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                    -height as f32,
+                    0.05,
+                    0.05,
+                ));
+
+            out.solid()[basic_obj::BasicObj::TessellatedCylinder].add(basic_obj::Instance {
+                transform,
+                color: na::Vector4::new(0.25, 0.25, 0.25, 1.0),
+            })
+        }
+
+        cur = next;
+    }
+}
+
 pub fn render_machine<'a>(
     machine: &'a Machine,
     tick_time: &TickTime,
@@ -1089,6 +1123,24 @@ pub fn render_machine<'a>(
             out,
         );
 
+        if !placed_block.block.is_air() && !is_straight_pipe(&placed_block.block) {
+            render_pillar(machine, block_pos, out);
+        }
+
         out.dither = false;
     }
+}
+
+fn is_straight_pipe(block: &Block) -> bool {
+    match block {
+        Block::GeneralPipe(dirs) => is_straight(dirs),
+        _ => false,
+    }
+}
+
+fn is_straight(dirs: &grid::DirMap3<bool>) -> bool {
+    let count: usize = dirs.values().map(|&enabled| enabled as usize).sum();
+    let has_straight = Dir3::ALL.iter().any(|&dir| dirs[dir] && dirs[dir.invert()]);
+
+    count == 2 && has_straight
 }
