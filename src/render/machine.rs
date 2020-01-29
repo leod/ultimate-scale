@@ -110,6 +110,10 @@ pub fn outline_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.0, 0.0, 0.0))
 }
 
+pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
+    na::Vector4::new(color.x, color.y, color.z, alpha)
+}
+
 #[derive(Clone, Debug)]
 pub struct Line {
     pub start: na::Point3<f32>,
@@ -301,10 +305,6 @@ pub fn bridge_length_anim(
     )
 }
 
-pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
-    na::Vector4::new(color.x, color.y, color.z, alpha)
-}
-
 pub struct Bridge {
     pub center: na::Point3<f32>,
     pub dir: Dir3,
@@ -492,14 +492,10 @@ pub fn render_outline(
             &(scaling + na::Vector3::new(OUTLINE_MARGIN, OUTLINE_MARGIN, OUTLINE_MARGIN)),
         );
 
-    let thickness = if out.dither {
-        OUTLINE_THICKNESS * 0.8
-    } else {
-        OUTLINE_THICKNESS
-    };
+    let alpha = alpha * if out.dither { 0.3 } else { 0.6 };
 
     render_line_wireframe(
-        thickness,
+        OUTLINE_THICKNESS,
         &block_color(&outline_color(), alpha),
         &transform,
         out,
@@ -1042,7 +1038,7 @@ pub fn placed_block_transform(_placed_block: &PlacedBlock) -> na::Matrix4<f32> {
     na::Matrix4::identity()
 }
 
-pub fn render_pillar(machine: &Machine, pos: &grid::Point3, out: &mut Stage) {
+pub fn render_pillar(machine: &Machine, pos: &grid::Point3, alpha: f32, out: &mut Stage) {
     let mut cur = *pos;
 
     while cur.z > 0 {
@@ -1075,7 +1071,7 @@ pub fn render_pillar(machine: &Machine, pos: &grid::Point3, out: &mut Stage) {
 
             out.solid()[basic_obj::BasicObj::TessellatedCylinder].add(basic_obj::Instance {
                 transform,
-                color: na::Vector4::new(0.25, 0.25, 0.25, 1.0),
+                color: na::Vector4::new(0.25, 0.25, 0.25, alpha),
             })
         }
 
@@ -1107,9 +1103,12 @@ pub fn render_machine<'a>(
         let level_progress = exec.and_then(|exec| exec.level_progress());
         let next_level_progress = exec.and_then(|exec| exec.next_level_progress());
 
-        if unfocus(&block_pos) {
+        let alpha = if unfocus(&block_pos) {
             out.dither = true;
-        }
+            0.55
+        } else {
+            1.0
+        };
 
         render_block(
             &placed_block,
@@ -1119,12 +1118,12 @@ pub fn render_machine<'a>(
             next_level_progress,
             &center,
             &transform,
-            1.0,
+            alpha,
             out,
         );
 
         if !placed_block.block.is_air() && !is_straight_pipe(&placed_block.block) {
-            render_pillar(machine, block_pos, out);
+            render_pillar(machine, block_pos, alpha, out);
         }
 
         out.dither = false;
