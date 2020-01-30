@@ -221,7 +221,7 @@ impl Block {
                     new_dirs[f(dir)] = dirs[dir];
                 }
 
-                *dirs = new_dirs.clone();
+                *dirs = new_dirs;
             }
             Block::FunnelXY { flow_dir, .. } => *flow_dir = f(*flow_dir),
             Block::WindSource { .. } => (),
