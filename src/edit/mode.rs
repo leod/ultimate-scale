@@ -70,10 +70,6 @@ impl Mode {
         Self::new_selection(SelectionMode::new(false))
     }
 
-    pub fn new_select_layer_bound() -> Self {
-        Self::new_selection(SelectionMode::new(true))
-    }
-
     pub fn new_selection(selection: SelectionMode) -> Self {
         Mode::Select { selection }
     }

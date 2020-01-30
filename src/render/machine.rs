@@ -594,7 +594,7 @@ pub fn render_block(
 
             // Pulsator to hide our shame of wind direction change. Only needed
             // for non-straight pipes
-            if !is_straight(dirs) {
+            if !grid::is_straight(dirs) {
                 render_pulsator(tick_time, anim_state, center, transform, &color, out);
             }
         }
@@ -1143,14 +1143,7 @@ pub fn render_machine<'a>(
 
 fn is_straight_pipe(block: &Block) -> bool {
     match block {
-        Block::GeneralPipe(dirs) => is_straight(dirs),
+        Block::GeneralPipe(dirs) => grid::is_straight(dirs),
         _ => false,
     }
-}
-
-fn is_straight(dirs: &grid::DirMap3<bool>) -> bool {
-    let count: usize = dirs.values().map(|&enabled| enabled as usize).sum();
-    let has_straight = Dir3::ALL.iter().any(|&dir| dirs[dir] && dirs[dir.invert()]);
-
-    count == 2 && has_straight
 }

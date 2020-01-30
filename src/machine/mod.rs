@@ -115,7 +115,13 @@ impl Block {
             }
             Block::Pipe(_, _) => "Pipe".to_string(),
             Block::PipeMergeXY => "Pipe crossing".to_string(),
-            Block::GeneralPipe(_) => "Pipe".to_string(),
+            Block::GeneralPipe(dirs) => {
+                if grid::is_straight(dirs) {
+                    "Straight pipe".to_string()
+                } else {
+                    "Pipe".to_string()
+                }
+            }
             Block::FunnelXY { .. } => "Funnel".to_string(),
             Block::WindSource => "Wind source".to_string(),
             Block::BlipSpawn {
@@ -221,7 +227,7 @@ impl Block {
                     new_dirs[f(dir)] = dirs[dir];
                 }
 
-                *dirs = new_dirs;
+                *dirs = new_dirs.clone();
             }
             Block::FunnelXY { flow_dir, .. } => *flow_dir = f(*flow_dir),
             Block::WindSource { .. } => (),
