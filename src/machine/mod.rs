@@ -338,6 +338,15 @@ impl Block {
             _ => false,
         }
     }
+
+    pub fn combine_or_overwrite(&self, other: &Block) -> Block {
+        match (self, other) {
+            (Block::GeneralPipe(dirs_a), Block::GeneralPipe(dirs_b)) => {
+                Block::GeneralPipe(DirMap3::from_fn(|dir| dirs_a[dir] || dirs_b[dir]))
+            }
+            _ => other.clone(),
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
