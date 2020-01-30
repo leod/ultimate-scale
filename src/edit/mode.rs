@@ -101,6 +101,18 @@ impl Mode {
         }
     }
 
+    pub fn selection(&self) -> Option<&SelectionMode> {
+        match self {
+            Mode::Select { selection } => Some(selection),
+            Mode::SelectClickedOnBlock { selection, .. } => Some(selection),
+            Mode::DragAndDrop { selection, .. } => Some(selection),
+            Mode::RectSelect {
+                existing_selection, ..
+            } => Some(existing_selection),
+            _ => None,
+        }
+    }
+
     /// Make sure the mode state is consistent with the edited machine.
     ///
     /// The main case is for this to be called after an edit has been applied to
