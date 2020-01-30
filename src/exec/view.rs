@@ -78,56 +78,11 @@ impl ExecView {
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(*input),
-            WindowEvent::MouseInput {
-                state,
-                button,
-                modifiers,
-                ..
-            } => self.on_mouse_input(*state, *button, *modifiers),
             _ => (),
         }
     }
 
     fn on_keyboard_input(&mut self, _input: glutin::KeyboardInput) {}
-
-    fn on_mouse_input(
-        &mut self,
-        state: glutin::ElementState,
-        button: glutin::MouseButton,
-        _modifiers: glutin::ModifiersState,
-    ) {
-        match button {
-            glutin::MouseButton::Left if state == glutin::ElementState::Pressed => {
-                if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    // TODO
-                    /*Exec::try_spawn_blip(
-                        false,
-                        BlipSpawnMode::Ease,
-                        BlipKind::A,
-                        &mouse_block_pos,
-                        &self.exec.machine.blocks.indices,
-                        &mut self.exec.blip_state,
-                        &mut self.exec.blips,
-                    );*/
-                }
-            }
-            glutin::MouseButton::Right if state == glutin::ElementState::Pressed => {
-                if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    // TODO
-                    /*Exec::try_spawn_blip(
-                        false,
-                        BlipSpawnMode::Ease,
-                        BlipKind::B,
-                        &mouse_block_pos,
-                        &self.exec.machine.blocks.indices,
-                        &mut self.exec.blip_state,
-                        &mut self.exec.blips,
-                    );*/
-                }
-            }
-            _ => (),
-        }
-    }
 
     pub fn ui(&mut self, _ui: &imgui::Ui) {}
 
@@ -230,11 +185,12 @@ impl ExecView {
                     na::Vector3::new(0.0, -1.0, 0.0),
                 ];
 
-                let back = rot
+                /*let back = rot
                     .transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0))
                     .normalize();
                 let side = rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0));
-                //let velocity = 3.0 * side;
+                let velocity = 3.0 * side;*/
+
                 let speed = match blip.status {
                     BlipStatus::Spawning(_) => 2.15,
                     _ => 3.0,
