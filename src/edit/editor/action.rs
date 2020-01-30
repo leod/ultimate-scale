@@ -158,9 +158,7 @@ impl Editor {
                 piece.rotate_cw_xy();
             }
             Mode::Select { selection, .. } => {
-                if !selection.is_empty() {
-                    edit = Some(Edit::RotateCWXY(selection.to_vec()));
-                } else if let Some(mouse_block_pos) = self.mouse_block_pos {
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::RotateCWXY(vec![mouse_block_pos]));
                 }
             }
@@ -191,9 +189,7 @@ impl Editor {
                 piece.rotate_ccw_xy();
             }
             Mode::Select { selection, .. } => {
-                if !selection.is_empty() {
-                    edit = Some(Edit::RotateCCWXY(selection.to_vec()));
-                } else if let Some(mouse_block_pos) = self.mouse_block_pos {
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::RotateCCWXY(vec![mouse_block_pos]));
                 }
             }
