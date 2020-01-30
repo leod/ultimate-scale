@@ -17,6 +17,11 @@ impl Editor {
             .content_size([200.0, 0.0])
             .collapsible(false)
             .build(&ui, || {
+                imgui::TreeNode::new(ui, im_str!("Layer"))
+                    .opened(true, imgui::Condition::FirstUseEver)
+                    .build(|| {
+                        self.ui_layers(ui);
+                    });
                 imgui::TreeNode::new(ui, im_str!("Modes"))
                     .opened(true, imgui::Condition::FirstUseEver)
                     .build(|| {
@@ -33,6 +38,37 @@ impl Editor {
                         self.ui_actions(ui);
                     });
             });
+    }
+
+    fn ui_layers(&mut self, ui: &imgui::Ui) {
+        ui.text(&ImString::new(self.current_layer.to_string()));
+        ui.same_line_with_spacing(0.0, 20.0);
+
+        let selectable = imgui::Selectable::new(im_str!("↓"))
+            .disabled(!self.machine.is_valid_layer(self.current_layer - 1))
+            .size([20.0, 0.0]);
+        if selectable.build(ui) {
+            self.action_layer_down();
+        }
+        if ui.is_item_hovered() {
+            let text = format!(
+                "Go down a layer.\n\nShortcut: {:?}",
+                self.config.layer_down_key,
+            );
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
+
+        ui.same_line(0.0);
+        let selectable = imgui::Selectable::new(im_str!("↑"))
+            .disabled(!self.machine.is_valid_layer(self.current_layer + 1))
+            .size([20.0, 0.0]);
+        if selectable.build(ui) {
+            self.action_layer_up();
+        }
+        if ui.is_item_hovered() {
+            let text = format!("Go up a layer.\n\nShortcut: {:?}", self.config.layer_up_key,);
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
     }
 
     fn ui_modes(&mut self, ui: &imgui::Ui) {

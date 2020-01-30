@@ -303,11 +303,13 @@ impl Play {
                 }
 
                 ui.same_line(0.0);
+
                 let symbol = if is_paused || is_stopped {
                     im_str!("▶")
                 } else {
                     im_str!("⏸")
                 };
+
                 let selectable = imgui::Selectable::new(symbol)
                     .disabled(is_finished)
                     .size([21.0, 0.0]);
@@ -322,9 +324,8 @@ impl Play {
                     ui.tooltip(|| ui.text(&ImString::new(text)));
                 }
 
-                ui.set_window_font_scale(1.5);
+                ui.same_line_with_spacing(0.0, 30.0);
 
-                ui.same_line(0.0);
                 let selectable = imgui::Selectable::new(im_str!("-"))
                     .disabled(self.ticks_per_sec_index == 0)
                     .size([15.0, 0.0]);

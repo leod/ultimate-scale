@@ -144,7 +144,7 @@ impl Default for Config {
                         flow_dir: Dir3::X_POS,
                     },
                 ),
-                (ModifiedKey::new(VirtualKeyCode::Key7), Block::Solid),
+                //(ModifiedKey::new(VirtualKeyCode::Key7), Block::Solid),
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key3),
                     Block::BlipSpawn {
