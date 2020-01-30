@@ -8,7 +8,7 @@ use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 use crate::exec::anim::{AnimState, WindLife};
 use crate::exec::{Exec, LevelProgress, TickTime};
 
-use crate::render::Stage;
+use crate::render::{floor, Stage};
 
 pub const PIPE_THICKNESS: f32 = 0.04;
 pub const MILL_THICKNESS: f32 = 0.2;
@@ -108,6 +108,10 @@ pub fn grid_color() -> na::Vector3<f32> {
 
 pub fn outline_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.0, 0.0, 0.0))
+}
+
+pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
+    na::Vector4::new(color.x, color.y, color.z, alpha)
 }
 
 #[derive(Clone, Debug)]
@@ -214,27 +218,37 @@ pub fn render_cuboid_wireframe(
 pub fn render_xy_grid(
     size: &grid::Vector3,
     z: f32,
-    out: &mut basic_obj::RenderList<basic_obj::Instance>,
+    out: &mut rendology::RenderList<line::Instance>,
+    //out: &mut basic_obj::RenderList<basic_obj::Instance>,
 ) {
-    let color = block_color(&grid_color(), 0.0);
+    let color = block_color(&grid_color(), 1.0);
+    let thickness = 6.5;
 
     for x in 0..=size.x {
-        let translation = na::Matrix4::new_translation(&na::Vector3::new(x as f32, 0.0, z));
-        let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::y() * (size.y as f32)));
-        out[BasicObj::LineY].add(basic_obj::Instance {
-            transform: translation * scaling,
+        let transform = na::Matrix4::from_columns(&[
+            na::Vector4::new(0.0, size.y as f32, 0.0, 0.0),
+            na::Vector4::zeros(),
+            na::Vector4::zeros(),
+            na::Vector4::new(x as f32, 0.0, z, 1.0),
+        ]);
+        out.add(line::Instance {
+            transform,
             color,
-            ..Default::default()
+            thickness,
         });
     }
 
     for y in 0..=size.y {
-        let translation = na::Matrix4::new_translation(&na::Vector3::new(0.0, y as f32, z));
-        let scaling = na::Matrix4::new_nonuniform_scaling(&(na::Vector3::x() * (size.x as f32)));
-        out[BasicObj::LineX].add(basic_obj::Instance {
-            transform: translation * scaling,
+        let transform = na::Matrix4::from_columns(&[
+            na::Vector4::new(size.x as f32, 0.0, 0.0, 0.0),
+            na::Vector4::zeros(),
+            na::Vector4::zeros(),
+            na::Vector4::new(0.0, y as f32, z, 1.0),
+        ]);
+        out.add(line::Instance {
+            transform,
             color,
-            ..Default::default()
+            thickness,
         });
     }
 }
@@ -291,10 +305,6 @@ pub fn bridge_length_anim(
     )
 }
 
-pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
-    na::Vector4::new(color.x, color.y, color.z, alpha)
-}
-
 pub struct Bridge {
     pub center: na::Point3<f32>,
     pub dir: Dir3,
@@ -314,7 +324,7 @@ pub fn render_bridge(bridge: &Bridge, transform: &na::Matrix4<f32>, out: &mut St
         )
         * bridge.dir.to_rotation_mat_x();
     let scaling = na::Vector3::new(bridge.length, bridge.size, bridge.size);
-    out.solid[BasicObj::Cube].add(basic_obj::Instance {
+    out.solid()[BasicObj::Cube].add(basic_obj::Instance {
         transform: output_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
         color: bridge.color,
         ..Default::default()
@@ -342,7 +352,7 @@ pub fn render_mill(mill: &Mill, transform: &na::Matrix4<f32>, out: &mut Stage) {
         )
         * na::Matrix4::from_euler_angles(mill.roll, pitch, yaw);
     let scaling = na::Vector3::new(mill.length, MILL_THICKNESS, MILL_DEPTH);
-    out.solid[BasicObj::Cube].add(basic_obj::Instance {
+    out.solid()[BasicObj::Cube].add(basic_obj::Instance {
         transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
         color: mill.color,
         ..Default::default()
@@ -440,16 +450,14 @@ pub fn render_half_pipe(
     });
 }
 
-pub fn render_outline(
-    cube_transform: &na::Matrix4<f32>,
-    scaling: &na::Vector3<f32>,
-    alpha: f32,
+pub fn render_line_wireframe(
+    thickness: f32,
+    color: &na::Vector4<f32>,
+    transform: &na::Matrix4<f32>,
     out: &mut Stage,
 ) {
-    let transform = cube_transform
-        * na::Matrix4::new_nonuniform_scaling(
-            &(scaling + na::Vector3::new(OUTLINE_MARGIN, OUTLINE_MARGIN, OUTLINE_MARGIN)),
-        );
+    // TODO: This code is from the early prototype for outlines. Will need to
+    // optimize this!
 
     for (start, end) in CUBOID_WIREFRAME_LINES.iter() {
         let start: na::Point3<f32> = na::convert(na::Point3::from_slice(start));
@@ -465,18 +473,33 @@ pub fn render_outline(
             na::Vector4::new(line_start.x, line_start.y, line_start.z, 1.0),
         ]);
 
-        //out.solid[BasicObj::TessellatedCylinder].add(basic_obj::Instance {
-        /*out.plain[BasicObj::LineX].add(basic_obj::Instance {
-            transform: line_transform,
-            color: block_color(&outline_color(), alpha),
-            ..Default::default()
-        });*/
         out.lines.add(line::Instance {
             transform: line_transform,
-            color: block_color(&outline_color(), alpha),
-            thickness: OUTLINE_THICKNESS,
+            color: *color,
+            thickness,
         });
     }
+}
+
+pub fn render_outline(
+    cube_transform: &na::Matrix4<f32>,
+    scaling: &na::Vector3<f32>,
+    alpha: f32,
+    out: &mut Stage,
+) {
+    let transform = cube_transform
+        * na::Matrix4::new_nonuniform_scaling(
+            &(scaling + na::Vector3::new(OUTLINE_MARGIN, OUTLINE_MARGIN, OUTLINE_MARGIN)),
+        );
+
+    let alpha = alpha * if out.dither { 0.3 } else { 0.6 };
+
+    render_line_wireframe(
+        OUTLINE_THICKNESS,
+        &block_color(&outline_color(), alpha),
+        &transform,
+        out,
+    );
 }
 
 pub fn render_pulsator(
@@ -502,7 +525,7 @@ pub fn render_pulsator(
     let cube_transform = translation * transform;
     let scaling = na::Vector3::new(size, size, size);
 
-    out.solid[BasicObj::Cube].add(basic_obj::Instance {
+    out.solid()[BasicObj::Cube].add(basic_obj::Instance {
         transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
         color: *color,
         ..Default::default()
@@ -528,8 +551,8 @@ pub fn render_block(
         Block::Pipe(dir_a, dir_b) => {
             let color = block_color(&pipe_color(), alpha);
 
-            render_half_pipe(center, transform, dir_a, &color, &mut out.solid);
-            render_half_pipe(center, transform, dir_b, &color, &mut out.solid);
+            render_half_pipe(center, transform, dir_a, &color, out.solid());
+            render_half_pipe(center, transform, dir_b, &color, out.solid());
 
             // Pulsator to hide our shame of wind direction change
             if dir_a.0 != dir_b.0 {
@@ -544,7 +567,7 @@ pub fn render_block(
                 PIPE_THICKNESS,
             ));
 
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: translation * transform * scaling,
                 color,
                 ..Default::default()
@@ -552,13 +575,28 @@ pub fn render_block(
 
             let rot_transform = transform
                 * na::Matrix4::new_rotation(na::Vector3::z() * std::f32::consts::PI / 2.0);
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: translation * rot_transform * scaling,
                 color,
                 ..Default::default()
             });
 
             render_pulsator(tick_time, anim_state, center, transform, &color, out);
+        }
+        Block::GeneralPipe(ref dirs) => {
+            let color = block_color(&pipe_color(), alpha);
+
+            for (dir, &enabled) in dirs.iter() {
+                if enabled {
+                    render_half_pipe(center, transform, dir, &color, out.solid());
+                }
+            }
+
+            // Pulsator to hide our shame of wind direction change. Only needed
+            // for non-straight pipes
+            if !grid::is_straight(dirs) {
+                render_pulsator(tick_time, anim_state, center, transform, &color, out);
+            }
         }
         Block::FunnelXY { flow_dir } => {
             let cube_transform = translation
@@ -567,9 +605,9 @@ pub fn render_block(
                 * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0));
             let scaling = na::Vector3::new(0.7, 0.45, 0.45);
 
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid_dither[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
-                color: block_color(&funnel_in_color(), alpha),
+                color: block_color(&funnel_in_color(), alpha * 0.7),
                 ..Default::default()
             });
             render_outline(&cube_transform, &scaling, alpha, out);
@@ -580,12 +618,23 @@ pub fn render_block(
                 * flow_dir.invert().to_rotation_mat_x()
                 * na::Matrix4::new_translation(&na::Vector3::new(-0.4, 0.0, 0.0));
             let scaling = &na::Vector3::new(0.3, input_size, input_size);
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: input_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color: block_color(&funnel_out_color(), alpha),
                 ..Default::default()
             });
             render_outline(&input_transform, &scaling, alpha, out);
+
+            let pipe_color = block_color(&pipe_color(), alpha);
+
+            render_half_pipe(center, transform, flow_dir, &pipe_color, out.solid());
+            render_half_pipe(
+                center,
+                transform,
+                flow_dir.invert(),
+                &pipe_color,
+                out.solid(),
+            );
         }
         Block::WindSource => {
             let cube_transform = translation * transform;
@@ -594,7 +643,7 @@ pub fn render_block(
             let render_list = if anim_state.is_some() {
                 &mut out.solid_glow
             } else {
-                &mut out.solid
+                out.solid()
             };
             render_list[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
@@ -645,7 +694,7 @@ pub fn render_block(
                 scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.5, 0.6, 0.6));
             let size = size_anim.eval(tick_time.tick_progress());
 
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
                 color: cube_color,
                 ..Default::default()
@@ -681,7 +730,7 @@ pub fn render_block(
                 scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.45, 0.6, 0.6));
             let size = size_anim.eval(tick_time.tick_progress());
 
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
                 color: block_color(&kind_color, alpha),
                 ..Default::default()
@@ -759,7 +808,7 @@ pub fn render_block(
             let render_list = if activation.is_some() {
                 &mut out.solid_glow
             } else {
-                &mut out.solid
+                out.solid()
             };
 
             let cube_transform = translation
@@ -824,7 +873,7 @@ pub fn render_block(
         }
         Block::Solid => {
             let cube_transform = translation * transform;
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform,
                 color: block_color(&solid_color(), alpha),
                 ..Default::default()
@@ -855,7 +904,7 @@ pub fn render_block(
 
             let cube_transform = translation * transform * rotation;
             let scaling = na::Vector3::new(0.8, 0.6, 0.6);
-            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 color,
                 ..Default::default()
@@ -1000,20 +1049,57 @@ pub fn placed_block_transform(_placed_block: &PlacedBlock) -> na::Matrix4<f32> {
     na::Matrix4::identity()
 }
 
+pub fn render_pillar(machine: &Machine, pos: &grid::Point3, alpha: f32, out: &mut Stage) {
+    let mut cur = *pos;
+
+    while cur.z > 0 {
+        let mut next = cur;
+        next.z -= 1;
+
+        let is_free = |p| machine.get(&p).map_or(true, |block| block.block.is_air());
+
+        while is_free(next) && next.z >= 0 {
+            next.z -= 1;
+        }
+
+        let height = cur.z - next.z - 1;
+
+        if height > 0 && next.z >= -1 {
+            let start: na::Vector3<f32> = na::convert(cur.coords);
+            let center = start + na::Vector3::new(0.5, 0.5, -height as f32 / 2.0);
+            let transform = na::Matrix4::new_translation(&center)
+                * na::Matrix4::from_columns(&[
+                    na::Vector4::new(0.0, 0.0, 1.0, 0.0),
+                    na::Vector4::new(0.0, 1.0, 0.0, 0.0),
+                    na::Vector4::new(1.0, 0.0, 0.0, 0.0),
+                    na::Vector4::new(0.0, 0.0, 0.0, 1.0),
+                ])
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
+                    -height as f32,
+                    0.05,
+                    0.05,
+                ));
+
+            out.solid()[basic_obj::BasicObj::TessellatedCylinder].add(basic_obj::Instance {
+                transform,
+                color: na::Vector4::new(0.25, 0.25, 0.25, alpha),
+            })
+        }
+
+        cur = next;
+    }
+}
+
 pub fn render_machine<'a>(
     machine: &'a Machine,
     tick_time: &TickTime,
     exec: Option<&Exec>,
     filter: impl Fn(&'a grid::Point3) -> bool,
+    unfocus: impl Fn(&'a grid::Point3) -> bool,
     out: &mut Stage,
 ) {
-    let floor_size = na::Vector3::new(machine.size().x as f32, machine.size().y as f32, 1.0);
-
-    let floor_transform = na::Matrix4::new_nonuniform_scaling(&floor_size);
-    out.solid[BasicObj::Quad].add(basic_obj::Instance {
-        transform: floor_transform,
-        color: block_color(&floor_color(), 1.0),
-        ..Default::default()
+    out.floor.add(floor::Instance {
+        size: na::Vector2::new(machine.size().x as f32, machine.size().y as f32),
     });
 
     for (block_index, (block_pos, placed_block)) in machine.iter_blocks() {
@@ -1028,6 +1114,13 @@ pub fn render_machine<'a>(
         let level_progress = exec.and_then(|exec| exec.level_progress());
         let next_level_progress = exec.and_then(|exec| exec.next_level_progress());
 
+        let alpha = if unfocus(&block_pos) {
+            out.dither = true;
+            0.55
+        } else {
+            1.0
+        };
+
         render_block(
             &placed_block,
             tick_time,
@@ -1036,8 +1129,21 @@ pub fn render_machine<'a>(
             next_level_progress,
             &center,
             &transform,
-            1.0,
+            alpha,
             out,
         );
+
+        if !placed_block.block.is_air() && !is_straight_pipe(&placed_block.block) {
+            render_pillar(machine, block_pos, alpha, out);
+        }
+
+        out.dither = false;
+    }
+}
+
+fn is_straight_pipe(block: &Block) -> bool {
+    match block {
+        Block::GeneralPipe(dirs) => grid::is_straight(dirs),
+        _ => false,
     }
 }

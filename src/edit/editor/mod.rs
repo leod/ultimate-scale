@@ -21,7 +21,7 @@ use crate::machine::grid;
 use crate::machine::{Block, Machine, PlacedBlock, SavedMachine};
 
 use crate::edit::config::ModifiedKey;
-use crate::edit::{pick, Config, Edit, Mode, Piece};
+use crate::edit::{pick, Config, Edit, Mode, Piece, SelectionMode};
 
 /// Maximal length of the undo queue.
 pub const MAX_UNDOS: usize = 1000;
@@ -145,6 +145,13 @@ impl Editor {
             camera,
             &edit_camera_view.eye(),
             &input_state.mouse_window_pos(),
+            |block_pos| {
+                if self.mode.is_layer_bound() {
+                    block_pos.z == self.current_layer
+                } else {
+                    true
+                }
+            },
         );
 
         self.update_input(input_state, camera);
@@ -161,11 +168,7 @@ impl Editor {
             } if input_state.is_button_pressed(MouseButton::Left) => {
                 // User has clicked on a selected block. Activate drag and
                 // drop as soon as the mouse grid pos changes.
-                if self
-                    .mouse_grid_pos
-                    .map(|p| p != dragged_grid_pos)
-                    .unwrap_or(false)
-                {
+                if self.mouse_grid_pos.map_or(false, |p| p != dragged_grid_pos) {
                     let mut piece =
                         Piece::new_from_selection(&self.machine, selection.iter().cloned());
 
@@ -190,10 +193,16 @@ impl Editor {
                     }
                 }
             }
-            Mode::SelectClickedOnBlock { selection, .. }
-                if !input_state.is_button_pressed(MouseButton::Left) =>
-            {
-                // Stop trying to go into drag and drop mode.
+            Mode::SelectClickedOnBlock {
+                mut selection,
+                dragged_block_pos,
+                ..
+            } if !input_state.is_button_pressed(MouseButton::Left) => {
+                // Stop trying to go into drag and drop mode. Select only the
+                // block that was clicked on.
+                selection.clear();
+                self.push_selection(dragged_block_pos, &mut selection);
+
                 Mode::new_selection(selection)
             }
             Mode::Select { selection, .. } if input_state.is_button_pressed(MouseButton::Right) => {
@@ -220,7 +229,7 @@ impl Editor {
                 let mut selection = existing_selection;
                 for p in new_selection.iter() {
                     if !selection.contains(p) {
-                        selection.push(*p);
+                        self.push_selection(*p, &mut selection);
                     }
                 }
 
@@ -234,11 +243,15 @@ impl Editor {
                 // Update selection according to rectangle
                 let end_pos = input_state.mouse_window_pos();
                 let new_selection =
-                    pick::pick_window_rect(&self.machine, camera, &start_pos, &end_pos);
+                    pick::pick_window_rect(&self.machine, camera, &start_pos, &end_pos)
+                        .filter(|p| {
+                            !existing_selection.is_layer_bound() || p.z == self.current_layer
+                        })
+                        .collect();
 
                 Mode::RectSelect {
                     existing_selection,
-                    new_selection: new_selection.collect(),
+                    new_selection,
                     start_pos,
                     end_pos: input_state.mouse_window_pos(),
                 }
@@ -287,12 +300,11 @@ impl Editor {
                     let new_selection = piece
                         .iter()
                         .map(|(p, _)| p)
-                        .filter(|p| self.machine.is_valid_pos(p))
-                        .collect();
+                        .filter(|p| self.machine.is_valid_pos(p));
 
                     edit = Some(Edit::compose(remove_edit, place_edit));
 
-                    Mode::new_selection(new_selection)
+                    self.overwrite_selection(new_selection, Mode::new_selection(selection))
                 } else {
                     // Mouse not at a grid position, Just return to selection
                     // mode.
@@ -373,44 +385,56 @@ impl Editor {
             if let Some(delta_dir) = delta_dir {
                 // Change the previously placed pipe so that it points to the
                 // new tentative pipe
-                let updated_last_block = blocks.get(&last_pos).map(|placed_block| {
-                    self.pipe_tool_connect_pipe(&blocks, placed_block, &last_pos, delta_dir)
+                let last_block = blocks.get(&last_pos);
+                let new_block = blocks
+                    .get(&mouse_grid_pos)
+                    .map_or_else(|| self.machine.get(&mouse_grid_pos), |block| Some(block))
+                    .cloned()
+                    .unwrap_or_else(|| PlacedBlock {
+                        block: Block::GeneralPipe(grid::DirMap3::from_fn(|_| false)),
+                    });
+
+                let connect = last_block.map_or(true, |last_block| {
+                    let last_is_pipe = if let Block::GeneralPipe(_) = last_block.block {
+                        true
+                    } else {
+                        false
+                    };
+                    let new_is_pipe = if let Block::GeneralPipe(_) = new_block.block {
+                        true
+                    } else {
+                        false
+                    };
+
+                    let connect_last = last_is_pipe || last_block.block.has_wind_hole(delta_dir);
+                    let connect_new =
+                        new_is_pipe || new_block.block.has_wind_hole(delta_dir.invert());
+
+                    connect_last && connect_new
                 });
 
-                if let Some(updated_last_block) = updated_last_block {
-                    blocks.insert(last_pos, updated_last_block);
-                }
-
-                if blocks.get(&mouse_grid_pos).is_none() {
-                    let existing_new_block = self.machine.get(&mouse_grid_pos);
-
-                    if let Some(existing_new_block) = existing_new_block {
-                        blocks.insert(mouse_grid_pos, existing_new_block.clone());
+                if connect {
+                    if let Some(last_block) = last_block {
+                        let updated_last_block =
+                            self.pipe_tool_connect_pipe(&blocks, last_block, &last_pos, delta_dir);
+                        blocks.insert(last_pos, updated_last_block);
                     }
-                }
 
-                let updated_new_block = blocks.get(&mouse_grid_pos).map(|placed_block| {
-                    self.pipe_tool_connect_pipe(
+                    let updated_new_block = self.pipe_tool_connect_pipe(
                         &blocks,
-                        placed_block,
+                        &new_block,
                         &mouse_grid_pos,
                         delta_dir.invert(),
-                    )
-                });
-
-                if let Some(updated_new_block) = updated_new_block {
+                    );
                     blocks.insert(mouse_grid_pos, updated_new_block);
                 } else {
-                    blocks.insert(
-                        mouse_grid_pos,
-                        PlacedBlock {
-                            block: Block::Pipe(delta_dir, delta_dir.invert()),
-                        },
-                    );
+                    blocks.insert(mouse_grid_pos, new_block);
                 }
             } else {
                 // New mouse grid position is not a neighbor of last_pos
-                let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
+                let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(|dir| {
+                    dir == grid::Dir3::Y_NEG || dir == grid::Dir3::Y_POS
+                }));
                 for _ in 0..rotation_xy {
                     block.mutate_dirs(|dir| dir.rotated_cw_xy());
                 }
@@ -475,8 +499,12 @@ impl Editor {
             self.action_layer_up();
         } else if key == self.config.layer_down_key {
             self.action_layer_down();
+        } else if key == self.config.select_all_key {
+            self.action_select_all();
         } else if key == self.config.select_key {
             self.action_select_mode();
+        } else if key == self.config.select_layer_bound_key {
+            self.action_select_layer_bound_mode();
         } else if key == self.config.pipe_tool_key {
             self.action_pipe_tool_mode();
         } else if key == self.config.cancel_key {
@@ -544,20 +572,20 @@ impl Editor {
 
                 if let Some(mouse_grid_pos) = mouse_grid_pos {
                     // Don't overwrite existing block when starting placement
-                    let blocks = if let Some(block) = self.machine.get(&mouse_grid_pos) {
-                        maplit::hashmap! {
-                            mouse_grid_pos => block.clone(),
-                        }
-                    } else {
-                        let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
-                        for _ in 0..rotation_xy {
-                            block.mutate_dirs(|dir| dir.rotated_cw_xy());
-                        }
+                    let placed_block = self.machine.get(&mouse_grid_pos).map_or_else(
+                        || {
+                            let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(|dir| {
+                                dir == grid::Dir3::Y_NEG || dir == grid::Dir3::Y_POS
+                            }));
+                            for _ in 0..rotation_xy {
+                                block.mutate_dirs(|dir| dir.rotated_cw_xy());
+                            }
+                            PlacedBlock { block }
+                        },
+                        |placed_block| placed_block.clone(),
+                    );
 
-                        maplit::hashmap! {
-                            mouse_grid_pos => PlacedBlock { block },
-                        }
-                    };
+                    let blocks = maplit::hashmap! { mouse_grid_pos => placed_block };
 
                     Mode::PipeTool {
                         last_pos: Some(mouse_grid_pos),
@@ -576,7 +604,7 @@ impl Editor {
         &self,
         input_state: &InputState,
         modifiers: glutin::ModifiersState,
-        mut selection: Vec<grid::Point3>,
+        mut selection: SelectionMode,
     ) -> Mode {
         // Double check that there actually is a block at the mouse block
         // position.
@@ -585,12 +613,22 @@ impl Editor {
         if let Some(block_pos) = block_pos {
             // Clicked on a block!
 
-            if modifiers.shift && !selection.is_empty() {
+            if modifiers.shift && selection.is_empty() {
+                // Shift with an empty selection means to always go into rect select.
+                let start_pos = input_state.mouse_window_pos();
+
+                Mode::RectSelect {
+                    existing_selection: selection,
+                    new_selection: Vec::new(),
+                    start_pos,
+                    end_pos: start_pos,
+                }
+            } else if modifiers.shift && !selection.is_empty() {
                 // Shift: Select in a line from the last to the current grid
                 // position.
 
                 // Safe to unwrap due to `is_empty()` check above.
-                let last = selection.last().unwrap();
+                let last = selection.newest_point().unwrap();
 
                 // For now draw line only if there are two shared coordinates,
                 // otherwise behavior is too wonky. Note that rust guarantees
@@ -599,18 +637,16 @@ impl Editor {
                     + (last.y == block_pos.y) as usize
                     + (last.z == block_pos.z) as usize;
                 let line = if num_shared == 2 {
-                    pick::pick_line(&self.machine, last, &block_pos)
+                    pick::pick_line(&self.machine, &last, &block_pos)
                 } else {
                     vec![block_pos]
                 };
 
                 // Push the selected line to the end of the vector, so that it
                 // counts as the most recently selected.
-                selection.retain(|p| !line.contains(p));
-
                 if !modifiers.ctrl {
                     for p in line {
-                        selection.push(p);
+                        self.push_selection(p, &mut selection);
                     }
                 }
 
@@ -618,11 +654,7 @@ impl Editor {
                 Mode::new_selection(selection)
             } else if modifiers.ctrl {
                 // Control: Extend/toggle block selection.
-                if selection.contains(&block_pos) {
-                    selection.retain(|p| *p != block_pos);
-                } else {
-                    selection.push(block_pos);
-                }
+                selection.toggle(&block_pos);
 
                 // Stay in selection mode.
                 Mode::new_selection(selection)
@@ -630,8 +662,8 @@ impl Editor {
                 // No modifier, but clicked on a block...
                 if !selection.contains(&block_pos) {
                     // Different block, select only this one.
-                    selection = Vec::new();
-                    selection.push(block_pos);
+                    selection.clear();
+                    self.push_selection(block_pos, &mut selection);
                 }
 
                 if let Some(grid_pos) = self.mouse_grid_pos {
@@ -649,18 +681,17 @@ impl Editor {
             }
         } else {
             // Did not click on a block, switch to rect select.
-            let existing_selection = if modifiers.ctrl {
-                // Control: Keep existing selection.
-                selection
-            } else {
+            //
+            // Control: Keep existing selection.
+            if !modifiers.ctrl {
                 // Start from scratch otherwise.
-                Vec::new()
-            };
+                selection.clear();
+            }
 
             let start_pos = input_state.mouse_window_pos();
 
             Mode::RectSelect {
-                existing_selection,
+                existing_selection: selection,
                 new_selection: Vec::new(),
                 start_pos,
                 end_pos: start_pos,
@@ -704,15 +735,13 @@ impl Editor {
                 let is_connected = |pos: grid::Point3, dir: grid::Dir3| {
                     let tentative = blocks
                         .get(&(pos + dir.to_vector()))
-                        .map(|neighbor| neighbor.block.has_wind_hole(dir.invert()))
-                        .unwrap_or(false);
+                        .map_or(false, |neighbor| neighbor.block.has_wind_hole(dir.invert()));
                     let existing = self
                         .machine
                         .get(&(pos + dir.to_vector()))
-                        .map(|neighbor| neighbor.block.has_wind_hole(dir.invert()))
-                        .unwrap_or(false);
+                        .map_or(false, |neighbor| neighbor.block.has_wind_hole(dir.invert()));
 
-                    tentative || existing
+                    placed_block.block.has_wind_hole(dir) && (tentative || existing)
                 };
 
                 let is_a_connected = is_connected(*block_pos, dir_a);
@@ -737,7 +766,77 @@ impl Editor {
 
                 PlacedBlock { block }
             }
+            Block::GeneralPipe(ref dirs) => {
+                let mut new_dirs = dirs.clone();
+                new_dirs[new_dir] = true;
+
+                let block = Block::GeneralPipe(new_dirs);
+
+                PlacedBlock { block }
+            }
             _ => placed_block.clone(),
+        }
+    }
+
+    fn go_into_select_mode(&mut self, is_layer_bound: bool) {
+        let mut selection = match self.mode.clone() {
+            Mode::Select { selection } => selection,
+            Mode::SelectClickedOnBlock { selection, .. } => selection,
+            Mode::RectSelect {
+                existing_selection, ..
+            } => existing_selection,
+            _ => SelectionMode::new(is_layer_bound),
+        };
+
+        selection.set_is_layer_bound(self.current_layer, is_layer_bound);
+
+        self.mode = Mode::new_selection(selection);
+    }
+
+    fn overwrite_selection(
+        &self,
+        points: impl Iterator<Item = grid::Point3>,
+        mut mode: Mode,
+    ) -> Mode {
+        let overwrite = |selection: &mut SelectionMode| {
+            selection.clear();
+
+            for p in points {
+                self.push_selection(p, selection);
+            }
+        };
+
+        match &mut mode {
+            Mode::Select { selection } => {
+                overwrite(selection);
+            }
+            Mode::SelectClickedOnBlock { selection, .. } => {
+                overwrite(selection);
+            }
+            Mode::RectSelect {
+                existing_selection, ..
+            } => {
+                overwrite(existing_selection);
+            }
+            Mode::DragAndDrop { .. } => {
+                // Drag and drop just simply does not allow overwriting the
+                // selection, since it carries the meaning of which blocks are
+                // being dragged.
+                return mode.clone();
+            }
+            _ => {
+                let mut selection = SelectionMode::new(false);
+                overwrite(&mut selection);
+                return Mode::Select { selection };
+            }
+        }
+
+        return mode;
+    }
+
+    fn push_selection(&self, p: grid::Point3, selection: &mut SelectionMode) {
+        if self.machine.is_valid_pos(&p) {
+            selection.push_if_correct_layer(self.current_layer, p);
         }
     }
 }

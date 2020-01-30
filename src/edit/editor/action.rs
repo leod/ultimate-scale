@@ -76,6 +76,15 @@ impl Editor {
                 piece.shift(&grid::Vector3::y());
             }
 
+            // If we are placing in an upper layer, it could be that the piece
+            // sticks out at the top. Shift down if that is the case.
+            let max_z = piece.blocks().iter().map(|(p, _)| p.z).max().unwrap_or(0)
+                + self.mouse_grid_pos.map_or(0, |p| p.z);
+            let too_high = (max_z - self.machine().size().z + 1).max(0);
+
+            self.current_layer -= too_high.max(self.current_layer);
+            assert!(self.machine.is_valid_layer(self.current_layer));
+
             self.mode = Mode::PlacePiece { piece };
         }
     }
@@ -116,8 +125,19 @@ impl Editor {
         }
     }
 
+    pub fn action_select_all(&mut self) {
+        self.mode = self.overwrite_selection(
+            self.machine.iter_blocks().map(|(_, (pos, _))| *pos),
+            self.mode.clone(),
+        );
+    }
+
     pub fn action_select_mode(&mut self) {
-        self.mode = Mode::new_select();
+        self.go_into_select_mode(false);
+    }
+
+    pub fn action_select_layer_bound_mode(&mut self) {
+        self.go_into_select_mode(true);
     }
 
     pub fn action_pipe_tool_mode(&mut self) {
@@ -139,10 +159,8 @@ impl Editor {
             Mode::PlacePiece { piece } => {
                 piece.rotate_cw_xy();
             }
-            Mode::Select { selection, .. } => {
-                if !selection.is_empty() {
-                    edit = Some(Edit::RotateCWXY(selection.clone()));
-                } else if let Some(mouse_block_pos) = self.mouse_block_pos {
+            Mode::Select { .. } => {
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::RotateCWXY(vec![mouse_block_pos]));
                 }
             }
@@ -172,10 +190,8 @@ impl Editor {
             Mode::PlacePiece { piece } => {
                 piece.rotate_ccw_xy();
             }
-            Mode::Select { selection, .. } => {
-                if !selection.is_empty() {
-                    edit = Some(Edit::RotateCCWXY(selection.clone()));
-                } else if let Some(mouse_block_pos) = self.mouse_block_pos {
+            Mode::Select { .. } => {
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::RotateCCWXY(vec![mouse_block_pos]));
                 }
             }
@@ -211,13 +227,29 @@ impl Editor {
     }
 
     pub fn action_next_kind(&mut self) {
+        let mut edit = None;
+
         match &mut self.mode {
             Mode::PlacePiece { piece, .. } => {
+                piece.set_next_kind();
+            }
+            Mode::Select { selection, .. } => {
+                if !selection.is_empty() {
+                    edit = Some(Edit::NextKind(selection.to_vec()));
+                } else if let Some(mouse_block_pos) = self.mouse_block_pos {
+                    edit = Some(Edit::NextKind(vec![mouse_block_pos]));
+                }
+            }
+            Mode::DragAndDrop { piece, .. } => {
                 piece.set_next_kind();
             }
             _ => {
                 // No op in other modes.
             }
         };
+
+        if let Some(edit) = edit {
+            self.run_and_track_edit(edit);
+        }
     }
 }

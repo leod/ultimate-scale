@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::util::vec_option::VecOption;
 
-use grid::{Axis3, Dir3, Grid3, Point3, Sign, Vector3};
+use grid::{Axis3, Dir3, DirMap3, Grid3, Point3, Sign, Vector3};
 use level::Level;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
@@ -51,6 +51,7 @@ pub type TickNum = usize;
 pub enum Block {
     Pipe(Dir3, Dir3),
     PipeMergeXY,
+    GeneralPipe(DirMap3<bool>),
     FunnelXY {
         flow_dir: Dir3,
     },
@@ -85,6 +86,20 @@ pub enum Block {
 }
 
 impl Block {
+    pub fn replace_deprecated(self) -> Block {
+        let is_old_pipe = match &self {
+            Block::Pipe(_, _) => true,
+            Block::PipeMergeXY => true,
+            _ => false,
+        };
+
+        if is_old_pipe {
+            Block::GeneralPipe(DirMap3::from_fn(|dir| self.has_wind_hole(dir)))
+        } else {
+            self
+        }
+    }
+
     pub fn name(&self) -> String {
         match self {
             Block::Pipe(a, b) if a.0 != Axis3::Z && a.0 == b.0 => "Pipe straight".to_string(),
@@ -100,6 +115,13 @@ impl Block {
             }
             Block::Pipe(_, _) => "Pipe".to_string(),
             Block::PipeMergeXY => "Pipe crossing".to_string(),
+            Block::GeneralPipe(dirs) => {
+                if grid::is_straight(dirs) {
+                    "Straight pipe".to_string()
+                } else {
+                    "Pipe".to_string()
+                }
+            }
             Block::FunnelXY { .. } => "Funnel".to_string(),
             Block::WindSource => "Wind source".to_string(),
             Block::BlipSpawn {
@@ -109,9 +131,9 @@ impl Block {
                 num_spawns: Some(_),
                 ..
             } => "Blip spawn".to_string(),
-            Block::BlipDuplicator { kind: Some(_), .. } => "Picky blip copier".to_string(),
-            Block::BlipDuplicator { kind: None, .. } => "Blip copier".to_string(),
-            Block::BlipWindSource { .. } => "Blipped wind spawn".to_string(),
+            Block::BlipDuplicator { kind: Some(_), .. } => "Picky copier".to_string(),
+            Block::BlipDuplicator { kind: None, .. } => "Copier".to_string(),
+            Block::BlipWindSource { .. } => "Wind button".to_string(),
             Block::Solid => "Solid".to_string(),
             Block::Input { .. } => "Input".to_string(),
             Block::Output { .. } => "Output".to_string(),
@@ -127,6 +149,7 @@ impl Block {
         match self {
             Block::Pipe(_, _) => "Conducts both wind and blips.",
             Block::PipeMergeXY => "Four-way pipe.",
+            Block::GeneralPipe(_) => "Conducts both wind and blips.",
             Block::FunnelXY { .. } => "Conducts in only one direction.",
             Block::WindSource => "Produces a stream of wind in all directions.",
             Block::BlipSpawn {
@@ -159,6 +182,14 @@ impl Block {
         match self {
             Block::Pipe(_, _) => true,
             Block::PipeMergeXY => true,
+            Block::GeneralPipe(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_air(&self) -> bool {
+        match self {
+            Block::Air => true,
             _ => false,
         }
     }
@@ -188,6 +219,16 @@ impl Block {
                 *dir_b = f(*dir_b);
             }
             Block::PipeMergeXY => (),
+            Block::GeneralPipe(dirs) => {
+                // You best hope that `f` is bijective!
+                let mut new_dirs = DirMap3::default();
+
+                for &dir in &Dir3::ALL {
+                    new_dirs[f(dir)] = dirs[dir];
+                }
+
+                *dirs = new_dirs.clone();
+            }
             Block::FunnelXY { flow_dir, .. } => *flow_dir = f(*flow_dir),
             Block::WindSource { .. } => (),
             Block::BlipSpawn { out_dir, .. } => *out_dir = f(*out_dir),
@@ -215,6 +256,7 @@ impl Block {
         match self {
             Block::Pipe(dir_a, dir_b) => dir == *dir_a || dir == *dir_b,
             Block::PipeMergeXY => dir != Dir3::Z_NEG && dir != Dir3::Z_POS,
+            Block::GeneralPipe(dirs) => dirs[dir],
             Block::FunnelXY { flow_dir, .. } => {
                 // Has restricted cases for in/out below
                 dir == *flow_dir || dir == flow_dir.invert()
@@ -303,24 +345,6 @@ pub struct PlacedBlock {
     pub block: Block,
 }
 
-/*impl PlacedBlock {
-    pub fn has_wind_hole(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole(dir)
-    }
-
-    pub fn has_move_hole(&self, dir: Dir3) -> bool {
-        self.block.has_move_hole(dir)
-    }
-
-    pub fn has_wind_hole_in(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole_in(dir)
-    }
-
-    pub fn has_wind_hole_out(&self, dir: Dir3) -> bool {
-        self.block.has_wind_hole_out(dir)
-    }
-}*/
-
 pub type BlockIndex = usize;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -346,7 +370,10 @@ impl Machine {
         let mut data = VecOption::new();
 
         for (pos, placed_block) in slice {
-            indices[*pos] = Some(data.add((*pos, placed_block.clone())));
+            let mut placed_block = placed_block.clone();
+            placed_block.block = placed_block.block.replace_deprecated();
+
+            indices[*pos] = Some(data.add((*pos, placed_block)));
         }
 
         let blocks = Blocks { indices, data };
