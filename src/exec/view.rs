@@ -56,6 +56,7 @@ impl ExecView {
             camera,
             &edit_camera_view.eye(),
             &input_state.mouse_window_pos(),
+            |_| true,
         );
     }
 

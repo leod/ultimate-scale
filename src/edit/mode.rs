@@ -14,7 +14,7 @@ pub enum Mode {
     /// There must be no duplicate positions. The order corresponds to the
     /// selection order.
     Select {
-        selection: Vec<grid::Point3>,
+        selection: SelectionMode,
     },
 
     /// User just clicked on a block in selection mode.
@@ -22,7 +22,7 @@ pub enum Mode {
     /// Based on this, we will switch to `DragAndDrop` if the mouse grid
     /// position changes.
     SelectClickedOnBlock {
-        selection: Vec<grid::Point3>,
+        selection: SelectionMode,
 
         /// The position of the block the user clicked on.
         dragged_block_pos: grid::Point3,
@@ -31,10 +31,18 @@ pub enum Mode {
         dragged_grid_pos: grid::Point3,
     },
 
+    DragAndDrop {
+        /// Blocks that were selected at the time of starting drag-and-drop.
+        /// Used for returning to selection mode if drag-and-drop is aborted.
+        selection: SelectionMode,
+
+        piece: Piece,
+    },
+
     /// Select blocks in the machine by a screen rectangle.
     RectSelect {
         /// Blocks that were already selected when entering this mode.
-        existing_selection: Vec<grid::Point3>,
+        existing_selection: SelectionMode,
 
         /// New blocks currently selected by the rectangle.
         new_selection: Vec<grid::Point3>,
@@ -50,14 +58,6 @@ pub enum Mode {
         piece: Piece,
     },
 
-    DragAndDrop {
-        /// Blocks that were selected at the time of starting drag-and-drop.
-        /// Used for returning to selection mode if drag-and-drop is aborted.
-        selection: Vec<grid::Point3>,
-
-        piece: Piece,
-    },
-
     PipeTool {
         last_pos: Option<grid::Point3>,
         rotation_xy: usize,
@@ -67,10 +67,14 @@ pub enum Mode {
 
 impl Mode {
     pub fn new_select() -> Self {
-        Self::new_selection(Vec::new())
+        Self::new_selection(SelectionMode::new(false))
     }
 
-    pub fn new_selection(selection: Vec<grid::Point3>) -> Self {
+    pub fn new_select_layer_bound() -> Self {
+        Self::new_selection(SelectionMode::new(true))
+    }
+
+    pub fn new_selection(selection: SelectionMode) -> Self {
         Mode::Select { selection }
     }
 
@@ -94,17 +98,17 @@ impl Mode {
     /// it from the selection.
     pub fn make_consistent_with_machine(self, machine: &Machine) -> Self {
         match self {
-            Mode::Select { mut selection } => {
-                selection.retain(|grid_pos| machine.is_block_at(grid_pos));
+            Mode::Select { selection } => {
+                let selection = selection.make_consistent_with_machine(machine);
 
                 Mode::Select { selection }
             }
             Mode::SelectClickedOnBlock {
-                mut selection,
+                selection,
                 dragged_block_pos,
                 dragged_grid_pos,
             } => {
-                selection.retain(|grid_pos| machine.is_block_at(grid_pos));
+                let selection = selection.make_consistent_with_machine(machine);
 
                 if !machine.is_block_at(&dragged_block_pos) {
                     // The block that the user want to drag-and-drop was
@@ -120,12 +124,12 @@ impl Mode {
                 }
             }
             Mode::RectSelect {
-                mut existing_selection,
+                existing_selection,
                 mut new_selection,
                 start_pos,
                 end_pos,
             } => {
-                existing_selection.retain(|grid_pos| machine.is_block_at(grid_pos));
+                let existing_selection = existing_selection.make_consistent_with_machine(machine);
                 new_selection.retain(|grid_pos| machine.is_block_at(grid_pos));
 
                 Mode::RectSelect {
@@ -135,15 +139,101 @@ impl Mode {
                     end_pos,
                 }
             }
-            Mode::DragAndDrop {
-                mut selection,
-                piece,
-            } => {
-                selection.retain(|grid_pos| machine.is_block_at(grid_pos));
+            Mode::DragAndDrop { selection, piece } => {
+                let selection = selection.make_consistent_with_machine(machine);
 
                 Mode::DragAndDrop { selection, piece }
             }
             mode => mode,
         }
+    }
+
+    pub fn is_layer_bound(&self) -> bool {
+        match self {
+            Mode::Select { selection, .. } => selection.is_layer_bound(),
+            Mode::SelectClickedOnBlock { selection, .. } => selection.is_layer_bound(),
+            Mode::DragAndDrop { selection, .. } => selection.is_layer_bound(),
+            Mode::RectSelect {
+                existing_selection, ..
+            } => existing_selection.is_layer_bound(),
+            Mode::PlacePiece { .. } => true,
+            Mode::PipeTool { .. } => true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SelectionMode {
+    points: Vec<grid::Point3>,
+    is_layer_bound: bool,
+}
+
+impl SelectionMode {
+    pub fn new(is_layer_bound: bool) -> SelectionMode {
+        SelectionMode {
+            points: Vec::new(),
+            is_layer_bound,
+        }
+    }
+
+    fn push(&mut self, p: grid::Point3) {
+        // Make sure that the point unique and is at the end of the vector.
+        self.points.retain(|q| *q != p);
+        self.points.push(p);
+    }
+
+    pub fn push_if_correct_layer(&mut self, current_layer: isize, p: grid::Point3) {
+        if !self.is_layer_bound || current_layer == p.z {
+            self.push(p);
+        }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &grid::Point3> {
+        self.points.iter()
+    }
+
+    pub fn is_layer_bound(&self) -> bool {
+        self.is_layer_bound
+    }
+
+    pub fn contains(&self, p: &grid::Point3) -> bool {
+        self.points.contains(p)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.points.is_empty()
+    }
+
+    pub fn clear(&mut self) {
+        self.points.clear();
+    }
+
+    pub fn newest_point(&self) -> Option<grid::Point3> {
+        self.points.last().copied()
+    }
+
+    pub fn to_vec(&self) -> Vec<grid::Point3> {
+        self.points.clone()
+    }
+
+    pub fn toggle(&mut self, p: &grid::Point3) {
+        if self.points.contains(p) {
+            self.points.retain(|q| q != p);
+        } else {
+            self.points.push(*p);
+        }
+    }
+
+    pub fn make_consistent_with_machine(mut self, machine: &Machine) -> Self {
+        self.points.retain(|p| machine.is_block_at(p));
+        self
+    }
+
+    pub fn set_is_layer_bound(&mut self, current_layer: isize, new_is_layer_bound: bool) {
+        if !self.is_layer_bound && new_is_layer_bound {
+            self.points.retain(|q| q.z == current_layer);
+        }
+
+        self.is_layer_bound = new_is_layer_bound;
     }
 }

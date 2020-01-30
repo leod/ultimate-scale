@@ -95,6 +95,7 @@ pub struct Config {
     pub select_all_key: ModifiedKey,
 
     pub select_key: ModifiedKey,
+    pub select_layer_bound_key: ModifiedKey,
     pub pipe_tool_key: ModifiedKey,
     pub block_keys: Vec<(ModifiedKey, Block)>,
     pub layer_keys: Vec<(ModifiedKey, isize)>,
@@ -120,6 +121,7 @@ impl Default for Config {
             layer_down_key: ModifiedKey::shift(VirtualKeyCode::Tab),
             select_all_key: ModifiedKey::ctrl(VirtualKeyCode::A),
             select_key: ModifiedKey::new(VirtualKeyCode::Key1),
+            select_layer_bound_key: ModifiedKey::ctrl(VirtualKeyCode::Key1),
             pipe_tool_key: ModifiedKey::new(VirtualKeyCode::Key2),
             block_keys: vec![
                 (

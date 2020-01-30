@@ -75,17 +75,20 @@ impl Editor {
         ui.columns(2, im_str!("ui_modes"), false);
         ui.set_column_width(0, 50.0);
 
+        let selection = match self.mode.clone() {
+            Mode::Select { selection, .. } => Some(selection),
+            Mode::SelectClickedOnBlock { selection, .. } => Some(selection),
+            Mode::RectSelect {
+                existing_selection, ..
+            } => Some(existing_selection),
+            Mode::DragAndDrop { selection, .. } => Some(selection),
+            _ => None,
+        };
+
         ui.text_disabled(&ImString::new(format!("{}", self.config.select_key)));
         ui.next_column();
-
-        let selected = match &self.mode {
-            Mode::Select { .. } => true,
-            Mode::SelectClickedOnBlock { .. } => true,
-            Mode::RectSelect { .. } => true,
-            Mode::DragAndDrop { .. } => true,
-            _ => false,
-        };
-        let selectable = imgui::Selectable::new(im_str!("Select")).selected(selected);
+        let selectable = imgui::Selectable::new(im_str!("Select"))
+            .selected(selection.as_ref().map_or(false, |s| !s.is_layer_bound()));
         if selectable.build(ui) {
             self.action_select_mode();
         }
@@ -93,6 +96,25 @@ impl Editor {
             let text = format!(
                 "Switch to block selection mode.\n\nShortcut: {}",
                 self.config.select_key
+            );
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
+        ui.next_column();
+
+        ui.text_disabled(&ImString::new(format!(
+            "{}",
+            self.config.select_layer_bound_key
+        )));
+        ui.next_column();
+        let selectable = imgui::Selectable::new(im_str!("Select in layer"))
+            .selected(selection.as_ref().map_or(false, |s| s.is_layer_bound()));
+        if selectable.build(ui) {
+            self.action_select_layer_bound_mode();
+        }
+        if ui.is_item_hovered() {
+            let text = format!(
+                "Switch to selecting only in the current layer.\n\nShortcut: {}",
+                self.config.select_layer_bound_key
             );
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }

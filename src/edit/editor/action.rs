@@ -124,16 +124,18 @@ impl Editor {
     }
 
     pub fn action_select_all(&mut self) {
-        self.mode = Mode::new_selection(
-            self.machine
-                .iter_blocks()
-                .map(|(_, (pos, _))| *pos)
-                .collect(),
-        )
+        self.mode = self.overwrite_selection(
+            self.machine.iter_blocks().map(|(_, (pos, _))| *pos),
+            self.mode.clone(),
+        );
     }
 
     pub fn action_select_mode(&mut self) {
-        self.mode = Mode::new_select();
+        self.go_into_select_mode(false);
+    }
+
+    pub fn action_select_layer_bound_mode(&mut self) {
+        self.go_into_select_mode(true);
     }
 
     pub fn action_pipe_tool_mode(&mut self) {
@@ -157,7 +159,7 @@ impl Editor {
             }
             Mode::Select { selection, .. } => {
                 if !selection.is_empty() {
-                    edit = Some(Edit::RotateCWXY(selection.clone()));
+                    edit = Some(Edit::RotateCWXY(selection.to_vec()));
                 } else if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::RotateCWXY(vec![mouse_block_pos]));
                 }
@@ -190,7 +192,7 @@ impl Editor {
             }
             Mode::Select { selection, .. } => {
                 if !selection.is_empty() {
-                    edit = Some(Edit::RotateCCWXY(selection.clone()));
+                    edit = Some(Edit::RotateCCWXY(selection.to_vec()));
                 } else if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::RotateCCWXY(vec![mouse_block_pos]));
                 }
@@ -235,7 +237,7 @@ impl Editor {
             }
             Mode::Select { selection, .. } => {
                 if !selection.is_empty() {
-                    edit = Some(Edit::NextKind(selection.clone()));
+                    edit = Some(Edit::NextKind(selection.to_vec()));
                 } else if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::NextKind(vec![mouse_block_pos]));
                 }

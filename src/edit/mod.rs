@@ -11,7 +11,7 @@ use crate::machine::{Block, Machine, PlacedBlock};
 
 pub use config::Config;
 pub use editor::Editor;
-pub use mode::Mode;
+pub use mode::{Mode, SelectionMode};
 pub use piece::Piece;
 
 #[derive(Debug, Clone)]

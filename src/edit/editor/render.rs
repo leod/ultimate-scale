@@ -36,7 +36,13 @@ impl Editor {
             }
         };
 
-        let unfocus = |pos: &grid::Point3| pos.z != self.current_layer;
+        let unfocus = |pos: &grid::Point3| {
+            if self.mode.is_layer_bound() {
+                pos.z != self.current_layer
+            } else {
+                false
+            }
+        };
 
         render::machine::render_machine(
             &self.machine,
@@ -55,7 +61,7 @@ impl Editor {
 
         match &self.mode {
             Mode::Select { selection, .. } => {
-                self.render_selection(selection, false, out);
+                self.render_selection(selection.iter(), out);
 
                 // Only render wireframe at current position if not already selected.
                 let mouse_block_pos = self
@@ -78,7 +84,7 @@ impl Editor {
                 dragged_block_pos,
                 ..
             } => {
-                self.render_selection(selection, false, out);
+                self.render_selection(selection.iter(), out);
 
                 self.render_base(dragged_block_pos, na::Vector2::new(1, 1), out);
             }
@@ -88,8 +94,8 @@ impl Editor {
                 start_pos,
                 end_pos,
             } => {
-                self.render_selection(existing_selection, false, out);
-                self.render_selection(new_selection, false, out);
+                self.render_selection(existing_selection.iter(), out);
+                self.render_selection(new_selection.iter(), out);
 
                 let min = na::Point2::new(start_pos.x.min(end_pos.x), start_pos.y.min(end_pos.y));
                 let max = na::Point2::new(start_pos.x.max(end_pos.x), start_pos.y.max(end_pos.y));
@@ -117,7 +123,7 @@ impl Editor {
                     self.render_piece_to_place(&piece, &mouse_grid_pos, out);
 
                     //let selection: Vec<_> = piece.iter().map(|(pos, _)| *pos);
-                    self.render_selection(&selection, false, out);
+                    self.render_selection(selection.iter(), out);
                 }
             }
             Mode::PipeTool {
@@ -193,13 +199,13 @@ impl Editor {
         Ok(())
     }
 
-    fn render_selection(&self, selection: &[grid::Point3], highlight_last: bool, out: &mut Stage) {
-        for (i, grid_pos) in selection.iter().enumerate() {
-            let color = if highlight_last && i + 1 == selection.len() {
-                na::Vector4::new(0.9, 0.9, 0.0, 1.0)
-            } else {
-                na::Vector4::new(0.9, 0.5, 0.0, 1.0)
-            };
+    fn render_selection<'a>(
+        &self,
+        selection: impl Iterator<Item = &'a grid::Point3>,
+        out: &mut Stage,
+    ) {
+        for grid_pos in selection {
+            let color = na::Vector4::new(0.9, 0.5, 0.0, 1.0);
 
             self.render_block_wireframe(grid_pos, 15.0, &color, out);
         }
