@@ -605,9 +605,9 @@ pub fn render_block(
                 * na::Matrix4::new_translation(&na::Vector3::new(0.1, 0.0, 0.0));
             let scaling = na::Vector3::new(0.7, 0.45, 0.45);
 
-            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
+            out.solid_dither[BasicObj::Cube].add(basic_obj::Instance {
                 transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
-                color: block_color(&funnel_in_color(), alpha),
+                color: block_color(&funnel_in_color(), alpha * 0.7),
                 ..Default::default()
             });
             render_outline(&cube_transform, &scaling, alpha, out);
@@ -624,6 +624,17 @@ pub fn render_block(
                 ..Default::default()
             });
             render_outline(&input_transform, &scaling, alpha, out);
+
+            let pipe_color = block_color(&pipe_color(), alpha);
+
+            render_half_pipe(center, transform, flow_dir, &pipe_color, out.solid());
+            render_half_pipe(
+                center,
+                transform,
+                flow_dir.invert(),
+                &pipe_color,
+                out.solid(),
+            );
         }
         Block::WindSource => {
             let cube_transform = translation * transform;
