@@ -159,7 +159,7 @@ impl Editor {
             Mode::PlacePiece { piece } => {
                 piece.rotate_cw_xy();
             }
-            Mode::Select { selection, .. } => {
+            Mode::Select { .. } => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::RotateCWXY(vec![mouse_block_pos]));
                 }
@@ -190,7 +190,7 @@ impl Editor {
             Mode::PlacePiece { piece } => {
                 piece.rotate_ccw_xy();
             }
-            Mode::Select { selection, .. } => {
+            Mode::Select { .. } => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
                     edit = Some(Edit::RotateCCWXY(vec![mouse_block_pos]));
                 }

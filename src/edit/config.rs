@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use glium::glutin::VirtualKeyCode;
 
-use crate::machine::grid::Dir3;
+use crate::machine::grid::{Dir3, DirMap3};
 use crate::machine::{BlipKind, Block};
 
 // TODO: Shift does not work for some reason, we don't get any key press events
@@ -145,6 +145,12 @@ impl Default for Config {
                     Block::FunnelXY {
                         flow_dir: Dir3::X_POS,
                     },
+                ),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key7),
+                    Block::GeneralPipe(DirMap3::from_fn(|dir| {
+                        dir == Dir3::Y_NEG || dir == Dir3::Y_POS
+                    })),
                 ),
                 //(ModifiedKey::new(VirtualKeyCode::Key7), Block::Solid),
                 (
