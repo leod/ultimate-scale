@@ -800,15 +800,11 @@ impl Editor {
     }
 
     fn go_into_select_mode(&mut self, is_layer_bound: bool) {
-        let mut selection = match self.mode.clone() {
-            Mode::Select { selection } => selection,
-            Mode::SelectClickedOnBlock { selection, .. } => selection,
-            Mode::RectSelect {
-                existing_selection, ..
-            } => existing_selection,
-            _ => SelectionMode::new(is_layer_bound),
-        };
-
+        let mut selection = self
+            .mode
+            .selection()
+            .cloned()
+            .unwrap_or_else(|| SelectionMode::new(is_layer_bound));
         selection.set_is_layer_bound(self.current_layer, is_layer_bound);
 
         self.mode = Mode::new_selection(selection);

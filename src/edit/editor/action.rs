@@ -43,16 +43,11 @@ impl Editor {
     }
 
     pub fn action_copy(&mut self) {
-        match &self.mode {
-            Mode::Select { selection, .. } => {
-                self.clipboard = Some(Piece::new_from_selection(
-                    &self.machine,
-                    selection.iter().cloned(),
-                ));
-            }
-            _ => {
-                // No op in other modes.
-            }
+        if let Some(selection) = self.mode.selection() {
+            self.clipboard = Some(Piece::new_from_selection(
+                &self.machine,
+                selection.iter().cloned(),
+            ));
         }
     }
 
