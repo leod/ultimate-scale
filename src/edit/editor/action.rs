@@ -117,6 +117,17 @@ impl Editor {
     pub fn action_layer_down(&mut self) {
         if self.machine.is_valid_layer(self.current_layer - 1) {
             self.current_layer -= 1;
+        } else {
+            if let Mode::DragAndDrop { ref mut piece, .. } = self.mode {
+                // Here we may have the case that we are dragging a piece in
+                // layer e.g. 3, while the editor is set to layer 0. Then the
+                // user cannot drag the object to any layer below 3, because
+                // we disallow setting the editor to layers below 0. Thus, we
+                // shift the piece down instead.
+                if self.current_layer + piece.max_pos().z > 0 {
+                    piece.shift(&-grid::Vector3::z());
+                }
+            }
         }
     }
 
