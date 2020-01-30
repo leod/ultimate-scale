@@ -53,11 +53,16 @@ pub fn pick_block(
     camera: &Camera,
     eye: &na::Point3<f32>,
     window_pos: &na::Point2<f32>,
+    filter: impl Fn(&grid::Point3) -> bool,
 ) -> Option<grid::Point3> {
     let ray = camera_ray(camera, eye, window_pos);
 
     let mut closest_block = None;
     for (_block_index, (block_pos, _placed_block)) in machine.iter_blocks() {
+        if !filter(block_pos) {
+            continue;
+        }
+
         let center = render::machine::block_center(&block_pos);
 
         let aabb = AABB {
