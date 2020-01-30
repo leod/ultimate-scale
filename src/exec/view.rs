@@ -56,6 +56,7 @@ impl ExecView {
             camera,
             &edit_camera_view.eye(),
             &input_state.mouse_window_pos(),
+            |_| true,
         );
     }
 
@@ -78,56 +79,11 @@ impl ExecView {
     pub fn on_event(&mut self, event: &WindowEvent) {
         match event {
             WindowEvent::KeyboardInput { input, .. } => self.on_keyboard_input(*input),
-            WindowEvent::MouseInput {
-                state,
-                button,
-                modifiers,
-                ..
-            } => self.on_mouse_input(*state, *button, *modifiers),
             _ => (),
         }
     }
 
     fn on_keyboard_input(&mut self, _input: glutin::KeyboardInput) {}
-
-    fn on_mouse_input(
-        &mut self,
-        state: glutin::ElementState,
-        button: glutin::MouseButton,
-        _modifiers: glutin::ModifiersState,
-    ) {
-        match button {
-            glutin::MouseButton::Left if state == glutin::ElementState::Pressed => {
-                if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    // TODO
-                    /*Exec::try_spawn_blip(
-                        false,
-                        BlipSpawnMode::Ease,
-                        BlipKind::A,
-                        &mouse_block_pos,
-                        &self.exec.machine.blocks.indices,
-                        &mut self.exec.blip_state,
-                        &mut self.exec.blips,
-                    );*/
-                }
-            }
-            glutin::MouseButton::Right if state == glutin::ElementState::Pressed => {
-                if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    // TODO
-                    /*Exec::try_spawn_blip(
-                        false,
-                        BlipSpawnMode::Ease,
-                        BlipKind::B,
-                        &mouse_block_pos,
-                        &self.exec.machine.blocks.indices,
-                        &mut self.exec.blip_state,
-                        &mut self.exec.blips,
-                    );*/
-                }
-            }
-            _ => (),
-        }
-    }
 
     pub fn ui(&mut self, _ui: &imgui::Ui) {}
 
@@ -139,6 +95,7 @@ impl ExecView {
             time,
             Some(&self.exec),
             |_| true,
+            |_| false,
             out,
         );
 
@@ -181,7 +138,7 @@ impl ExecView {
             }
 
             let is_on_wind = self.is_blip_on_wind(blip);
-            let pos_rot_anim = blip_pos_rot_anim(blip.clone(), is_on_wind);
+            let pos_rot_anim = blip_pos_rot_anim(*blip, is_on_wind);
 
             if let Some(die_mode) = blip.status.die_mode() {
                 let die_time = match die_mode {
@@ -229,11 +186,12 @@ impl ExecView {
                     na::Vector3::new(0.0, -1.0, 0.0),
                 ];
 
-                let back = rot
+                /*let back = rot
                     .transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0))
                     .normalize();
                 let side = rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0));
-                //let velocity = 3.0 * side;
+                let velocity = 3.0 * side;*/
+
                 let speed = match blip.status {
                     BlipStatus::Spawning(_) => 2.15,
                     _ => 3.0,
@@ -380,7 +338,7 @@ impl ExecView {
             ) * blip_size_anim(blip.status);*/
             let size_anim = blip_size_anim(blip.status);
             let is_on_wind = self.is_blip_on_wind(blip);
-            let pos_rot_anim = blip_pos_rot_anim(blip.clone(), is_on_wind);
+            let pos_rot_anim = blip_pos_rot_anim(*blip, is_on_wind);
 
             let size_factor = size_anim.eval(time.tick_progress());
             let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
@@ -510,12 +468,11 @@ fn blip_pos_rot_anim(
     let pos_anim = pareen::constant(blip.move_dir).map_or(center, move |move_dir| {
         let next_pos = blip.pos + move_dir.to_vector();
         let next_center = render::machine::block_center(&next_pos);
-        pareen::lerp(center, next_center).map_time_anim(
-            blip_move_rot_anim(blip.clone(), is_on_wind).map(|(progress, _)| progress),
-        )
+        pareen::lerp(center, next_center)
+            .map_time_anim(blip_move_rot_anim(blip, is_on_wind).map(|(progress, _)| progress))
     });
 
-    let rot_anim = blip_move_rot_anim(blip.clone(), is_on_wind).map(|(_, rot)| rot);
+    let rot_anim = blip_move_rot_anim(blip, is_on_wind).map(|(_, rot)| rot);
 
     pos_anim.zip(rot_anim).into_box()
 }
@@ -526,8 +483,8 @@ fn blip_move_rot_anim(
 ) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
     pareen::cond(
         !blip.status.is_pressing_button(),
-        normal_move_rot_anim(blip.clone(), is_on_wind),
-        press_button_move_rot_anim(blip.clone()),
+        normal_move_rot_anim(blip, is_on_wind),
+        press_button_move_rot_anim(blip),
     )
     .into_box()
 }
@@ -557,7 +514,7 @@ fn normal_move_rot_anim(
     blip: Blip,
     is_on_wind: bool,
 ) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
-    let blip = blip.clone();
+    let blip = blip;
     let orient = blip.orient.to_quaternion_x();
     let next_orient = blip.next_orient().to_quaternion_x();
 
@@ -603,7 +560,7 @@ fn normal_move_rot_anim(
 }
 
 fn press_button_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
-    let move_rot_anim = normal_move_rot_anim(blip.clone(), true);
+    let move_rot_anim = normal_move_rot_anim(blip, true);
     let halfway_time = 0.55;
     let (_, hold_rot) = move_rot_anim.eval(1.0);
 
@@ -611,7 +568,7 @@ fn press_button_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Unit
     let normal_anim = move_rot_anim.map(|(_, rot)| rot);
 
     // Quickly reset to a horizontal.
-    let reach_anim = normal_move_rot_anim(blip.clone(), true)
+    let reach_anim = normal_move_rot_anim(blip, true)
         .map(|(_, rot)| rot)
         .map_time(move |t| halfway_time + t * 10.0);
     let reach_time = 1.0 / 20.0;
@@ -629,7 +586,7 @@ fn press_button_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Unit
     //let finish_anim = pareen::constant(na::UnitQuaternion::identity());
 
     // Combine all:
-    let move_anim = normal_move_rot_anim(blip.clone(), true)
+    let move_anim = normal_move_rot_anim(blip, true)
         .map(|(pos, _)| pos)
         .seq_continue(halfway_time, move |halfway_pos| {
             pareen::lerp(halfway_pos, halfway_time)

@@ -2,7 +2,7 @@ use imgui::{im_str, ImString};
 
 use crate::edit::{Editor, Mode};
 
-const BUTTON_H: f32 = 20.0;
+const BUTTON_H: f32 = 25.0;
 const BUTTON_W: f32 = 66.25;
 const BG_ALPHA: f32 = 0.8;
 
@@ -11,10 +11,17 @@ impl Editor {
         imgui::Window::new(im_str!("Editor"))
             .horizontal_scrollbar(true)
             .always_auto_resize(true)
-            .position([10.0, 10.0], imgui::Condition::FirstUseEver)
+            .position([0.0, 0.0], imgui::Condition::FirstUseEver)
+            .movable(false)
             .bg_alpha(BG_ALPHA)
             .content_size([200.0, 0.0])
+            .collapsible(false)
             .build(&ui, || {
+                imgui::TreeNode::new(ui, im_str!("Layer"))
+                    .opened(true, imgui::Condition::FirstUseEver)
+                    .build(|| {
+                        self.ui_layers(ui);
+                    });
                 imgui::TreeNode::new(ui, im_str!("Modes"))
                     .opened(true, imgui::Condition::FirstUseEver)
                     .build(|| {
@@ -33,21 +40,55 @@ impl Editor {
             });
     }
 
+    fn ui_layers(&mut self, ui: &imgui::Ui) {
+        ui.text(&ImString::new(self.current_layer.to_string()));
+        ui.same_line_with_spacing(0.0, 20.0);
+
+        let selectable = imgui::Selectable::new(im_str!("↓"))
+            .disabled(!self.machine.is_valid_layer(self.current_layer - 1))
+            .size([20.0, 0.0]);
+        if selectable.build(ui) {
+            self.action_layer_down();
+        }
+        if ui.is_item_hovered() {
+            let text = format!(
+                "Go down a layer.\n\nShortcut: {:?}",
+                self.config.layer_down_key,
+            );
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
+
+        ui.same_line(0.0);
+        let selectable = imgui::Selectable::new(im_str!("↑"))
+            .disabled(!self.machine.is_valid_layer(self.current_layer + 1))
+            .size([20.0, 0.0]);
+        if selectable.build(ui) {
+            self.action_layer_up();
+        }
+        if ui.is_item_hovered() {
+            let text = format!("Go up a layer.\n\nShortcut: {:?}", self.config.layer_up_key,);
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
+    }
+
     fn ui_modes(&mut self, ui: &imgui::Ui) {
         ui.columns(2, im_str!("ui_modes"), false);
         ui.set_column_width(0, 50.0);
 
+        let selection = match self.mode.clone() {
+            Mode::Select { selection, .. } => Some(selection),
+            Mode::SelectClickedOnBlock { selection, .. } => Some(selection),
+            Mode::RectSelect {
+                existing_selection, ..
+            } => Some(existing_selection),
+            Mode::DragAndDrop { selection, .. } => Some(selection),
+            _ => None,
+        };
+
         ui.text_disabled(&ImString::new(format!("{}", self.config.select_key)));
         ui.next_column();
-
-        let selected = match &self.mode {
-            Mode::Select { .. } => true,
-            Mode::SelectClickedOnBlock { .. } => true,
-            Mode::RectSelect { .. } => true,
-            Mode::DragAndDrop { .. } => true,
-            _ => false,
-        };
-        let selectable = imgui::Selectable::new(im_str!("Select")).selected(selected);
+        let selectable = imgui::Selectable::new(im_str!("Select"))
+            .selected(selection.as_ref().map_or(false, |s| !s.is_layer_bound()));
         if selectable.build(ui) {
             self.action_select_mode();
         }
@@ -55,6 +96,25 @@ impl Editor {
             let text = format!(
                 "Switch to block selection mode.\n\nShortcut: {}",
                 self.config.select_key
+            );
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
+        ui.next_column();
+
+        ui.text_disabled(&ImString::new(format!(
+            "{}",
+            self.config.select_layer_bound_key
+        )));
+        ui.next_column();
+        let selectable = imgui::Selectable::new(im_str!("Select in layer"))
+            .selected(selection.as_ref().map_or(false, |s| s.is_layer_bound()));
+        if selectable.build(ui) {
+            self.action_select_layer_bound_mode();
+        }
+        if ui.is_item_hovered() {
+            let text = format!(
+                "Switch to selecting only in the current layer.\n\nShortcut: {}",
+                self.config.select_layer_bound_key
             );
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
@@ -214,6 +274,19 @@ impl Editor {
             let text = format!(
                 "Mirror blocks to be placed at Y axis.\n\nShortcut: {}",
                 self.config.mirror_y_key
+            );
+            ui.tooltip(|| ui.text(&ImString::new(text)));
+        }
+
+        ui.same_line(0.0);
+
+        if ui.button(im_str!("Color"), [BUTTON_W, BUTTON_H]) {
+            self.action_next_kind();
+        }
+        if ui.is_item_hovered() {
+            let text = format!(
+                "Changes color of selected blocks where applicable (i.e. blip spawns and copiers).\n\nShortcut: {}",
+                self.config.block_kind_key,
             );
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }

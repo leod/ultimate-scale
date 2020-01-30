@@ -21,6 +21,7 @@ pub struct Config {
 
     pub rotate_degrees_per_sec: f32,
     pub fast_rotate_multiplier: f32,
+    pub max_height: f32,
 }
 
 impl Default for Config {
@@ -39,6 +40,7 @@ impl Default for Config {
             fast_move_multiplier: 4.0,
             rotate_degrees_per_sec: 90.0,
             fast_rotate_multiplier: 2.0,
+            max_height: 50.0,
         }
     }
 }
@@ -150,7 +152,7 @@ impl EditCameraViewInput {
         camera.height += 0.25 * self.move_speed_per_sec(input_state) * self.height_delta;
         self.height_delta = 0.0;
 
-        camera.height = camera.height.max(0.5).min(100.0);
+        camera.height = camera.height.max(0.5).min(self.config.max_height);
 
         let rotation_z = na::Rotation3::from_axis_angle(
             &na::Vector3::z_axis(),

@@ -182,7 +182,7 @@ impl Dir3 {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Debug, Default)]
+#[derive(PartialEq, Eq, Clone, Debug, Default, Serialize, Deserialize)]
 pub struct DirMap3<T>(pub [T; Dir3::NUM_INDICES]);
 
 #[allow(dead_code)]
@@ -300,4 +300,11 @@ impl<T> IndexMut<Point3> for Grid3<T> {
         let index = self.node_index(&p);
         &mut self.data[index]
     }
+}
+
+pub fn is_straight(dirs: &DirMap3<bool>) -> bool {
+    let count: usize = dirs.values().map(|&enabled| enabled as usize).sum();
+    let has_straight = Dir3::ALL.iter().any(|&dir| dirs[dir] && dirs[dir.invert()]);
+
+    count == 2 && has_straight
 }
