@@ -13,9 +13,7 @@ pub enum Mode {
     /// For consistency, the selected positions must always contain a block.
     /// There must be no duplicate positions. The order corresponds to the
     /// selection order.
-    Select {
-        selection: SelectionMode,
-    },
+    Select { selection: SelectionMode },
 
     /// User just clicked on a block in selection mode.
     ///
@@ -56,6 +54,8 @@ pub enum Mode {
 
     PlacePiece {
         piece: Piece,
+        is_paste: bool,
+        outer: Box<Mode>,
     },
 
     PipeTool {
@@ -83,6 +83,21 @@ impl Mode {
             last_pos: None,
             rotation_xy,
             blocks: HashMap::new(),
+        }
+    }
+
+    pub fn switch_to_place_piece(self, piece: Piece, is_paste: bool) -> Self {
+        match self {
+            Mode::PlacePiece { outer, .. } => Mode::PlacePiece {
+                piece,
+                is_paste,
+                outer,
+            },
+            x => Mode::PlacePiece {
+                piece,
+                is_paste,
+                outer: Box::new(x),
+            },
         }
     }
 
@@ -139,6 +154,19 @@ impl Mode {
                 let selection = selection.make_consistent_with_machine(machine);
 
                 Mode::DragAndDrop { selection, piece }
+            }
+            Mode::PlacePiece {
+                piece,
+                is_paste,
+                outer,
+            } => {
+                let new_outer = (*outer).clone().make_consistent_with_machine(machine);
+
+                Mode::PlacePiece {
+                    piece,
+                    is_paste,
+                    outer: Box::new(new_outer),
+                }
             }
             mode => mode,
         }

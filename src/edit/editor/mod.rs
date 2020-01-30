@@ -115,7 +115,7 @@ impl Editor {
         // to place.
         let piece = Piece::new_origin_block(PlacedBlock { block });
 
-        self.mode = Mode::PlacePiece { piece };
+        self.mode = self.mode.clone().switch_to_place_piece(piece, false);
     }
 
     pub fn update(
@@ -256,7 +256,11 @@ impl Editor {
                     end_pos: input_state.mouse_window_pos(),
                 }
             }
-            Mode::PlacePiece { piece } if input_state.is_button_pressed(MouseButton::Left) => {
+            Mode::PlacePiece {
+                piece,
+                is_paste,
+                outer,
+            } if input_state.is_button_pressed(MouseButton::Left) => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                     let mut piece = piece.clone();
                     piece.shift(&mouse_grid_pos.coords);
@@ -265,17 +269,34 @@ impl Editor {
                     self.run_and_track_edit(edit);
                 }
 
-                Mode::PlacePiece { piece }
-            }
-            Mode::PlacePiece { piece } if input_state.is_button_pressed(MouseButton::Right) => {
-                if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let edit = Edit::SetBlocks(maplit::hashmap! {
-                        mouse_grid_pos => None,
-                    });
-                    self.run_and_track_edit(edit);
+                Mode::PlacePiece {
+                    piece,
+                    is_paste,
+                    outer,
                 }
+            }
+            Mode::PlacePiece {
+                piece,
+                is_paste,
+                outer,
+            } if input_state.is_button_pressed(MouseButton::Right) => {
+                if !is_paste {
+                    if let Some(mouse_grid_pos) = self.mouse_grid_pos {
+                        let edit = Edit::SetBlocks(maplit::hashmap! {
+                            mouse_grid_pos => None,
+                        });
+                        self.run_and_track_edit(edit);
+                    }
 
-                Mode::PlacePiece { piece }
+                    Mode::PlacePiece {
+                        piece,
+                        is_paste,
+                        outer,
+                    }
+                } else {
+                    // Cancel placing and return to previous mode.
+                    *outer
+                }
             }
             Mode::DragAndDrop { selection, .. }
                 if input_state.is_button_pressed(MouseButton::Right) =>

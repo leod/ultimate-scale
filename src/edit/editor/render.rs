@@ -113,7 +113,7 @@ impl Editor {
                     ..Default::default()
                 });
             }
-            Mode::PlacePiece { piece } => {
+            Mode::PlacePiece { piece, .. } => {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                     self.render_piece_to_place(piece, &mouse_grid_pos, out);
                 }

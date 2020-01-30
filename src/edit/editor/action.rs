@@ -85,7 +85,7 @@ impl Editor {
             self.current_layer -= too_high.max(self.current_layer);
             assert!(self.machine.is_valid_layer(self.current_layer));
 
-            self.mode = Mode::PlacePiece { piece };
+            self.mode = self.mode.clone().switch_to_place_piece(piece, true);
         }
     }
 
@@ -148,6 +148,7 @@ impl Editor {
         self.mode = match &self.mode {
             Mode::DragAndDrop { selection, .. } => Mode::new_selection(selection.clone()),
             Mode::PipeTool { last_pos, .. } if last_pos.is_some() => Mode::new_pipe_tool(),
+            Mode::PlacePiece { outer, .. } => (**outer).clone(),
             _ => Mode::new_select(),
         };
     }
@@ -156,7 +157,7 @@ impl Editor {
         let mut edit = None;
 
         match &mut self.mode {
-            Mode::PlacePiece { piece } => {
+            Mode::PlacePiece { piece, .. } => {
                 piece.rotate_cw_xy();
             }
             Mode::Select { .. } => {
@@ -187,7 +188,7 @@ impl Editor {
         let mut edit = None;
 
         match &mut self.mode {
-            Mode::PlacePiece { piece } => {
+            Mode::PlacePiece { piece, .. } => {
                 piece.rotate_ccw_xy();
             }
             Mode::Select { .. } => {
