@@ -211,7 +211,8 @@ impl Update {
     }
 
     pub fn update(&mut self, input: Input) -> Output {
-        self.sync_exec_with_play_status(input.play_status.as_ref());
+        let mut render_stage = render::Stage::default();
+        self.sync_with_play_status(input.play_status.as_ref(), &mut render_stage);
 
         let viewport_size =
             na::Vector2::new(input.target_size.0 as f32, input.target_size.1 as f32);
@@ -280,10 +281,14 @@ impl Update {
         );
         self.camera.view = self.edit_camera_view.view();
 
-        self.render(input)
+        self.render(input, render_stage)
     }
 
-    pub fn sync_exec_with_play_status(&mut self, play_status: Option<&play::Status>) {
+    pub fn sync_with_play_status(
+        &mut self,
+        play_status: Option<&play::Status>,
+        render_stage: &mut render::Stage,
+    ) {
         // Do we need to start/stop execution?
         if self.exec_view.is_some() != play_status.is_some() {
             if play_status.is_some() {
@@ -314,7 +319,14 @@ impl Update {
             let mut last_transduce_time = prev_time.clone();
 
             if *num_ticks_since_last_update > 0 {
-                // TODO: Transduce
+                // Finish off transducing the previous tick.
+                if let Some(prev_time) = prev_time.as_ref() {
+                    let mut end_of_last_tick = prev_time.clone();
+                    end_of_last_tick.next_tick_timer.set_progress(1.0);
+
+                    exec_view.transduce(prev_time, &end_of_last_tick, render_stage);
+                    last_transduce_time = Some(end_of_last_tick);
+                }
             }
 
             for _ in 0..*num_ticks_since_last_update {
@@ -325,14 +337,14 @@ impl Update {
                 }
             }
 
-            // TODO: Transduce
+            let last_transduce_time = last_transduce_time.unwrap_or_else(|| TickTime::zero());
+            exec_view.transduce(&last_transduce_time, &time, render_stage);
         }
     }
 
-    fn render(&mut self, input: Input) -> Output {
+    fn render(&mut self, input: Input, mut render_stage: render::Stage) -> Output {
         profile!("render");
 
-        let mut render_stage = render::Stage::default();
         if let Some(exec_view) = self.exec_view.as_mut() {
             // Safe to unwrap here, since we have synchronized execution status
             // above.
