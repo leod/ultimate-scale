@@ -9,7 +9,7 @@ use nalgebra as na;
 use rendology::Camera;
 
 use crate::config::{Config, ViewConfig};
-use crate::edit::Editor;
+use crate::edit::{editor, Editor};
 use crate::edit_camera_view::{EditCameraView, EditCameraViewInput};
 use crate::exec::TickTime;
 use crate::input_state::InputState;
@@ -17,14 +17,16 @@ use crate::render;
 
 pub struct Input {
     pub dt: Duration,
-    pub window_events: Vec<(InputState, glutin::WindowEvent)>,
-    pub input_state: InputState,
     pub target_size: (u32, u32),
+    pub input_state: InputState,
+    pub window_events: Vec<(InputState, glutin::WindowEvent)>,
+    pub editor_ui_output: editor::ui::Output,
 }
 
 pub struct Output {
     pub render_stage: render::Stage,
     pub render_context: render::Context,
+    pub editor_ui_input: Option<editor::ui::Input>,
 }
 
 enum Command {
@@ -189,6 +191,8 @@ impl Update {
             }
         }
 
+        self.editor.on_ui_output(&input.editor_ui_output);
+
         self.editor.update(
             input.dt,
             &input.input_state,
@@ -236,9 +240,12 @@ impl Update {
             tick_time: TickTime::zero(),
         };
 
+        let editor_ui_input = self.editor.ui_input();
+
         Output {
             render_stage,
             render_context,
+            editor_ui_input: Some(editor_ui_input),
         }
     }
 }

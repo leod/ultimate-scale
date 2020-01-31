@@ -256,7 +256,7 @@ fn main() {
         if let Some(new_window_size) = new_window_size {
             info!("Window resized to: {:?}", new_window_size);
 
-            game.on_window_resize(&display, new_window_size).unwrap();
+            game.on_window_resize(&display, new_window_size);
         }
 
         let now_clock = Instant::now();
@@ -277,7 +277,7 @@ fn main() {
                 .expect("Failed to start imgui frame");
             previous_clock_imgui = imgui_io.update_delta_time(previous_clock_imgui);
             let ui = imgui.frame();
-            //game.ui(&ui);
+            game.ui(&ui);
 
             imgui_platform.prepare_render(&ui, &window);
             ui.render()

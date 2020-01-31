@@ -1,4 +1,5 @@
 mod draw;
+mod ui;
 mod update;
 
 use std::time::Duration;
@@ -13,7 +14,7 @@ use glium::glutin;
 use rendology::{Camera, Light};
 
 use crate::config::{self, Config};
-use crate::edit::Editor;
+use crate::edit::{editor, Editor};
 use crate::edit_camera_view::{EditCameraView, EditCameraViewInput};
 use crate::exec::play::{self, Play, TickTime};
 use crate::exec::{ExecView, LevelProgress, LevelStatus};
@@ -25,6 +26,29 @@ use crate::util::stats;
 use draw::Draw;
 use update::{Update, UpdateRunner};
 
+#[derive(Debug, Clone, Default)]
+struct UpdateInputStage {
+    window_events: Vec<(InputState, glutin::WindowEvent)>,
+    editor_ui_output: editor::ui::Output,
+}
+
+impl UpdateInputStage {
+    fn into_input(
+        self,
+        dt: Duration,
+        target_size: (u32, u32),
+        input_state: InputState,
+    ) -> update::Input {
+        update::Input {
+            dt,
+            target_size,
+            input_state,
+            window_events: self.window_events,
+            editor_ui_output: self.editor_ui_output,
+        }
+    }
+}
+
 pub struct Game {
     config: Config,
 
@@ -32,11 +56,14 @@ pub struct Game {
     draw: Draw,
 
     target_size: (u32, u32),
-    next_window_events: Vec<(InputState, glutin::WindowEvent)>,
 
     last_output: Option<update::Output>,
+    next_input_stage: UpdateInputStage,
 
     fps: stats::Variable,
+    show_config_ui: bool,
+    show_debug_ui: bool,
+    recreate_render_pipeline: bool,
 }
 
 impl Game {
@@ -44,7 +71,7 @@ impl Game {
         facade: &F,
         config: &Config,
         initial_machine: Machine,
-    ) -> Result<Game, draw::CreationError> {
+    ) -> Result<Game, rendology::pipeline::CreationError> {
         info!("Creating resources");
 
         let editor = Editor::new(&config.editor, initial_machine);
@@ -56,21 +83,23 @@ impl Game {
 
         // Kick off the update loop, so that we get our first `update::Output`
         // to draw.
-        update.send_input(update::Input {
-            dt: Duration::from_secs(0),
-            window_events: Vec::new(),
-            input_state: InputState::empty(1.0),
+        update.send_input(UpdateInputStage::default().into_input(
+            Duration::from_secs(0),
             target_size,
-        });
+            InputState::empty(1.0),
+        ));
 
         Ok(Game {
             config: config.clone(),
             update,
             draw,
             target_size,
-            next_window_events: Vec::new(),
             last_output: None,
+            next_input_stage: UpdateInputStage::default(),
             fps: stats::Variable::new(Duration::from_secs(1)),
+            show_config_ui: false,
+            show_debug_ui: false,
+            recreate_render_pipeline: false,
         })
     }
 
@@ -90,17 +119,30 @@ impl Game {
 
             // Submit the next input for the update thread. Updating can then run
             // at the same time as drawing the previous output.
-            let window_events = std::mem::replace(&mut self.next_window_events, Vec::new());
+            let next_input_stage =
+                std::mem::replace(&mut self.next_input_stage, Default::default());
+            let next_input = next_input_stage.into_input(dt, self.target_size, input_state.clone());
 
-            let input = update::Input {
-                dt,
-                window_events,
-                input_state: input_state.clone(),
-                target_size: self.target_size,
-            };
-
-            self.update.send_input(input);
+            self.update.send_input(next_input);
         }
+    }
+
+    pub fn create_resources<F: glium::backend::Facade>(
+        &mut self,
+        facade: &F,
+    ) -> Result<(), rendology::pipeline::CreationError> {
+        if self.recreate_render_pipeline {
+            info!(
+                "Recreating render pipeline with config: {:?}",
+                self.config.render_pipeline,
+            );
+
+            self.recreate_render_pipeline = false;
+
+            self.draw = Draw::create(facade, &self.config)?;
+        }
+
+        Ok(())
     }
 
     pub fn draw<F: glium::backend::Facade, S: glium::Surface>(
@@ -123,7 +165,8 @@ impl Game {
     }
 
     pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {
-        self.next_window_events
+        self.next_input_stage
+            .window_events
             .push((input_state.clone(), event.clone()));
     }
 
@@ -131,7 +174,7 @@ impl Game {
         &mut self,
         _facade: &F,
         new_window_size: glutin::dpi::LogicalSize,
-    ) -> Result<(), draw::CreationError> {
-        Ok(())
+    ) -> () {
+        ()
     }
 }

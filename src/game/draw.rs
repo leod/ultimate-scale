@@ -22,14 +22,13 @@ impl Draw {
     pub fn create<F: glium::backend::Facade>(
         facade: &F,
         config: &Config,
-    ) -> Result<Self, CreationError> {
+    ) -> Result<Self, rendology::pipeline::CreationError> {
         // TODO: Account for DPI in initialization
         let render_pipeline = render::Pipeline::create(
             facade,
             &config.render_pipeline,
             config.view.window_size.into(),
-        )
-        .map_err(CreationError::RenderPipeline)?;
+        )?;
 
         Ok(Draw { render_pipeline })
     }
@@ -43,9 +42,4 @@ impl Draw {
         self.render_pipeline
             .draw_frame(facade, &input.context, input.stage, target)
     }
-}
-
-#[derive(Debug)]
-pub enum CreationError {
-    RenderPipeline(rendology::pipeline::CreationError),
 }

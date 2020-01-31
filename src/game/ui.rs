@@ -4,6 +4,7 @@ use imgui::{im_str, ImString};
 
 use rendology::fxaa;
 
+use crate::edit::editor;
 use crate::exec::{LevelProgress, LevelStatus};
 use crate::game::Game;
 use crate::machine::level;
@@ -11,22 +12,29 @@ use crate::render;
 
 impl Game {
     pub fn ui(&mut self, ui: &imgui::Ui) {
-        let window_size =
-            na::Vector2::new(self.camera.viewport_size.x, self.camera.viewport_size.y);
+        let editor_ui_input = self
+            .last_output
+            .as_ref()
+            .and_then(|o| o.editor_ui_input.as_ref());
 
-        if let Some((_, exec_view)) = self.exec.as_mut() {
-            exec_view.ui(ui);
-        } else {
-            self.editor.ui(ui);
+        if let Some(editor_ui_input) = editor_ui_input {
+            editor::ui::run(
+                editor_ui_input,
+                ui,
+                &mut self.next_input_stage.editor_ui_output,
+            );
         }
 
-        let play_state = self.exec.as_ref().map(|(play_state, _)| play_state);
-        self.play.ui(window_size, play_state, ui);
+        /*let play_state = self.exec.as_ref().map(|(play_state, _)| play_state);
+        self.play.ui(window_size, play_state, ui);*/
 
         if self.show_config_ui {
             imgui::Window::new(im_str!("Config"))
                 .horizontal_scrollbar(true)
-                .position([window_size.x, 10.0], imgui::Condition::FirstUseEver)
+                .position(
+                    [self.target_size.0 as f32, 10.0],
+                    imgui::Condition::FirstUseEver,
+                )
                 .position_pivot([1.0, 0.0])
                 .always_auto_resize(true)
                 .bg_alpha(0.8)
@@ -106,7 +114,10 @@ impl Game {
         if self.show_debug_ui {
             imgui::Window::new(im_str!("Debug"))
                 .horizontal_scrollbar(true)
-                .position([window_size.x, 300.0], imgui::Condition::FirstUseEver)
+                .position(
+                    [self.target_size.0 as f32, 300.0],
+                    imgui::Condition::FirstUseEver,
+                )
                 .position_pivot([1.0, 0.0])
                 .always_auto_resize(true)
                 .bg_alpha(0.8)
@@ -118,7 +129,7 @@ impl Game {
                 });
         }
 
-        if let Some(level) = self.editor.machine().level.as_ref() {
+        /*if let Some(level) = self.editor.machine().level.as_ref() {
             if let Some((_, exec)) = self.exec.as_ref() {
                 // During execution, set the shown example to the generated
                 // one. Also remember the progress, so that it can still be
@@ -173,7 +184,7 @@ impl Game {
             if let Some(example) = updated_example {
                 self.level_example = Some(example);
             }
-        }
+        }*/
     }
 
     fn ui_show_example(&self, example: &LevelProgress, ui: &imgui::Ui) {
