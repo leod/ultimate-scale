@@ -349,6 +349,16 @@ impl Block {
             _ => None,
         }
     }
+
+    pub fn can_connect_by_pipe(&self, dir_out: Dir3) -> bool {
+        let is_pipe = if let Block::GeneralPipe(_) = self {
+            true
+        } else {
+            false
+        };
+
+        is_pipe || self.has_wind_hole(dir_out)
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
