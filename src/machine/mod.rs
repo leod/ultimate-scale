@@ -338,6 +338,27 @@ impl Block {
             _ => false,
         }
     }
+
+    pub fn combine(&self, other: &Block) -> Option<Block> {
+        match (self, other) {
+            (Block::GeneralPipe(dirs_a), Block::GeneralPipe(dirs_b)) => {
+                Some(Block::GeneralPipe(DirMap3::from_fn(|dir| {
+                    dirs_a[dir] || dirs_b[dir]
+                })))
+            }
+            _ => None,
+        }
+    }
+
+    pub fn can_connect_by_pipe(&self, dir_out: Dir3) -> bool {
+        let is_pipe = if let Block::GeneralPipe(_) = self {
+            true
+        } else {
+            false
+        };
+
+        is_pipe || self.has_wind_hole(dir_out)
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]

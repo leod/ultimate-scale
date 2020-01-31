@@ -40,15 +40,38 @@ impl Edit {
             Edit::NoOp => Edit::NoOp,
             Edit::SetBlocks(blocks) => {
                 // What are we going to set?
-                let valid_blocks = blocks
+                let valid_blocks: HashMap<_, _> = blocks
                     .into_iter()
                     .filter(|(p, _block)| machine.is_valid_pos(p))
-                    .collect::<HashMap<_, _>>();
+                    .collect();
 
                 // What is there already?
                 let mut previous_blocks: HashMap<_, _> = valid_blocks
                     .keys()
                     .map(|p| (*p, machine.get(p).cloned()))
+                    .collect();
+
+                // Combine blocks whenever possible (i.e. when placing a pipe
+                // into another pipe).
+                let valid_blocks: HashMap<_, _> = valid_blocks
+                    .into_iter()
+                    .map(|(p, new_block)| {
+                        let new_block = new_block.map(|new_block| {
+                            if let Some(previous_block) = previous_blocks.get(&p).cloned().flatten()
+                            {
+                                let block = previous_block
+                                    .block
+                                    .combine(&new_block.block)
+                                    .unwrap_or(new_block.block);
+
+                                PlacedBlock { block }
+                            } else {
+                                new_block
+                            }
+                        });
+
+                        (p, new_block)
+                    })
                     .collect();
 
                 // Make sure that we conserve input and output blocks.

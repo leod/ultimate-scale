@@ -118,7 +118,13 @@ impl Editor {
         if self.machine.is_valid_layer(self.current_layer - 1) {
             self.current_layer -= 1;
         } else {
-            if let Mode::DragAndDrop { ref mut piece, .. } = self.mode {
+            let piece = match &mut self.mode {
+                Mode::DragAndDrop { piece, .. } => Some(piece),
+                Mode::PlacePiece { piece, .. } => Some(piece),
+                _ => None,
+            };
+
+            if let Some(piece) = piece {
                 // Here we may have the case that we are dragging a piece in
                 // layer e.g. 3, while the editor is set to layer 0. Then the
                 // user cannot drag the object to any layer below 3, because
@@ -174,12 +180,6 @@ impl Editor {
             Mode::DragAndDrop { piece, .. } => {
                 piece.rotate_cw_xy();
             }
-            Mode::PipeTool { rotation_xy, .. } => {
-                *rotation_xy += 1;
-                if *rotation_xy == 4 {
-                    *rotation_xy = 0;
-                }
-            }
             _ => {
                 // No op in other modes.
             }
@@ -204,13 +204,6 @@ impl Editor {
             }
             Mode::DragAndDrop { piece, .. } => {
                 piece.rotate_ccw_xy();
-            }
-            Mode::PipeTool { rotation_xy, .. } => {
-                if *rotation_xy == 0 {
-                    *rotation_xy = 3;
-                } else {
-                    *rotation_xy -= 1;
-                }
             }
             _ => {
                 // No op in other modes.
