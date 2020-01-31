@@ -109,7 +109,6 @@ impl ExecView {
         time: &TickTime,
         render_out: &mut render::Stage,
     ) {
-        return;
         assert!(
             prev_time.num_ticks_passed < time.num_ticks_passed
                 || (prev_time.num_ticks_passed == time.num_ticks_passed
@@ -224,7 +223,7 @@ impl ExecView {
             }
         }
 
-        println!("spawned {}", num_spawned)
+        //println!("spawned {}", num_spawned)
     }
 
     fn kill_particles(
