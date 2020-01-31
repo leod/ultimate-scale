@@ -332,11 +332,9 @@ impl Editor {
                     Mode::new_selection(selection)
                 }
             }
-            Mode::PipeTool {
-                last_pos: None,
-                rotation_xy,
-                ..
-            } if input_state.is_button_pressed(MouseButton::Right) => {
+            Mode::PipeTool { last_pos: None, .. }
+                if input_state.is_button_pressed(MouseButton::Right) =>
+            {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
                     let edit = Edit::SetBlocks(maplit::hashmap! {
                         mouse_grid_pos => None,
@@ -344,19 +342,13 @@ impl Editor {
                     self.run_and_track_edit(edit);
                 }
 
-                Mode::new_pipe_tool_with_rotation(rotation_xy)
+                Mode::new_pipe_tool()
             }
-            Mode::PipeTool { rotation_xy, .. }
-                if input_state.is_button_pressed(MouseButton::Right) =>
-            {
+            Mode::PipeTool { .. } if input_state.is_button_pressed(MouseButton::Right) => {
                 // Abort placement.
-                Mode::new_pipe_tool_with_rotation(rotation_xy)
+                Mode::new_pipe_tool()
             }
-            Mode::PipeTool {
-                rotation_xy,
-                blocks,
-                ..
-            } if !input_state.is_button_pressed(MouseButton::Left) => {
+            Mode::PipeTool { blocks, .. } if !input_state.is_button_pressed(MouseButton::Left) => {
                 // Finish placement.
                 edit = Some(Edit::SetBlocks(
                     blocks
@@ -365,16 +357,15 @@ impl Editor {
                         .collect(),
                 ));
 
-                Mode::new_pipe_tool_with_rotation(rotation_xy)
+                Mode::new_pipe_tool()
             }
             Mode::PipeTool {
                 last_pos: Some(last_pos),
-                rotation_xy,
                 blocks,
                 ..
             } if input_state.is_button_pressed(MouseButton::Left) => {
                 // Continue in pipe tool placement mode
-                self.update_input_continue_pipe_tool(last_pos, rotation_xy, blocks)
+                self.update_input_continue_pipe_tool(last_pos, blocks)
             }
             x => {
                 // No mode update.
@@ -390,7 +381,6 @@ impl Editor {
     fn update_input_continue_pipe_tool(
         &self,
         last_pos: grid::Point3,
-        rotation_xy: usize,
         mut blocks: HashMap<grid::Point3, PlacedBlock>,
     ) -> Mode {
         let mouse_grid_pos = self
@@ -416,22 +406,8 @@ impl Editor {
                     });
 
                 let connect = last_block.map_or(true, |last_block| {
-                    let last_is_pipe = if let Block::GeneralPipe(_) = last_block.block {
-                        true
-                    } else {
-                        false
-                    };
-                    let new_is_pipe = if let Block::GeneralPipe(_) = new_block.block {
-                        true
-                    } else {
-                        false
-                    };
-
-                    let connect_last = last_is_pipe || last_block.block.has_wind_hole(delta_dir);
-                    let connect_new =
-                        new_is_pipe || new_block.block.has_wind_hole(delta_dir.invert());
-
-                    connect_last && connect_new
+                    last_block.block.can_connect_by_pipe(delta_dir)
+                        && new_block.block.can_connect_by_pipe(delta_dir.invert())
                 });
 
                 if connect {
@@ -453,26 +429,19 @@ impl Editor {
                 }
             } else {
                 // New mouse grid position is not a neighbor of last_pos
-                let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(|dir| {
-                    dir == grid::Dir3::Y_NEG || dir == grid::Dir3::Y_POS
-                }));
-                for _ in 0..rotation_xy {
-                    block.mutate_dirs(|dir| dir.rotated_cw_xy());
-                }
+                let block = Block::GeneralPipe(grid::DirMap3::from_fn(|_| false));
 
                 blocks.insert(mouse_grid_pos, PlacedBlock { block });
             }
 
             Mode::PipeTool {
                 last_pos: Some(mouse_grid_pos),
-                rotation_xy,
                 blocks,
             }
         } else {
             // No change
             Mode::PipeTool {
                 last_pos: Some(last_pos),
-                rotation_xy,
                 blocks,
             }
         }
@@ -584,7 +553,7 @@ impl Editor {
             {
                 self.on_left_mouse_click_select(input_state, modifiers, selection)
             }
-            Mode::PipeTool { rotation_xy, .. }
+            Mode::PipeTool { .. }
                 if button == glutin::MouseButton::Left
                     && state == glutin::ElementState::Pressed =>
             {
@@ -595,12 +564,7 @@ impl Editor {
                     // Don't overwrite existing block when starting placement
                     let placed_block = self.machine.get(&mouse_grid_pos).map_or_else(
                         || {
-                            let mut block = Block::GeneralPipe(grid::DirMap3::from_fn(|dir| {
-                                dir == grid::Dir3::Y_NEG || dir == grid::Dir3::Y_POS
-                            }));
-                            for _ in 0..rotation_xy {
-                                block.mutate_dirs(|dir| dir.rotated_cw_xy());
-                            }
+                            let block = Block::GeneralPipe(grid::DirMap3::from_fn(|_| false));
                             PlacedBlock { block }
                         },
                         |placed_block| placed_block.clone(),
@@ -610,11 +574,10 @@ impl Editor {
 
                     Mode::PipeTool {
                         last_pos: Some(mouse_grid_pos),
-                        rotation_xy,
                         blocks,
                     }
                 } else {
-                    Mode::new_pipe_tool_with_rotation(rotation_xy)
+                    Mode::new_pipe_tool()
                 }
             }
             x => x,

@@ -60,7 +60,6 @@ pub enum Mode {
 
     PipeTool {
         last_pos: Option<grid::Point3>,
-        rotation_xy: usize,
         blocks: HashMap<grid::Point3, PlacedBlock>,
     },
 }
@@ -75,13 +74,8 @@ impl Mode {
     }
 
     pub fn new_pipe_tool() -> Self {
-        Self::new_pipe_tool_with_rotation(1)
-    }
-
-    pub fn new_pipe_tool_with_rotation(rotation_xy: usize) -> Self {
         Mode::PipeTool {
             last_pos: None,
-            rotation_xy,
             blocks: HashMap::new(),
         }
     }

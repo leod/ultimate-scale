@@ -180,12 +180,6 @@ impl Editor {
             Mode::DragAndDrop { piece, .. } => {
                 piece.rotate_cw_xy();
             }
-            Mode::PipeTool { rotation_xy, .. } => {
-                *rotation_xy += 1;
-                if *rotation_xy == 4 {
-                    *rotation_xy = 0;
-                }
-            }
             _ => {
                 // No op in other modes.
             }
@@ -210,13 +204,6 @@ impl Editor {
             }
             Mode::DragAndDrop { piece, .. } => {
                 piece.rotate_ccw_xy();
-            }
-            Mode::PipeTool { rotation_xy, .. } => {
-                if *rotation_xy == 0 {
-                    *rotation_xy = 3;
-                } else {
-                    *rotation_xy -= 1;
-                }
             }
             _ => {
                 // No op in other modes.

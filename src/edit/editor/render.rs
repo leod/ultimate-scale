@@ -123,12 +123,52 @@ impl Editor {
                 }
             }
             Mode::PipeTool {
-                last_pos,
-                rotation_xy,
-                blocks,
-                ..
+                last_pos, blocks, ..
             } => {
                 let mouse_grid_pos = self.mouse_grid_pos.filter(|p| self.machine.is_valid_pos(p));
+
+                if let Some(mouse_grid_pos) = mouse_grid_pos {
+                    // Preview the available connections at the mouse position.
+                    let available_dirs = grid::DirMap3::from_fn(|dir| {
+                        let neighbor_pos = mouse_grid_pos + dir.to_vector();
+
+                        let is_valid_neighbor = self.machine.is_valid_pos(&neighbor_pos);
+                        let can_connect_mouse = self
+                            .machine
+                            .get(&mouse_grid_pos)
+                            .map_or(true, |block| block.block.can_connect_by_pipe(dir));
+                        let can_connect_neighbor = self
+                            .machine
+                            .get(&neighbor_pos)
+                            .map_or(true, |block| block.block.can_connect_by_pipe(dir.invert()));
+
+                        is_valid_neighbor && can_connect_mouse && can_connect_neighbor
+                    });
+
+                    if available_dirs.values().any(|b| *b) {
+                        let placed_block = PlacedBlock {
+                            block: Block::GeneralPipe(available_dirs),
+                        };
+                        let block_center = render::machine::block_center(&mouse_grid_pos);
+                        let block_transform =
+                            render::machine::placed_block_transform(&placed_block);
+                        out.dither = true;
+                        render::machine::render_block(
+                            &placed_block,
+                            &TickTime::zero(),
+                            None,
+                            None,
+                            None,
+                            &block_center,
+                            &block_transform,
+                            0.5,
+                            out,
+                        );
+                        out.dither = false;
+                    }
+
+                    self.render_base(&mouse_grid_pos, na::Vector2::new(1, 1), out);
+                }
 
                 if let Some(last_pos) = last_pos {
                     // Pipe tool is running.
@@ -151,12 +191,10 @@ impl Editor {
                             self.render_block_wireframe(
                                 &pos,
                                 0.7,
-                                10.0,
-                                &na::Vector4::new(0.7, 0.7, 0.7, 1.0),
+                                7.0,
+                                &na::Vector4::new(0.6, 0.6, 0.6, 1.0),
                                 out,
                             );
-                        } else {
-                            self.render_base(pos, na::Vector2::new(1, 1), out);
                         }
                     }
                 } else if let Some(mouse_grid_pos) = mouse_grid_pos {
@@ -168,29 +206,6 @@ impl Editor {
                         &na::Vector4::new(0.2, 0.6, 0.2, 1.0),
                         out,
                     );
-                    self.render_base(&mouse_grid_pos, na::Vector2::new(1, 1), out);
-
-                    if self.machine.get(&mouse_grid_pos).is_none() {
-                        let mut block = Block::Pipe(grid::Dir3::Y_NEG, grid::Dir3::Y_POS);
-                        for _ in 0..*rotation_xy {
-                            block.mutate_dirs(|dir| dir.rotated_cw_xy());
-                        }
-                        let placed_block = PlacedBlock { block };
-                        let block_center = render::machine::block_center(&mouse_grid_pos);
-                        let block_transform =
-                            render::machine::placed_block_transform(&placed_block);
-                        render::machine::render_block(
-                            &placed_block,
-                            &TickTime::zero(),
-                            None,
-                            None,
-                            None,
-                            &block_center,
-                            &block_transform,
-                            0.8,
-                            out,
-                        );
-                    }
                 }
             }
         }
