@@ -4,176 +4,191 @@ use imgui::{im_str, ImString};
 
 use rendology::fxaa;
 
+use crate::edit::editor;
 use crate::exec::{LevelProgress, LevelStatus};
 use crate::game::Game;
-use crate::machine::level;
+use crate::machine::{level, Level};
 use crate::render;
 
 impl Game {
     pub fn ui(&mut self, ui: &imgui::Ui) {
-        let window_size =
-            na::Vector2::new(self.camera.viewport_size.x, self.camera.viewport_size.y);
-
-        if let Some((_, exec_view)) = self.exec.as_mut() {
-            exec_view.ui(ui);
-        } else {
-            self.editor.ui(ui);
+        let editor_ui_input = self
+            .last_output
+            .as_ref()
+            .and_then(|o| o.editor_ui_input.as_ref());
+        if let Some(editor_ui_input) = editor_ui_input {
+            editor::ui::run(
+                editor_ui_input,
+                ui,
+                &mut self.next_input_stage.editor_ui_output,
+            );
         }
 
-        let play_state = self.exec.as_ref().map(|(play_state, _)| play_state);
-        self.play.ui(window_size, play_state, ui);
+        self.play.ui(
+            na::Vector2::new(self.target_size.0 as f32, self.target_size.1 as f32),
+            self.play_status.as_ref(),
+            ui,
+        );
 
         if self.show_config_ui {
-            imgui::Window::new(im_str!("Config"))
-                .horizontal_scrollbar(true)
-                .position([window_size.x, 10.0], imgui::Condition::FirstUseEver)
-                .position_pivot([1.0, 0.0])
-                .always_auto_resize(true)
-                .bg_alpha(0.8)
-                .build(&ui, || {
-                    let mut shadow_mapping = self.config.render_pipeline.shadow_mapping.is_some();
-                    if ui.checkbox(im_str!("Shadow mapping"), &mut shadow_mapping) {
-                        self.config.render_pipeline.shadow_mapping = if shadow_mapping {
-                            Some(Default::default())
-                        } else {
-                            None
-                        };
-                    }
-
-                    let mut deferred_shading =
-                        self.config.render_pipeline.deferred_shading.is_some();
-                    if ui.checkbox(im_str!("Deferred shading"), &mut deferred_shading) {
-                        self.config.render_pipeline.deferred_shading = if deferred_shading {
-                            Some(Default::default())
-                        } else {
-                            None
-                        };
-                    }
-
-                    let mut glow = self.config.render_pipeline.glow.is_some();
-                    if ui.checkbox(im_str!("Glow"), &mut glow) {
-                        self.config.render_pipeline.glow =
-                            if glow { Some(Default::default()) } else { None };
-                    }
-
-                    let mut gamma = self.config.render_pipeline.gamma_correction.unwrap_or(1.0);
-
-                    imgui::Slider::new(im_str!("Gamma"), 0.3..=4.0).build(ui, &mut gamma);
-
-                    self.config.render_pipeline.gamma_correction = Some(gamma);
-
-                    let mut hdr = self.config.render_pipeline.hdr.is_some();
-                    if ui.checkbox(im_str!("HDR"), &mut hdr) {
-                        self.config.render_pipeline.hdr = if hdr { Some(42.0) } else { None };
-                    }
-
-                    ui.separator();
-
-                    let mut fxaa_quality = self
-                        .config
-                        .render_pipeline
-                        .fxaa
-                        .as_ref()
-                        .map(|config| config.quality);
-                    ui.radio_button(im_str!("No anti-aliasing"), &mut fxaa_quality, None);
-                    ui.radio_button(
-                        im_str!("FXAA (low)"),
-                        &mut fxaa_quality,
-                        Some(fxaa::Quality::Low),
-                    );
-                    ui.radio_button(
-                        im_str!("FXAA (medium)"),
-                        &mut fxaa_quality,
-                        Some(fxaa::Quality::Medium),
-                    );
-                    ui.radio_button(
-                        im_str!("FXAA (high)"),
-                        &mut fxaa_quality,
-                        Some(fxaa::Quality::High),
-                    );
-
-                    self.config.render_pipeline.fxaa =
-                        fxaa_quality.map(|quality| fxaa::Config { quality });
-
-                    ui.separator();
-
-                    if ui.button(im_str!("Apply"), [80.0, 20.0]) {
-                        self.recreate_render_pipeline = true;
-                    }
-                });
+            self.ui_config(ui);
         }
 
         if self.show_debug_ui {
-            imgui::Window::new(im_str!("Debug"))
-                .horizontal_scrollbar(true)
-                .position([window_size.x, 300.0], imgui::Condition::FirstUseEver)
-                .position_pivot([1.0, 0.0])
-                .always_auto_resize(true)
-                .bg_alpha(0.8)
-                .build(&ui, || {
-                    ui.text(&ImString::new(format!(
-                        "FPS: {:.1}",
-                        self.fps.recent_average()
-                    )));
-                });
+            self.ui_debug(ui);
         }
 
-        if let Some(level) = self.editor.machine().level.as_ref() {
-            if let Some((_, exec)) = self.exec.as_ref() {
-                // During execution, set the shown example to the generated
-                // one. Also remember the progress, so that it can still be
-                // shown after execution.
-                self.level_example = exec.level_progress().cloned();
-            }
-
-            // UI allows generating new example when not executing
-            let mut updated_example = None;
-
-            imgui::Window::new(im_str!("Level"))
-                .horizontal_scrollbar(true)
-                .position([window_size.x / 2.0, 10.0], imgui::Condition::FirstUseEver)
-                .position_pivot([0.5, 0.0])
-                .always_auto_resize(true)
-                .bg_alpha(0.8)
-                .build(&ui, || {
-                    let goal = "Goal: ".to_string() + &level.spec.description();
-                    ui.bullet_text(&ImString::new(&goal));
-
-                    let status = "Status: ".to_string()
-                        + &if let Some((_, exec)) = self.exec.as_ref() {
-                            match exec.next_level_status() {
-                                LevelStatus::Running => "Running".to_string(),
-                                LevelStatus::Completed => "Completed!".to_string(),
-                                LevelStatus::Failed => "Failed".to_string(),
-                            }
-                        } else {
-                            "Editing".to_string()
-                        };
-
-                    ui.bullet_text(&ImString::new(&status));
-
-                    imgui::TreeNode::new(ui, im_str!("Show example"))
-                        .opened(false, imgui::Condition::FirstUseEver)
-                        .build(|| {
-                            if let Some(example) = self.level_example.as_ref() {
-                                self.ui_show_example(example, ui);
-                            }
-
-                            if self.exec.is_none() && ui.button(im_str!("Generate"), [80.0, 20.0]) {
-                                updated_example =
-                                    self.editor.machine().level.as_ref().map(|level| {
-                                        let inputs_outputs =
-                                            level.spec.gen_inputs_outputs(&mut rand::thread_rng());
-                                        LevelProgress::new(None, inputs_outputs)
-                                    });
-                            }
-                        });
-                });
-
-            if let Some(example) = updated_example {
-                self.level_example = Some(example);
-            }
+        let level_progress = self
+            .last_output
+            .as_ref()
+            .and_then(|o| o.level_progress.clone());
+        if let Some((level, progress)) = level_progress {
+            self.ui_level_progress(&level, &progress, ui);
         }
+    }
+
+    fn ui_config(&mut self, ui: &imgui::Ui) {
+        imgui::Window::new(im_str!("Config"))
+            .horizontal_scrollbar(true)
+            .position(
+                [self.target_size.0 as f32, 10.0],
+                imgui::Condition::FirstUseEver,
+            )
+            .position_pivot([1.0, 0.0])
+            .always_auto_resize(true)
+            .bg_alpha(0.8)
+            .build(&ui, || {
+                let mut shadow_mapping = self.config.render_pipeline.shadow_mapping.is_some();
+                if ui.checkbox(im_str!("Shadow mapping"), &mut shadow_mapping) {
+                    self.config.render_pipeline.shadow_mapping = if shadow_mapping {
+                        Some(Default::default())
+                    } else {
+                        None
+                    };
+                }
+
+                let mut deferred_shading = self.config.render_pipeline.deferred_shading.is_some();
+                if ui.checkbox(im_str!("Deferred shading"), &mut deferred_shading) {
+                    self.config.render_pipeline.deferred_shading = if deferred_shading {
+                        Some(Default::default())
+                    } else {
+                        None
+                    };
+                }
+
+                let mut glow = self.config.render_pipeline.glow.is_some();
+                if ui.checkbox(im_str!("Glow"), &mut glow) {
+                    self.config.render_pipeline.glow =
+                        if glow { Some(Default::default()) } else { None };
+                }
+
+                let mut gamma = self.config.render_pipeline.gamma_correction.unwrap_or(1.0);
+
+                imgui::Slider::new(im_str!("Gamma"), 0.3..=4.0).build(ui, &mut gamma);
+
+                self.config.render_pipeline.gamma_correction = Some(gamma);
+
+                let mut hdr = self.config.render_pipeline.hdr.is_some();
+                if ui.checkbox(im_str!("HDR"), &mut hdr) {
+                    self.config.render_pipeline.hdr = if hdr { Some(42.0) } else { None };
+                }
+
+                ui.separator();
+
+                let mut fxaa_quality = self
+                    .config
+                    .render_pipeline
+                    .fxaa
+                    .as_ref()
+                    .map(|config| config.quality);
+                ui.radio_button(im_str!("No anti-aliasing"), &mut fxaa_quality, None);
+                ui.radio_button(
+                    im_str!("FXAA (low)"),
+                    &mut fxaa_quality,
+                    Some(fxaa::Quality::Low),
+                );
+                ui.radio_button(
+                    im_str!("FXAA (medium)"),
+                    &mut fxaa_quality,
+                    Some(fxaa::Quality::Medium),
+                );
+                ui.radio_button(
+                    im_str!("FXAA (high)"),
+                    &mut fxaa_quality,
+                    Some(fxaa::Quality::High),
+                );
+
+                self.config.render_pipeline.fxaa =
+                    fxaa_quality.map(|quality| fxaa::Config { quality });
+
+                ui.separator();
+
+                if ui.button(im_str!("Apply"), [80.0, 20.0]) {
+                    self.recreate_render_pipeline = true;
+                }
+            });
+    }
+
+    fn ui_debug(&self, ui: &imgui::Ui) {
+        imgui::Window::new(im_str!("Debug"))
+            .horizontal_scrollbar(true)
+            .position(
+                [self.target_size.0 as f32, 300.0],
+                imgui::Condition::FirstUseEver,
+            )
+            .position_pivot([1.0, 0.0])
+            .always_auto_resize(true)
+            .bg_alpha(0.8)
+            .build(&ui, || {
+                ui.text(&ImString::new(format!(
+                    "FPS: {:.1}",
+                    self.fps.recent_average()
+                )));
+            });
+    }
+
+    fn ui_level_progress(&mut self, level: &Level, example: &LevelProgress, ui: &imgui::Ui) {
+        let next_level_status = self.last_output.as_ref().and_then(|o| o.next_level_status);
+
+        imgui::Window::new(im_str!("Level"))
+            .horizontal_scrollbar(true)
+            .position(
+                [self.target_size.0 as f32 / 2.0, 10.0],
+                imgui::Condition::FirstUseEver,
+            )
+            .position_pivot([0.5, 0.0])
+            .always_auto_resize(true)
+            .bg_alpha(0.8)
+            .build(&ui, || {
+                let goal = "Goal: ".to_string() + &level.spec.description();
+                ui.bullet_text(&ImString::new(&goal));
+
+                let status = if let Some(status) = next_level_status {
+                    match status {
+                        LevelStatus::Running => "Running",
+                        LevelStatus::Completed => "Completed!",
+                        LevelStatus::Failed => "Failed",
+                    }
+                } else {
+                    "Editing"
+                };
+
+                ui.bullet_text(&ImString::new(&("Status: ".to_string() + status)));
+
+                imgui::TreeNode::new(ui, im_str!("Show example"))
+                    .opened(false, imgui::Condition::FirstUseEver)
+                    .build(|| {
+                        self.ui_show_example(example, ui);
+
+                        // When not executing, allow generating a new level
+                        // example to show.
+                        if next_level_status.is_none() {
+                            if ui.button(im_str!("Generate"), [80.0, 20.0]) {
+                                self.next_input_stage.generate_level_example = true;
+                            }
+                        }
+                    });
+            });
     }
 
     fn ui_show_example(&self, example: &LevelProgress, ui: &imgui::Ui) {
