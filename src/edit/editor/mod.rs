@@ -1,6 +1,6 @@
 mod action;
 mod render;
-mod ui;
+pub mod ui;
 
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
@@ -108,14 +108,6 @@ impl Editor {
                 self.redo.clear();
             }
         }
-    }
-
-    pub fn switch_to_place_block_mode(&mut self, block: Block) {
-        // TODO: Maintain current rotation when switching to a different block
-        // to place.
-        let piece = Piece::new_origin_block(PlacedBlock { block });
-
-        self.mode = self.mode.clone().switch_to_place_piece(piece, false);
     }
 
     pub fn update(
@@ -461,6 +453,20 @@ impl Editor {
         }
     }
 
+    pub fn ui_input(&self) -> ui::Input {
+        ui::Input {
+            config: self.config.clone(),
+            current_layer: self.current_layer,
+            mode: self.mode.clone(),
+        }
+    }
+
+    pub fn on_ui_output(&mut self, output: &ui::Output) {
+        for action in output.actions.iter() {
+            self.run_action(action.clone());
+        }
+    }
+
     fn on_keyboard_input(&mut self, _input_state: &InputState, input: &glutin::KeyboardInput) {
         if input.state == glutin::ElementState::Pressed {
             if let Some(keycode) = input.virtual_keycode {
@@ -535,7 +541,7 @@ impl Editor {
             .cloned()
             .find(|(block_key, _block)| key == *block_key)
         {
-            self.switch_to_place_block_mode(block);
+            self.action_place_block_mode(block);
         }
     }
 
