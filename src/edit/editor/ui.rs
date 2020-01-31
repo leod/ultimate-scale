@@ -52,7 +52,7 @@ impl Editor {
         }
         if ui.is_item_hovered() {
             let text = format!(
-                "Go down a layer.\n\nShortcut: {:?}",
+                "Go down a layer.\n\nShortcut: {}",
                 self.config.layer_down_key,
             );
             ui.tooltip(|| ui.text(&ImString::new(text)));
@@ -66,7 +66,7 @@ impl Editor {
             self.action_layer_up();
         }
         if ui.is_item_hovered() {
-            let text = format!("Go up a layer.\n\nShortcut: {:?}", self.config.layer_up_key,);
+            let text = format!("Go up a layer.\n\nShortcut: {}", self.config.layer_up_key,);
             ui.tooltip(|| ui.text(&ImString::new(text)));
         }
     }
