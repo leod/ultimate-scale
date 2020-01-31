@@ -56,7 +56,7 @@ impl Update {
         }
     }
 
-    fn update(&mut self, input: Input) -> Output {
+    pub fn update(&mut self, input: Input) -> Output {
         let viewport_size =
             na::Vector2::new(input.target_size.0 as f32, input.target_size.1 as f32);
         self.camera.viewport_size = viewport_size;

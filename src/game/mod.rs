@@ -34,6 +34,8 @@ pub struct Game {
     target_size: (u32, u32),
     next_window_events: Vec<(InputState, glutin::WindowEvent)>,
 
+    last_output: Option<update::Output>,
+
     fps: stats::Variable,
 }
 
@@ -58,18 +60,9 @@ impl Game {
             draw,
             target_size,
             next_window_events: Vec::new(),
+            last_output: None,
             fps: stats::Variable::new(Duration::from_secs(1)),
         })
-    }
-
-    pub fn draw<F: glium::backend::Facade, S: glium::Surface>(
-        &mut self,
-        facade: &F,
-        target: &mut S,
-    ) -> Result<(), rendology::DrawError> {
-        self.target_size = target.get_dimensions();
-
-        Ok(())
     }
 
     pub fn update(&mut self, dt: Duration, input_state: &InputState) {
@@ -83,6 +76,27 @@ impl Game {
             input_state: input_state.clone(),
             target_size: self.target_size,
         };
+
+        self.last_output = Some(self.update.update(input));
+    }
+
+    pub fn draw<F: glium::backend::Facade, S: glium::Surface>(
+        &mut self,
+        facade: &F,
+        target: &mut S,
+    ) -> Result<(), rendology::DrawError> {
+        self.target_size = target.get_dimensions();
+
+        if let Some(output) = self.last_output.take() {
+            let input = draw::Input {
+                recreate_pipeline: None,
+                stage: &output.render_stage,
+                context: output.render_context.clone(),
+            };
+            self.draw.draw(facade, &input, target)?;
+        }
+
+        Ok(())
     }
 
     pub fn on_event(&mut self, input_state: &InputState, event: &glutin::WindowEvent) {
