@@ -28,7 +28,6 @@ use game::Game;
 use input_state::InputState;
 use machine::level::{Level, Spec};
 use machine::{grid, BlipKind, Machine, SavedMachine};
-
 fn main() {
     simple_logger::init_with_level(log::Level::Info).unwrap();
 
@@ -186,7 +185,7 @@ fn main() {
     let mut quit = false;
 
     while !quit {
-        profile!("frame");
+        profile!("main_thread");
 
         // Remember only the last (hopefully: newest) resize event. We do this
         // because resizing textures is somewhat costly, so it makes sense to
@@ -257,12 +256,17 @@ fn main() {
         if let Some(new_window_size) = new_window_size {
             info!("Window resized to: {:?}", new_window_size);
 
-            game.on_window_resize(&display, new_window_size).unwrap();
+            game.on_window_resize(&display, new_window_size);
         }
 
         let now_clock = Instant::now();
         let frame_duration = now_clock - previous_clock;
         previous_clock = now_clock;
+
+        {
+            profile!("create_resources");
+            game.create_resources(&display).unwrap();
+        }
 
         {
             profile!("update");
@@ -288,14 +292,9 @@ fn main() {
             profile!("draw");
 
             let mut target = {
-                profile!("lock");
+                profile!("start");
                 display.draw()
             };
-
-            {
-                profile!("update_resources");
-                game.update_resources(&display).unwrap();
-            }
 
             game.draw(&display, &mut target).unwrap();
 

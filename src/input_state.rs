@@ -5,6 +5,7 @@ use nalgebra as na;
 use glium::glutin::{self, ElementState, MouseButton, VirtualKeyCode, WindowEvent};
 
 /// Keep track of pressed keys and mouse buttons.
+#[derive(Clone, Debug)]
 pub struct InputState {
     /// The current DPI factor as reported by winit.
     hi_dpi_factor: f64,
@@ -21,8 +22,12 @@ pub struct InputState {
 
 impl InputState {
     pub fn new(window: &glutin::Window) -> Self {
+        Self::empty(window.get_hidpi_factor())
+    }
+
+    pub fn empty(hi_dpi_factor: f64) -> Self {
         Self {
-            hi_dpi_factor: window.get_hidpi_factor(),
+            hi_dpi_factor,
             pressed_keys: HashSet::new(),
             pressed_buttons: HashSet::new(),
             mouse_window_pos: na::Point2::origin(),

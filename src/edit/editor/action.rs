@@ -1,8 +1,58 @@
 use crate::edit::{Edit, Editor, Mode, Piece};
-use crate::machine::grid;
+use crate::machine::{grid, Block, PlacedBlock};
 
+#[allow(unused)]
 /// Actions that can be accessed by buttons and shortcuts in the editor.
+/// This has now been turned into an enum to allow UI to run in the main
+/// thread and send back actions to the update thread.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Action {
+    Undo,
+    Redo,
+    Cut,
+    Copy,
+    Paste,
+    Delete,
+    Save,
+    LayerUp,
+    LayerDown,
+    SelectAll,
+    SelectMode,
+    SelectLayerBoundMode,
+    PipeToolMode,
+    PlaceBlockMode(Block),
+    Cancel,
+    RotateCW,
+    RotateCCW,
+    MirrorY,
+    NextKind,
+}
+
 impl Editor {
+    pub fn run_action(&mut self, action: Action) {
+        match action {
+            Action::Undo => self.action_undo(),
+            Action::Redo => self.action_redo(),
+            Action::Cut => self.action_cut(),
+            Action::Copy => self.action_copy(),
+            Action::Paste => self.action_paste(),
+            Action::Delete => self.action_delete(),
+            Action::Save => self.action_save(),
+            Action::LayerUp => self.action_layer_up(),
+            Action::LayerDown => self.action_layer_down(),
+            Action::SelectAll => self.action_select_all(),
+            Action::SelectMode => self.action_select_mode(),
+            Action::SelectLayerBoundMode => self.action_select_layer_bound_mode(),
+            Action::PipeToolMode => self.action_pipe_tool_mode(),
+            Action::PlaceBlockMode(block) => self.action_place_block_mode(block),
+            Action::Cancel => self.action_cancel(),
+            Action::RotateCW => self.action_rotate_cw(),
+            Action::RotateCCW => self.action_rotate_ccw(),
+            Action::MirrorY => self.action_mirror_y(),
+            Action::NextKind => self.action_next_kind(),
+        }
+    }
+
     pub fn action_undo(&mut self) {
         if let Some(undo_edit) = self.undo.pop_back() {
             let redo_edit = self.run_edit(undo_edit);
@@ -154,6 +204,14 @@ impl Editor {
 
     pub fn action_pipe_tool_mode(&mut self) {
         self.mode = Mode::new_pipe_tool();
+    }
+
+    pub fn action_place_block_mode(&mut self, block: Block) {
+        // TODO: Maintain current rotation when switching to a different block
+        // to place.
+        let piece = Piece::new_origin_block(PlacedBlock { block });
+
+        self.mode = self.mode.clone().switch_to_place_piece(piece, false);
     }
 
     pub fn action_cancel(&mut self) {
