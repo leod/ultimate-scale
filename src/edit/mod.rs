@@ -59,11 +59,12 @@ impl Edit {
                         let new_block = new_block.map(|new_block| {
                             if let Some(previous_block) = previous_blocks.get(&p).cloned().flatten()
                             {
-                                PlacedBlock {
-                                    block: previous_block
-                                        .block
-                                        .combine_or_overwrite(&new_block.block),
-                                }
+                                let block = previous_block
+                                    .block
+                                    .combine(&new_block.block)
+                                    .unwrap_or(new_block.block);
+
+                                PlacedBlock { block }
                             } else {
                                 new_block
                             }

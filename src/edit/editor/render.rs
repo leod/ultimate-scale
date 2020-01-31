@@ -63,14 +63,10 @@ impl Editor {
             Mode::Select { selection, .. } => {
                 self.render_selection(selection.iter(), out);
 
-                // Only render wireframe at current position if not already selected.
-                let mouse_block_pos = self
-                    .mouse_block_pos
-                    .filter(|p| selection.iter().all(|s| s != p));
-
-                if let Some(mouse_block_pos) = mouse_block_pos {
+                if let Some(mouse_block_pos) = self.mouse_block_pos {
                     self.render_block_wireframe(
                         &mouse_block_pos,
+                        1.0,
                         9.0,
                         &na::Vector4::new(0.9, 0.9, 0.9, 1.0),
                         out,
@@ -138,7 +134,8 @@ impl Editor {
                     // Pipe tool is running.
                     self.render_block_wireframe(
                         &last_pos,
-                        17.0,
+                        1.0,
+                        20.0,
                         &na::Vector4::new(0.2, 0.7, 0.2, 1.0),
                         out,
                     );
@@ -153,6 +150,7 @@ impl Editor {
                         if *pos != *last_pos {
                             self.render_block_wireframe(
                                 &pos,
+                                0.7,
                                 10.0,
                                 &na::Vector4::new(0.7, 0.7, 0.7, 1.0),
                                 out,
@@ -165,7 +163,8 @@ impl Editor {
                     // Pipe tool has not started yet.
                     self.render_block_wireframe(
                         &mouse_grid_pos,
-                        12.0,
+                        1.0,
+                        20.0,
                         &na::Vector4::new(0.2, 0.6, 0.2, 1.0),
                         out,
                     );
@@ -207,7 +206,7 @@ impl Editor {
         for grid_pos in selection {
             let color = na::Vector4::new(0.9, 0.5, 0.0, 1.0);
 
-            self.render_block_wireframe(grid_pos, 15.0, &color, out);
+            self.render_block_wireframe(grid_pos, 0.7, 15.0, &color, out);
         }
     }
 
@@ -237,12 +236,36 @@ impl Editor {
 
             // TODO: Render tentative blocks as non-shadowed?
 
-            let is_valid = self.machine.is_valid_pos(&pos) && !self.machine.is_block_at(&pos);
-            any_pos_valid = any_pos_valid || is_valid;
+            let is_valid = self.machine.is_valid_pos(&pos);
+            let can_place = !self.machine.is_block_at(&pos);
+            let can_combine = self.machine.get(&pos).map_or(false, |old_placed_block| {
+                old_placed_block
+                    .block
+                    .combine(&placed_block.block)
+                    .is_some()
+            });
 
-            if show_invalid && !is_valid {
-                self.render_block_wireframe(&pos, 20.0, &na::Vector4::new(0.9, 0.0, 0.0, 1.0), out);
+            if show_invalid {
+                if !is_valid || (!can_place && !can_combine) {
+                    self.render_block_wireframe(
+                        &pos,
+                        0.9,
+                        20.0,
+                        &na::Vector4::new(0.9, 0.0, 0.0, 1.0),
+                        out,
+                    );
+                } else if can_combine {
+                    self.render_block_wireframe(
+                        &pos,
+                        1.0,
+                        20.0,
+                        &na::Vector4::new(1.0, 1.0, 1.0, 1.0),
+                        out,
+                    );
+                }
             }
+
+            any_pos_valid = any_pos_valid || is_valid;
         }
 
         any_pos_valid
@@ -251,15 +274,15 @@ impl Editor {
     fn render_block_wireframe(
         &self,
         pos: &grid::Point3,
+        size: f32,
         thickness: f32,
         color: &na::Vector4<f32>,
         out: &mut Stage,
     ) {
         let pos: na::Point3<f32> = na::convert(*pos);
-        let size = na::Vector3::new(1.0, 1.0, 1.0);
-        let center = pos + size / 2.0 + na::Vector3::z() * GRID_OFFSET_Z;
-        let transform = na::Matrix4::new_translation(&center.coords)
-            * na::Matrix4::new_nonuniform_scaling(&size);
+        let center = pos + na::Vector3::new(0.5, 0.5, 0.5 + GRID_OFFSET_Z);
+        let transform =
+            na::Matrix4::new_translation(&center.coords) * na::Matrix4::new_scaling(size);
 
         render::machine::render_line_wireframe(thickness, color, &transform, out);
     }

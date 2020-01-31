@@ -339,12 +339,14 @@ impl Block {
         }
     }
 
-    pub fn combine_or_overwrite(&self, other: &Block) -> Block {
+    pub fn combine(&self, other: &Block) -> Option<Block> {
         match (self, other) {
             (Block::GeneralPipe(dirs_a), Block::GeneralPipe(dirs_b)) => {
-                Block::GeneralPipe(DirMap3::from_fn(|dir| dirs_a[dir] || dirs_b[dir]))
+                Some(Block::GeneralPipe(DirMap3::from_fn(|dir| {
+                    dirs_a[dir] || dirs_b[dir]
+                })))
             }
-            _ => other.clone(),
+            _ => None,
         }
     }
 }
