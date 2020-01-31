@@ -23,8 +23,8 @@ easer = "0.2"
 pareen = { git = "https://github.com/leod/pareen.git", branch = "box", features = ["easer"] }
 #pareen = "0.2"
 coarse-prof = "0.2"
-rendology = { path = "../rendology" }
-#rendology = { git = "https://github.com/leod/rendology.git", branch = "dither" }
+#rendology = { path = "../rendology" }
+rendology = { git = "https://github.com/leod/rendology.git" }
 #rendology = "0.4"
 
 [profile.dev]
