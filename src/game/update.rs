@@ -2,12 +2,10 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-use log::{info, warn};
-
+use coarse_prof::profile;
 use glium::glutin;
-
+use log::{info, warn};
 use nalgebra as na;
-
 use rendology::Camera;
 
 use crate::config::{Config, ViewConfig};
@@ -74,7 +72,12 @@ impl UpdateRunner {
         output_send: mpsc::Sender<Output>,
     ) {
         loop {
-            let command = command_recv.recv();
+            profile!("update_thread");
+
+            let command = {
+                profile!("recv");
+                command_recv.recv()
+            };
 
             if let Ok(command) = command {
                 match command {
@@ -83,15 +86,21 @@ impl UpdateRunner {
                         return;
                     }
                     Command::Run(input) => {
-                        let output = update.update(input);
-                        let result = output_send.send(output);
+                        let output = {
+                            profile!("run");
+                            update.update(input)
+                        };
+                        {
+                            profile!("send");
+                            let result = output_send.send(output);
 
-                        if result.is_err() {
-                            // The corresponding sender has disconnected. Shut down
-                            // gracefully. This should not happen in practice, since
-                            // the sender sends `Command::Terminate`.
-                            warn!("Sender disconnected, shutting down update thread");
-                            return;
+                            if result.is_err() {
+                                // The corresponding sender has disconnected. Shut down
+                                // gracefully. This should not happen in practice, since
+                                // the sender sends `Command::Terminate`.
+                                warn!("Sender disconnected, shutting down update thread");
+                                return;
+                            }
                         }
                     }
                 }
@@ -165,6 +174,19 @@ impl Update {
         for (input_state, window_event) in input.window_events.into_iter() {
             self.edit_camera_view_input.on_event(&window_event);
             self.editor.on_event(&input_state, &window_event);
+
+            // Print thread-local profiling:
+            if let glutin::WindowEvent::KeyboardInput { input, .. } = window_event {
+                if input.state == glutin::ElementState::Pressed {
+                    match input.virtual_keycode {
+                        Some(glutin::VirtualKeyCode::P) => {
+                            coarse_prof::write(&mut std::io::stdout()).unwrap();
+                            coarse_prof::reset();
+                        }
+                        _ => {}
+                    }
+                }
+            }
         }
 
         self.editor.update(
@@ -185,6 +207,8 @@ impl Update {
     }
 
     fn render(&mut self) -> Output {
+        profile!("render");
+
         let mut render_stage = render::Stage::default();
         self.editor.render(&mut render_stage);
 

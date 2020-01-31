@@ -185,7 +185,7 @@ fn main() {
     let mut quit = false;
 
     while !quit {
-        profile!("frame");
+        profile!("main_thread");
 
         // Remember only the last (hopefully: newest) resize event. We do this
         // because resizing textures is somewhat costly, so it makes sense to
@@ -287,7 +287,7 @@ fn main() {
             profile!("draw");
 
             let mut target = {
-                profile!("lock");
+                profile!("start");
                 display.draw()
             };
 

@@ -77,22 +77,30 @@ impl Game {
     pub fn update(&mut self, dt: Duration, input_state: &InputState) {
         self.fps.record(1.0 / dt.as_secs_f32());
 
-        // At this point, we have always sent one input to the update thread,
-        // so we can wait here until we receive the output.
-        self.last_output = Some(self.update.recv_output());
+        {
+            profile!("recv");
 
-        // Submit the next input for the update thread. Updating can then run
-        // at the same time as drawing the previous output.
-        let window_events = std::mem::replace(&mut self.next_window_events, Vec::new());
+            // At this point, we have always sent one input to the update thread,
+            // so we can wait here until we receive the output.
+            self.last_output = Some(self.update.recv_output());
+        }
 
-        let input = update::Input {
-            dt,
-            window_events,
-            input_state: input_state.clone(),
-            target_size: self.target_size,
-        };
+        {
+            profile!("send");
 
-        self.update.send_input(input);
+            // Submit the next input for the update thread. Updating can then run
+            // at the same time as drawing the previous output.
+            let window_events = std::mem::replace(&mut self.next_window_events, Vec::new());
+
+            let input = update::Input {
+                dt,
+                window_events,
+                input_state: input_state.clone(),
+                target_size: self.target_size,
+            };
+
+            self.update.send_input(input);
+        }
     }
 
     pub fn draw<F: glium::backend::Facade, S: glium::Surface>(
