@@ -1,4 +1,8 @@
+use std::sync::mpsc;
+use std::thread;
 use std::time::Duration;
+
+use log::{info, warn};
 
 use glium::glutin;
 
@@ -23,6 +27,102 @@ pub struct Input {
 pub struct Output {
     pub render_stage: render::Stage,
     pub render_context: render::Context,
+}
+
+enum Command {
+    Terminate,
+    Run(Input),
+}
+
+pub struct UpdateRunner {
+    command_send: mpsc::Sender<Command>,
+    output_recv: mpsc::Receiver<Output>,
+    thread: Option<thread::JoinHandle<()>>,
+}
+
+impl UpdateRunner {
+    pub fn spawn(update: Update) -> Self {
+        let (command_send, command_recv) = mpsc::channel();
+        let (output_send, output_recv) = mpsc::channel();
+
+        let thread = thread::spawn(move || {
+            Self::run(update, command_recv, output_send);
+        });
+
+        UpdateRunner {
+            command_send,
+            output_recv,
+            thread: Some(thread),
+        }
+    }
+
+    pub fn send_input(&mut self, input: Input) {
+        // It makes sense to unwrap here, since err means that the update
+        // thread shut down for some unintended reason.
+        self.command_send.send(Command::Run(input)).unwrap();
+    }
+
+    pub fn recv_output(&mut self) -> Output {
+        // It makes sense to unwrap here, since err means that the update
+        // thread shut down for some unintended reason.
+        self.output_recv.recv().unwrap()
+    }
+
+    fn run(
+        mut update: Update,
+        command_recv: mpsc::Receiver<Command>,
+        output_send: mpsc::Sender<Output>,
+    ) {
+        loop {
+            let command = command_recv.recv();
+
+            if let Ok(command) = command {
+                match command {
+                    Command::Terminate => {
+                        info!("Received termination command, shutting down update thread");
+                        return;
+                    }
+                    Command::Run(input) => {
+                        let output = update.update(input);
+                        let result = output_send.send(output);
+
+                        if result.is_err() {
+                            // The corresponding sender has disconnected. Shut down
+                            // gracefully. This should not happen in practice, since
+                            // the sender sends `Command::Terminate`.
+                            warn!("Sender disconnected, shutting down update thread");
+                            return;
+                        }
+                    }
+                }
+            } else {
+                // The corresponding sender has disconnected. Shut down
+                // gracefully. This should not happen in practice, since
+                // the sender sends `Command::Terminate`.
+                warn!("Sender disconnected, shutting down update thread");
+                return;
+            }
+        }
+    }
+}
+
+impl Drop for UpdateRunner {
+    fn drop(&mut self) {
+        info!("Shutting down update thread");
+
+        let result = self.command_send.send(Command::Terminate);
+
+        if result.is_err() {
+            // The update thread has disconnected already. This should not
+            // happen in practice. We ignore the error here, so that we can see
+            // the panic when joining below.
+            warn!("Update thread disconnected, ignoring");
+            return;
+        }
+
+        // Forward panics of the update thread to the outer thread.
+        self.thread.take().unwrap().join().unwrap();
+    }
 }
 
 pub struct Update {

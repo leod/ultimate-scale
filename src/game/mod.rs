@@ -23,12 +23,12 @@ use crate::render;
 use crate::util::stats;
 
 use draw::Draw;
-use update::Update;
+use update::{Update, UpdateRunner};
 
 pub struct Game {
     config: Config,
 
-    update: Update,
+    update: UpdateRunner,
     draw: Draw,
 
     target_size: (u32, u32),
@@ -48,11 +48,20 @@ impl Game {
         info!("Creating resources");
 
         let editor = Editor::new(&config.editor, initial_machine);
-        let update = Update::new_editor(config, editor);
+        let mut update = UpdateRunner::spawn(Update::new_editor(config, editor));
         let draw = Draw::create(facade, config)?;
 
         // TODO: Account for DPI in initialization
         let target_size = config.view.window_size.into();
+
+        // Kick off the update loop, so that we get our first `update::Output`
+        // to draw.
+        update.send_input(update::Input {
+            dt: Duration::from_secs(0),
+            window_events: Vec::new(),
+            input_state: InputState::empty(1.0),
+            target_size,
+        });
 
         Ok(Game {
             config: config.clone(),
@@ -68,6 +77,12 @@ impl Game {
     pub fn update(&mut self, dt: Duration, input_state: &InputState) {
         self.fps.record(1.0 / dt.as_secs_f32());
 
+        // At this point, we have always sent one input to the update thread,
+        // so we can wait here until we receive the output.
+        self.last_output = Some(self.update.recv_output());
+
+        // Submit the next input for the update thread. Updating can then run
+        // at the same time as drawing the previous output.
         let window_events = std::mem::replace(&mut self.next_window_events, Vec::new());
 
         let input = update::Input {
@@ -77,7 +92,7 @@ impl Game {
             target_size: self.target_size,
         };
 
-        self.last_output = Some(self.update.update(input));
+        self.update.send_input(input);
     }
 
     pub fn draw<F: glium::backend::Facade, S: glium::Surface>(

@@ -22,8 +22,12 @@ pub struct InputState {
 
 impl InputState {
     pub fn new(window: &glutin::Window) -> Self {
+        Self::empty(window.get_hidpi_factor())
+    }
+
+    pub fn empty(hi_dpi_factor: f64) -> Self {
         Self {
-            hi_dpi_factor: window.get_hidpi_factor(),
+            hi_dpi_factor,
             pressed_keys: HashSet::new(),
             pressed_buttons: HashSet::new(),
             mouse_window_pos: na::Point2::origin(),
