@@ -5,22 +5,16 @@ mod update;
 use std::time::Duration;
 
 use coarse_prof::profile;
-use floating_duration::TimeAsFloat;
 use log::info;
-use nalgebra as na;
 
 use glium::glutin;
 
-use rendology::{Camera, Light};
-
-use crate::config::{self, Config};
-use crate::edit::{editor, Editor};
-use crate::edit_camera_view::{EditCameraView, EditCameraViewInput};
-use crate::exec::play::{self, Play, TickTime};
-use crate::exec::{ExecView, LevelProgress, LevelStatus};
+use crate::config::Config;
+use crate::edit::Editor;
+use crate::exec::play::{self, Play};
+use crate::exec::LevelStatus;
 use crate::input_state::InputState;
 use crate::machine::Machine;
-use crate::render;
 use crate::util::stats;
 
 use draw::Draw;
@@ -167,7 +161,6 @@ impl Game {
 
         if let Some(output) = self.last_output.take() {
             let input = draw::Input {
-                recreate_pipeline: None,
                 stage: &output.render_stage,
                 context: output.render_context.clone(),
             };
@@ -201,7 +194,7 @@ impl Game {
     pub fn on_window_resize<F: glium::backend::Facade>(
         &mut self,
         _facade: &F,
-        new_window_size: glutin::dpi::LogicalSize,
+        _new_window_size: glutin::dpi::LogicalSize,
     ) -> () {
         ()
     }

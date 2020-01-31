@@ -1,18 +1,10 @@
-use nalgebra as na;
-
-use rendology::Camera;
-
 use crate::config::Config;
-use crate::exec::TickTime;
 use crate::render;
 
 pub struct Input<'a> {
-    pub recreate_pipeline: Option<rendology::Config>,
     pub stage: &'a render::Stage,
     pub context: render::Context,
 }
-
-pub type Output = ();
 
 pub struct Draw {
     render_pipeline: render::Pipeline,
