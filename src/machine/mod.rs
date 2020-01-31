@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 use crate::util::vec_option::VecOption;
 
 use grid::{Axis3, Dir3, DirMap3, Grid3, Point3, Sign, Vector3};
-use level::Level;
+
+pub use level::Level;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum BlipKind {

@@ -8,25 +8,49 @@ use log::{info, warn};
 use nalgebra as na;
 use rendology::Camera;
 
-use crate::config::{Config, ViewConfig};
+use crate::config::Config;
 use crate::edit::{editor, Editor};
 use crate::edit_camera_view::{EditCameraView, EditCameraViewInput};
-use crate::exec::TickTime;
+use crate::exec::{LevelProgress, TickTime};
 use crate::input_state::InputState;
+use crate::machine::Level;
 use crate::render;
+
+#[derive(Debug, Clone, Default)]
+pub struct InputStage {
+    pub window_events: Vec<(InputState, glutin::WindowEvent)>,
+    pub editor_ui_output: editor::ui::Output,
+    pub generate_level_example: bool,
+}
+
+impl InputStage {
+    pub fn into_input(
+        self,
+        dt: Duration,
+        target_size: (u32, u32),
+        input_state: InputState,
+    ) -> Input {
+        Input {
+            dt,
+            target_size,
+            input_state,
+            stage: self,
+        }
+    }
+}
 
 pub struct Input {
     pub dt: Duration,
     pub target_size: (u32, u32),
     pub input_state: InputState,
-    pub window_events: Vec<(InputState, glutin::WindowEvent)>,
-    pub editor_ui_output: editor::ui::Output,
+    pub stage: InputStage,
 }
 
 pub struct Output {
     pub render_stage: render::Stage,
     pub render_context: render::Context,
     pub editor_ui_input: Option<editor::ui::Input>,
+    pub level_progress: Option<(Level, LevelProgress)>,
 }
 
 enum Command {
@@ -143,6 +167,9 @@ pub struct Update {
     edit_camera_view_input: EditCameraViewInput,
 
     editor: Editor,
+
+    /// Current input/output example to show for the level.
+    level_progress: Option<LevelProgress>,
 }
 
 impl Update {
@@ -158,12 +185,18 @@ impl Update {
         let edit_camera_view = EditCameraView::new();
         let edit_camera_view_input = EditCameraViewInput::new(&config.camera);
 
+        let level_progress = editor.machine().level.as_ref().map(|level| {
+            let inputs_outputs = level.spec.gen_inputs_outputs(&mut rand::thread_rng());
+            LevelProgress::new(None, inputs_outputs)
+        });
+
         Self {
             fov,
             camera,
             edit_camera_view,
             edit_camera_view_input,
             editor,
+            level_progress,
         }
     }
 
@@ -173,7 +206,7 @@ impl Update {
         self.camera.viewport_size = viewport_size;
         self.camera.projection = perspective_matrix(self.fov, &viewport_size);
 
-        for (input_state, window_event) in input.window_events.into_iter() {
+        for (input_state, window_event) in input.stage.window_events.into_iter() {
             self.edit_camera_view_input.on_event(&window_event);
             self.editor.on_event(&input_state, &window_event);
 
@@ -191,7 +224,7 @@ impl Update {
             }
         }
 
-        self.editor.on_ui_output(&input.editor_ui_output);
+        self.editor.on_ui_output(&input.stage.editor_ui_output);
 
         self.editor.update(
             input.dt,
@@ -206,6 +239,15 @@ impl Update {
             &mut self.edit_camera_view,
         );
         self.camera.view = self.edit_camera_view.view();
+
+        if input.stage.generate_level_example {
+            self.level_progress = self.editor.machine().level.as_ref().map(|level| {
+                let inputs_outputs = level.spec.gen_inputs_outputs(&mut rand::thread_rng());
+                LevelProgress::new(None, inputs_outputs)
+            });
+        } else {
+            // TODO: Copy from Exec
+        }
 
         self.render()
     }
@@ -242,10 +284,18 @@ impl Update {
 
         let editor_ui_input = self.editor.ui_input();
 
+        let level_progress = self
+            .editor
+            .machine()
+            .level
+            .clone()
+            .and_then(|level| self.level_progress.clone().map(|example| (level, example)));
+
         Output {
             render_stage,
             render_context,
             editor_ui_input: Some(editor_ui_input),
+            level_progress,
         }
     }
 }
