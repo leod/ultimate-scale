@@ -28,7 +28,6 @@ use game::Game;
 use input_state::InputState;
 use machine::level::{Level, Spec};
 use machine::{grid, BlipKind, Machine, SavedMachine};
-
 fn main() {
     simple_logger::init_with_level(log::Level::Info).unwrap();
 
@@ -278,7 +277,7 @@ fn main() {
                 .expect("Failed to start imgui frame");
             previous_clock_imgui = imgui_io.update_delta_time(previous_clock_imgui);
             let ui = imgui.frame();
-            game.ui(&ui);
+            //game.ui(&ui);
 
             imgui_platform.prepare_render(&ui, &window);
             ui.render()
@@ -291,11 +290,6 @@ fn main() {
                 profile!("lock");
                 display.draw()
             };
-
-            {
-                profile!("update_resources");
-                game.update_resources(&display).unwrap();
-            }
 
             game.draw(&display, &mut target).unwrap();
 

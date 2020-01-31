@@ -11,7 +11,7 @@ use crate::render::{self, Stage};
 pub const GRID_OFFSET_Z: f32 = 0.00;
 
 impl Editor {
-    pub fn render(&mut self, out: &mut Stage) -> Result<(), glium::DrawError> {
+    pub fn render(&mut self, out: &mut Stage) {
         profile!("editor");
 
         let grid_size: na::Vector3<f32> = na::convert(self.machine.size());
@@ -209,8 +209,6 @@ impl Editor {
                 }
             }
         }
-
-        Ok(())
     }
 
     fn render_selection<'a>(

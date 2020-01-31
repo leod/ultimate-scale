@@ -109,6 +109,7 @@ impl ExecView {
         time: &TickTime,
         render_out: &mut render::Stage,
     ) {
+        return;
         assert!(
             prev_time.num_ticks_passed < time.num_ticks_passed
                 || (prev_time.num_ticks_passed == time.num_ticks_passed
@@ -131,6 +132,8 @@ impl ExecView {
             }
             v
         };
+
+        let mut num_spawned = 0;
 
         for blip in self.exec.blips().values() {
             if blip.move_dir.is_none() {
@@ -160,6 +163,8 @@ impl ExecView {
                         &-dir,
                         &mut render_out.new_particles,
                     );
+
+                    num_spawned += 2500;
                 }
             }
 
@@ -214,9 +219,12 @@ impl ExecView {
                     };
 
                     render_out.new_particles.add(particle);
+                    num_spawned += 1;
                 }
             }
         }
+
+        println!("spawned {}", num_spawned)
     }
 
     fn kill_particles(

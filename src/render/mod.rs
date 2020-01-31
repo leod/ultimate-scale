@@ -14,6 +14,8 @@ use rendology::{
     ShadowPass,
 };
 
+use crate::exec::TickTime;
+
 #[derive(Default)]
 pub struct Stage {
     pub dither: bool,
@@ -38,7 +40,7 @@ pub struct Stage {
 #[derive(Clone)]
 pub struct Context {
     pub rendology: rendology::Context,
-    pub tick_progress: f32,
+    pub tick_time: TickTime,
 }
 
 impl Stage {
@@ -215,7 +217,6 @@ impl Pipeline {
         &mut self,
         facade: &F,
         context: &Context,
-        time: f32,
         stage: &Stage,
         target: &mut S,
     ) -> Result<(), rendology::DrawError> {
@@ -285,7 +286,7 @@ impl Pipeline {
         let wind_color = machine::wind_source_color();
         let wind_stripe_color = machine::wind_stripe_color();
         let wind_params = wind::Params {
-            tick_progress: context.tick_progress,
+            tick_progress: context.tick_time.tick_progress(),
             color: na::Vector4::new(wind_color.x, wind_color.y, wind_color.z, 1.0),
             stripe_color: na::Vector4::new(
                 wind_stripe_color.x,
@@ -296,8 +297,11 @@ impl Pipeline {
         };
         let wind_mesh = self.basic_obj_resources.mesh(BasicObj::TessellatedCylinder);
 
-        let particle_params = particle::Params { time };
-        self.particle_system.set_current_time(time);
+        let particle_params = particle::Params {
+            time: context.tick_time.to_f32(),
+        };
+        self.particle_system
+            .set_current_time(context.tick_time.to_f32());
 
         self.rendology
             .start_frame(facade, (0.0, 0.0, 0.0), context.rendology.clone(), target)?
