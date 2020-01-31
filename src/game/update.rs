@@ -11,7 +11,7 @@ use rendology::Camera;
 use crate::config::Config;
 use crate::edit::{editor, Editor};
 use crate::edit_camera_view::{EditCameraView, EditCameraViewInput};
-use crate::exec::{LevelProgress, TickTime};
+use crate::exec::{play, ExecView, LevelProgress, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::Level;
 use crate::render;
@@ -29,11 +29,13 @@ impl InputStage {
         dt: Duration,
         target_size: (u32, u32),
         input_state: InputState,
+        play_status: Option<play::Status>,
     ) -> Input {
         Input {
             dt,
             target_size,
             input_state,
+            play_status,
             stage: self,
         }
     }
@@ -43,6 +45,7 @@ pub struct Input {
     pub dt: Duration,
     pub target_size: (u32, u32),
     pub input_state: InputState,
+    pub play_status: Option<play::Status>,
     pub stage: InputStage,
 }
 
@@ -51,6 +54,7 @@ pub struct Output {
     pub render_context: render::Context,
     pub editor_ui_input: Option<editor::ui::Input>,
     pub level_progress: Option<(Level, LevelProgress)>,
+    pub next_level_status: Option<LevelStatus>,
 }
 
 enum Command {
@@ -121,9 +125,10 @@ impl UpdateRunner {
                             let result = output_send.send(output);
 
                             if result.is_err() {
-                                // The corresponding sender has disconnected. Shut down
-                                // gracefully. This should not happen in practice, since
-                                // the sender sends `Command::Terminate`.
+                                // The corresponding sender has disconnected.
+                                // Shut down gracefully. This should not happen
+                                // in practice, since the sender sends
+                                // `Command::Terminate`.
                                 warn!("Sender disconnected, shutting down update thread");
                                 return;
                             }
@@ -161,12 +166,15 @@ impl Drop for UpdateRunner {
 }
 
 pub struct Update {
+    config: Config,
+
     fov: f32,
     camera: Camera,
     edit_camera_view: EditCameraView,
     edit_camera_view_input: EditCameraViewInput,
 
     editor: Editor,
+    exec_view: Option<ExecView>,
 
     /// Current input/output example to show for the level.
     level_progress: Option<LevelProgress>,
@@ -191,24 +199,27 @@ impl Update {
         });
 
         Self {
+            config: config.clone(),
             fov,
             camera,
             edit_camera_view,
             edit_camera_view_input,
             editor,
+            exec_view: None,
             level_progress,
         }
     }
 
     pub fn update(&mut self, input: Input) -> Output {
+        self.sync_exec_with_play_status(input.play_status.as_ref());
+
         let viewport_size =
             na::Vector2::new(input.target_size.0 as f32, input.target_size.1 as f32);
         self.camera.viewport_size = viewport_size;
         self.camera.projection = perspective_matrix(self.fov, &viewport_size);
 
-        for (input_state, window_event) in input.stage.window_events.into_iter() {
-            self.edit_camera_view_input.on_event(&window_event);
-            self.editor.on_event(&input_state, &window_event);
+        for (_, window_event) in input.stage.window_events.iter() {
+            self.edit_camera_view_input.on_event(window_event);
 
             // Print thread-local profiling:
             if let glutin::WindowEvent::KeyboardInput { input, .. } = window_event {
@@ -224,14 +235,43 @@ impl Update {
             }
         }
 
-        self.editor.on_ui_output(&input.stage.editor_ui_output);
+        if let Some(exec_view) = self.exec_view.as_mut() {
+            // Execution mode
 
-        self.editor.update(
-            input.dt,
-            &input.input_state,
-            &self.camera,
-            &mut self.edit_camera_view,
-        );
+            for (_, window_event) in input.stage.window_events.iter() {
+                exec_view.on_event(window_event);
+            }
+
+            exec_view.update(
+                input.dt,
+                &input.input_state,
+                &self.camera,
+                &self.edit_camera_view,
+            );
+
+            self.level_progress = exec_view.level_progress().cloned();
+        } else {
+            // Editor mode
+
+            for (input_state, window_event) in input.stage.window_events.iter() {
+                self.editor.on_event(input_state, window_event);
+            }
+
+            self.editor.on_ui_output(&input.stage.editor_ui_output);
+            self.editor.update(
+                input.dt,
+                &input.input_state,
+                &self.camera,
+                &mut self.edit_camera_view,
+            );
+
+            if input.stage.generate_level_example {
+                self.level_progress = self.editor.machine().level.as_ref().map(|level| {
+                    let inputs_outputs = level.spec.gen_inputs_outputs(&mut rand::thread_rng());
+                    LevelProgress::new(None, inputs_outputs)
+                });
+            }
+        }
 
         self.edit_camera_view_input.update(
             input.dt.as_secs_f32(),
@@ -240,23 +280,68 @@ impl Update {
         );
         self.camera.view = self.edit_camera_view.view();
 
-        if input.stage.generate_level_example {
-            self.level_progress = self.editor.machine().level.as_ref().map(|level| {
-                let inputs_outputs = level.spec.gen_inputs_outputs(&mut rand::thread_rng());
-                LevelProgress::new(None, inputs_outputs)
-            });
-        } else {
-            // TODO: Copy from Exec
-        }
-
-        self.render()
+        self.render(input)
     }
 
-    fn render(&mut self) -> Output {
+    pub fn sync_exec_with_play_status(&mut self, play_status: Option<&play::Status>) {
+        // Do we need to start/stop execution?
+        if self.exec_view.is_some() != play_status.is_some() {
+            if play_status.is_some() {
+                // Start execution
+                self.exec_view = Some(ExecView::new(
+                    &self.config.exec,
+                    self.editor.machine().clone(),
+                ));
+            } else {
+                // Stop execution
+                self.exec_view = None;
+            }
+        }
+
+        assert!(self.exec_view.is_some() == play_status.is_some());
+
+        // Advance execution?
+        if let Some(play::Status::Playing {
+            num_ticks_since_last_update,
+            prev_time,
+            time,
+            ..
+        }) = play_status
+        {
+            // Safe to unwrap here, since we have synchronized execution status
+            // above.
+            let exec_view = self.exec_view.as_mut().unwrap();
+            let mut last_transduce_time = prev_time.clone();
+
+            if *num_ticks_since_last_update > 0 {
+                // TODO: Transduce
+            }
+
+            for _ in 0..*num_ticks_since_last_update {
+                exec_view.run_tick();
+
+                if exec_view.next_level_status() != LevelStatus::Running {
+                    break;
+                }
+            }
+
+            // TODO: Transduce
+        }
+    }
+
+    fn render(&mut self, input: Input) -> Output {
         profile!("render");
 
         let mut render_stage = render::Stage::default();
-        self.editor.render(&mut render_stage);
+        if let Some(exec_view) = self.exec_view.as_mut() {
+            // Safe to unwrap here, since we have synchronized execution status
+            // above.
+            let tick_time = input.play_status.as_ref().unwrap().time();
+
+            exec_view.render(tick_time, &mut render_stage);
+        } else {
+            self.editor.render(&mut render_stage);
+        }
 
         let main_light_pos = na::Point3::new(
             15.0 + 20.0 * (std::f32::consts::PI / 4.0).cos(),
@@ -279,10 +364,16 @@ impl Update {
                 main_light_center: na::Point3::new(15.0, 15.0, 0.0),
                 ambient_light: na::Vector3::new(0.3, 0.3, 0.3),
             },
-            tick_time: TickTime::zero(),
+            tick_time: input
+                .play_status
+                .map_or_else(|| TickTime::zero(), |status| status.time().clone()),
         };
 
-        let editor_ui_input = self.editor.ui_input();
+        let editor_ui_input = if self.exec_view.is_none() {
+            Some(self.editor.ui_input())
+        } else {
+            None
+        };
 
         let level_progress = self
             .editor
@@ -291,11 +382,17 @@ impl Update {
             .clone()
             .and_then(|level| self.level_progress.clone().map(|example| (level, example)));
 
+        let next_level_status = self
+            .exec_view
+            .as_ref()
+            .map(|exec_view| exec_view.next_level_status());
+
         Output {
             render_stage,
             render_context,
-            editor_ui_input: Some(editor_ui_input),
+            editor_ui_input,
             level_progress,
+            next_level_status,
         }
     }
 }

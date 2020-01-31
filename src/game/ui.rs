@@ -24,8 +24,11 @@ impl Game {
             );
         }
 
-        /*let play_state = self.exec.as_ref().map(|(play_state, _)| play_state);
-        self.play.ui(window_size, play_state, ui);*/
+        self.play.ui(
+            na::Vector2::new(self.target_size.0 as f32, self.target_size.1 as f32),
+            self.play_status.as_ref(),
+            ui,
+        );
 
         if self.show_config_ui {
             self.ui_config(ui);
@@ -145,6 +148,8 @@ impl Game {
     }
 
     fn ui_level_progress(&mut self, level: &Level, example: &LevelProgress, ui: &imgui::Ui) {
+        let next_level_status = self.last_output.as_ref().and_then(|o| o.next_level_status);
+
         imgui::Window::new(im_str!("Level"))
             .horizontal_scrollbar(true)
             .position(
@@ -158,28 +163,29 @@ impl Game {
                 let goal = "Goal: ".to_string() + &level.spec.description();
                 ui.bullet_text(&ImString::new(&goal));
 
-                // TODO
-                /*let status = "Status: ".to_string()
-                    + &if let Some((_, exec)) = self.exec.as_ref() {
-                        match exec.next_level_status() {
-                            LevelStatus::Running => "Running".to_string(),
-                            LevelStatus::Completed => "Completed!".to_string(),
-                            LevelStatus::Failed => "Failed".to_string(),
-                        }
-                    } else {
-                        "Editing".to_string()
-                    };
+                let status = if let Some(status) = next_level_status {
+                    match status {
+                        LevelStatus::Running => "Running",
+                        LevelStatus::Completed => "Completed!",
+                        LevelStatus::Failed => "Failed",
+                    }
+                } else {
+                    "Editing"
+                };
 
-                ui.bullet_text(&ImString::new(&status));*/
+                ui.bullet_text(&ImString::new(&("Status: ".to_string() + status)));
 
                 imgui::TreeNode::new(ui, im_str!("Show example"))
                     .opened(false, imgui::Condition::FirstUseEver)
                     .build(|| {
                         self.ui_show_example(example, ui);
 
-                        // TODO: Only if not playing
-                        if ui.button(im_str!("Generate"), [80.0, 20.0]) {
-                            self.next_input_stage.generate_level_example = true;
+                        // When not executing, allow generating a new level
+                        // example to show.
+                        if next_level_status.is_none() {
+                            if ui.button(im_str!("Generate"), [80.0, 20.0]) {
+                                self.next_input_stage.generate_level_example = true;
+                            }
                         }
                     });
             });

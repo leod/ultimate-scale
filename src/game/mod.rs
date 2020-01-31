@@ -37,6 +37,9 @@ pub struct Game {
     last_output: Option<update::Output>,
     next_input_stage: update::InputStage,
 
+    play: Play,
+    play_status: Option<play::Status>,
+
     fps: stats::Variable,
     show_config_ui: bool,
     show_debug_ui: bool,
@@ -64,7 +67,10 @@ impl Game {
             Duration::from_secs(0),
             target_size,
             InputState::empty(1.0),
+            None,
         ));
+
+        let play = Play::new(&config.play);
 
         Ok(Game {
             config: config.clone(),
@@ -73,6 +79,8 @@ impl Game {
             target_size,
             last_output: None,
             next_input_stage: update::InputStage::default(),
+            play,
+            play_status: None,
             fps: stats::Variable::new(Duration::from_secs(1)),
             show_config_ui: false,
             show_debug_ui: false,
@@ -88,7 +96,30 @@ impl Game {
 
             // At this point, we have always sent one input to the update thread,
             // so we can wait here until we receive the output.
-            self.last_output = Some(self.update.recv_output());
+            let output = self.update.recv_output();
+
+            // If execution has ended (due to the level being failed or
+            // completed), update the play status.
+            if output.next_level_status != Some(LevelStatus::Running) {
+                self.play_status = match self.play_status.clone() {
+                    Some(play::Status::Playing { time, .. }) => {
+                        Some(play::Status::Finished { time })
+                    }
+                    x => x,
+                }
+            }
+
+            self.last_output = Some(output);
+        }
+
+        // Note that play status may be set to `Finished` above in this
+        // function, so order is important here.
+        let old_play_status = self.play_status.clone();
+        self.play_status = self.play.update_status(dt, self.play_status.as_ref());
+
+        // Did we just stop execution?
+        if old_play_status.is_some() && self.play_status.is_none() {
+            self.draw.clean_up_after_exec();
         }
 
         {
@@ -98,7 +129,12 @@ impl Game {
             // at the same time as drawing the previous output.
             let next_input_stage =
                 std::mem::replace(&mut self.next_input_stage, Default::default());
-            let next_input = next_input_stage.into_input(dt, self.target_size, input_state.clone());
+            let next_input = next_input_stage.into_input(
+                dt,
+                self.target_size,
+                input_state.clone(),
+                self.play_status.clone(),
+            );
 
             self.update.send_input(next_input);
         }
@@ -145,6 +181,8 @@ impl Game {
         self.next_input_stage
             .window_events
             .push((input_state.clone(), event.clone()));
+
+        self.play.on_event(event);
 
         // Some shortcuts for debugging
         if let glutin::WindowEvent::KeyboardInput { input, .. } = event {
