@@ -42,4 +42,8 @@ impl Draw {
         self.render_pipeline
             .draw_frame(facade, &input.context, input.stage, target)
     }
+
+    pub fn clean_up_after_exec(&mut self) {
+        self.render_pipeline.clear_particles();
+    }
 }
