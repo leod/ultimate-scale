@@ -26,29 +26,6 @@ use crate::util::stats;
 use draw::Draw;
 use update::{Update, UpdateRunner};
 
-#[derive(Debug, Clone, Default)]
-struct UpdateInputStage {
-    window_events: Vec<(InputState, glutin::WindowEvent)>,
-    editor_ui_output: editor::ui::Output,
-}
-
-impl UpdateInputStage {
-    fn into_input(
-        self,
-        dt: Duration,
-        target_size: (u32, u32),
-        input_state: InputState,
-    ) -> update::Input {
-        update::Input {
-            dt,
-            target_size,
-            input_state,
-            window_events: self.window_events,
-            editor_ui_output: self.editor_ui_output,
-        }
-    }
-}
-
 pub struct Game {
     config: Config,
 
@@ -58,7 +35,7 @@ pub struct Game {
     target_size: (u32, u32),
 
     last_output: Option<update::Output>,
-    next_input_stage: UpdateInputStage,
+    next_input_stage: update::InputStage,
 
     fps: stats::Variable,
     show_config_ui: bool,
@@ -83,7 +60,7 @@ impl Game {
 
         // Kick off the update loop, so that we get our first `update::Output`
         // to draw.
-        update.send_input(UpdateInputStage::default().into_input(
+        update.send_input(update::InputStage::default().into_input(
             Duration::from_secs(0),
             target_size,
             InputState::empty(1.0),
@@ -95,7 +72,7 @@ impl Game {
             draw,
             target_size,
             last_output: None,
-            next_input_stage: UpdateInputStage::default(),
+            next_input_stage: update::InputStage::default(),
             fps: stats::Variable::new(Duration::from_secs(1)),
             show_config_ui: false,
             show_debug_ui: false,
