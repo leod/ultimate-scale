@@ -85,8 +85,6 @@ impl ExecView {
 
     fn on_keyboard_input(&mut self, _input: glutin::KeyboardInput) {}
 
-    pub fn ui(&mut self, _ui: &imgui::Ui) {}
-
     pub fn render(&mut self, time: &TickTime, out: &mut render::Stage) {
         profile!("exec_view");
 

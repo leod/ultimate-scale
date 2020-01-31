@@ -1,6 +1,7 @@
 use crate::edit::{Edit, Editor, Mode, Piece};
 use crate::machine::{grid, Block, PlacedBlock};
 
+#[allow(unused)]
 /// Actions that can be accessed by buttons and shortcuts in the editor.
 /// This has now been turned into an enum to allow UI to run in the main
 /// thread and send back actions to the update thread.
