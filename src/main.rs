@@ -264,6 +264,11 @@ fn main() {
         previous_clock = now_clock;
 
         {
+            profile!("create_resources");
+            game.create_resources(&display).unwrap();
+        }
+
+        {
             profile!("update");
             game.update(frame_duration, &input_state);
         }

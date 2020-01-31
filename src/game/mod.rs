@@ -168,6 +168,19 @@ impl Game {
         self.next_input_stage
             .window_events
             .push((input_state.clone(), event.clone()));
+
+        // Some shortcuts for debugging
+        if let glutin::WindowEvent::KeyboardInput { input, .. } = event {
+            if input.state == glutin::ElementState::Pressed
+                && input.virtual_keycode == Some(glutin::VirtualKeyCode::F5)
+            {
+                self.show_config_ui = !self.show_config_ui;
+            } else if input.state == glutin::ElementState::Pressed
+                && input.virtual_keycode == Some(glutin::VirtualKeyCode::F6)
+            {
+                self.show_debug_ui = !self.show_debug_ui;
+            }
+        }
     }
 
     pub fn on_window_resize<F: glium::backend::Facade>(
