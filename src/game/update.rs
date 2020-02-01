@@ -324,7 +324,12 @@ impl Update {
                     let mut end_of_last_tick = prev_time.clone();
                     end_of_last_tick.next_tick_timer.set_progress(1.0);
 
-                    exec_view.transduce(prev_time, &end_of_last_tick, render_stage);
+                    exec_view.transduce(
+                        prev_time,
+                        &end_of_last_tick,
+                        &self.edit_camera_view.eye(),
+                        render_stage,
+                    );
                     last_transduce_time = Some(end_of_last_tick);
                 }
             }
@@ -338,7 +343,12 @@ impl Update {
             }
 
             let last_transduce_time = last_transduce_time.unwrap_or_else(|| TickTime::zero());
-            exec_view.transduce(&last_transduce_time, &time, render_stage);
+            exec_view.transduce(
+                &last_transduce_time,
+                &time,
+                &self.edit_camera_view.eye(),
+                render_stage,
+            );
         }
     }
 

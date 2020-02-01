@@ -133,6 +133,8 @@ pub struct Blip {
     pub status: BlipStatus,
 }
 
+pub type BlipIndex = usize;
+
 impl Blip {
     fn new(
         kind: BlipKind,
