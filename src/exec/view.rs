@@ -12,7 +12,8 @@ use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
 use crate::exec::anim::{AnimState, WindDeadend, WindLife};
 use crate::exec::{
-    Blip, BlipDieMode, BlipSpawnMode, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime,
+    Blip, BlipDieMode, BlipIndex, BlipSpawnMode, BlipStatus, Exec, LevelProgress, LevelStatus,
+    TickTime,
 };
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
@@ -20,25 +21,47 @@ use crate::machine::{grid, BlipKind, Machine};
 use crate::render;
 
 #[derive(Debug, Clone)]
-pub struct Config {}
+pub struct Config {
+    particle_budget_per_tick: usize,
+    close_particle_budget_fraction: f32,
+}
 
 impl Default for Config {
-    fn default() -> Config {
-        Config {}
+    fn default() -> Self {
+        Self {
+            particle_budget_per_tick: 1000000,
+            close_particle_budget_fraction: 0.3,
+        }
+    }
+}
+
+impl Config {
+    fn close_particle_budget_per_tick(&self) -> usize {
+        (self.particle_budget_per_tick as f32 * self.close_particle_budget_fraction) as usize
     }
 }
 
 pub struct ExecView {
+    config: Config,
+
     exec: Exec,
 
     mouse_block_pos: Option<grid::Point3>,
+
+    transduce_events: Vec<(isize, TransduceEvent)>,
+    particle_budget: Vec<f32>,
+    is_over_particle_budget: bool,
 }
 
 impl ExecView {
-    pub fn new(_config: &Config, machine: Machine) -> ExecView {
+    pub fn new(config: &Config, machine: Machine) -> ExecView {
         ExecView {
+            config: config.clone(),
             exec: Exec::new(machine, &mut rand::thread_rng()),
             mouse_block_pos: None,
+            transduce_events: Vec::new(),
+            particle_budget: Vec::new(),
+            is_over_particle_budget: false,
         }
     }
 
@@ -101,12 +124,76 @@ impl ExecView {
         self.render_blips(time, out);
     }
 
+    fn compute_transduce_events(&mut self, eye_pos: &na::Point3<f32>) {
+        profile!("compute_events");
+
+        let eye_pos = Point3::new(eye_pos.x as isize, eye_pos.y as isize, eye_pos.z as isize);
+
+        self.transduce_events.clear();
+        self.transduce_events
+            .extend(iter_transduce_events(&self.exec, eye_pos));
+
+        self.particle_budget.clear();
+
+        let num_particles: usize = self
+            .transduce_events
+            .iter()
+            .map(|(_, event)| event.num_particles())
+            .sum();
+        self.is_over_particle_budget = num_particles > self.config.particle_budget_per_tick;
+
+        if self.is_over_particle_budget {
+            self.transduce_events.sort_by_key(|(distance, _)| *distance);
+
+            self.particle_budget.reserve(self.transduce_events.len());
+
+            let close_particle_budget = self.config.close_particle_budget_per_tick();
+
+            assert!(
+                close_particle_budget > 0
+                    && close_particle_budget < self.config.particle_budget_per_tick
+            );
+
+            let mut num_spawned: usize = 0;
+            let mut i = 0;
+            while num_spawned < close_particle_budget {
+                self.particle_budget.push(1.0);
+
+                num_spawned += self.transduce_events[i].1.num_particles();
+                i += 1;
+            }
+
+            let remaining_budget = self.config.particle_budget_per_tick - num_spawned;
+            let remaining_particles = num_particles - num_spawned;
+
+            let fraction = remaining_budget as f32 / remaining_particles as f32;
+
+            while num_spawned < self.config.particle_budget_per_tick {
+                self.particle_budget.push(fraction);
+
+                num_spawned +=
+                    (self.transduce_events[i].1.num_particles() as f32 * fraction).ceil() as usize;
+                i += 1;
+            }
+
+            while i < self.transduce_events.len() {
+                self.particle_budget.push(0.0);
+                i += 1;
+            }
+
+            assert!(self.particle_budget.len() == self.transduce_events.len());
+        }
+    }
+
     pub fn transduce(
         &mut self,
         prev_time: &TickTime,
         time: &TickTime,
+        eye_pos: &na::Point3<f32>,
         render_out: &mut render::Stage,
     ) {
+        profile!("transduce");
+
         assert!(
             prev_time.num_ticks_passed < time.num_ticks_passed
                 || (prev_time.num_ticks_passed == time.num_ticks_passed
@@ -114,121 +201,164 @@ impl ExecView {
         );
 
         let (progress_start, progress_end) = if prev_time.num_ticks_passed < time.num_ticks_passed {
+            // We have jumped into a new tick.
+            self.compute_transduce_events(eye_pos);
+
+            // Start time within tick at zero.
             (0.0, time.tick_progress())
         } else {
+            // We are continuing to transduce the same tick as last update.
             (prev_time.tick_progress(), time.tick_progress())
         };
 
-        let sub_tick_duration = 0.005;
-        let times = {
-            let mut v = Vec::new();
-            let mut current = (progress_start / sub_tick_duration).ceil() * sub_tick_duration;
-            while current < progress_end {
-                v.push(current);
-                current += sub_tick_duration;
-            }
-            v
-        };
+        for (event_index, (_, event)) in self.transduce_events.iter().enumerate() {
+            let budget_fraction = if self.is_over_particle_budget {
+                self.particle_budget[event_index]
+            } else {
+                1.0
+            };
 
-        let mut num_spawned = 0;
-
-        for blip in self.exec.blips().values() {
-            if blip.move_dir.is_none() {
-                continue;
+            if budget_fraction == 0.0 {
+                break;
             }
 
-            let is_on_wind = self.is_blip_on_wind(blip);
-            let pos_rot_anim = blip_pos_rot_anim(*blip, is_on_wind);
+            match event {
+                TransduceEvent::BlipDeath {
+                    blip_index,
+                    time: die_time,
+                    ..
+                } => {
+                    if *die_time < progress_start || *die_time > progress_end {
+                        continue;
+                    }
 
-            if let Some(die_mode) = blip.status.die_mode() {
-                let die_time = match die_mode {
-                    BlipDieMode::PopEarly => 0.3,
-                    _ => 0.8,
-                };
-
-                if die_mode != BlipDieMode::PressButton
-                    && die_time >= progress_start
-                    && die_time <= progress_end
-                {
+                    let blip = &self.exec.blips()[*blip_index];
                     let dir: na::Vector3<f32> =
                         na::convert(blip.move_dir.map_or(na::Vector3::zeros(), Dir3::to_vector));
+                    let pos_rot_anim = blip_pos_rot_anim(blip.clone(), self.is_blip_on_wind(blip));
 
                     Self::kill_particles(
                         time.num_ticks_passed as f32 + die_time,
                         blip.kind,
-                        &(pos_rot_anim.eval(die_time).0 + dir * 0.2),
+                        &(pos_rot_anim.eval(*die_time).0 + dir * 0.2),
                         &-dir,
+                        budget_fraction,
                         &mut render_out.new_particles,
                     );
-
-                    num_spawned += 2500;
                 }
+                TransduceEvent::BlipSliver {
+                    blip_index,
+                    start_time,
+                    duration,
+                } => {
+                    if progress_start > *start_time + *duration || *start_time > progress_end {
+                        continue;
+                    }
+                } //let pos_rot_anim = blip_pos_rot_anim(blip.clone(), self.is_blip_on_wind(blip));
             }
+        }
+    }
 
-            for &progress in &times {
-                let spawn = match blip.status {
-                    BlipStatus::Spawning(_) => progress >= 0.5,
-                    BlipStatus::Existing => false,
-                    BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => progress >= 0.65,
-                    BlipStatus::LiveToDie(_, _) => progress >= 0.5 && progress <= 0.8,
-                    BlipStatus::Dying(BlipDieMode::PressButton) => progress >= 0.65,
-                    BlipStatus::Dying(_) => false,
-                };
+    /*let sub_tick_duration = 0.05;
+    let times = {
+        let mut v = Vec::new();
+        let mut current = (progress_start / sub_tick_duration).ceil() * sub_tick_duration;
+        while current < progress_end {
+            v.push(current);
+            current += sub_tick_duration;
+        }
+        v
+    };
 
-                if !spawn {
-                    continue;
-                }
+    let mut num_spawned = 0;
 
-                let (pos, rot) = pos_rot_anim.eval(progress);
+    for blip in self.exec.blips().values() {
+        if blip.move_dir.is_none() {
+            continue;
+        }
 
-                let corners = [
-                    na::Vector3::new(0.0, 0.0, 1.0),
-                    na::Vector3::new(0.0, 0.0, -1.0),
-                    na::Vector3::new(0.0, 1.0, 0.0),
-                    na::Vector3::new(0.0, -1.0, 0.0),
-                ];
+        let is_on_wind = self.is_blip_on_wind(blip);
+        let pos_rot_anim = blip_pos_rot_anim(*blip, is_on_wind);
 
-                /*let back = rot
-                    .transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0))
-                    .normalize();
-                let side = rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0));
-                let velocity = 3.0 * side;*/
+        if let Some(die_mode) = blip.status.die_mode() {
+            let die_time = match die_mode {
+                BlipDieMode::PopEarly => 0.3,
+                _ => 0.8,
+            };
 
-                let speed = match blip.status {
-                    BlipStatus::Spawning(_) => 2.15,
-                    _ => 3.0,
-                };
-                let friction = 9.0;
+            if die_mode != BlipDieMode::PressButton
+                && die_time >= progress_start
+                && die_time <= progress_end
+            {
 
-                for corner in &corners {
-                    //let corner_pos = pos + rot.transform_vector(corner) * 0.04 + back * 0.05;
-                    let velocity = rot.transform_vector(corner) * speed;
-                    let life_duration = speed / friction;
-
-                    let particle = Particle {
-                        spawn_time: time.num_ticks_passed as f32 + progress,
-                        life_duration,
-                        start_pos: pos,
-                        velocity,
-                        color: render::machine::blip_color(blip.kind),
-                        size: na::Vector2::new(0.02, 0.02),
-                        friction,
-                    };
-
-                    render_out.new_particles.add(particle);
-                    num_spawned += 1;
-                }
+                num_spawned += 2500;
             }
         }
 
-        //println!("spawned {}", num_spawned)
-    }
+        for &progress in &times {
+            let spawn = match blip.status {
+                BlipStatus::Spawning(_) => progress >= 0.5,
+                BlipStatus::Existing => false,
+                BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => progress >= 0.65,
+                BlipStatus::LiveToDie(_, _) => progress >= 0.5 && progress <= 0.8,
+                BlipStatus::Dying(BlipDieMode::PressButton) => progress >= 0.65,
+                BlipStatus::Dying(_) => false,
+            };
+
+            if !spawn {
+                continue;
+            }
+
+            let (pos, rot) = pos_rot_anim.eval(progress);
+
+            let corners = [
+                na::Vector3::new(0.0, 0.0, 1.0),
+                na::Vector3::new(0.0, 0.0, -1.0),
+                na::Vector3::new(0.0, 1.0, 0.0),
+                na::Vector3::new(0.0, -1.0, 0.0),
+            ];
+
+            /*let back = rot
+                .transform_vector(&na::Vector3::new(-1.0, 0.0, 0.0))
+                .normalize();
+            let side = rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0));
+            let velocity = 3.0 * side;*/
+
+            let speed = match blip.status {
+                BlipStatus::Spawning(_) => 2.15,
+                _ => 3.0,
+            };
+            let friction = 9.0;
+
+            for corner in &corners {
+                //let corner_pos = pos + rot.transform_vector(corner) * 0.04 + back * 0.05;
+                let velocity = rot.transform_vector(corner) * speed;
+                let life_duration = speed / friction;
+
+                let particle = Particle {
+                    spawn_time: time.num_ticks_passed as f32 + progress,
+                    life_duration,
+                    start_pos: pos,
+                    velocity,
+                    color: render::machine::blip_color(blip.kind),
+                    size: na::Vector2::new(0.02, 0.02) * 10.0f32.sqrt(),
+                    friction,
+                };
+
+                render_out.new_particles.add(particle);
+                num_spawned += 1;
+            }
+        }
+    }*/
+
+    //println!("spawned {}", num_spawned)
 
     fn kill_particles(
         spawn_time: f32,
         kind: BlipKind,
         pos: &na::Point3<f32>,
         tangent: &na::Vector3<f32>,
+        budget_fraction: f32,
         out: &mut RenderList<Particle>,
     ) {
         let smallest_unit =
@@ -242,7 +372,10 @@ impl ExecView {
         let x_unit = tangent.cross(&smallest_unit).normalize();
         let y_unit = tangent.cross(&x_unit).normalize();
 
-        for _ in 0..2500 {
+        let num_spawn = (2500.0 * budget_fraction) as usize;
+        let size_factor = (1.0 / budget_fraction).sqrt();
+
+        for _ in 0..num_spawn {
             let radius = rand::random::<f32>() * 0.45;
             let angle = rand::random::<f32>() * std::f32::consts::PI * 2.0;
 
@@ -256,7 +389,7 @@ impl ExecView {
                 start_pos: *pos,
                 velocity,
                 color: render::machine::blip_color(kind),
-                size: na::Vector2::new(0.013, 0.013),
+                size: na::Vector2::new(0.013, 0.013) * size_factor,
                 friction: velocity.norm() / life_duration,
             };
             out.add(particle);
@@ -389,6 +522,91 @@ impl ExecView {
                 })
         })
     }
+}
+
+enum TransduceEvent {
+    BlipDeath {
+        blip_index: BlipIndex,
+        time: f32,
+    },
+    BlipSliver {
+        blip_index: BlipIndex,
+        start_time: f32,
+        duration: f32,
+    },
+}
+
+impl TransduceEvent {
+    fn num_particles(&self) -> usize {
+        match self {
+            TransduceEvent::BlipDeath { .. } => 2500,
+            TransduceEvent::BlipSliver { duration, .. } => (600.0 * duration) as usize,
+        }
+    }
+}
+
+const MAX_TRANSDUCE_DISTANCE_SQ: isize = 1000;
+
+fn iter_nearby_blips(
+    exec: &Exec,
+    eye_pos: Point3,
+) -> impl Iterator<Item = (BlipIndex, isize, &'_ Blip)> {
+    exec.blips()
+        .iter()
+        .map(move |(blip_index, blip)| {
+            let delta = blip.pos - eye_pos;
+            let distance_sq = delta.x * delta.x + delta.y * delta.y + delta.z * delta.z;
+
+            (blip_index, distance_sq, blip)
+        })
+        .filter(|(_, distance_sq, _)| *distance_sq <= MAX_TRANSDUCE_DISTANCE_SQ)
+}
+
+fn iter_transduce_events(
+    exec: &Exec,
+    eye_pos: Point3,
+) -> impl Iterator<Item = (isize, TransduceEvent)> + '_ {
+    let death = iter_nearby_blips(exec, eye_pos).filter_map(|(blip_index, distance_sq, blip)| {
+        blip.status
+            .die_mode()
+            .filter(|die_mode| *die_mode != BlipDieMode::PressButton)
+            .map(|die_mode| {
+                let die_time = match die_mode {
+                    BlipDieMode::PopEarly => 0.3,
+                    _ => 0.8,
+                };
+
+                (
+                    distance_sq,
+                    TransduceEvent::BlipDeath {
+                        blip_index,
+                        time: die_time,
+                    },
+                )
+            })
+    });
+
+    let sliver = iter_nearby_blips(exec, eye_pos).filter_map(|(blip_index, distance_sq, blip)| {
+        let (start_time, duration) = match blip.status {
+            BlipStatus::Spawning(_) => Some((0.5, 0.5)),
+            BlipStatus::Existing => None,
+            BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => Some((0.65, 0.45)),
+            BlipStatus::LiveToDie(_, _) => Some((0.5, 0.3)),
+            BlipStatus::Dying(BlipDieMode::PressButton) => Some((0.65, 0.35)),
+            BlipStatus::Dying(_) => None,
+        }?;
+
+        Some((
+            distance_sq,
+            TransduceEvent::BlipSliver {
+                blip_index,
+                start_time,
+                duration,
+            },
+        ))
+    });
+
+    death.chain(sliver)
 }
 
 fn blip_spawn_anim() -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
