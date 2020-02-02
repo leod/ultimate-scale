@@ -2,6 +2,7 @@ use nalgebra as na;
 
 use imgui::{im_str, ImString};
 
+use rendology::basic_obj::BasicObj;
 use rendology::fxaa;
 
 use crate::edit::editor;
@@ -144,6 +145,31 @@ impl Game {
                     "FPS: {:.1}",
                     self.fps.recent_average()
                 )));
+
+                if let Some(stage) = self.last_output.as_ref().map(|o| &o.render_stage) {
+                    ui.text(&ImString::new(format!(
+                        "Spawned particles: {}",
+                        stage.new_particles.as_slice().len()
+                    )));
+                    ui.text(&ImString::new(format!(
+                        "Solid cube objects: {}",
+                        stage.solid[BasicObj::Cube].as_slice().len()
+                            + stage.solid_dither[BasicObj::Cube].as_slice().len()
+                            + stage.solid_glow[BasicObj::Cube].as_slice().len()
+                    )));
+                    ui.text(&ImString::new(format!(
+                        "Wind objects: {}",
+                        stage.wind.as_slice().len()
+                    )));
+                    ui.text(&ImString::new(format!(
+                        "Lights: {}",
+                        stage.lights.as_slice().len()
+                    )));
+                    ui.text(&ImString::new(format!(
+                        "Lines: {}",
+                        stage.lines.as_slice().len()
+                    )));
+                }
             });
     }
 
