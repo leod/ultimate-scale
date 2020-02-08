@@ -1268,7 +1268,6 @@ dependencies = [
  "clap",
  "coarse-prof",
  "easer",
- "floating-duration",
  "glium",
  "imgui",
  "imgui-glium-renderer",
