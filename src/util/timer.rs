@@ -14,7 +14,7 @@ pub fn hz_to_period(hz: f32) -> Duration {
 }
 
 /// A timer that can be used to trigger events that happen periodically.
-#[derive(Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Debug, Clone, Copy)]
 pub struct Timer {
     period: Duration,
     accum: Duration,

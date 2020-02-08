@@ -7,7 +7,7 @@ use nalgebra as na;
 pub type Vector3 = na::Vector3<isize>;
 pub type Point3 = na::Point3<isize>;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash, Serialize, Deserialize)]
 pub enum Axis3 {
     X,
     Y,
@@ -36,7 +36,7 @@ impl Axis3 {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash, Serialize, Deserialize)]
 pub enum Sign {
     Pos,
     Neg,
@@ -67,7 +67,7 @@ impl Sign {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct Dir3(pub Axis3, pub Sign);
 
 impl Dir3 {

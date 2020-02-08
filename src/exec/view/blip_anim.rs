@@ -1,24 +1,129 @@
+use std::collections::HashMap;
+use std::time::Duration;
+
 use nalgebra as na;
 
 use crate::exec::{Blip, BlipDieMode, BlipSpawnMode, BlipStatus};
-use crate::machine::grid::Dir3;
+use crate::machine::grid::{self, Dir3};
 use crate::render;
 
-pub fn pos_rot_anim(
-    blip: Blip,
+/// A subset of fields of `Blip` that are relevant for determining the blip's
+/// animation. Most importantly, this excludes the position field. We use this
+/// for caching the blip animation and prevent recomputing quaternions over and
+/// over again when visualizing simulation progress within a tick.
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
+pub struct Input {
+    orient: Dir3,
+    move_dir: Option<Dir3>,
+    status: BlipStatus,
+
+    // This is not actually `Blip` state, but derived from wind state.
     is_on_wind: bool,
-) -> pareen::AnimBox<f32, (na::Point3<f32>, na::UnitQuaternion<f32>)> {
-    let center = render::machine::block_center(&blip.pos);
-    let pos_anim = pareen::constant(blip.move_dir).map_or(center, move |move_dir| {
-        let next_pos = blip.pos + move_dir.to_vector();
-        let next_center = render::machine::block_center(&next_pos);
-        pareen::lerp(center, next_center)
-            .map_time_anim(move_rot_anim(blip, is_on_wind).map(|(progress, _)| progress))
-    });
+}
 
-    let rot_anim = move_rot_anim(blip, is_on_wind).map(|(_, rot)| rot);
+impl Input {
+    pub fn from_blip(blip: &Blip, is_on_wind: bool) -> Self {
+        Self {
+            orient: blip.orient,
+            move_dir: blip.move_dir,
+            status: blip.status,
+            is_on_wind,
+        }
+    }
 
-    pos_anim.zip(rot_anim).into_box()
+    pub fn next_orient(&self) -> Dir3 {
+        self.move_dir.unwrap_or(self.orient)
+    }
+
+    pub fn is_turning(&self) -> bool {
+        self.move_dir.map_or(false, |dir| dir != self.orient)
+    }
+}
+
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
+pub struct Key {
+    time: Duration,
+    input: Input,
+}
+
+impl Key {
+    pub fn at_time_f32(time_f32: f32, input: Input) -> Self {
+        let time = Duration::from_secs_f32(time_f32);
+
+        Key { time, input }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Value {
+    pub isometry: na::Isometry3<f32>,
+    pub isometry_mat: na::Matrix4<f32>,
+    pub scaling: na::Vector3<f32>,
+    pub face_dirs: [na::Vector3<f32>; 4],
+}
+
+impl Value {
+    pub fn center(&self, blip_pos: &grid::Point3) -> na::Point3<f32> {
+        render::machine::block_center(blip_pos) + self.isometry.translation.vector
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Cache {
+    // We'll use a `HashMap` for now, but this will be easy replace if we find
+    // that it is a bottleneck. The number of possible values of `Input` is
+    // relatively small.
+    cache: HashMap<Key, Value>,
+}
+
+impl Cache {
+    pub fn get_or_insert(&mut self, key: Key) -> &Value {
+        self.cache
+            .entry(key.clone())
+            .or_insert_with(|| value_anim(key.input.clone()).eval(key.time.as_secs_f32()))
+    }
+
+    pub fn clear(&mut self) {
+        log::debug!("clearing {} cached entries", self.cache.len());
+
+        self.cache.clear();
+    }
+}
+
+pub fn value_anim(input: Input) -> pareen::AnimBox<f32, Value> {
+    let delta = input
+        .move_dir
+        .map(Dir3::to_vector)
+        .unwrap_or(na::Vector3::zeros());
+    let delta_f32: na::Vector3<f32> = na::convert(delta);
+
+    let size = size_anim(input.status);
+    let move_rot = move_rot_anim(input);
+
+    move_rot
+        .zip(size)
+        .map(move |((move_progress, rot), size)| {
+            let trans = na::Translation::from(move_progress * delta_f32);
+
+            let face_dirs = [
+                rot.transform_vector(&na::Vector3::new(0.0, 0.0, 1.0)),
+                rot.transform_vector(&na::Vector3::new(0.0, 0.0, -1.0)),
+                rot.transform_vector(&na::Vector3::new(0.0, 1.0, 0.0)),
+                rot.transform_vector(&na::Vector3::new(0.0, -1.0, 0.0)),
+            ];
+
+            let isometry = na::Isometry3::from_parts(trans, rot);
+            let isometry_mat = isometry.to_homogeneous();
+            let scaling = na::Vector3::new(size, size, size);
+
+            Value {
+                isometry,
+                isometry_mat,
+                scaling,
+                face_dirs,
+            }
+        })
+        .into_box()
 }
 
 pub fn size_anim(status: BlipStatus) -> pareen::AnimBox<f32, f32> {
@@ -93,14 +198,11 @@ fn twist_anim(
     })
 }
 
-fn move_rot_anim(
-    blip: Blip,
-    is_on_wind: bool,
-) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
+fn move_rot_anim(input: Input) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
     pareen::cond(
-        !blip.status.is_pressing_button(),
-        normal_move_rot_anim(blip, is_on_wind),
-        press_button_move_rot_anim(blip),
+        !input.status.is_pressing_button(),
+        normal_move_rot_anim(input.clone()),
+        press_button_move_rot_anim(input),
     )
     .into_box()
 }
@@ -126,21 +228,16 @@ fn accelerate() -> pareen::AnimBox<f32, f32> {
         .into_box()
 }
 
-fn normal_move_rot_anim(
-    blip: Blip,
-    is_on_wind: bool,
-) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
-    let blip = blip;
-    let orient = blip.orient.to_quaternion_x();
-    let next_orient = blip.next_orient().to_quaternion_x();
-
+fn normal_move_rot_anim(input: Input) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
     // Move the blip
+    let status = input.status;
+    let is_turning = input.is_turning();
     let move_anim = || {
         pareen::cond(
-            blip.status.is_bridge_spawning(),
+            status.is_bridge_spawning(),
             spawn_move_anim(),
             pareen::cond(
-                blip.is_turning(),
+                is_turning,
                 pareen::constant(0.0).seq_squeeze(0.2, accelerate()),
                 //pareen::constant(0.0).seq_ease_in(0.2, easer::functions::Quad, 0.6, pareen::fun(|t| t + 0.8)),
                 pareen::id(),
@@ -150,24 +247,27 @@ fn normal_move_rot_anim(
     };
 
     // Rotate the blip
+    let orient = input.orient.to_quaternion_x();
+    let next_orient = input.next_orient().to_quaternion_x();
+    let turn = input.orient.quaternion_between(input.next_orient());
+
     let orient_anim = pareen::fun(move |t| {
-        let rotation = blip.orient.quaternion_between(blip.next_orient());
-        let next_orient = rotation * orient;
+        let interp_quat = turn * orient;
         orient
-            .try_slerp(&next_orient, t, 0.001)
-            .unwrap_or_else(|| next_orient.clone())
+            .try_slerp(&interp_quat, t, 0.001)
+            .unwrap_or_else(|| next_orient)
     });
 
     let twist_anim = || {
         pareen::cond(
-            blip.status.is_spawning() || !is_on_wind,
+            input.status.is_spawning() || !input.is_on_wind,
             na::UnitQuaternion::identity(),
-            twist_anim(blip.move_dir, move_anim()),
+            twist_anim(input.move_dir, move_anim()),
         )
     };
 
     let rot_anim = pareen::cond(
-        blip.is_turning(),
+        input.is_turning(),
         orient_anim.seq_squeeze(0.2, twist_anim() * next_orient),
         twist_anim() * next_orient,
     );
@@ -175,8 +275,16 @@ fn normal_move_rot_anim(
     move_anim().zip(rot_anim).into_box()
 }
 
-fn press_button_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
-    let move_rot_anim = normal_move_rot_anim(blip, true);
+fn press_button_move_rot_anim(
+    input: Input,
+) -> pareen::AnimBox<f32, (f32, na::UnitQuaternion<f32>)> {
+    let input_on_wind = Input {
+        is_on_wind: false,
+        ..input.clone()
+    };
+
+    let move_rot_anim = normal_move_rot_anim(input_on_wind.clone());
+
     let halfway_time = 0.55;
     let (_, hold_rot) = move_rot_anim.eval(1.0);
 
@@ -184,7 +292,7 @@ fn press_button_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Unit
     let normal_anim = move_rot_anim.map(|(_, rot)| rot);
 
     // Quickly reset to a horizontal.
-    let reach_anim = normal_move_rot_anim(blip, true)
+    let reach_anim = normal_move_rot_anim(input_on_wind.clone())
         .map(|(_, rot)| rot)
         .map_time(move |t| halfway_time + t * 10.0);
     let reach_time = 1.0 / 20.0;
@@ -194,14 +302,14 @@ fn press_button_move_rot_anim(blip: Blip) -> pareen::AnimBox<f32, (f32, na::Unit
     let hold_time = 0.15;
 
     // Twist frantically.
-    let twist_anim = twist_anim(blip.move_dir, pareen::id() + halfway_time).map_time(|t| t * 12.0);
+    let twist_anim = twist_anim(input.move_dir, pareen::id() + halfway_time).map_time(|t| t * 12.0);
     //let twist_time = 1.0 / 8.0;
 
     // Then hold again.
     //let finish_anim = pareen::constant(na::UnitQuaternion::identity());
 
     // Combine all:
-    let move_anim = normal_move_rot_anim(blip, true)
+    let move_anim = normal_move_rot_anim(input_on_wind)
         .map(|(pos, _)| pos)
         .seq_continue(halfway_time, move |halfway_pos| {
             pareen::lerp(halfway_pos, halfway_time)

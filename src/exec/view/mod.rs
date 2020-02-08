@@ -49,6 +49,8 @@ pub struct ExecView {
 
     mouse_block_pos: Option<grid::Point3>,
 
+    blip_anim_cache: blip_anim::Cache,
+
     transduce_events: Vec<(f32, TransduceEvent)>,
     particle_budget: Vec<f32>,
     is_over_particle_budget: bool,
@@ -60,6 +62,7 @@ impl ExecView {
             config: config.clone(),
             exec: Exec::new(machine, &mut rand::thread_rng()),
             mouse_block_pos: None,
+            blip_anim_cache: blip_anim::Cache::default(),
             transduce_events: Vec::new(),
             particle_budget: Vec::new(),
             is_over_particle_budget: false,
@@ -88,6 +91,12 @@ impl ExecView {
         profile!("tick");
 
         self.exec.update();
+
+        // The blip animation cache is indexed by the tick progress, among other
+        // things. The tick progress offsets depend entirely on frame times, so
+        // if we didn't clear the animation cache anywhere it would be allowed
+        // to grow essentially without bound.
+        self.blip_anim_cache.clear();
     }
 
     pub fn next_level_status(&self) -> LevelStatus {
@@ -250,15 +259,18 @@ impl ExecView {
                     }
 
                     let blip = &self.exec.blips()[*blip_index];
+                    let anim_input = self.blip_anim_input(blip);
+                    let anim_value = self
+                        .blip_anim_cache
+                        .get_or_insert(blip_anim::Key::at_time_f32(*die_time, anim_input));
+
                     let dir: na::Vector3<f32> =
                         na::convert(blip.move_dir.map_or(na::Vector3::zeros(), Dir3::to_vector));
-                    let pos_rot_anim =
-                        blip_anim::pos_rot_anim(blip.clone(), self.is_blip_on_wind(blip));
 
                     Self::kill_particles(
                         time.num_ticks_passed as f32 + die_time,
                         blip.kind,
-                        &(pos_rot_anim.eval(*die_time).0 + dir * 0.2),
+                        &(anim_value.center(&blip.pos) + dir * 0.2),
                         &-dir,
                         budget_fraction,
                         &mut render_out.new_particles,
@@ -274,36 +286,35 @@ impl ExecView {
                     }
 
                     let blip = &self.exec.blips()[*blip_index];
-                    let pos_rot_anim =
-                        blip_anim::pos_rot_anim(blip.clone(), self.is_blip_on_wind(blip));
+                    let anim_input = self.blip_anim_input(blip);
 
                     let sub_tick_duration = 1.0 / (budget_fraction * num_particles as f32);
                     let mut current_time = progress_start;
 
                     while current_time < progress_end {
-                        let (pos, rot) = pos_rot_anim.eval(current_time);
+                        let anim_value =
+                            self.blip_anim_cache
+                                .get_or_insert(blip_anim::Key::at_time_f32(
+                                    current_time,
+                                    anim_input.clone(),
+                                ));
 
-                        let corners = [
-                            na::Vector3::new(0.0, 0.0, 1.0),
-                            na::Vector3::new(0.0, 0.0, -1.0),
-                            na::Vector3::new(0.0, 1.0, 0.0),
-                            na::Vector3::new(0.0, -1.0, 0.0),
-                        ];
-
+                        let spawn_time = time.num_ticks_passed as f32 + current_time;
                         let speed = match blip.status {
                             BlipStatus::Spawning(_) => 2.15,
                             _ => 3.0,
                         };
                         let friction = 9.0;
+                        let life_duration = speed / friction;
+                        let start_pos = anim_value.center(&blip.pos);
 
-                        for corner in &corners {
-                            let velocity = rot.transform_vector(corner) * speed;
-                            let life_duration = speed / friction;
+                        for face_index in 0..4 {
+                            let velocity = anim_value.face_dirs[face_index] * speed;
 
                             let particle = Particle {
-                                spawn_time: time.num_ticks_passed as f32 + current_time,
+                                spawn_time,
                                 life_duration,
-                                start_pos: pos,
+                                start_pos,
                                 velocity,
                                 color: render::machine::blip_color(blip.kind),
                                 size: na::Vector2::new(0.01, 0.01) * 10.0f32.sqrt(),
@@ -440,45 +451,41 @@ impl ExecView {
         }
     }
 
-    fn render_blips(&self, time: &TickTime, out: &mut render::Stage) {
+    fn render_blips(&mut self, time: &TickTime, out: &mut render::Stage) {
+        profile!("blips");
+
         for (_index, blip) in self.exec.blips().iter() {
-            /*let size_anim = pareen::cond(
-                blip.status.is_pressing_button(),
-                pareen::constant(1.0)
-                    .seq(0.55, pareen::lerp(1.0, 0.9).squeeze(0.0..=0.2)).into_box(),
-                1.0,
-            ) * blip_size_anim(blip.status);*/
-            let size_anim = blip_anim::size_anim(blip.status);
-            let is_on_wind = self.is_blip_on_wind(blip);
-            let pos_rot_anim = blip_anim::pos_rot_anim(*blip, is_on_wind);
+            let anim_input = self.blip_anim_input(blip);
+            let anim_value = self
+                .blip_anim_cache
+                .get_or_insert(blip_anim::Key::at_time_f32(
+                    time.tick_progress(),
+                    anim_input,
+                ));
+            let scaling = anim_value
+                .scaling
+                .component_mul(&na::Vector3::new(1.0, 0.8, 0.8))
+                * 0.22;
 
-            let size_factor = size_anim.eval(time.tick_progress());
-            let (pos, rot) = pos_rot_anim.eval(time.tick_progress());
+            // Shift transform to the blip's position
+            let mut transform = anim_value.isometry_mat;
+            transform[(0, 3)] += 0.5 + blip.pos.coords.x as f32;
+            transform[(1, 3)] += 0.5 + blip.pos.coords.y as f32;
+            transform[(2, 3)] += 0.5 + blip.pos.coords.z as f32;
 
-            let transform = na::Matrix4::new_translation(&pos.coords)
-                * rot.to_homogeneous()
-                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(1.0, 0.8, 0.8));
+            render::machine::render_outline(&transform, &scaling, 1.0, out);
 
             let color = render::machine::blip_color(blip.kind);
-            let size = size_factor * 0.22;
             let params = basic_obj::Instance {
                 color: na::Vector4::new(color.x, color.y, color.z, 1.0),
-                transform: transform * na::Matrix4::new_scaling(size),
+                transform: transform * na::Matrix4::new_nonuniform_scaling(&scaling),
                 ..Default::default()
             };
-
-            render::machine::render_outline(
-                &transform,
-                &na::Vector3::new(size, size, size),
-                1.0,
-                out,
-            );
-
             out.solid_glow[BasicObj::Cube].add(params);
 
-            let intensity = size_factor * 10.0;
+            let intensity = anim_value.scaling.x * 10.0;
             out.lights.push(Light {
-                position: pos,
+                position: anim_value.center(&blip.pos),
                 //attenuation: na::Vector4::new(1.0, 6.0, 30.0, 0.0),
                 attenuation: na::Vector4::new(1.0, 0.0, 0.0, 7.0),
                 color: intensity * render::machine::blip_color(blip.kind),
@@ -487,15 +494,17 @@ impl ExecView {
         }
     }
 
-    fn is_blip_on_wind(&self, blip: &Blip) -> bool {
-        blip.move_dir.map_or(false, |dir| {
+    fn blip_anim_input(&self, blip: &Blip) -> blip_anim::Input {
+        let is_on_wind = blip.move_dir.map_or(false, |dir| {
             self.exec
                 .machine()
                 .get_index(&blip.pos)
                 .map_or(false, |block_index| {
                     self.exec.next_blocks().wind_out[block_index][dir]
                 })
-        })
+        });
+
+        blip_anim::Input::from_blip(blip, is_on_wind)
     }
 }
 

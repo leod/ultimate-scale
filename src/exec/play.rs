@@ -36,7 +36,7 @@ impl Default for Config {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone, Hash)]
 pub struct TickTime {
     /// Number of ticks that have already passed since starting the simulation.
     pub num_ticks_passed: usize,
