@@ -24,14 +24,8 @@ pub use level::{LevelProgress, LevelStatus};
 pub use play::TickTime;
 pub use view::ExecView;
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
-pub struct BlipMovement {
-    pub dir: Dir3,
-    pub progress: usize,
-}
-
 /// Ways that blips can enter live.
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug, Hash)]
 pub enum BlipSpawnMode {
     //Ease,
     Quick,
@@ -39,14 +33,14 @@ pub enum BlipSpawnMode {
 }
 
 /// Ways that blips can leave live.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
 pub enum BlipDieMode {
     PopEarly,
     PopMiddle,
     PressButton,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug, Hash)]
 pub enum BlipStatus {
     Spawning(BlipSpawnMode),
     Existing,
@@ -157,14 +151,6 @@ impl Blip {
             + self
                 .move_dir
                 .map_or(Vector3::zeros(), |dir| dir.to_vector())
-    }
-
-    fn next_orient(&self) -> Dir3 {
-        self.move_dir.unwrap_or(self.orient)
-    }
-
-    fn is_turning(&self) -> bool {
-        self.move_dir.map_or(false, |dir| dir != self.orient)
     }
 }
 
