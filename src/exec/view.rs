@@ -272,8 +272,6 @@ impl ExecView {
                     }
 
                     let blip = &self.exec.blips()[*blip_index];
-                    let dir: na::Vector3<f32> =
-                        na::convert(blip.move_dir.map_or(na::Vector3::zeros(), Dir3::to_vector));
                     let pos_rot_anim = blip_pos_rot_anim(blip.clone(), self.is_blip_on_wind(blip));
 
                     let sub_tick_duration = 1.0 / (budget_fraction * num_particles as f32);
@@ -384,7 +382,7 @@ impl ExecView {
         let transform = na::Matrix4::new_translation(&(block_center.coords + in_vector / 2.0))
             * in_dir.invert().to_rotation_mat_x();
 
-        for &phase in &[0.0, 0.25] {
+        for &phase in &[0.0 /*, 0.25*/] {
             out.wind.add(render::wind::Instance {
                 transform,
                 start: in_t,
@@ -475,10 +473,11 @@ impl ExecView {
 
             out.solid_glow[BasicObj::Cube].add(params);
 
-            let intensity = size_factor * 20.0;
+            let intensity = size_factor * 10.0;
             out.lights.push(Light {
                 position: pos,
-                attenuation: na::Vector3::new(1.0, 6.0, 30.0),
+                //attenuation: na::Vector4::new(1.0, 6.0, 30.0, 0.0),
+                attenuation: na::Vector4::new(1.0, 0.0, 0.0, 7.0),
                 color: intensity * render::machine::blip_color(blip.kind),
                 ..Default::default()
             });
@@ -510,7 +509,7 @@ enum TransduceEvent {
 }
 
 impl TransduceEvent {
-    fn num_particles(&self, distance: f32) -> usize {
+    fn num_particles(&self, _distance: f32) -> usize {
         match self {
             TransduceEvent::BlipDeath { .. } => 1000,
             TransduceEvent::BlipSliver { duration, .. } => (600.0 * duration) as usize,
