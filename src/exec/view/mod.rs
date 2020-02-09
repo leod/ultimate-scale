@@ -244,7 +244,7 @@ impl ExecView {
                                 start_pos,
                                 velocity,
                                 color: render::machine::blip_color(blip.kind),
-                                size: na::Vector2::new(0.01, 0.01) * 10.0f32.sqrt(),
+                                size: 0.01 * 10.0f32.sqrt(),
                                 friction,
                             };
 
@@ -301,7 +301,7 @@ impl ExecView {
                 start_pos: *pos,
                 velocity,
                 color: render::machine::blip_color(kind),
-                size: na::Vector2::new(0.03, 0.03) * size_factor,
+                size: 0.03 * size_factor,
                 friction: velocity.norm() / life_duration,
             };
             out.add(particle);

@@ -22,7 +22,9 @@
 - Don't use `from_euler_angles` for axis-aligned stuff
 - Particle rendering without geometry shaders
 - Wind LoD
-- Better streaming of instance and particle data?
+- Better streaming of instance and particle data
+    - Persistent mapping + triple buffering?
+- Precompute inverse transform for normals
 
 ## Sound
  - _Anything at all_!
