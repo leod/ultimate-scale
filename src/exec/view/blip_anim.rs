@@ -84,7 +84,7 @@ impl Cache {
     }
 
     pub fn clear(&mut self) {
-        log::debug!("clearing {} cached entries", self.cache.len());
+        //log::info!("clearing {} cached entries", self.cache.len());
 
         self.cache.clear();
     }

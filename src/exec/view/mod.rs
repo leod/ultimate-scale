@@ -1,4 +1,5 @@
 mod blip_anim;
+mod event;
 
 use std::time::Duration;
 
@@ -13,13 +14,13 @@ use rendology::{basic_obj, BasicObj, Camera, Light, RenderList};
 use crate::edit::pick;
 use crate::edit_camera_view::EditCameraView;
 use crate::exec::anim::{AnimState, WindDeadend, WindLife};
-use crate::exec::{
-    Blip, BlipDieMode, BlipIndex, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime,
-};
+use crate::exec::{Blip, BlipStatus, Exec, LevelProgress, LevelStatus, TickTime};
 use crate::input_state::InputState;
 use crate::machine::grid::{Dir3, Point3};
 use crate::machine::{grid, BlipKind, Machine};
 use crate::render;
+
+use event::TransduceEvent;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -53,7 +54,6 @@ pub struct ExecView {
 
     transduce_events: Vec<(f32, TransduceEvent)>,
     particle_budget: Vec<f32>,
-    is_over_particle_budget: bool,
 }
 
 impl ExecView {
@@ -65,7 +65,6 @@ impl ExecView {
             blip_anim_cache: blip_anim::Cache::default(),
             transduce_events: Vec::new(),
             particle_budget: Vec::new(),
-            is_over_particle_budget: false,
         }
     }
 
@@ -134,79 +133,6 @@ impl ExecView {
         self.render_blips(time, out);
     }
 
-    fn compute_transduce_events(&mut self, eye_pos: &na::Point3<f32>) {
-        profile!("compute_events");
-
-        self.transduce_events.clear();
-        self.transduce_events
-            .extend(iter_transduce_events(&self.exec, eye_pos));
-
-        self.particle_budget.clear();
-
-        let num_particles: usize = self
-            .transduce_events
-            .iter()
-            .map(|(distance, event)| event.num_particles(*distance))
-            .sum();
-        self.is_over_particle_budget = num_particles > self.config.particle_budget_per_tick;
-
-        if self.is_over_particle_budget {
-            self.transduce_events
-                .sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
-
-            self.particle_budget.reserve(self.transduce_events.len());
-
-            let close_particle_budget = self.config.close_particle_budget_per_tick();
-
-            assert!(
-                close_particle_budget > 0
-                    && close_particle_budget < self.config.particle_budget_per_tick
-            );
-
-            let mut num_spawned: usize = 0;
-            let mut i = 0;
-            while num_spawned < close_particle_budget {
-                self.particle_budget.push(1.0);
-
-                num_spawned += self.transduce_events[i]
-                    .1
-                    .num_particles(self.transduce_events[i].0);
-                i += 1;
-            }
-
-            let remaining_budget = self.config.particle_budget_per_tick - num_spawned;
-            let remaining_particles = num_particles - num_spawned;
-
-            let fraction = remaining_budget as f32 / remaining_particles as f32;
-
-            log::info!(
-                "num_particles {} num_spawned {} fraction {}",
-                num_particles,
-                num_spawned,
-                fraction
-            );
-
-            while num_spawned < self.config.particle_budget_per_tick {
-                self.particle_budget.push(fraction);
-
-                num_spawned += (self.transduce_events[i]
-                    .1
-                    .num_particles(self.transduce_events[i].0)
-                    as f32
-                    * fraction)
-                    .ceil() as usize;
-                i += 1;
-            }
-
-            while i < self.transduce_events.len() {
-                self.particle_budget.push(0.0);
-                i += 1;
-            }
-
-            assert!(self.particle_budget.len() == self.transduce_events.len());
-        }
-    }
-
     pub fn transduce(
         &mut self,
         prev_time: &TickTime,
@@ -224,7 +150,14 @@ impl ExecView {
 
         let (progress_start, progress_end) = if prev_time.num_ticks_passed < time.num_ticks_passed {
             // We have jumped into a new tick.
-            self.compute_transduce_events(eye_pos);
+            profile!("compute_events");
+            event::compute_transduce_events(
+                &self.exec,
+                &self.config,
+                eye_pos,
+                &mut self.transduce_events,
+                &mut self.particle_budget,
+            );
 
             // Start time within tick at zero.
             (0.0, time.tick_progress())
@@ -234,13 +167,7 @@ impl ExecView {
         };
 
         for (event_index, (distance, event)) in self.transduce_events.iter().enumerate() {
-            let budget_fraction = if self.is_over_particle_budget {
-                self.particle_budget[event_index]
-            } else {
-                1.0
-            };
-
-            //println!("{} -> {}", distance, particle_decay_by_distance(*distance));
+            let budget_fraction = self.particle_budget[event_index];
 
             if budget_fraction == 0.0 {
                 break;
@@ -506,91 +433,4 @@ impl ExecView {
 
         blip_anim::Input::from_blip(blip, is_on_wind)
     }
-}
-
-enum TransduceEvent {
-    BlipDeath {
-        blip_index: BlipIndex,
-        time: f32,
-    },
-    BlipSliver {
-        blip_index: BlipIndex,
-        start_time: f32,
-        duration: f32,
-    },
-}
-
-impl TransduceEvent {
-    fn num_particles(&self, _distance: f32) -> usize {
-        match self {
-            TransduceEvent::BlipDeath { .. } => 1000,
-            TransduceEvent::BlipSliver { duration, .. } => (600.0 * duration) as usize,
-        }
-    }
-}
-
-const MAX_TRANSDUCE_DISTANCE_SQ: f32 = 10000.0;
-
-fn iter_nearby_blips<'a>(
-    exec: &'a Exec,
-    eye_pos: &'a na::Point3<f32>,
-) -> impl Iterator<Item = (BlipIndex, f32, &'a Blip)> {
-    exec.blips().iter().filter_map(move |(blip_index, blip)| {
-        let blip_pos: na::Point3<f32> = na::convert(blip.pos);
-        let delta = blip_pos - eye_pos;
-        let distance_sq = delta.norm_squared();
-
-        if distance_sq > MAX_TRANSDUCE_DISTANCE_SQ {
-            None
-        } else {
-            Some((blip_index, distance_sq.sqrt(), blip))
-        }
-    })
-}
-
-fn iter_transduce_events<'a>(
-    exec: &'a Exec,
-    eye_pos: &'a na::Point3<f32>,
-) -> impl Iterator<Item = (f32, TransduceEvent)> + 'a {
-    let death = iter_nearby_blips(exec, eye_pos).filter_map(|(blip_index, distance, blip)| {
-        blip.status
-            .die_mode()
-            .filter(|die_mode| *die_mode != BlipDieMode::PressButton)
-            .map(|die_mode| {
-                let die_time = match die_mode {
-                    BlipDieMode::PopEarly => 0.3,
-                    _ => 0.8,
-                };
-
-                (
-                    distance,
-                    TransduceEvent::BlipDeath {
-                        blip_index,
-                        time: die_time,
-                    },
-                )
-            })
-    });
-
-    let sliver = iter_nearby_blips(exec, eye_pos).filter_map(|(blip_index, distance, blip)| {
-        let (start_time, duration) = match blip.status {
-            BlipStatus::Spawning(_) => Some((0.5, 0.5)),
-            BlipStatus::Existing => None,
-            BlipStatus::LiveToDie(_, BlipDieMode::PressButton) => Some((0.65, 0.45)),
-            BlipStatus::LiveToDie(_, _) => Some((0.5, 0.3)),
-            BlipStatus::Dying(BlipDieMode::PressButton) => Some((0.65, 0.35)),
-            BlipStatus::Dying(_) => None,
-        }?;
-
-        Some((
-            distance,
-            TransduceEvent::BlipSliver {
-                blip_index,
-                start_time,
-                duration,
-            },
-        ))
-    });
-
-    death.chain(sliver)
 }
