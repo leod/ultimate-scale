@@ -40,7 +40,7 @@ impl Default for Config {
             fast_move_multiplier: 4.0,
             rotate_degrees_per_sec: 90.0,
             fast_rotate_multiplier: 2.0,
-            max_height: 50.0,
+            max_height: 500.0,
         }
     }
 }

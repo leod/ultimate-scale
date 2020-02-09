@@ -29,6 +29,10 @@ rendology = { git = "https://github.com/leod/rendology.git", branch = "tuning" }
 [profile.dev]
 opt-level = 1
 
+[profile.release]
+# For profiling
+debug = true 
+
 [patch.crates-io]
 glium = { git = "https://github.com/leod/glium.git", branch = "polygon_offset_0.25" }
 
