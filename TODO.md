@@ -9,6 +9,7 @@
 ## Rendering
 - Highlight wind-wind interactions
 - Improve pillars
+- Handle shadow mapping on large maps
 
 ## Gameplay
 - Campaign mode
