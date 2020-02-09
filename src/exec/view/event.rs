@@ -25,6 +25,7 @@ impl TransduceEvent {
 }
 
 const MAX_TRANSDUCE_DISTANCE_SQ: f32 = 10000.0;
+const MAX_CLOSE_DISTANCE: f32 = 10.0;
 
 pub fn iter_nearby_blips<'a>(
     exec: &'a Exec,
@@ -101,6 +102,7 @@ pub fn compute_transduce_events(
     events.extend(iter_transduce_events(exec, eye_pos));
 
     particle_budget.clear();
+    particle_budget.reserve(events.len());
 
     let num_particles: usize = events
         .iter()
@@ -111,17 +113,14 @@ pub fn compute_transduce_events(
     if num_particles > config.particle_budget_per_tick {
         events.sort_unstable_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
 
-        particle_budget.reserve(events.len());
-
         let close_particle_budget = config.close_particle_budget_per_tick();
-
         assert!(
             close_particle_budget > 0 && close_particle_budget < config.particle_budget_per_tick
         );
 
         let mut num_spawned: usize = 0;
         let mut i = 0;
-        while num_spawned < close_particle_budget {
+        while num_spawned < close_particle_budget && events[i].0 < MAX_CLOSE_DISTANCE {
             particle_budget.push(1.0);
 
             num_spawned += events[i].1.num_particles(events[i].0);
@@ -130,15 +129,14 @@ pub fn compute_transduce_events(
 
         let remaining_budget = config.particle_budget_per_tick - num_spawned;
         let remaining_particles = num_particles - num_spawned;
-
         let fraction = remaining_budget as f32 / remaining_particles as f32;
 
-        log::info!(
+        /*log::info!(
             "num_particles {} num_spawned {} fraction {}",
             num_particles,
             num_spawned,
             fraction
-        );
+        );*/
 
         while num_spawned < config.particle_budget_per_tick {
             particle_budget.push(fraction);
@@ -152,9 +150,9 @@ pub fn compute_transduce_events(
             particle_budget.push(0.0);
             i += 1;
         }
-
-        assert!(particle_budget.len() == events.len());
     } else {
         particle_budget.extend(std::iter::repeat(1.0).take(events.len()));
     }
+
+    assert!(particle_budget.len() == events.len());
 }
