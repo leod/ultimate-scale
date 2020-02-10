@@ -725,13 +725,17 @@ impl Editor {
                 let is_connected = |pos: grid::Point3, dir: grid::Dir3| {
                     let tentative = blocks
                         .get(&(pos + dir.to_vector()))
-                        .map_or(false, |neighbor| neighbor.block.has_wind_hole(dir.invert()));
+                        .map_or(false, |neighbor| {
+                            neighbor.block.has_wind_hole(dir.invert(), false)
+                        });
                     let existing = self
                         .machine
                         .get(&(pos + dir.to_vector()))
-                        .map_or(false, |neighbor| neighbor.block.has_wind_hole(dir.invert()));
+                        .map_or(false, |neighbor| {
+                            neighbor.block.has_wind_hole(dir.invert(), false)
+                        });
 
-                    placed_block.block.has_wind_hole(dir) && (tentative || existing)
+                    placed_block.block.has_wind_hole(dir, false) && (tentative || existing)
                 };
 
                 let is_a_connected = is_connected(*block_pos, dir_a);

@@ -104,7 +104,7 @@ impl Edit {
 
                             if block
                                 .as_ref()
-                                .map_or(false, |block| block.block.has_wind_hole(dir))
+                                .map_or(false, |block| block.block.has_wind_hole(dir, false))
                             {
                                 // No need to change the neighbor's connectivity.
                                 continue;

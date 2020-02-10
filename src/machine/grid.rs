@@ -16,7 +16,6 @@ pub enum Axis3 {
 
 impl Axis3 {
     pub const NUM_INDICES: usize = 3;
-    #[allow(dead_code)]
     pub const ALL: [Axis3; Self::NUM_INDICES] = [Axis3::X, Axis3::Y, Axis3::Z];
 
     pub fn to_vector(self) -> Vector3 {
@@ -44,6 +43,7 @@ pub enum Sign {
 
 impl Sign {
     pub const NUM_INDICES: usize = 2;
+    pub const ALL: [Sign; Self::NUM_INDICES] = [Sign::Neg, Sign::Pos];
 
     pub fn to_number(self) -> isize {
         match self {

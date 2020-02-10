@@ -1,12 +1,14 @@
+// What follows is horrible
+
 use nalgebra as na;
 
 use rendology::{basic_obj, line, BasicObj, Light};
 
-use crate::machine::grid::{self, Dir3, Sign};
+use crate::machine::grid::{self, Axis3, Dir3, Sign};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
 use crate::exec::anim::{AnimState, WindLife};
-use crate::exec::{Exec, LevelProgress, TickTime};
+use crate::exec::{Activation, Exec, LevelProgress, TickTime};
 
 use crate::render::{floor, Stage};
 
@@ -305,6 +307,26 @@ pub fn bridge_length_anim(
     )
 }
 
+pub fn button_length_anim(
+    activation: &Activation,
+    next_activation: &Activation,
+    block_size: f32,
+) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
+    pareen::cond(
+        next_activation.is_some(),
+        pareen::constant(activation.is_some())
+            .seq(1.0 - block_size / 2.0, next_activation.is_some()),
+        activation.is_some(),
+    )
+    .map(|a| {
+        if a {
+            BUTTON_LENGTH_MIN
+        } else {
+            BUTTON_LENGTH_MAX
+        }
+    })
+}
+
 pub struct Bridge {
     pub center: na::Point3<f32>,
     pub dir: Dir3,
@@ -376,7 +398,7 @@ pub fn render_wind_mills(
     out: &mut Stage,
 ) {
     for &dir in &Dir3::ALL {
-        if !placed_block.block.has_wind_hole_out(dir) {
+        if !placed_block.block.has_wind_hole_out(dir, false) {
             continue;
         }
 
@@ -760,21 +782,8 @@ pub fn render_block(
                 );
             }
 
-            let button_length = pareen::cond(
-                next_activation.is_some(),
-                pareen::constant(activation.is_some())
-                    .seq(1.0 - size.y / 2.0, next_activation.is_some()),
-                activation.is_some(),
-            )
-            .map(|a| {
-                if a {
-                    BUTTON_LENGTH_MIN
-                } else {
-                    BUTTON_LENGTH_MAX
-                }
-            })
-            .eval(tick_time.tick_progress());
-
+            let button_length = button_length_anim(&activation, &next_activation, size.y)
+                .eval(tick_time.tick_progress());
             let button_color = kind.map_or(button_color(), blip_color);
 
             for &dir in &Dir3::ALL {
@@ -797,8 +806,8 @@ pub fn render_block(
             }
         }
         Block::BlipWindSource { button_dir } => {
-            let activation = anim_state.and_then(|s| s.activation.as_ref());
-            let next_activation = anim_state.and_then(|s| s.next_activation.as_ref());
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
 
             let cube_color = block_color(
                 &if activation.is_some() {
@@ -830,25 +839,15 @@ pub fn render_block(
                 render_wind_source_light(&center, out);
             }
 
-            let button_length_anim = pareen::cond(
-                next_activation.is_some(),
-                pareen::constant(activation.is_some()).seq(0.85, next_activation.is_some()),
-                activation.is_some(),
-            )
-            .map(|a| {
-                if a {
-                    BUTTON_LENGTH_MIN
-                } else {
-                    BUTTON_LENGTH_MAX
-                }
-            });
+            let button_length = button_length_anim(&activation, &next_activation, 0.6)
+                .eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
                     center: *center,
                     dir: button_dir,
                     offset: 0.6 / 2.0,
-                    length: button_length_anim.eval(tick_time.tick_progress()),
+                    length: button_length,
                     size: 0.4,
                     color: block_color(&button_color(), alpha),
                 },
@@ -1035,6 +1034,60 @@ pub fn render_block(
             );
         }
         Block::Air => (),
+        Block::PipeButton { axis } => {
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
+
+            let cube_transform =
+                translation * transform * Dir3(axis, Sign::Pos).to_rotation_mat_x();
+            let scaling = na::Vector3::new(0.9, 0.45, 0.45);
+
+            out.solid_dither[BasicObj::Cube].add(basic_obj::Instance {
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+                color: block_color(&pipe_color(), alpha * 0.7),
+                ..Default::default()
+            });
+            render_outline(&cube_transform, &scaling, alpha, out);
+
+            let pipe_color = block_color(&pipe_color(), alpha);
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(axis, Sign::Neg),
+                &pipe_color,
+                out.solid(),
+            );
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(axis, Sign::Pos),
+                &pipe_color,
+                out.solid(),
+            );
+
+            let button_length = button_length_anim(&activation, &next_activation, scaling.y)
+                .eval(tick_time.tick_progress());
+
+            let button_dirs = Axis3::ALL
+                .iter()
+                .filter(|a| **a != axis)
+                .flat_map(|a| Sign::ALL.iter().map(move |sign| Dir3(*a, *sign)));
+
+            for dir in button_dirs {
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: scaling.y / 2.0,
+                        length: button_length,
+                        size: 0.25,
+                        color: block_color(&button_color(), alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
+        }
     }
 }
 
