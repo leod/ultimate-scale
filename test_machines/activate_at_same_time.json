@@ -1,0 +1,8141 @@
+{
+  "size": [
+    38,
+    38,
+    5
+  ],
+  "block_data": [
+    [
+      [
+        1,
+        29,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        32,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        30,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        30,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Neg"
+              ],
+              [
+                "Y",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        28,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        30,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        27,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        35,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        1,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        27,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        26,
+        2
+      ],
+      {
+        "block": {
+          "PipeButton": {
+            "axis": "X"
+          }
+        }
+      }
+    ],
+    [
+      [
+        1,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        28,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        8,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        27,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        30,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        26,
+        2
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        2,
+        29,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        0,
+        0,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        31,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        1,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "Output": {
+            "in_dir": [
+              "X",
+              "Neg"
+            ],
+            "index": 0
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        29,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        26,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        31,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        26,
+        2
+      ],
+      {
+        "block": {
+          "PipeButton": {
+            "axis": "X"
+          }
+        }
+      }
+    ],
+    [
+      [
+        32,
+        2,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        4,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        27,
+        0
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "Y",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        22,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        1,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        30,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        26,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        29,
+        30,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        26,
+        2
+      ],
+      {
+        "block": {
+          "PipeButton": {
+            "axis": "X"
+          }
+        }
+      }
+    ],
+    [
+      [
+        27,
+        30,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        27,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        31,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        1,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        31,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Neg"
+            ],
+            "kind": "A",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        20,
+        31,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        0,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        1,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        27,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        1,
+        0
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        3,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        33,
+        28,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        27,
+        0
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "Y",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        26,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        27,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        26,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Pos"
+            ],
+            "kind": "B",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        2,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        7,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        2,
+        27,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Pos"
+              ],
+              [
+                "X",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        35,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        35,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        28,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        28,
+        29,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        3,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        0,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        23,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        26,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        8,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        26,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        29,
+        1,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        21,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        0,
+        3,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        27,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        28,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        31,
+        28,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        30,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        28,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        26,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        32,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        1,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        26,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        3,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        0,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "Input": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "index": 0
+          }
+        }
+      }
+    ],
+    [
+      [
+        32,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        26,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        0,
+        1,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        1,
+        27,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Neg"
+              ],
+              [
+                "Y",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        29,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        28,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        0,
+        4,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        26,
+        2
+      ],
+      {
+        "block": {
+          "PipeButton": {
+            "axis": "X"
+          }
+        }
+      }
+    ],
+    [
+      [
+        26,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        28,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        26,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        30,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Pos"
+              ],
+              [
+                "X",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        30,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        1,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "Y",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        20,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        1,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        26,
+        2
+      ],
+      {
+        "block": {
+          "PipeButton": {
+            "axis": "X"
+          }
+        }
+      }
+    ],
+    [
+      [
+        30,
+        1,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        2,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        27,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        27,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        26,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        26,
+        2
+      ],
+      {
+        "block": {
+          "PipeButton": {
+            "axis": "X"
+          }
+        }
+      }
+    ],
+    [
+      [
+        34,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        26,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        29,
+        35,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        29,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        32,
+        28,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        28,
+        34,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        31,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        33,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        1,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        20,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        13,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        8,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        7,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        8,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        6,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        9,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        19,
+        9,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        17,
+        9,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        15,
+        9,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        13,
+        9,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        11,
+        9,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        9,
+        9,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        23,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        9,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        23,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        10,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        10,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        10,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        10,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        10,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        10,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        10,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        0,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        16,
+        5,
+        2
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "Y",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        1,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        10,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        3,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        2,
+        1
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        3,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        2,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        4,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        2,
+        1
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        3,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        1,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        0,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        4,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        0,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        0,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        0,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        0,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        1,
+        1
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "A",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        3,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        3,
+        1
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ]
+  ],
+  "level": {
+    "size": [
+      19,
+      19,
+      2
+    ],
+    "spec": {
+      "MultiplyByN": {
+        "n": 3,
+        "max": 15
+      }
+    }
+  }
+}
