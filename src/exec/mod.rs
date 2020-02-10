@@ -266,7 +266,7 @@ impl Exec {
                     &self.machine,
                     &self.neighbor_map,
                     &self.blocks.wind_out,
-                    &self.blocks.activation,
+                    &self.next_blocks.activation,
                 );
             }
         }
@@ -463,14 +463,14 @@ fn spawn_or_advect_wind(
     machine: &Machine,
     neighbor_map: &NeighborMap,
     wind_out: &[DirMap3<bool>],
-    prev_activation: &[Activation],
+    activation: &[Activation],
 ) -> DirMap3<bool> {
     let block = machine.block_at_index(block_index);
 
     match block {
         Block::WindSource => DirMap3::from_fn(|_| true),
         Block::BlipWindSource { button_dir } => {
-            if prev_activation[block_index].is_some() {
+            if activation[block_index].is_some() {
                 DirMap3::from_fn(|dir| dir != *button_dir)
             } else {
                 DirMap3::from_fn(|_| false)
