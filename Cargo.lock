@@ -1034,7 +1034,7 @@ checksum = "2439c63f3f6139d1b57529d16bc3b8bb855230c8efcc5d3a896c8bea7c3b1e84"
 [[package]]
 name = "rendology"
 version = "0.4.1"
-source = "git+https://github.com/leod/rendology.git?branch=tuning#8837f53f188556409ee6848af298c97e103bbe02"
+source = "git+https://github.com/leod/rendology.git#f4b5a13ef1952109c99521c67e05b6c37a5b0662"
 dependencies = [
  "coarse-prof",
  "glium",
