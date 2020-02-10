@@ -534,6 +534,15 @@ pub fn render_pulsator(
     render_outline(&cube_transform, &scaling, color.w, out);
 }
 
+pub fn render_wind_source_light(position: &na::Point3<f32>, out: &mut Stage) {
+    out.lights.push(Light {
+        position: *position,
+        attenuation: na::Vector4::new(1.0, 0.0, 0.0, 2.5),
+        color: 10.0 * wind_source_color(),
+        ..Default::default()
+    });
+}
+
 pub fn render_block(
     placed_block: &PlacedBlock,
     tick_time: &TickTime,
@@ -654,12 +663,7 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             if anim_state.is_some() {
-                out.lights.push(Light {
-                    position: *center,
-                    attenuation: na::Vector3::new(1.0, 0.0, 3.0),
-                    color: 8.0 * wind_source_color(),
-                    ..Default::default()
-                });
+                render_wind_source_light(&center, out);
             }
 
             render_wind_mills(
@@ -823,12 +827,7 @@ pub fn render_block(
             render_outline(&cube_transform, &scaling, alpha, out);
 
             if activation.is_some() {
-                out.lights.push(Light {
-                    position: *center,
-                    attenuation: na::Vector3::new(1.0, 0.0, 3.0),
-                    color: 8.0 * wind_source_color(),
-                    ..Default::default()
-                });
+                render_wind_source_light(&center, out);
             }
 
             let button_length_anim = pareen::cond(
