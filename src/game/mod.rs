@@ -34,7 +34,7 @@ pub struct Game {
     play: Play,
     play_status: Option<play::Status>,
 
-    fps: stats::Variable,
+    debug_frame_time: stats::Variable,
     show_config_ui: bool,
     show_debug_ui: bool,
     recreate_render_pipeline: bool,
@@ -75,7 +75,7 @@ impl Game {
             next_input_stage: update::InputStage::default(),
             play,
             play_status: None,
-            fps: stats::Variable::new(Duration::from_secs(1)),
+            debug_frame_time: stats::Variable::new(Duration::from_secs(1)),
             show_config_ui: false,
             show_debug_ui: false,
             recreate_render_pipeline: false,
@@ -83,7 +83,7 @@ impl Game {
     }
 
     pub fn update(&mut self, dt: Duration, input_state: &InputState) {
-        self.fps.record(1.0 / dt.as_secs_f32());
+        self.debug_frame_time.record(dt.as_secs_f32());
 
         {
             profile!("recv");

@@ -318,13 +318,23 @@ impl Update {
             let exec_view = self.exec_view.as_mut().unwrap();
             let mut last_transduce_time = prev_time.clone();
 
-            if *num_ticks_since_last_update > 0 {
+            if *num_ticks_since_last_update > 1 {
                 // Finish off transducing the previous tick.
                 if let Some(prev_time) = prev_time.as_ref() {
                     let mut end_of_last_tick = prev_time.clone();
                     end_of_last_tick.next_tick_timer.set_progress(1.0);
 
-                    exec_view.transduce(prev_time, &end_of_last_tick, render_stage);
+                    // Ignore these events when speeding through the simulation,
+                    // preventing massive slowdowns.
+                    if *num_ticks_since_last_update == 1 {
+                        exec_view.transduce(
+                            prev_time,
+                            &end_of_last_tick,
+                            &self.edit_camera_view.eye(),
+                            render_stage,
+                        );
+                    }
+
                     last_transduce_time = Some(end_of_last_tick);
                 }
             }
@@ -338,7 +348,12 @@ impl Update {
             }
 
             let last_transduce_time = last_transduce_time.unwrap_or_else(|| TickTime::zero());
-            exec_view.transduce(&last_transduce_time, &time, render_stage);
+            exec_view.transduce(
+                &last_transduce_time,
+                &time,
+                &self.edit_camera_view.eye(),
+                render_stage,
+            );
         }
     }
 
@@ -363,7 +378,7 @@ impl Update {
 
         render_stage.lights.push(rendology::Light {
             position: main_light_pos,
-            attenuation: na::Vector3::new(1.0, 0.0, 0.0),
+            attenuation: na::Vector4::new(1.0, 0.0, 0.0, 0.0),
             color: na::Vector3::new(1.0, 1.0, 1.0),
             is_main: true,
             ..Default::default()
