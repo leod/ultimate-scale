@@ -57,6 +57,10 @@ impl<T> VecOption<T> {
         }
     }
 
+    pub fn keys(&self) -> impl Iterator<Item = usize> + '_ {
+        self.iter().map(|(index, _value)| index)
+    }
+
     pub fn values(&self) -> impl Iterator<Item = &T> {
         self.iter().map(|(_index, value)| value)
     }

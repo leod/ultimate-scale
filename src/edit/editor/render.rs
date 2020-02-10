@@ -129,7 +129,8 @@ impl Editor {
 
                 if let Some(mouse_grid_pos) = mouse_grid_pos {
                     // Preview the available connections at the mouse position.
-                    let show_outgoing = self.machine.is_block_at(&mouse_grid_pos) || last_pos.is_some();
+                    let show_outgoing =
+                        self.machine.is_block_at(&mouse_grid_pos) || last_pos.is_some();
                     let available_dirs = grid::DirMap3::from_fn(|dir| {
                         let neighbor_pos = mouse_grid_pos + dir.to_vector();
 
@@ -143,10 +144,15 @@ impl Editor {
                             .get(&neighbor_pos)
                             .map_or(true, |block| block.block.can_connect_by_pipe(dir.invert()));
 
-                         show_outgoing && is_valid_neighbor && can_connect_mouse && can_connect_neighbor
+                        show_outgoing
+                            && is_valid_neighbor
+                            && can_connect_mouse
+                            && can_connect_neighbor
                     });
 
-                    if available_dirs.values().any(|b| *b) || !self.machine.is_block_at(&mouse_grid_pos) {
+                    if available_dirs.values().any(|b| *b)
+                        || !self.machine.is_block_at(&mouse_grid_pos)
+                    {
                         let placed_block = PlacedBlock {
                             block: Block::GeneralPipe(available_dirs),
                         };
