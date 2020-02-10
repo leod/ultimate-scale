@@ -3,8 +3,12 @@
 - Show some info on mouse over of blocks
 - Fast scrolling when zoomed out
 - Fix undo when extending pipes
+- Reconsider combining pipes when dragging/dropping/placing
 - No red outline when placing same object
 - Smooth camera movement
+- Don't allow deleting in multiple layers without moving the mouse
+- Don't scroll on C-s or C-a
+- Don't force layer change unnecessarily when pasting
 
 ## Rendering
 - Highlight wind-wind interactions
@@ -31,12 +35,14 @@
 
 ## Level Ideas
 ### Introductory
-- Append orange
+- Only let through green
 - Flip color
 - Even/odd
+- Append green
 
 ### Intermediate
 - Splitting input into two outputs
+- Splitting input into head/tail
 - Something about buffering?
 
 ### Hard
