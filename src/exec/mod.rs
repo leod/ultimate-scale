@@ -14,7 +14,7 @@ use coarse_prof::profile;
 use log::info;
 use rand::Rng;
 
-use crate::machine::grid::{Dir3, DirMap3, Point3, Vector3};
+use crate::machine::grid::{Axis3, Dir3, DirMap3, Point3, Vector3};
 use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 
@@ -266,7 +266,7 @@ impl Exec {
                     &self.machine,
                     &self.neighbor_map,
                     &self.blocks.wind_out,
-                    &self.next_blocks.activation,
+                    &self.blocks.activation,
                 );
             }
         }
@@ -357,10 +357,13 @@ impl Exec {
             for (block_index, (block_pos, placed_block)) in self.machine.blocks.data.iter_mut() {
                 if let Some(blip_kind) = self.blocks.activation[block_index] {
                     run_activated_block(
+                        block_index,
                         block_pos,
                         &mut placed_block.block,
                         blip_kind,
                         &mut self.blips,
+                        &self.neighbor_map,
+                        &self.next_blip_count,
                     );
                 }
             }
@@ -558,7 +561,7 @@ fn blip_move_dir(
 
             let can_move_in = dir == Dir3::Z_NEG
                 || (neighbor_block.has_move_hole(dir.invert(), is_active)
-                    && neighbor_block.has_wind_hole_in(dir.invert(), is_active));
+        /*&& neighbor_block.has_wind_hole_in(dir.invert(), is_active)*/);
 
             can_move_out && can_move_in
         })
@@ -574,7 +577,12 @@ fn blip_move_dir(
 
     let can_move = |dir: Dir3| block_move_out[dir] && !block_wind_in[dir];
 
-    if *block == Block::Air {
+    let must_fall = *block == Block::Air
+        || ((*block == Block::PipeButton { axis: Axis3::X }
+            || *block == Block::PipeButton { axis: Axis3::Y })
+            && is_active);
+
+    if must_fall {
         // The only way is DOWN!
         Some(Dir3::Z_NEG)
     } else if can_move(blip.orient) {
@@ -623,10 +631,13 @@ fn self_activate_block(
 }
 
 fn run_activated_block(
+    block_index: BlockIndex,
     block_pos: &Point3,
     block: &mut Block,
     blip_kind: BlipKind,
     blips: &mut VecOption<Blip>,
+    neighbor_map: &NeighborMap,
+    next_blip_count: &[usize],
 ) {
     match block {
         Block::BlipSpawn {
@@ -646,13 +657,21 @@ fn run_activated_block(
         }
         Block::BlipDuplicator { out_dirs, .. } => {
             for &out_dir in &[out_dirs.0, out_dirs.1] {
-                blips.add(Blip::new(
-                    blip_kind,
-                    *block_pos,
-                    out_dir,
-                    Some(out_dir),
-                    BlipSpawnMode::Bridge,
-                ));
+                let neighbor_index = neighbor_map[block_index][out_dir];
+                /*let is_free = neighbor_index.map_or(true, |neighbor_index| {
+                    next_blip_count[neighbor_index] == 0
+                });*/
+                let is_free = true;
+
+                if is_free {
+                    blips.add(Blip::new(
+                        blip_kind,
+                        *block_pos,
+                        out_dir,
+                        Some(out_dir),
+                        BlipSpawnMode::Bridge,
+                    ));
+                }
             }
         }
         Block::Input { out_dir, .. } => {

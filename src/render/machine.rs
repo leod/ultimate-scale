@@ -1070,7 +1070,7 @@ pub fn render_block(
 
             let button_dirs = Axis3::ALL
                 .iter()
-                .filter(|a| **a != axis)
+                .filter(|a| **a != axis && **a != Axis3::Z)
                 .flat_map(|a| Sign::ALL.iter().map(move |sign| Dir3(*a, *sign)));
 
             for dir in button_dirs {

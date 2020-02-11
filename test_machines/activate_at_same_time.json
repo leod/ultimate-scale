@@ -74,21 +74,12 @@
     ],
     [
       [
-        18,
-        9,
-        0
+        19,
+        14,
+        1
       ],
       {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
+        "block": "WindSource"
       }
     ],
     [
@@ -174,9 +165,9 @@
     ],
     [
       [
-        21,
-        7,
-        2
+        15,
+        11,
+        0
       ],
       {
         "block": {
@@ -307,8 +298,8 @@
     ],
     [
       [
-        20,
         9,
+        18,
         0
       ],
       {
@@ -454,16 +445,16 @@
     ],
     [
       [
-        18,
-        7,
+        19,
+        12,
         2
       ],
       {
         "block": {
           "GeneralPipe": [
             true,
-            false,
             true,
+            false,
             false,
             false,
             false
@@ -587,8 +578,8 @@
     ],
     [
       [
-        16,
-        9,
+        6,
+        17,
         0
       ],
       {
@@ -702,16 +693,16 @@
     ],
     [
       [
+        17,
         18,
-        8,
-        2
+        0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
-            true,
             false,
+            false,
+            true,
             true,
             false,
             false
@@ -820,17 +811,17 @@
     ],
     [
       [
-        17,
-        8,
+        14,
+        11,
         2
       ],
       {
         "block": {
           "GeneralPipe": [
             true,
-            false,
             true,
             false,
+            true,
             false,
             false
           ]
@@ -1048,8 +1039,8 @@
     ],
     [
       [
-        22,
-        9,
+        18,
+        20,
         0
       ],
       {
@@ -1084,55 +1075,55 @@
     ],
     [
       [
-        22,
-        8,
+        12,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        14,
         2
       ],
       {
         "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
         }
       }
     ],
     [
       [
-        9,
-        7,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
+        8,
         18,
-        7,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
-            true,
             false,
             false,
+            true,
+            true,
             false,
             false
           ]
@@ -1298,15 +1289,15 @@
     ],
     [
       [
-        23,
-        8,
+        10,
+        11,
         2
       ],
       {
         "block": {
           "GeneralPipe": [
-            false,
             true,
+            false,
             true,
             false,
             false,
@@ -1388,16 +1379,16 @@
     ],
     [
       [
-        12,
-        9,
-        0
+        20,
+        13,
+        2
       ],
       {
         "block": {
           "GeneralPipe": [
-            false,
-            false,
             true,
+            true,
+            false,
             true,
             false,
             false
@@ -1631,16 +1622,16 @@
     ],
     [
       [
+        8,
         19,
-        7,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
-            true,
             false,
+            false,
+            true,
             true,
             false,
             false
@@ -1705,12 +1696,21 @@
     ],
     [
       [
-        14,
-        3,
+        13,
+        9,
         0
       ],
       {
-        "block": "WindSource"
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
       }
     ],
     [
@@ -2037,16 +2037,16 @@
     ],
     [
       [
-        14,
-        8,
-        2
+        16,
+        18,
+        0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
-            true,
             false,
+            false,
+            true,
             true,
             false,
             false
@@ -2113,19 +2113,19 @@
     ],
     [
       [
-        12,
-        6,
-        0
+        17,
+        15,
+        1
       ],
       {
         "block": {
           "GeneralPipe": [
+            false,
+            false,
+            false,
             true,
-            true,
             false,
-            false,
-            false,
-            false
+            true
           ]
         }
       }
@@ -2227,16 +2227,16 @@
     ],
     [
       [
-        23,
-        9,
-        2
+        17,
+        21,
+        0
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
             false,
-            true,
+            false,
             true,
             false,
             false
@@ -2346,9 +2346,9 @@
     ],
     [
       [
-        21,
-        8,
-        2
+        7,
+        12,
+        0
       ],
       {
         "block": {
@@ -2365,17 +2365,17 @@
     ],
     [
       [
+        18,
         16,
-        8,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
+            false,
             false,
             true,
-            false,
+            true,
             false,
             false
           ]
@@ -2456,20 +2456,20 @@
     ],
     [
       [
-        11,
-        6,
-        0
+        12,
+        8,
+        1
       ],
       {
         "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
         }
       }
     ],
@@ -2532,15 +2532,15 @@
     ],
     [
       [
-        8,
-        8,
-        0
+        17,
+        13,
+        2
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
             false,
+            true,
             true,
             false,
             false,
@@ -2570,16 +2570,16 @@
     ],
     [
       [
-        21,
-        7,
+        10,
+        11,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
+            true,
+            true,
             false,
-            true,
-            true,
             false,
             false,
             false
@@ -2608,16 +2608,16 @@
     ],
     [
       [
-        13,
-        8,
+        14,
+        15,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
-            true,
             false,
+            false,
+            true,
             true,
             false,
             false
@@ -2703,9 +2703,9 @@
     ],
     [
       [
-        13,
-        9,
-        2
+        18,
+        15,
+        0
       ],
       {
         "block": {
@@ -2827,9 +2827,9 @@
     ],
     [
       [
+        9,
         13,
-        7,
-        0
+        2
       ],
       {
         "block": {
@@ -2846,8 +2846,8 @@
     ],
     [
       [
-        11,
-        7,
+        18,
+        12,
         2
       ],
       {
@@ -2856,7 +2856,7 @@
             true,
             true,
             false,
-            false,
+            true,
             false,
             false
           ]
@@ -2902,16 +2902,16 @@
     ],
     [
       [
-        13,
-        6,
+        11,
+        12,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
-            true,
             false,
+            true,
+            true,
             false,
             false,
             false
@@ -3064,20 +3064,25 @@
     ],
     [
       [
-        15,
-        8,
-        2
+        10,
+        7,
+        1
       ],
       {
         "block": {
-          "GeneralPipe": [
-            false,
-            true,
-            true,
-            false,
-            false,
-            false
-          ]
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
         }
       }
     ],
@@ -3354,17 +3359,17 @@
     ],
     [
       [
-        12,
-        8,
+        15,
+        17,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
+            false,
             false,
             true,
-            false,
+            true,
             false,
             false
           ]
@@ -3373,34 +3378,17 @@
     ],
     [
       [
-        15,
-        5,
-        0
-      ],
-      {
-        "block": {
-          "BlipWindSource": {
-            "button_dir": [
-              "Y",
-              "Neg"
-            ]
-          }
-        }
-      }
-    ],
-    [
-      [
-        20,
-        6,
+        7,
+        14,
         2
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
-            true,
-            true,
             false,
+            true,
+            true,
             false,
             false
           ]
@@ -3409,15 +3397,44 @@
     ],
     [
       [
+        7,
+        14,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
         10,
-        8,
+        20,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
+            false,
             true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
             true,
             false,
             false,
@@ -3429,16 +3446,35 @@
     [
       [
         11,
-        8,
-        2
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        16,
+        0
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
-            true,
-            true,
             false,
+            true,
+            true,
             false,
             false
           ]
@@ -3448,132 +3484,94 @@
     [
       [
         20,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
         7,
+        14,
         0
       ],
       {
         "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
         }
       }
     ],
     [
       [
-        12,
-        6,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        7,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        20,
-        8,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
+        19,
         15,
-        6,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        6,
-        0
+        1
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
-            true,
-            true,
             false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        8,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
             false,
             true,
-            true,
             false,
-            false,
-            false
+            true
           ]
         }
       }
@@ -3599,39 +3597,30 @@
     ],
     [
       [
-        13,
-        8,
-        2
+        11,
+        14,
+        1
       ],
       {
-        "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
+        "block": "WindSource"
       }
     ],
     [
       [
-        22,
-        9,
-        2
+        18,
+        18,
+        0
       ],
       {
         "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
         }
       }
     ],
@@ -3689,8 +3678,8 @@
     ],
     [
       [
-        8,
-        9,
+        12,
+        20,
         0
       ],
       {
@@ -3746,17 +3735,17 @@
     ],
     [
       [
-        14,
-        9,
-        0
+        20,
+        12,
+        2
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
+            true,
+            true,
             false,
-            true,
-            true,
             false,
             false
           ]
@@ -3803,9 +3792,9 @@
     ],
     [
       [
-        11,
-        9,
-        2
+        6,
+        14,
+        0
       ],
       {
         "block": {
@@ -3822,17 +3811,17 @@
     ],
     [
       [
-        14,
-        7,
-        2
+        15,
+        13,
+        0
       ],
       {
         "block": {
           "GeneralPipe": [
-            false,
             true,
             true,
             false,
+            true,
             false,
             false
           ]
@@ -3917,20 +3906,18 @@
     ],
     [
       [
-        17,
-        8,
+        13,
+        10,
         0
       ],
       {
         "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
+          "BlipWindSource": {
+            "button_dir": [
+              "Y",
+              "Neg"
+            ]
+          }
         }
       }
     ],
@@ -3982,7 +3969,7 @@
         "block": {
           "GeneralPipe": [
             true,
-            false,
+            true,
             false,
             false,
             false,
@@ -4178,17 +4165,17 @@
     ],
     [
       [
-        10,
-        9,
-        0
+        17,
+        12,
+        2
       ],
       {
         "block": {
           "GeneralPipe": [
-            false,
-            false,
             true,
             true,
+            false,
+            false,
             false,
             false
           ]
@@ -4197,9 +4184,9 @@
     ],
     [
       [
-        17,
         9,
-        2
+        19,
+        0
       ],
       {
         "block": {
@@ -4254,17 +4241,17 @@
     ],
     [
       [
-        16,
-        6,
+        10,
+        17,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
-            true,
-            true,
             false,
             false,
+            true,
+            true,
             false,
             false
           ]
@@ -4483,73 +4470,16 @@
     [
       [
         20,
-        7,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        10,
-        7,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
         17,
-        1,
-        1
+        0
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
-            true,
-            true,
             false,
+            true,
+            true,
             false,
             false
           ]
@@ -4558,17 +4488,74 @@
     ],
     [
       [
+        8,
         14,
-        8,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        17,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
+            false,
             true,
             true,
             false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
             false,
             false
           ]
@@ -4578,699 +4565,15 @@
     [
       [
         17,
-        6,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        8,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        11,
-        7,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        7,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        7,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        6,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        7,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
         20,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        14,
-        6,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        6,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        8,
         0
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
-            true,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        8,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
             false,
             true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        6,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
-        6,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        19,
-        7,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        7,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            true,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        8,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        6,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        8,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            true,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        6,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        9,
-        0
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        19,
-        9,
-        0
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        17,
-        9,
-        0
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        15,
-        9,
-        0
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        13,
-        9,
-        0
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        11,
-        9,
-        0
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        9,
-        9,
-        0
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        7,
-        9,
-        0
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        10,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        8,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "BlipSpawn": {
-            "out_dir": [
-              "X",
-              "Pos"
-            ],
-            "kind": "A",
-            "num_spawns": null
-          }
-        }
-      }
-    ],
-    [
-      [
-        12,
-        7,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        8,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
             true,
             false,
             false
@@ -5281,8 +4584,18 @@
     [
       [
         21,
-        9,
-        2
+        14,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        19,
+        18,
+        0
       ],
       {
         "block": {
@@ -5299,16 +4612,16 @@
     ],
     [
       [
+        19,
         13,
-        6,
         2
       ],
       {
         "block": {
           "GeneralPipe": [
             true,
-            true,
             false,
+            true,
             false,
             false,
             false
@@ -5319,612 +4632,19 @@
     [
       [
         15,
-        9,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        6,
-        2
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        9,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        19,
-        9,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        17,
-        9,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        15,
-        9,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        13,
-        9,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        11,
-        9,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        9,
-        9,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        23,
-        11,
+        14,
         0
       ],
       {
         "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        23,
-        9,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        23,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        23,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            false,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        10,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            true
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            false,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        10,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            true
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            false,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        20,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        20,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        20,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        10,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            true
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            false,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
         }
       }
     ],
@@ -5932,281 +4652,15 @@
       [
         16,
         11,
-        0
+        2
       ],
       {
         "block": {
           "GeneralPipe": [
-            false,
-            false,
             true,
             true,
             false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
             false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        10,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            true
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            false,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        10,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            true
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            false,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
             false,
             false
           ]
@@ -6216,283 +4670,321 @@
     [
       [
         11,
-        10,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            true
-          ]
-        }
-      }
-    ],
-    [
-      [
-        11,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            false,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        11,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        11,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            false,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        10,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            true
-          ]
-        }
-      }
-    ],
-    [
-      [
-        8,
-        12,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        8,
-        10,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        8,
-        11,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        11,
-        0,
-        1
-      ],
-      {
-        "block": "WindSource"
-      }
-    ],
-    [
-      [
-        16,
         5,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        13,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        14,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        12,
+        13,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        13,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        10,
         2
       ],
       {
@@ -6508,16 +5000,16 @@
     ],
     [
       [
-        15,
-        1,
-        1
+        12,
+        13,
+        0
       ],
       {
         "block": {
           "GeneralPipe": [
+            false,
             true,
-            false,
-            false,
+            true,
             false,
             false,
             false
@@ -6527,8 +5019,8 @@
     ],
     [
       [
-        23,
-        10,
+        7,
+        15,
         1
       ],
       {
@@ -6546,8 +5038,8 @@
     ],
     [
       [
-        23,
-        14,
+        17,
+        19,
         0
       ],
       {
@@ -6565,122 +5057,8 @@
     ],
     [
       [
-        23,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        23,
         13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        23,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        22,
-        15,
+        17,
         0
       ],
       {
@@ -6699,387 +5077,7 @@
     [
       [
         21,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        21,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        20,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        20,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        20,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        20,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        19,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
         18,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        18,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        13,
         0
       ],
       {
@@ -7098,196 +5096,6 @@
     [
       [
         16,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        14,
         15,
         0
       ],
@@ -7307,501 +5115,26 @@
     [
       [
         13,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
         14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        12,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        11,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        11,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        11,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        11,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        10,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        9,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        8,
-        14,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        8,
-        13,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        8,
-        16,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        8,
-        15,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        3,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            false,
-            true,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        15,
-        3,
-        0
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            true,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        2,
+        7,
         1
       ],
       {
@@ -7824,28 +5157,9 @@
     ],
     [
       [
-        17,
-        3,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            true,
-            false,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        17,
-        2,
-        1
+        14,
+        18,
+        0
       ],
       {
         "block": {
@@ -7862,19 +5176,19 @@
     ],
     [
       [
-        16,
-        4,
-        1
+        13,
+        8,
+        2
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
             false,
+            true,
             false,
-            true,
-            true,
-            false
+            false,
+            true
           ]
         }
       }
@@ -7882,7 +5196,221 @@
     [
       [
         15,
-        4,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        5,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        7,
+        1
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        11,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        16,
         0
       ],
       {
@@ -7901,109 +5429,121 @@
     [
       [
         15,
-        2,
-        1
-      ],
-      {
-        "block": {
-          "BlipWindSource": {
-            "button_dir": [
-              "X",
-              "Pos"
-            ]
-          }
-        }
-      }
-    ],
-    [
-      [
-        15,
-        3,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            false,
-            false,
-            false,
-            true,
-            true,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        1,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            true,
-            true,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        13,
-        0,
-        1
-      ],
-      {
-        "block": {
-          "GeneralPipe": [
-            true,
-            true,
-            false,
-            false,
-            false,
-            false
-          ]
-        }
-      }
-    ],
-    [
-      [
-        16,
-        4,
+        11,
         2
       ],
       {
         "block": {
           "GeneralPipe": [
-            false,
-            false,
+            true,
             true,
             false,
             false,
-            true
+            false,
+            false
           ]
         }
       }
     ],
     [
       [
-        16,
-        0,
+        11,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        14,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        15,
+        7,
         1
       ],
       {
         "block": {
           "GeneralPipe": [
             false,
-            true,
-            true,
             false,
+            true,
+            true,
             false,
             false
           ]
@@ -8013,8 +5553,217 @@
     [
       [
         14,
-        0,
+        8,
         1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        11,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        13,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        8,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        11,
+        2
       ],
       {
         "block": {
@@ -8032,45 +5781,45 @@
     [
       [
         15,
-        0,
+        15,
         1
       ],
       {
         "block": {
           "GeneralPipe": [
+            false,
+            false,
+            false,
             true,
-            true,
             false,
-            false,
-            false,
-            false
+            true
           ]
         }
       }
     ],
     [
       [
-        12,
-        0,
+        21,
+        15,
         1
       ],
       {
         "block": {
           "GeneralPipe": [
+            false,
+            false,
+            false,
             true,
-            true,
             false,
-            false,
-            false,
-            false
+            true
           ]
         }
       }
     ],
     [
       [
-        12,
-        1,
+        10,
+        8,
         1
       ],
       {
@@ -8088,8 +5837,2925 @@
     ],
     [
       [
+        13,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        12,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
         15,
-        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        5,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        9,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        5,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        9,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Pos"
+              ],
+              [
+                "X",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        12,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        13,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        5,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        13,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        11,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        12,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        12,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        15,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        12,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Neg"
+              ],
+              [
+                "Y",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        11,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        13,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        14,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        21,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        15,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        7,
+        1
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        8,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        19,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        15,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        5,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        12,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        9,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        14,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        10,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        8,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        5,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        13,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        24,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        25,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        25,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        25,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        25,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        25,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        25,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        24,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        24,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        24,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        24,
         2
       ],
       {
@@ -8108,15 +8774,3077 @@
     [
       [
         14,
-        3,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        24,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        26,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        17,
+        35,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        36,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        35,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        37,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        36,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        36,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        35,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        34,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        32,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        33,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        21,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Pos"
+              ],
+              [
+                "X",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        35,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        20,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        19,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Neg"
+              ],
+              [
+                "Y",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        34,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        19,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        19,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        21,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        18,
+        3
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        14,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        15,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        16,
+        3
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        22,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        33,
+        15,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        14,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        25,
         1
       ],
       {
         "block": {
           "BlipSpawn": {
             "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "A",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        37,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        21,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        21,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        23,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        17,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        18,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Pos"
+              ],
+              [
+                "X",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        20,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        20,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        19,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        36,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        35,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        16,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        25,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        18,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        25,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        18,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        17,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        23,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        20,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        18,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        19,
+        3
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        36,
+        16,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Pos"
+              ],
+              [
+                "X",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        17,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        30,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        22,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        14,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        15,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        18,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        24,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        26,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        24,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        18,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        17,
+        3
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        16,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Pos"
+              ],
+              [
+                "X",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        35,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        31,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        16,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        17,
+        3
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        37,
+        16,
+        3
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        36,
+        23,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        18,
+        3
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        24,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        32,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        17,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        17,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        37,
+        17,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Neg"
+              ],
+              [
+                "Y",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        35,
+        18,
+        3
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        26,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        27,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        36,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        35,
+        16,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        17,
+        3
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        14,
+        2
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        18,
+        2
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        36,
+        24,
+        1
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        36,
+        25,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        33,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        34,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
               "X",
               "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        33,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
             ],
             "kind": "A",
             "num_spawns": null
