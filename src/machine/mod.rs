@@ -263,7 +263,7 @@ impl Block {
         }
     }
 
-    pub fn has_wind_hole(&self, dir: Dir3, activated: bool) -> bool {
+    pub fn has_wind_hole(&self, dir: Dir3, _activated: bool) -> bool {
         match self {
             Block::Pipe(dir_a, dir_b) => dir == *dir_a || dir == *dir_b,
             Block::PipeMergeXY => dir != Dir3::Z_NEG && dir != Dir3::Z_POS,
@@ -283,7 +283,7 @@ impl Block {
                 out_dir, flow_axis, ..
             } => dir.0 == *flow_axis || dir == *out_dir,
             Block::Air => false,
-            Block::PipeButton { axis } => !activated && dir.0 == *axis,
+            Block::PipeButton { axis } => dir.0 == *axis,
         }
     }
 
@@ -318,7 +318,7 @@ impl Block {
             Block::BlipWindSource { button_dir, .. } => dir == *button_dir,
             Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
             Block::Air => true,
-            Block::PipeButton { axis } => dir.0 != *axis || !activated,
+            Block::PipeButton { .. } => true,
             _ => self.has_wind_hole(dir, activated),
         }
     }
@@ -328,6 +328,7 @@ impl Block {
             Block::BlipSpawn { out_dir, .. } => dir == *out_dir,
             Block::BlipDuplicator { out_dirs, .. } => dir == out_dirs.0 || dir == out_dirs.1,
             Block::DetectorBlipDuplicator { out_dir, .. } => dir == *out_dir,
+            Block::PipeButton { .. } => true,
             _ => false,
         }
     }
@@ -338,7 +339,7 @@ impl Block {
             Block::BlipWindSource { .. } => true,
             Block::Solid => true,
             Block::Output { .. } => true,
-            Block::PipeButton { axis } => dir.0 != *axis,
+            Block::PipeButton { axis } => dir.0 != *axis && dir.0 != Axis3::Z,
             _ => false,
         }
     }
@@ -349,7 +350,7 @@ impl Block {
             Block::BlipWindSource { .. } => true,
             Block::Output { .. } => true,
             Block::DetectorBlipDuplicator { kind, .. } => *kind == None || *kind == Some(blip_kind),
-            Block::PipeButton { axis } => dir.0 != *axis,
+            Block::PipeButton { axis } => dir.0 != *axis && dir.0 != Axis3::Z,
             _ => false,
         }
     }

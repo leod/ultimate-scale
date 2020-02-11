@@ -30,6 +30,16 @@
     - Persistent mapping + triple buffering?
 - Precompute inverse transform for normals
 
+## Execution
+- Bug when flinging a blip up
+- Disallow blip moving through blip
+
+### Block ideas
+- Fixed-size blip buffer
+- Delay wind by one
+- Stateful left/right pipe 
+- Blip detector activated wind spawn
+
 ## Sound
  - _Anything at all_!
 
