@@ -342,7 +342,8 @@ impl Editor {
             }
             Mode::PipeTool { blocks, .. } if !input_state.is_button_pressed(MouseButton::Left) => {
                 // Finish placement.
-                edit = Some(Edit::SetBlocks(
+                edit = Some(Edit::set_blocks_combine(
+                    &self.machine,
                     blocks
                         .iter()
                         .map(|(pos, block)| (*pos, Some(block.clone())))

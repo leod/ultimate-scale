@@ -14,6 +14,8 @@ pub use editor::Editor;
 pub use mode::{Mode, SelectionMode};
 pub use piece::Piece;
 
+// TODO: Unit tests for undo/redo
+
 #[derive(Debug, Clone)]
 pub enum Edit {
     NoOp,
@@ -33,6 +35,86 @@ pub enum Edit {
 }
 
 impl Edit {
+    /// Returns an editor operation that combines blocks whenever possible.
+    pub fn set_blocks_combine(
+        machine: &Machine,
+        blocks: HashMap<grid::Point3, Option<PlacedBlock>>,
+    ) -> Edit {
+        // What are we going to set?
+        let valid_blocks: HashMap<_, _> = blocks
+            .into_iter()
+            .filter(|(p, _block)| machine.is_valid_pos(p))
+            .collect();
+
+        // What is there already?
+        let previous_blocks: HashMap<_, _> = valid_blocks
+            .keys()
+            .map(|p| (*p, machine.get(p).cloned()))
+            .collect();
+
+        // Combine blocks whenever possible (i.e. when placing a pipe
+        // into another pipe).
+        let combined_valid_blocks: HashMap<_, _> = valid_blocks
+            .into_iter()
+            .map(|(p, new_block)| {
+                let new_block = new_block.map(|new_block| {
+                    if let Some(previous_block) = previous_blocks.get(&p).cloned().flatten() {
+                        let block = previous_block
+                            .block
+                            .combine(&new_block.block)
+                            .unwrap_or(new_block.block);
+
+                        PlacedBlock { block }
+                    } else {
+                        new_block
+                    }
+                });
+
+                (p, new_block)
+            })
+            .collect();
+
+        Edit::SetBlocks(combined_valid_blocks)
+
+        // TODO: We may wish to update the connectivity of
+        // neighboring blocks (specifically `GeneralPipe`).
+        /*for &dir in &grid::Dir3::ALL {
+            let neighbor_p = p + dir.to_vector();
+
+            if valid_blocks.contains_key(&neighbor_p) {
+                // The block at this neighbor's position is
+                // being overwritten anyway, so we can ignore
+                // it here.
+                continue;
+            }
+
+            if block
+                .as_ref()
+                .map_or(false, |block| block.block.has_wind_hole(dir, false))
+            {
+                // No need to change the neighbor's connectivity.
+                continue;
+            }
+
+            if !previous_blocks.contains_key(&neighbor_p) {
+                if let Some(neighbor_block) = machine.get_mut(&neighbor_p) {
+                    let previous_block = neighbor_block.clone();
+
+                    if let Block::GeneralPipe(dirs) = &mut neighbor_block.block {
+                        // Cut off this direction from the
+                        // neighboring `GeneralPipe`.
+                        if dirs[dir.invert()] {
+                            dirs[dir.invert()] = false;
+                        }
+
+                        // And remember how to undo this.
+                        previous_blocks.insert(neighbor_p, Some(previous_block));
+                    }
+                }
+            }
+        }*/
+    }
+
     /// Apply the edit operation to a machine and return an edit operation to
     /// undo what was done.
     pub fn run(self, machine: &mut Machine) -> Edit {
@@ -51,29 +133,6 @@ impl Edit {
                     .map(|p| (*p, machine.get(p).cloned()))
                     .collect();
 
-                // Combine blocks whenever possible (i.e. when placing a pipe
-                // into another pipe).
-                let valid_blocks: HashMap<_, _> = valid_blocks
-                    .into_iter()
-                    .map(|(p, new_block)| {
-                        let new_block = new_block.map(|new_block| {
-                            if let Some(previous_block) = previous_blocks.get(&p).cloned().flatten()
-                            {
-                                let block = previous_block
-                                    .block
-                                    .combine(&new_block.block)
-                                    .unwrap_or(new_block.block);
-
-                                PlacedBlock { block }
-                            } else {
-                                new_block
-                            }
-                        });
-
-                        (p, new_block)
-                    })
-                    .collect();
-
                 // Make sure that we conserve input and output blocks.
                 let counts_before = (
                     count_inputs(previous_blocks.values()),
@@ -89,44 +148,6 @@ impl Edit {
                 } else {
                     for (p, block) in valid_blocks.iter() {
                         machine.set(p, block.clone());
-
-                        // We may wish to update the connectivity of
-                        // neighboring blocks (specifically `GeneralPipe`).
-                        for &dir in &grid::Dir3::ALL {
-                            let neighbor_p = p + dir.to_vector();
-
-                            if valid_blocks.contains_key(&neighbor_p) {
-                                // The block at this neighbor's position is
-                                // being overwritten anyway, so we can ignore
-                                // it here.
-                                continue;
-                            }
-
-                            if block
-                                .as_ref()
-                                .map_or(false, |block| block.block.has_wind_hole(dir, false))
-                            {
-                                // No need to change the neighbor's connectivity.
-                                continue;
-                            }
-
-                            if !previous_blocks.contains_key(&neighbor_p) {
-                                if let Some(neighbor_block) = machine.get_mut(&neighbor_p) {
-                                    let previous_block = neighbor_block.clone();
-
-                                    if let Block::GeneralPipe(dirs) = &mut neighbor_block.block {
-                                        // Cut off this direction from the
-                                        // neighboring `GeneralPipe`.
-                                        if dirs[dir.invert()] {
-                                            dirs[dir.invert()] = false;
-                                        }
-
-                                        // And remember how to undo this.
-                                        previous_blocks.insert(neighbor_p, Some(previous_block));
-                                    }
-                                }
-                            }
-                        }
                     }
 
                     Edit::SetBlocks(previous_blocks)
