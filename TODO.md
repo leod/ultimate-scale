@@ -39,6 +39,7 @@
 - Delay wind by one
 - Stateful left/right pipe 
 - Blip detector activated wind spawn
+- Explicit block for falling blips
 
 ## Sound
  - _Anything at all_!

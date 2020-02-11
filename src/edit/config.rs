@@ -156,6 +156,10 @@ impl Default for Config {
                     ModifiedKey::new(VirtualKeyCode::Key8),
                     Block::PipeButton { axis: Axis3::X },
                 ),
+                (
+                    ModifiedKey::new(VirtualKeyCode::Key9),
+                    Block::DetectorWindSource { axis: Axis3::X },
+                ),
                 //(ModifiedKey::new(VirtualKeyCode::Key7), Block::Solid),
                 (
                     ModifiedKey::ctrl(VirtualKeyCode::Key3),
