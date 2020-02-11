@@ -78,13 +78,18 @@ pub enum Block {
         in_dir: Dir3,
         index: usize,
     },
+    Air,
+
+    // Experimental blocks follow
     DetectorBlipDuplicator {
         out_dir: Dir3,
         flow_axis: Axis3,
         kind: Option<BlipKind>,
     },
-    Air,
     PipeButton {
+        axis: Axis3,
+    },
+    DetectorWindSource {
         axis: Axis3,
     },
 }
@@ -147,6 +152,7 @@ impl Block {
             Block::DetectorBlipDuplicator { kind: None, .. } => "Detector blip copier".to_string(),
             Block::Air => "Air".to_string(),
             Block::PipeButton { .. } => "Pipe button".to_string(),
+            Block::DetectorWindSource { .. } => "Blip detector".to_string(),
         }
     }
 
@@ -181,6 +187,7 @@ impl Block {
             Block::DetectorBlipDuplicator { .. } => "TODO.",
             Block::Air => "Allows blips to fall freely.",
             Block::PipeButton { .. } => "Conducts wind and blips only if none of the buttons is pressed.",
+            Block::DetectorWindSource { .. } => "Spawns one thrust of wind if it detects a blip in itself.",
         }
     }
 
@@ -260,6 +267,10 @@ impl Block {
                 // Hack
                 *axis = f(Dir3(*axis, Sign::Pos)).0;
             }
+            Block::DetectorWindSource { axis } => {
+                // Hack
+                *axis = f(Dir3(*axis, Sign::Pos)).0;
+            }
         }
     }
 
@@ -284,6 +295,7 @@ impl Block {
             } => dir.0 == *flow_axis || dir == *out_dir,
             Block::Air => false,
             Block::PipeButton { axis } => dir.0 == *axis,
+            Block::DetectorWindSource { axis } => dir.0 == *axis,
         }
     }
 
@@ -333,24 +345,42 @@ impl Block {
         }
     }
 
-    pub fn is_blip_killer(&self, dir: Dir3) -> bool {
+    pub fn has_wind_source(&self, dir: Dir3) -> bool {
+        match self {
+            Block::WindSource => true,
+            Block::BlipWindSource { button_dir, .. } => dir == *button_dir,
+            Block::DetectorWindSource { axis } => dir.0 != *axis,
+            _ => false,
+        }
+    }
+
+    pub fn is_blip_killer(&self, dir: Option<Dir3>) -> bool {
         match self {
             Block::BlipDuplicator { .. } => true,
             Block::BlipWindSource { .. } => true,
             Block::Solid => true,
             Block::Output { .. } => true,
-            Block::PipeButton { axis } => dir.0 != *axis && dir.0 != Axis3::Z,
+            Block::PipeButton { axis } => {
+                dir.map_or(false, |dir| dir.0 != *axis && dir.0 != Axis3::Z)
+            }
             _ => false,
         }
     }
 
-    pub fn is_activatable(&self, blip_kind: BlipKind, dir: Dir3) -> bool {
+    pub fn is_activatable(&self, blip_kind: BlipKind, dir: Option<Dir3>) -> bool {
         match self {
-            Block::BlipDuplicator { kind, .. } => *kind == None || *kind == Some(blip_kind),
-            Block::BlipWindSource { .. } => true,
-            Block::Output { .. } => true,
-            Block::DetectorBlipDuplicator { kind, .. } => *kind == None || *kind == Some(blip_kind),
-            Block::PipeButton { axis } => dir.0 != *axis && dir.0 != Axis3::Z,
+            Block::BlipDuplicator { kind, .. } => {
+                dir.is_some() && (*kind == None || *kind == Some(blip_kind))
+            }
+            Block::BlipWindSource { .. } => dir.is_some(),
+            Block::Output { .. } => dir.is_some(),
+            Block::DetectorBlipDuplicator { kind, .. } => {
+                dir.is_some() && (*kind == None || *kind == Some(blip_kind))
+            }
+            Block::PipeButton { axis } => {
+                dir.map_or(false, |dir| dir.0 != *axis && dir.0 != Axis3::Z)
+            }
+            Block::DetectorWindSource { .. } => true,
             _ => false,
         }
     }
@@ -373,7 +403,7 @@ impl Block {
             false
         };
 
-        is_pipe || self.has_wind_hole(dir_out, false)
+        is_pipe || self.has_wind_hole(dir_out, false) || self.has_wind_source(dir_out)
     }
 }
 

@@ -267,6 +267,7 @@ impl Exec {
                     &self.neighbor_map,
                     &self.blocks.wind_out,
                     &self.blocks.activation,
+                    &self.next_blocks.activation,
                 );
             }
         }
@@ -321,9 +322,9 @@ impl Exec {
                 {
                     // Don't count blips that will kill get killed by their
                     // new block in step 7.
-                    let will_die_anyway = blip.move_dir.map_or(false, |move_dir| {
-                        next_block.block.is_blip_killer(move_dir.invert())
-                    });
+                    let will_die_anyway = next_block
+                        .block
+                        .is_blip_killer(blip.move_dir.map(|d| d.invert()));
 
                     if !will_die_anyway {
                         self.next_blip_count[next_block_index] += 1;
@@ -377,9 +378,9 @@ impl Exec {
                     {
                         // Don't count blips that will kill get killed by their
                         // new block in step 7.
-                        let will_die_anyway = blip.move_dir.map_or(false, |move_dir| {
-                            next_block.block.is_blip_killer(move_dir.invert())
-                        });
+                        let will_die_anyway = next_block
+                            .block
+                            .is_blip_killer(blip.move_dir.map(|d| d.invert()));
 
                         if !will_die_anyway {
                             self.next_blip_count[next_block_index] += 1;
@@ -419,10 +420,9 @@ impl Exec {
                         // The blip is moving into a block that does not have an
                         // opening in this direction.
                         blip.status.kill(BlipDieMode::PopMiddle);
-                    } else if let Some(move_dir) = blip.move_dir {
-                        let activate = next_block
-                            .block
-                            .is_activatable(blip.kind, move_dir.invert());
+                    } else {
+                        let inverse_dir = blip.move_dir.map(|d| d.invert());
+                        let activate = !blip.status.is_dead() && next_block.block.is_activatable(blip.kind, inverse_dir);
 
                         if activate {
                             // This block's effect will run in the next tick.
@@ -432,7 +432,7 @@ impl Exec {
                             );
                         }
 
-                        if next_block.block.is_blip_killer(move_dir.invert()) {
+                        if next_block.block.is_blip_killer(inverse_dir) {
                             //let die_mode = if next_block.block.is_activatable(blip.kind) {
                             //BlipDieMode::PopEarly
                             blip.status.kill(BlipDieMode::PressButton);
@@ -496,7 +496,7 @@ fn initialize_air_blocks(machine: &mut Machine) {
     }
 }
 
-fn spawn_or_advect_wind(
+fn advect_wind(
     block_index: BlockIndex,
     machine: &Machine,
     neighbor_map: &NeighborMap,
@@ -505,38 +505,58 @@ fn spawn_or_advect_wind(
 ) -> DirMap3<bool> {
     let block = machine.block_at_index(block_index);
 
+    // Check if we got any wind in flow from our neighbors in the
+    // old state
+    let block_wind_in = neighbor_map[block_index].map(|dir, neighbor_index| {
+        neighbor_index.map_or(false, |neighbor_index| {
+            block.has_wind_hole_in(dir, activation[block_index].is_some())
+                && wind_out[neighbor_index][dir.invert()]
+        })
+    });
+
+    if block_wind_in.values().any(|flow| *flow) {
+        // Forward in flow to our outgoing wind hole directions
+        neighbor_map[block_index].map(|dir, neighbor_index| {
+            let hole_out = block.has_wind_hole_out(dir, activation[block_index].is_some());
+            let no_wind_in = neighbor_index.map_or(true, |_| !block_wind_in[dir]);
+
+            hole_out && no_wind_in
+        })
+    } else {
+        DirMap3::from_fn(|_| false)
+    }
+}
+
+fn spawn_or_advect_wind(
+    block_index: BlockIndex,
+    machine: &Machine,
+    neighbor_map: &NeighborMap,
+    wind_out: &[DirMap3<bool>],
+    prev_activation: &[Activation],
+    activation: &[Activation],
+) -> DirMap3<bool> {
+    let block = machine.block_at_index(block_index);
+
     match block {
         Block::WindSource => DirMap3::from_fn(|_| true),
         Block::BlipWindSource { button_dir } => {
-            if activation[block_index].is_some() {
+            if prev_activation[block_index].is_some() {
                 DirMap3::from_fn(|dir| dir != *button_dir)
             } else {
                 DirMap3::from_fn(|_| false)
             }
         }
         Block::Input { out_dir, .. } => DirMap3::from_fn(|dir| dir == *out_dir),
-        _ => {
-            // Check if we got any wind in flow from our neighbors in the
-            // old state
-            let block_wind_in = neighbor_map[block_index].map(|dir, neighbor_index| {
-                neighbor_index.map_or(false, |neighbor_index| {
-                    block.has_wind_hole_in(dir, activation[block_index].is_some())
-                        && wind_out[neighbor_index][dir.invert()]
-                })
-            });
+        Block::DetectorWindSource { axis } => {
+            let pipe = advect_wind(block_index, machine, neighbor_map, wind_out, activation);
 
-            if block_wind_in.values().any(|flow| *flow) {
-                // Forward in flow to our outgoing wind hole directions
-                neighbor_map[block_index].map(|dir, neighbor_index| {
-                    let hole_out = block.has_wind_hole_out(dir, activation[block_index].is_some());
-                    let no_wind_in = neighbor_index.map_or(true, |_| !block_wind_in[dir]);
-
-                    hole_out && no_wind_in
-                })
+            if activation[block_index].is_some() {
+                DirMap3::from_fn(|dir| dir.0 != *axis || pipe[dir])
             } else {
-                DirMap3::from_fn(|_| false)
+                pipe
             }
         }
+        _ => advect_wind(block_index, machine, neighbor_map, wind_out, activation),
     }
 }
 
@@ -610,7 +630,7 @@ fn self_activate_block(
             if let Some(neighbor_index) = neighbor_map[block_index][out_dir] {
                 // The blip spawn acts only if there is no blip at the output position.
                 let is_safe = next_blip_count[neighbor_index] == 0
-                    || blocks[neighbor_index].1.block.is_blip_killer(out_dir);
+                    || blocks[neighbor_index].1.block.is_blip_killer(Some(out_dir));
                 if is_safe && num_spawns.map_or(true, |n| n > 0) {
                     return Some(kind);
                 }
@@ -631,13 +651,13 @@ fn self_activate_block(
 }
 
 fn run_activated_block(
-    block_index: BlockIndex,
+    _block_index: BlockIndex,
     block_pos: &Point3,
     block: &mut Block,
     blip_kind: BlipKind,
     blips: &mut VecOption<Blip>,
-    neighbor_map: &NeighborMap,
-    next_blip_count: &[usize],
+    _neighbor_map: &NeighborMap,
+    _next_blip_count: &[usize],
 ) {
     match block {
         Block::BlipSpawn {
@@ -657,8 +677,8 @@ fn run_activated_block(
         }
         Block::BlipDuplicator { out_dirs, .. } => {
             for &out_dir in &[out_dirs.0, out_dirs.1] {
-                let neighbor_index = neighbor_map[block_index][out_dir];
-                /*let is_free = neighbor_index.map_or(true, |neighbor_index| {
+                /*//let neighbor_index = neighbor_map[block_index][out_dir];
+                let is_free = neighbor_index.map_or(true, |neighbor_index| {
                     next_blip_count[neighbor_index] == 0
                 });*/
                 let is_free = true;

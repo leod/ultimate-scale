@@ -398,7 +398,7 @@ pub fn render_wind_mills(
     out: &mut Stage,
 ) {
     for &dir in &Dir3::ALL {
-        if !placed_block.block.has_wind_hole_out(dir, false) {
+        if !placed_block.block.has_wind_source(dir) {
             continue;
         }
 
@@ -1087,6 +1087,48 @@ pub fn render_block(
                     out,
                 );
             }
+        }
+        Block::DetectorWindSource { axis } => {
+            let cube_transform =
+                translation * transform * Dir3(axis, Sign::Pos).to_rotation_mat_x();
+            let scaling = na::Vector3::new(0.9, 0.45, 0.45);
+
+            out.solid_dither[BasicObj::Cube].add(basic_obj::Instance {
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+                color: block_color(&wind_source_color(), alpha * 0.7),
+                ..Default::default()
+            });
+            render_outline(&cube_transform, &scaling, alpha, out);
+
+            let pipe_color = block_color(&pipe_color(), alpha);
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(axis, Sign::Neg),
+                &pipe_color,
+                out.solid(),
+            );
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(axis, Sign::Pos),
+                &pipe_color,
+                out.solid(),
+            );
+
+            render_wind_mills(
+                &WindMills {
+                    center: *center,
+                    offset: scaling.y / 2.0,
+                    length: 0.1,
+                    color: block_color(&wind_mill_color(), alpha),
+                },
+                placed_block,
+                tick_time,
+                anim_state,
+                transform,
+                out,
+            );
         }
     }
 }

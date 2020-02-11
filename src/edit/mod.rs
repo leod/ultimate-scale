@@ -128,7 +128,7 @@ impl Edit {
                     .collect();
 
                 // What is there already?
-                let mut previous_blocks: HashMap<_, _> = valid_blocks
+                let previous_blocks: HashMap<_, _> = valid_blocks
                     .keys()
                     .map(|p| (*p, machine.get(p).cloned()))
                     .collect();
