@@ -422,7 +422,8 @@ impl Exec {
                         blip.status.kill(BlipDieMode::PopMiddle);
                     } else {
                         let inverse_dir = blip.move_dir.map(|d| d.invert());
-                        let activate = !blip.status.is_dead() && next_block.block.is_activatable(blip.kind, inverse_dir);
+                        let activate = !blip.status.is_dead()
+                            && next_block.block.is_activatable(blip.kind, inverse_dir);
 
                         if activate {
                             // This block's effect will run in the next tick.
@@ -539,19 +540,19 @@ fn spawn_or_advect_wind(
 
     match block {
         Block::WindSource => DirMap3::from_fn(|_| true),
-        Block::BlipWindSource { button_dir } => {
+        Block::BlipWindSource { .. } => {
             if prev_activation[block_index].is_some() {
-                DirMap3::from_fn(|dir| dir != *button_dir)
+                DirMap3::from_fn(|dir| block.has_wind_source(dir))
             } else {
                 DirMap3::from_fn(|_| false)
             }
         }
         Block::Input { out_dir, .. } => DirMap3::from_fn(|dir| dir == *out_dir),
-        Block::DetectorWindSource { axis } => {
+        Block::DetectorWindSource { .. } => {
             let pipe = advect_wind(block_index, machine, neighbor_map, wind_out, activation);
 
             if activation[block_index].is_some() {
-                DirMap3::from_fn(|dir| dir.0 != *axis || pipe[dir])
+                DirMap3::from_fn(|dir| block.has_wind_source(dir) || pipe[dir])
             } else {
                 pipe
             }
@@ -651,13 +652,13 @@ fn self_activate_block(
 }
 
 fn run_activated_block(
-    _block_index: BlockIndex,
+    block_index: BlockIndex,
     block_pos: &Point3,
     block: &mut Block,
     blip_kind: BlipKind,
     blips: &mut VecOption<Blip>,
-    _neighbor_map: &NeighborMap,
-    _next_blip_count: &[usize],
+    neighbor_map: &NeighborMap,
+    next_blip_count: &[usize],
 ) {
     match block {
         Block::BlipSpawn {
@@ -677,11 +678,9 @@ fn run_activated_block(
         }
         Block::BlipDuplicator { out_dirs, .. } => {
             for &out_dir in &[out_dirs.0, out_dirs.1] {
-                /*//let neighbor_index = neighbor_map[block_index][out_dir];
-                let is_free = neighbor_index.map_or(true, |neighbor_index| {
-                    next_blip_count[neighbor_index] == 0
-                });*/
-                let is_free = true;
+                let neighbor_index = neighbor_map[block_index][out_dir];
+                let is_free = neighbor_index
+                    .map_or(true, |neighbor_index| next_blip_count[neighbor_index] == 0);
 
                 if is_free {
                     blips.add(Blip::new(
@@ -711,6 +710,23 @@ fn run_activated_block(
                 Some(*out_dir),
                 BlipSpawnMode::Quick,
             ));
+        }
+        Block::BlipDeleter { out_dirs, .. } => {
+            for &out_dir in &[out_dirs.0, out_dirs.1] {
+                let neighbor_index = neighbor_map[block_index][out_dir];
+                let is_free = neighbor_index
+                    .map_or(true, |neighbor_index| next_blip_count[neighbor_index] == 0);
+
+                if !is_free {
+                    blips.add(Blip::new(
+                        blip_kind,
+                        *block_pos,
+                        out_dir,
+                        Some(out_dir),
+                        BlipSpawnMode::Bridge,
+                    ));
+                }
+            }
         }
         _ => (),
     }

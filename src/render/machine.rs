@@ -83,6 +83,10 @@ pub fn impatient_bridge_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.9, 0.9, 0.9))
 }
 
+pub fn deleter_bridge_color() -> na::Vector3<f32> {
+    gamma_correct(&na::Vector3::new(0.7, 0.2, 0.2))
+}
+
 pub fn button_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.8, 0.8, 0.8))
 }
@@ -1129,6 +1133,65 @@ pub fn render_block(
                 transform,
                 out,
             );
+        }
+        Block::BlipDeleter { out_dirs } => {
+            let cube_transform = translation * transform * out_dirs.0.to_rotation_mat_x();
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
+
+            let scaling_anim = blip_spawn_scaling_anim(activation);
+            let size_anim =
+                scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.45, 0.6, 0.6));
+            let size = size_anim.eval(tick_time.tick_progress());
+
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
+                color: block_color(&inactive_blip_duplicator_color(), alpha),
+                ..Default::default()
+            });
+            render_outline(&cube_transform, &size, alpha, out);
+
+            let bridge_length =
+                bridge_length_anim(0.05, 0.3, activation.is_some()).eval(tick_time.tick_progress());
+            let button_size = (scaling_anim.as_ref() * 0.25).eval(tick_time.tick_progress());
+
+            for &dir in &[out_dirs.0, out_dirs.1] {
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: size.x / 2.0,
+                        length: bridge_length,
+                        size: button_size,
+                        color: block_color(&deleter_bridge_color(), alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
+
+            let button_length = button_length_anim(&activation, &next_activation, size.y)
+                .eval(tick_time.tick_progress());
+            let button_color = button_color();
+
+            for &dir in &Dir3::ALL {
+                if dir == out_dirs.0 || dir == out_dirs.1 {
+                    continue;
+                }
+
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: size.y / 2.0,
+                        length: button_length,
+                        size: button_size,
+                        color: block_color(&button_color, alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
         }
     }
 }

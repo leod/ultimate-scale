@@ -182,6 +182,12 @@ impl Default for Config {
                         button_dir: Dir3::Y_NEG,
                     },
                 ),
+                (
+                    ModifiedKey::ctrl(VirtualKeyCode::Key6),
+                    Block::BlipDeleter {
+                        out_dirs: (Dir3::X_NEG, Dir3::X_POS),
+                    },
+                ),
                 /*(
                     ModifiedKey::ctrl(VirtualKeyCode::Key1),
                     Block::Pipe(Dir3::Y_NEG, Dir3::Y_POS),
