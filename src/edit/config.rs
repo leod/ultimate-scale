@@ -149,7 +149,7 @@ impl Default for Config {
                 (
                     ModifiedKey::new(VirtualKeyCode::Key7),
                     Block::GeneralPipe(DirMap3::from_fn(|dir| {
-                        dir == Dir3::Y_NEG || dir == Dir3::Y_POS
+                        dir == Dir3::Y_NEG //|| dir == Dir3::Y_POS
                     })),
                 ),
                 (

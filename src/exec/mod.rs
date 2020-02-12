@@ -580,9 +580,9 @@ fn blip_move_dir(
             let can_move_out =
                 next_wind_out[block_index][dir] && block.has_move_hole(dir, is_active);
 
-            let can_move_in = dir == Dir3::Z_NEG
-                || (neighbor_block.has_move_hole(dir.invert(), is_active)
-        /*&& neighbor_block.has_wind_hole_in(dir.invert(), is_active)*/);
+            let can_move_in =
+                dir == Dir3::Z_NEG || neighbor_block.has_move_hole(dir.invert(), is_active);
+            //&& neighbor_block.has_wind_hole_in(dir.invert(), is_active)
 
             can_move_out && can_move_in
         })
@@ -603,9 +603,19 @@ fn blip_move_dir(
             || *block == Block::PipeButton { axis: Axis3::Y })
             && is_active);
 
+    let turn_to_side =
+        |dir: Dir3| dir != blip.orient && can_move(dir) && block_wind_in[dir.invert()];
+    let num_turn_to_side = Dir3::ALL
+        .iter()
+        .cloned()
+        .filter(|dir| turn_to_side(*dir))
+        .count();
+
     if must_fall {
         // The only way is DOWN!
         Some(Dir3::Z_NEG)
+    } else if num_turn_to_side == 1 {
+        Dir3::ALL.iter().cloned().find(|dir| turn_to_side(*dir))
     } else if can_move(blip.orient) {
         Some(blip.orient)
     } else if num_move_out == 1 {

@@ -313,6 +313,7 @@ impl Block {
         match self {
             Block::FunnelXY { flow_dir, .. } => dir == *flow_dir,
             Block::WindSource => false,
+            Block::BlipWindSource { button_dir } => *button_dir == dir,
             Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
             Block::Air => true,
             _ => self.has_wind_hole(dir, activated),
