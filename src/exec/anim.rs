@@ -51,6 +51,7 @@ impl WindLife {
 pub struct AnimState {
     pub wind_out: DirMap3<WindLife>,
     pub out_deadend: DirMap3<Option<WindDeadend>>,
+    pub prev_activation: Activation,
     pub activation: Activation,
     pub next_activation: Activation,
 }
@@ -66,6 +67,7 @@ impl AnimState {
             )
         });
 
+        let prev_activation = exec.prev_activation()[block_index];
         let activation = exec.blocks().activation[block_index];
         let next_activation = exec.next_blocks().activation[block_index];
 
@@ -96,6 +98,7 @@ impl AnimState {
         Self {
             wind_out,
             out_deadend,
+            prev_activation,
             activation,
             next_activation,
         }

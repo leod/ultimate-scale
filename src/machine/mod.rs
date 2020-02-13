@@ -7,6 +7,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
+use crate::exec::BlipDieMode;
 use crate::util::vec_option::VecOption;
 
 use grid::{Axis3, Dir3, DirMap3, Grid3, Point3, Sign, Vector3};
@@ -95,6 +96,9 @@ pub enum Block {
     BlipDeleter {
         out_dirs: (Dir3, Dir3),
     },
+    Delay {
+        flow_dir: Dir3,
+    },
 }
 
 impl Block {
@@ -157,6 +161,7 @@ impl Block {
             Block::PipeButton { .. } => "Pipe button".to_string(),
             Block::DetectorWindSource { .. } => "Blip detector".to_string(),
             Block::BlipDeleter { .. } => "Blip deleter".to_string(),
+            Block::Delay { .. } => "Delay".to_string(),
         }
     }
 
@@ -193,6 +198,7 @@ impl Block {
             Block::PipeButton { .. } => "Conducts wind and blips only if none of the buttons is pressed.",
             Block::DetectorWindSource { .. } => "Spawns one thrust of wind if it detects a blip in itself.",
             Block::BlipDeleter { .. } => "Destroys blips that are in its way, if activated.",
+            Block::Delay { .. } => "Delays blip movement by one tick.",
         }
     }
 
@@ -280,6 +286,9 @@ impl Block {
                 out_dirs.0 = f(out_dirs.0);
                 out_dirs.1 = f(out_dirs.1);
             }
+            Block::Delay { flow_dir } => {
+                *flow_dir = f(*flow_dir);
+            }
         }
     }
 
@@ -306,6 +315,7 @@ impl Block {
             Block::PipeButton { axis } => dir.0 == *axis,
             Block::DetectorWindSource { axis } => dir.0 == *axis,
             Block::BlipDeleter { out_dirs } => dir != out_dirs.0 && dir != out_dirs.1,
+            Block::Delay { flow_dir } => dir == *flow_dir || dir == flow_dir.invert(),
         }
     }
 
@@ -316,6 +326,7 @@ impl Block {
             Block::BlipWindSource { button_dir } => *button_dir == dir,
             Block::DetectorBlipDuplicator { flow_axis, .. } => dir.0 == *flow_axis,
             Block::Air => true,
+            Block::Delay { flow_dir } => dir == flow_dir.invert(),
             _ => self.has_wind_hole(dir, activated),
         }
     }
@@ -368,17 +379,28 @@ impl Block {
         }
     }
 
-    pub fn is_blip_killer(&self, dir: Option<Dir3>) -> bool {
+    /*pub fn is_conduit(&self) -> bool {
         match self {
-            Block::BlipDuplicator { .. } => true,
-            Block::BlipWindSource { .. } => true,
-            Block::Solid => true,
-            Block::Output { .. } => true,
+            Block::Delay { .. } => false,
+            _ => true,
+        }
+    }*/
+
+    pub fn is_blip_killer(&self, dir: Option<Dir3>) -> Option<BlipDieMode> {
+        match self {
+            Block::BlipDuplicator { .. } => Some(BlipDieMode::PressButton),
+            Block::BlipWindSource { .. } => Some(BlipDieMode::PressButton),
+            Block::Output { .. } => Some(BlipDieMode::PressButton),
             Block::PipeButton { axis } => {
-                dir.map_or(false, |dir| dir.0 != *axis && dir.0 != Axis3::Z)
+                if dir.map_or(false, |dir| dir.0 != *axis && dir.0 != Axis3::Z) {
+                    Some(BlipDieMode::PressButton)
+                } else {
+                    None
+                }
             }
-            Block::BlipDeleter { .. } => true,
-            _ => false,
+            Block::BlipDeleter { .. } => Some(BlipDieMode::PressButton),
+            Block::Delay { .. } => Some(BlipDieMode::PressButton),
+            _ => None,
         }
     }
 
@@ -397,6 +419,7 @@ impl Block {
             }
             Block::DetectorWindSource { .. } => true,
             Block::BlipDeleter { .. } => dir.is_some(),
+            Block::Delay { flow_dir } => dir == Some(flow_dir.invert()),
             _ => false,
         }
     }
