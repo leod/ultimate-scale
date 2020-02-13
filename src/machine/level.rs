@@ -139,7 +139,7 @@ impl Spec {
                 InputsOutputs { inputs, outputs }
             }
             Spec::MultiplyByN { n, max } => {
-                let len_input: usize = 50; //rng.gen_range(1, *max);
+                let len_input: usize = rng.gen_range(1, *max);
 
                 let len_output = len_input * n;
                 let inputs = vec![iter::repeat(Some(Input::Blip(BlipKind::A)))

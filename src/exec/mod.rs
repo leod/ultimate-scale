@@ -537,7 +537,9 @@ fn advect_wind(
             let hole_out = block.has_wind_hole_out(dir, activation[block_index].is_some());
             let no_wind_in = neighbor_index.map_or(true, |_| !block_wind_in[dir]);
             let neighbor_hole_in = neighbor_index.map_or(true, |neighbor_index| {
-                machine.block_at_index(neighbor_index).has_wind_hole_in(dir.invert(), activation[neighbor_index].is_some())
+                machine
+                    .block_at_index(neighbor_index)
+                    .has_wind_hole_in(dir.invert(), activation[neighbor_index].is_some())
             });
 
             hole_out && no_wind_in && neighbor_hole_in
@@ -631,10 +633,7 @@ fn blip_move_dir(
 
     let turn_to_side =
         |dir: Dir3| dir != blip.orient && can_move(dir) && block_wind_in[dir.invert()];
-    let num_turn_to_side = Dir3::ALL
-        .iter()
-        .filter(|dir| turn_to_side(**dir))
-        .count();
+    let num_turn_to_side = Dir3::ALL.iter().filter(|dir| turn_to_side(**dir)).count();
 
     if must_fall {
         // The only way is DOWN!

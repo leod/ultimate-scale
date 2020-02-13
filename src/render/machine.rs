@@ -1228,8 +1228,8 @@ pub fn render_block(
             let part_2_pulsate =
                 pulsator_size_anim(prev_activation.is_some()).eval(tick_time.tick_progress());
 
-            let part_1_scaling = na::Vector3::new(part_size, 0.9, 0.9) * part_1_pulsate;
-            let part_2_scaling = na::Vector3::new(part_size, 0.8, 0.8) * part_2_pulsate;
+            let part_1_scaling = na::Vector3::new(part_size, 0.7, 0.7) * part_1_pulsate;
+            let part_2_scaling = na::Vector3::new(part_size, 0.6, 0.6) * part_2_pulsate;
 
             out.solid[BasicObj::Cube].add(basic_obj::Instance {
                 transform: part_1_transform * na::Matrix4::new_nonuniform_scaling(&part_1_scaling),
@@ -1264,9 +1264,9 @@ pub fn render_block(
                 &Bridge {
                     center: *center,
                     dir: flow_dir.invert(),
-                    offset: part_size + part_padding / 2.0,
+                    offset: part_1_scaling.x + part_padding / 2.0,
                     length: button_length,
-                    size: 0.4,
+                    size: 0.4 * part_1_pulsate,
                     color: block_color(&button_color(), alpha),
                 },
                 transform,
