@@ -536,8 +536,11 @@ fn advect_wind(
         neighbor_map[block_index].map(|dir, neighbor_index| {
             let hole_out = block.has_wind_hole_out(dir, activation[block_index].is_some());
             let no_wind_in = neighbor_index.map_or(true, |_| !block_wind_in[dir]);
+            let neighbor_hole_in = neighbor_index.map_or(true, |neighbor_index| {
+                machine.block_at_index(neighbor_index).has_wind_hole_in(dir.invert(), activation[neighbor_index].is_some())
+            });
 
-            hole_out && no_wind_in
+            hole_out && no_wind_in && neighbor_hole_in
         })
     } else {
         DirMap3::from_fn(|_| false)
@@ -617,9 +620,9 @@ fn blip_move_dir(
         })
     });
 
-    let num_move_out: usize = block_move_out.values().map(|flow| *flow as usize).sum();
-
     let can_move = |dir: Dir3| block_move_out[dir] && !block_wind_in[dir];
+
+    let num_can_move: usize = Dir3::ALL.iter().filter(|dir| can_move(**dir)).count();
 
     let must_fall = *block == Block::Air
         || ((*block == Block::PipeButton { axis: Axis3::X }
@@ -630,8 +633,7 @@ fn blip_move_dir(
         |dir: Dir3| dir != blip.orient && can_move(dir) && block_wind_in[dir.invert()];
     let num_turn_to_side = Dir3::ALL
         .iter()
-        .cloned()
-        .filter(|dir| turn_to_side(*dir))
+        .filter(|dir| turn_to_side(**dir))
         .count();
 
     if must_fall {
@@ -641,7 +643,7 @@ fn blip_move_dir(
         Dir3::ALL.iter().cloned().find(|dir| turn_to_side(*dir))
     } else if can_move(blip.orient) {
         Some(blip.orient)
-    } else if num_move_out == 1 {
+    } else if num_can_move == 1 {
         Dir3::ALL.iter().cloned().find(|dir| can_move(*dir))
     } else {
         None
