@@ -188,6 +188,12 @@ impl Default for Config {
                         out_dirs: (Dir3::X_NEG, Dir3::X_POS),
                     },
                 ),
+                (
+                    ModifiedKey::ctrl(VirtualKeyCode::Key7),
+                    Block::Delay {
+                        flow_dir: Dir3::X_POS,
+                    },
+                ),
                 /*(
                     ModifiedKey::ctrl(VirtualKeyCode::Key1),
                     Block::Pipe(Dir3::Y_NEG, Dir3::Y_POS),

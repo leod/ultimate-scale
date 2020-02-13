@@ -528,6 +528,14 @@ pub fn render_outline(
     );
 }
 
+pub fn pulsator_size_anim(active: bool) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
+    pareen::cond(
+        active,
+        pareen::half_circle().sin().powi(2) * 0.08f32 + 1.0,
+        1.0,
+    )
+}
+
 pub fn render_pulsator(
     tick_time: &TickTime,
     anim_state: Option<&AnimState>,
@@ -539,11 +547,7 @@ pub fn render_pulsator(
     let have_flow = anim_state.map_or(false, |anim| anim.num_alive_out() > 0);
 
     let max_size = 3.5 * PIPE_THICKNESS;
-    let size_anim = pareen::cond(
-        have_flow,
-        pareen::half_circle().sin().powi(2) * 0.08f32 + 1.0,
-        1.0,
-    ) * max_size;
+    let size_anim = pulsator_size_anim(have_flow) * max_size;
 
     let size = size_anim.eval(tick_time.tick_progress());
 
@@ -1192,6 +1196,82 @@ pub fn render_block(
                     out,
                 );
             }
+        }
+        Block::Delay { flow_dir } => {
+            let prev_activation = anim_state.and_then(|s| s.prev_activation);
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
+
+            let part_size = 0.3;
+            let part_padding = 0.1;
+
+            let part_transform = translation * transform * flow_dir.invert().to_rotation_mat_x();
+            let part_1_transform = part_transform
+                * na::Matrix4::new_translation(&na::Vector3::new(
+                    (part_size + part_padding) / 2.0,
+                    0.0,
+                    0.0,
+                ));
+            let part_2_transform = part_transform
+                * na::Matrix4::new_translation(&na::Vector3::new(
+                    -(part_size + part_padding) / 2.0,
+                    0.0,
+                    0.0,
+                ));
+
+            let part_1_color = activation.map_or_else(inactive_blip_duplicator_color, blip_color);
+            let part_2_color =
+                prev_activation.map_or_else(inactive_blip_duplicator_color, blip_color);
+
+            let part_1_pulsate =
+                pulsator_size_anim(activation.is_some()).eval(tick_time.tick_progress());
+            let part_2_pulsate =
+                pulsator_size_anim(prev_activation.is_some()).eval(tick_time.tick_progress());
+
+            let part_1_scaling = na::Vector3::new(part_size, 0.9, 0.9) * part_1_pulsate;
+            let part_2_scaling = na::Vector3::new(part_size, 0.8, 0.8) * part_2_pulsate;
+
+            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+                transform: part_1_transform * na::Matrix4::new_nonuniform_scaling(&part_1_scaling),
+                color: block_color(&part_1_color, alpha),
+                ..Default::default()
+            });
+            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+                transform: part_2_transform * na::Matrix4::new_nonuniform_scaling(&part_2_scaling),
+                color: block_color(&part_2_color, alpha),
+                ..Default::default()
+            });
+
+            render_outline(&part_1_transform, &part_1_scaling, alpha, out);
+            render_outline(&part_2_transform, &part_2_scaling, alpha, out);
+
+            let pipe_color = block_color(&pipe_color(), alpha);
+
+            render_half_pipe(center, transform, flow_dir, &pipe_color, out.solid());
+            render_half_pipe(
+                center,
+                transform,
+                flow_dir.invert(),
+                &pipe_color,
+                out.solid(),
+            );
+
+            let button_length =
+                button_length_anim(&activation, &next_activation, part_size + part_padding)
+                    .eval(tick_time.tick_progress());
+
+            render_bridge(
+                &Bridge {
+                    center: *center,
+                    dir: flow_dir.invert(),
+                    offset: part_size + part_padding / 2.0,
+                    length: button_length,
+                    size: 0.4,
+                    color: block_color(&button_color(), alpha),
+                },
+                transform,
+                out,
+            );
         }
     }
 }
