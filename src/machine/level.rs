@@ -134,7 +134,10 @@ impl Spec {
                 let inputs = vec![iter::repeat(Some(Input::Blip(BlipKind::A)))
                     .take(len_input)
                     .collect()];
-                let outputs = vec![iter::repeat(BlipKind::A).take(len_output).collect()];
+                let outputs = vec![iter::repeat(BlipKind::A)
+                    .take(len_output)
+                    .chain(iter::once(BlipKind::B))
+                    .collect()];
 
                 InputsOutputs { inputs, outputs }
             }
