@@ -31,7 +31,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            particle_budget_per_tick: 500000,
+            particle_budget_per_tick: 500_000,
             close_particle_budget_fraction: 0.3,
         }
     }
