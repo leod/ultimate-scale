@@ -546,7 +546,7 @@ pub fn render_pulsator(
 ) {
     let have_flow = anim_state.map_or(false, |anim| anim.num_alive_out() > 0);
 
-    let max_size = 3.5 * PIPE_THICKNESS;
+    let max_size = 2.8 * PIPE_THICKNESS;
     let size_anim = pulsator_size_anim(have_flow) * max_size;
 
     let size = size_anim.eval(tick_time.tick_progress());
@@ -1097,16 +1097,79 @@ pub fn render_block(
             }
         }
         Block::DetectorWindSource { axis } => {
-            let cube_transform =
-                translation * transform * Dir3(axis, Sign::Pos).to_rotation_mat_x();
-            let scaling = na::Vector3::new(0.9, 0.45, 0.45);
+            let pos_dir = Dir3(axis, Sign::Pos);
+            let left_dir = Dir3(
+                match axis {
+                    Axis3::X => Axis3::Y,
+                    Axis3::Y => Axis3::X,
+                    Axis3::Z => Axis3::X,
+                },
+                Sign::Pos,
+            );
+            let right_dir = left_dir.invert();
+            let down_dir = Dir3(Axis3::Z, Sign::Neg);
 
-            out.solid_dither[BasicObj::Cube].add(basic_obj::Instance {
-                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
-                color: block_color(&wind_source_color(), alpha * 0.7),
+            let offset = 0.225;
+            let size = 0.4;
+
+            let side_scaling = na::Vector3::new(0.9, 0.04, size);
+            let down_scaling = na::Vector3::new(0.9, size, 0.04);
+
+            let left_offset: na::Vector3<f32> = na::convert(left_dir.to_vector());
+            let right_offset: na::Vector3<f32> = na::convert(right_dir.to_vector());
+            let down_offset: na::Vector3<f32> = na::convert(down_dir.to_vector());
+            let left_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&(left_offset * offset))
+                * pos_dir.to_rotation_mat_x();
+            let right_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&(right_offset * offset))
+                * pos_dir.to_rotation_mat_x();
+            let down_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&(down_offset * offset))
+                * pos_dir.to_rotation_mat_x();
+
+            let activation = anim_state.and_then(|s| s.activation);
+            let render_list = if activation.is_some() {
+                &mut out.solid_glow
+            } else {
+                out.solid()
+            };
+            render_list[BasicObj::Cube].add(basic_obj::Instance {
+                transform: left_transform * na::Matrix4::new_nonuniform_scaling(&side_scaling),
+                color: block_color(&wind_source_color(), 1.0),
                 ..Default::default()
             });
-            render_outline(&cube_transform, &scaling, alpha, out);
+            render_list[BasicObj::Cube].add(basic_obj::Instance {
+                transform: right_transform * na::Matrix4::new_nonuniform_scaling(&side_scaling),
+                color: block_color(&wind_source_color(), 1.0),
+                ..Default::default()
+            });
+            render_list[BasicObj::Cube].add(basic_obj::Instance {
+                transform: down_transform * na::Matrix4::new_nonuniform_scaling(&down_scaling),
+                color: block_color(&wind_source_color(), 1.0),
+                ..Default::default()
+            });
+
+            render_outline(&left_transform, &side_scaling, alpha, out);
+            render_outline(&right_transform, &side_scaling, alpha, out);
+            render_outline(&down_transform, &down_scaling, alpha, out);
+
+            let detector_transform = translation
+                * transform
+                * pos_dir.to_rotation_mat_x()
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.005, size, size));
+            let detector_color = block_color(
+                &activation.map_or_else(button_color, blip_color),
+                alpha * 0.5,
+            );
+
+            out.solid_dither[BasicObj::Cube].add(basic_obj::Instance {
+                transform: detector_transform,
+                color: detector_color,
+            });
 
             let pipe_color = block_color(&pipe_color(), alpha);
             render_half_pipe(
@@ -1127,7 +1190,7 @@ pub fn render_block(
             render_wind_mills(
                 &WindMills {
                     center: *center,
-                    offset: scaling.y / 2.0,
+                    offset,
                     length: 0.1,
                     color: block_color(&wind_mill_color(), alpha),
                 },
@@ -1137,6 +1200,10 @@ pub fn render_block(
                 transform,
                 out,
             );
+
+            if activation.is_some() {
+                render_wind_source_light(&center, out);
+            }
         }
         Block::BlipDeleter { out_dirs } => {
             let cube_transform = translation * transform * out_dirs.0.to_rotation_mat_x();
