@@ -392,7 +392,7 @@ impl ExecView {
             let scaling = anim_value
                 .scaling
                 .component_mul(&na::Vector3::new(1.1, 0.8, 0.8))
-                * 0.27;
+                * 0.21;
 
             // Shift transform to the blip's position
             let mut transform = anim_value.isometry_mat;
