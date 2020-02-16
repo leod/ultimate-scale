@@ -199,10 +199,9 @@ impl Editor {
             }
             Mode::Select { selection, .. } if input_state.is_button_pressed(MouseButton::Right) => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    let edit = Edit::SetBlocks(maplit::hashmap! {
+                    edit = Some(Edit::SetBlocks(maplit::hashmap! {
                         mouse_block_pos => None,
-                    });
-                    self.run_and_track_edit(edit);
+                    }));
                 }
 
                 Mode::Select { selection }
@@ -274,10 +273,9 @@ impl Editor {
             } if input_state.is_button_pressed(MouseButton::Right) => {
                 if !is_paste {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = Edit::SetBlocks(maplit::hashmap! {
+                        edit = Some(Edit::SetBlocks(maplit::hashmap! {
                             mouse_grid_pos => None,
-                        });
-                        self.run_and_track_edit(edit);
+                        }));
                     }
 
                     Mode::PlacePiece {
@@ -328,10 +326,9 @@ impl Editor {
                 if input_state.is_button_pressed(MouseButton::Right) =>
             {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let edit = Edit::SetBlocks(maplit::hashmap! {
+                    edit = Some(Edit::SetBlocks(maplit::hashmap! {
                         mouse_grid_pos => None,
-                    });
-                    self.run_and_track_edit(edit);
+                    }));
                 }
 
                 Mode::new_pipe_tool()
