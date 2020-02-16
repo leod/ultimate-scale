@@ -181,15 +181,21 @@ impl Mode {
     pub fn impacts_layer(&self, current_layer: isize, target_layer: isize) -> bool {
         match self {
             Mode::Select { selection, .. } => selection.impacts_layer(current_layer, target_layer),
-            Mode::SelectClickedOnBlock { selection, .. } => selection.impacts_layer(current_layer, target_layer),
-            Mode::DragAndDrop { piece, .. } => target_layer >= current_layer + piece.min_pos().z
-                && target_layer <= current_layer + piece.max_pos().z,
+            Mode::SelectClickedOnBlock { selection, .. } => {
+                selection.impacts_layer(current_layer, target_layer)
+            }
+            Mode::DragAndDrop { piece, .. } => {
+                target_layer >= current_layer + piece.min_pos().z
+                    && target_layer <= current_layer + piece.max_pos().z
+            }
             Mode::RectSelect {
                 existing_selection, ..
             } => existing_selection.impacts_layer(current_layer, target_layer),
-            Mode::PlacePiece { piece, .. } => target_layer >= current_layer + piece.min_pos().z
-                && target_layer <= current_layer + piece.max_pos().z,
-            Mode::PipeTool { .. } => true,
+            Mode::PlacePiece { piece, .. } => {
+                target_layer >= current_layer + piece.min_pos().z
+                    && target_layer <= current_layer + piece.max_pos().z
+            }
+            Mode::PipeTool { .. } => current_layer == target_layer,
         }
     }
 }
