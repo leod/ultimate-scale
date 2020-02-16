@@ -127,7 +127,7 @@ impl Editor {
                 + self.mouse_grid_pos.map_or(0, |p| p.z);
             let too_high = (max_z - self.machine().size().z + 1).max(0);
 
-            self.current_layer -= too_high.max(self.current_layer);
+            self.current_layer -= too_high.min(self.current_layer);
             assert!(self.machine.is_valid_layer(self.current_layer));
 
             self.mode = self.mode.clone().switch_to_place_piece(piece, true);
