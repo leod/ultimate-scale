@@ -116,6 +116,10 @@ pub fn outline_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.0, 0.0, 0.0))
 }
 
+pub fn pillar_color() -> na::Vector3<f32> {
+    gamma_correct(&(na::Vector3::new(180.0, 132.0, 99.0) / 255.0))
+}
+
 pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
     na::Vector4::new(color.x, color.y, color.z, alpha)
 }
@@ -1379,14 +1383,14 @@ pub fn render_pillar(machine: &Machine, pos: &grid::Point3, alpha: f32, out: &mu
                     na::Vector4::new(0.0, 0.0, 0.0, 1.0),
                 ])
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                    -height as f32,
-                    0.05,
-                    0.05,
+                    -height as f32 - 1.0,
+                    0.03,
+                    0.03,
                 ));
 
             out.solid()[basic_obj::BasicObj::TessellatedCylinder].add(basic_obj::Instance {
                 transform,
-                color: na::Vector4::new(0.25, 0.25, 0.25, alpha),
+                color: block_color(&pillar_color(), alpha),
             })
         }
 
