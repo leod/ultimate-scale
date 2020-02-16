@@ -161,6 +161,19 @@ impl Editor {
     pub fn action_layer_up(&mut self) {
         if self.machine.is_valid_layer(self.current_layer + 1) {
             self.current_layer += 1;
+        } else {
+            let piece = match &mut self.mode {
+                Mode::DragAndDrop { piece, .. } => Some(piece),
+                Mode::PlacePiece { piece, .. } => Some(piece),
+                _ => None,
+            };
+
+            if let Some(piece) = piece {
+                // Similar to `action_layer_down`.
+                if self.current_layer + piece.min_pos().z + 1 < self.machine.size().z {
+                    piece.shift(&grid::Vector3::z());
+                }
+            }
         }
     }
 
