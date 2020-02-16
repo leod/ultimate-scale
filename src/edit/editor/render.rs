@@ -37,11 +37,13 @@ impl Editor {
         };
 
         let unfocus = |pos: &grid::Point3| {
-            if self.mode.is_layer_bound() {
-                pos.z != self.current_layer
+            let tentative_die = if let Mode::DragAndDrop { selection, .. } = &self.mode {
+                selection.contains(pos)
             } else {
                 false
-            }
+            };
+
+            tentative_die || !self.mode.impacts_layer(self.current_layer, pos.z)
         };
 
         render::machine::render_machine(
@@ -257,13 +259,19 @@ impl Editor {
             // TODO: Render tentative blocks as non-shadowed?
 
             let is_valid = self.machine.is_valid_pos(&pos);
-            let can_place = !self.machine.is_block_at(&pos);
-            let can_combine = self.machine.get(&pos).map_or(false, |old_placed_block| {
-                old_placed_block
-                    .block
-                    .combine(&placed_block.block)
-                    .is_some()
-            });
+            let tentative_die = if let Mode::DragAndDrop { selection, .. } = &self.mode {
+                selection.contains(&pos)
+            } else {
+                false
+            };
+            let can_place = tentative_die || !self.machine.is_block_at(&pos);
+            let can_combine = !tentative_die
+                && self.machine.get(&pos).map_or(false, |old_placed_block| {
+                    old_placed_block
+                        .block
+                        .combine(&placed_block.block)
+                        .is_some()
+                });
 
             if show_invalid {
                 if !is_valid || (!can_place && !can_combine) {

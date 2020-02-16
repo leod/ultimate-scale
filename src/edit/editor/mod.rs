@@ -137,13 +137,7 @@ impl Editor {
             camera,
             &edit_camera_view.eye(),
             &input_state.mouse_window_pos(),
-            |block_pos| {
-                if self.mode.is_layer_bound() {
-                    block_pos.z == self.current_layer
-                } else {
-                    true
-                }
-            },
+            |block_pos| self.mode.impacts_layer(self.current_layer, block_pos.z),
         );
 
         self.update_input(input_state, camera);
@@ -235,9 +229,7 @@ impl Editor {
                 let end_pos = input_state.mouse_window_pos();
                 let new_selection =
                     pick::pick_window_rect(&self.machine, camera, &start_pos, &end_pos)
-                        .filter(|p| {
-                            !existing_selection.is_layer_bound() || p.z == self.current_layer
-                        })
+                        .filter(|p| existing_selection.impacts_layer(self.current_layer, p.z))
                         .collect();
 
                 Mode::RectSelect {
