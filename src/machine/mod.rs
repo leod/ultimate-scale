@@ -404,6 +404,10 @@ impl Block {
         }
     }
 
+    pub fn has_button(&self, dir: Dir3) -> bool {
+        self.is_activatable(BlipKind::A, Some(dir)) || self.is_activatable(BlipKind::B, Some(dir))
+    }
+
     pub fn is_activatable(&self, blip_kind: BlipKind, dir: Option<Dir3>) -> bool {
         match self {
             Block::BlipDuplicator { kind, .. } => {

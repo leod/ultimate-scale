@@ -536,13 +536,8 @@ fn advect_wind(
         neighbor_map[block_index].map(|dir, neighbor_index| {
             let hole_out = block.has_wind_hole_out(dir, activation[block_index].is_some());
             let no_wind_in = neighbor_index.map_or(true, |_| !block_wind_in[dir]);
-            let neighbor_hole_in = neighbor_index.map_or(true, |neighbor_index| {
-                machine
-                    .block_at_index(neighbor_index)
-                    .has_wind_hole_in(dir.invert(), activation[neighbor_index].is_some())
-            });
 
-            hole_out && no_wind_in && neighbor_hole_in
+            hole_out && no_wind_in
         })
     } else {
         DirMap3::from_fn(|_| false)
@@ -601,21 +596,25 @@ fn blip_move_dir(
     let block = &placed_block.block;
     let is_active = activation[block_index].is_some();
 
+    // Check for which directions we can move out of the current block.
     let block_move_out = neighbor_map[block_index].map(|dir, neighbor_index| {
         neighbor_index.map_or(false, |neighbor_index| {
             let neighbor_block = machine.block_at_index(neighbor_index);
 
+            // Our current block needs wind and a move hole in the same direction.
             let can_move_out =
                 next_wind_out[block_index][dir] && block.has_move_hole(dir, is_active);
 
-            let can_move_in =
-                dir == Dir3::Z_NEG || neighbor_block.has_move_hole(dir.invert(), is_active);
-            //&& neighbor_block.has_wind_hole_in(dir.invert(), is_active)
+            // There needs to be a neighboring block which wants to receive blips opposite.
+            let can_move_in = neighbor_block.has_move_hole(dir.invert(), is_active)
+                && (neighbor_block.has_wind_hole_in(dir.invert(), is_active)
+                    || neighbor_block.has_button(dir.invert()));
 
             can_move_out && can_move_in
         })
     });
 
+    //
     let block_wind_in = neighbor_map[block_index].map(|dir, neighbor_index| {
         neighbor_index.map_or(false, |neighbor_index| {
             block.has_wind_hole_in(dir, is_active) && wind_out[neighbor_index][dir.invert()]
@@ -626,10 +625,11 @@ fn blip_move_dir(
 
     let num_can_move: usize = Dir3::ALL.iter().filter(|dir| can_move(**dir)).count();
 
-    let must_fall = *block == Block::Air
-        || ((*block == Block::PipeButton { axis: Axis3::X }
-            || *block == Block::PipeButton { axis: Axis3::Y })
-            && is_active);
+    let must_fall = match block {
+        Block::Air => true,
+        Block::PipeButton { .. } => is_active,
+        _ => false,
+    };
 
     let turn_to_side =
         |dir: Dir3| dir != blip.orient && can_move(dir) && block_wind_in[dir.invert()];
