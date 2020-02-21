@@ -347,7 +347,7 @@ impl Update {
                 }
             }
 
-            let last_transduce_time = last_transduce_time.unwrap_or_else(|| TickTime::zero());
+            let last_transduce_time = last_transduce_time.unwrap_or_else(TickTime::zero);
             exec_view.transduce(
                 &last_transduce_time,
                 &time,
@@ -393,7 +393,7 @@ impl Update {
             },
             tick_time: input
                 .play_status
-                .map_or_else(|| TickTime::zero(), |status| status.time().clone()),
+                .map_or_else(TickTime::zero, |status| status.time().clone()),
         };
 
         let editor_ui_input = if self.exec_view.is_none() {

@@ -195,7 +195,6 @@ impl Game {
         &mut self,
         _facade: &F,
         _new_window_size: glutin::dpi::LogicalSize,
-    ) -> () {
-        ()
+    ) {
     }
 }

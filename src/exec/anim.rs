@@ -51,6 +51,7 @@ impl WindLife {
 pub struct AnimState {
     pub wind_out: DirMap3<WindLife>,
     pub out_deadend: DirMap3<Option<WindDeadend>>,
+    pub prev_activation: Activation,
     pub activation: Activation,
     pub next_activation: Activation,
 }
@@ -66,11 +67,15 @@ impl AnimState {
             )
         });
 
+        let prev_activation = exec.prev_activation()[block_index];
+        let activation = exec.blocks().activation[block_index];
+        let next_activation = exec.next_blocks().activation[block_index];
+
         let out_deadend = exec.neighbor_map()[block_index].map(|dir, &neighbor_index| {
             if let Some(neighbor_index) = neighbor_index {
                 let neighbor_block = exec.machine().block_at_index(neighbor_index);
 
-                if !neighbor_block.has_wind_hole_in(dir.invert()) {
+                if !neighbor_block.has_wind_hole_in(dir.invert(), activation.is_some()) {
                     // If neighboring block has no wind connection in this
                     // direction, we won't show wind.
                     if neighbor_block.is_pipe() {
@@ -93,8 +98,9 @@ impl AnimState {
         Self {
             wind_out,
             out_deadend,
-            activation: exec.blocks().activation[block_index],
-            next_activation: exec.next_blocks().activation[block_index],
+            prev_activation,
+            activation,
+            next_activation,
         }
     }
 

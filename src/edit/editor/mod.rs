@@ -137,13 +137,7 @@ impl Editor {
             camera,
             &edit_camera_view.eye(),
             &input_state.mouse_window_pos(),
-            |block_pos| {
-                if self.mode.is_layer_bound() {
-                    block_pos.z == self.current_layer
-                } else {
-                    true
-                }
-            },
+            |block_pos| self.mode.impacts_layer(self.current_layer, block_pos.z),
         );
 
         self.update_input(input_state, camera);
@@ -199,10 +193,9 @@ impl Editor {
             }
             Mode::Select { selection, .. } if input_state.is_button_pressed(MouseButton::Right) => {
                 if let Some(mouse_block_pos) = self.mouse_block_pos {
-                    let edit = Edit::SetBlocks(maplit::hashmap! {
+                    edit = Some(Edit::SetBlocks(maplit::hashmap! {
                         mouse_block_pos => None,
-                    });
-                    self.run_and_track_edit(edit);
+                    }));
                 }
 
                 Mode::Select { selection }
@@ -236,9 +229,7 @@ impl Editor {
                 let end_pos = input_state.mouse_window_pos();
                 let new_selection =
                     pick::pick_window_rect(&self.machine, camera, &start_pos, &end_pos)
-                        .filter(|p| {
-                            !existing_selection.is_layer_bound() || p.z == self.current_layer
-                        })
+                        .filter(|p| existing_selection.impacts_layer(self.current_layer, p.z))
                         .collect();
 
                 Mode::RectSelect {
@@ -274,10 +265,9 @@ impl Editor {
             } if input_state.is_button_pressed(MouseButton::Right) => {
                 if !is_paste {
                     if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                        let edit = Edit::SetBlocks(maplit::hashmap! {
+                        edit = Some(Edit::SetBlocks(maplit::hashmap! {
                             mouse_grid_pos => None,
-                        });
-                        self.run_and_track_edit(edit);
+                        }));
                     }
 
                     Mode::PlacePiece {
@@ -328,10 +318,9 @@ impl Editor {
                 if input_state.is_button_pressed(MouseButton::Right) =>
             {
                 if let Some(mouse_grid_pos) = self.mouse_grid_pos {
-                    let edit = Edit::SetBlocks(maplit::hashmap! {
+                    edit = Some(Edit::SetBlocks(maplit::hashmap! {
                         mouse_grid_pos => None,
-                    });
-                    self.run_and_track_edit(edit);
+                    }));
                 }
 
                 Mode::new_pipe_tool()
@@ -342,7 +331,8 @@ impl Editor {
             }
             Mode::PipeTool { blocks, .. } if !input_state.is_button_pressed(MouseButton::Left) => {
                 // Finish placement.
-                edit = Some(Edit::SetBlocks(
+                edit = Some(Edit::set_blocks_combine(
+                    &self.machine,
                     blocks
                         .iter()
                         .map(|(pos, block)| (*pos, Some(block.clone())))
@@ -725,13 +715,17 @@ impl Editor {
                 let is_connected = |pos: grid::Point3, dir: grid::Dir3| {
                     let tentative = blocks
                         .get(&(pos + dir.to_vector()))
-                        .map_or(false, |neighbor| neighbor.block.has_wind_hole(dir.invert()));
+                        .map_or(false, |neighbor| {
+                            neighbor.block.has_wind_hole(dir.invert(), false)
+                        });
                     let existing = self
                         .machine
                         .get(&(pos + dir.to_vector()))
-                        .map_or(false, |neighbor| neighbor.block.has_wind_hole(dir.invert()));
+                        .map_or(false, |neighbor| {
+                            neighbor.block.has_wind_hole(dir.invert(), false)
+                        });
 
-                    placed_block.block.has_wind_hole(dir) && (tentative || existing)
+                    placed_block.block.has_wind_hole(dir, false) && (tentative || existing)
                 };
 
                 let is_a_connected = is_connected(*block_pos, dir_a);

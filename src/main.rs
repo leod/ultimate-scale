@@ -54,6 +54,9 @@ fn main() {
 
     let mut config: config::Config = Default::default();
     config.render_pipeline.hdr = Some(1.0);
+    /*config.render_pipeline.shadow_mapping = None;
+    config.render_pipeline.deferred_shading = None;
+    config.render_pipeline.glow = None;*/
     info!("Running with config: {:?}", config);
 
     info!("Opening glutin window");
@@ -61,7 +64,8 @@ fn main() {
     let display = {
         let window_builder = glutin::WindowBuilder::new()
             .with_dimensions(config.view.window_size)
-            .with_title("Ultimate Scale!");
+            .with_title("Ultimate Scale!")
+            .with_fullscreen(Some(events_loop.get_primary_monitor()));
         let context_builder = glutin::ContextBuilder::new();
         glium::Display::new(window_builder, context_builder, &events_loop).unwrap()
     };
@@ -148,9 +152,14 @@ fn main() {
                 size: grid::Vector3::new(19, 19, 2),
                 spec: Spec::MakeItN { n: 3, max: 30 },
             })
+        } else if level == "make_it_10" {
+            Some(Level {
+                size: grid::Vector3::new(60, 60, 15),
+                spec: Spec::MakeItN { n: 10, max: 30 },
+            })
         } else if level == "mul_by_3" {
             Some(Level {
-                size: grid::Vector3::new(19, 19, 2),
+                size: grid::Vector3::new(30, 30, 30),
                 spec: Spec::MultiplyByN { n: 3, max: 15 },
             })
         } else {
@@ -171,7 +180,7 @@ fn main() {
         Machine::new_from_level(level)
     } else {
         info!("Starting in sandbox mode");
-        let grid_size = grid::Vector3::new(30, 30, 4);
+        let grid_size = grid::Vector3::new(60, 60, 40);
         Machine::new_sandbox(grid_size)
     };
 

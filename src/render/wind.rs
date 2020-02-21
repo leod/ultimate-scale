@@ -65,7 +65,7 @@ impl SceneCore for Core {
             .with_defs(
                 "
                 const float PI = 3.141592;
-                const float radius = 0.05;
+                const float radius = 0.04;
                 const float scale = 0.0155;
                 ",
             )

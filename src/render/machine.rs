@@ -1,12 +1,14 @@
+// What follows is horrible
+
 use nalgebra as na;
 
 use rendology::{basic_obj, line, BasicObj, Light};
 
-use crate::machine::grid::{self, Dir3, Sign};
+use crate::machine::grid::{self, Axis3, Dir3, Sign};
 use crate::machine::{BlipKind, Block, Machine, PlacedBlock};
 
 use crate::exec::anim::{AnimState, WindLife};
-use crate::exec::{Exec, LevelProgress, TickTime};
+use crate::exec::{Activation, Exec, LevelProgress, TickTime};
 
 use crate::render::{floor, Stage};
 
@@ -81,6 +83,10 @@ pub fn impatient_bridge_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.9, 0.9, 0.9))
 }
 
+pub fn deleter_bridge_color() -> na::Vector3<f32> {
+    gamma_correct(&na::Vector3::new(0.7, 0.2, 0.2))
+}
+
 pub fn button_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.8, 0.8, 0.8))
 }
@@ -108,6 +114,10 @@ pub fn grid_color() -> na::Vector3<f32> {
 
 pub fn outline_color() -> na::Vector3<f32> {
     gamma_correct(&na::Vector3::new(0.0, 0.0, 0.0))
+}
+
+pub fn pillar_color() -> na::Vector3<f32> {
+    gamma_correct(&(na::Vector3::new(180.0, 132.0, 99.0) / 255.0))
 }
 
 pub fn block_color(color: &na::Vector3<f32>, alpha: f32) -> na::Vector4<f32> {
@@ -305,6 +315,26 @@ pub fn bridge_length_anim(
     )
 }
 
+pub fn button_length_anim(
+    activation: &Activation,
+    next_activation: &Activation,
+    block_size: f32,
+) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
+    pareen::cond(
+        next_activation.is_some(),
+        pareen::constant(activation.is_some())
+            .seq(1.0 - block_size / 2.0, next_activation.is_some()),
+        activation.is_some(),
+    )
+    .map(|a| {
+        if a {
+            BUTTON_LENGTH_MIN
+        } else {
+            BUTTON_LENGTH_MAX
+        }
+    })
+}
+
 pub struct Bridge {
     pub center: na::Point3<f32>,
     pub dir: Dir3,
@@ -376,7 +406,7 @@ pub fn render_wind_mills(
     out: &mut Stage,
 ) {
     for &dir in &Dir3::ALL {
-        if !placed_block.block.has_wind_hole_out(dir) {
+        if !placed_block.block.has_wind_source(dir) {
             continue;
         }
 
@@ -502,6 +532,14 @@ pub fn render_outline(
     );
 }
 
+pub fn pulsator_size_anim(active: bool) -> pareen::Anim<impl pareen::Fun<T = f32, V = f32>> {
+    pareen::cond(
+        active,
+        pareen::half_circle().sin().powi(2) * 0.08f32 + 1.0,
+        1.0,
+    )
+}
+
 pub fn render_pulsator(
     tick_time: &TickTime,
     anim_state: Option<&AnimState>,
@@ -512,12 +550,8 @@ pub fn render_pulsator(
 ) {
     let have_flow = anim_state.map_or(false, |anim| anim.num_alive_out() > 0);
 
-    let max_size = 3.5 * PIPE_THICKNESS;
-    let size_anim = pareen::cond(
-        have_flow,
-        pareen::half_circle().sin().powi(2) * 0.08f32 + 1.0,
-        1.0,
-    ) * max_size;
+    let max_size = 2.8 * PIPE_THICKNESS;
+    let size_anim = pulsator_size_anim(have_flow) * max_size;
 
     let size = size_anim.eval(tick_time.tick_progress());
 
@@ -760,21 +794,8 @@ pub fn render_block(
                 );
             }
 
-            let button_length = pareen::cond(
-                next_activation.is_some(),
-                pareen::constant(activation.is_some())
-                    .seq(1.0 - size.y / 2.0, next_activation.is_some()),
-                activation.is_some(),
-            )
-            .map(|a| {
-                if a {
-                    BUTTON_LENGTH_MIN
-                } else {
-                    BUTTON_LENGTH_MAX
-                }
-            })
-            .eval(tick_time.tick_progress());
-
+            let button_length = button_length_anim(&activation, &next_activation, size.y)
+                .eval(tick_time.tick_progress());
             let button_color = kind.map_or(button_color(), blip_color);
 
             for &dir in &Dir3::ALL {
@@ -797,8 +818,8 @@ pub fn render_block(
             }
         }
         Block::BlipWindSource { button_dir } => {
-            let activation = anim_state.and_then(|s| s.activation.as_ref());
-            let next_activation = anim_state.and_then(|s| s.next_activation.as_ref());
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
 
             let cube_color = block_color(
                 &if activation.is_some() {
@@ -830,25 +851,15 @@ pub fn render_block(
                 render_wind_source_light(&center, out);
             }
 
-            let button_length_anim = pareen::cond(
-                next_activation.is_some(),
-                pareen::constant(activation.is_some()).seq(0.85, next_activation.is_some()),
-                activation.is_some(),
-            )
-            .map(|a| {
-                if a {
-                    BUTTON_LENGTH_MIN
-                } else {
-                    BUTTON_LENGTH_MAX
-                }
-            });
+            let button_length = button_length_anim(&activation, &next_activation, 0.6)
+                .eval(tick_time.tick_progress());
 
             render_bridge(
                 &Bridge {
                     center: *center,
                     dir: button_dir,
                     offset: 0.6 / 2.0,
-                    length: button_length_anim.eval(tick_time.tick_progress()),
+                    length: button_length,
                     size: 0.4,
                     color: block_color(&button_color(), alpha),
                 },
@@ -1035,6 +1046,304 @@ pub fn render_block(
             );
         }
         Block::Air => (),
+        Block::PipeButton { axis } => {
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
+
+            let cube_transform =
+                translation * transform * Dir3(axis, Sign::Pos).to_rotation_mat_x();
+            let scaling = na::Vector3::new(0.9, 0.45, 0.45);
+
+            out.solid_dither[BasicObj::Cube].add(basic_obj::Instance {
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&scaling),
+                color: block_color(&pipe_color(), alpha * 0.7),
+                ..Default::default()
+            });
+            render_outline(&cube_transform, &scaling, alpha, out);
+
+            let pipe_color = block_color(&pipe_color(), alpha);
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(axis, Sign::Neg),
+                &pipe_color,
+                out.solid(),
+            );
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(axis, Sign::Pos),
+                &pipe_color,
+                out.solid(),
+            );
+
+            let button_length = button_length_anim(&activation, &next_activation, scaling.y)
+                .eval(tick_time.tick_progress());
+
+            let button_dirs = Axis3::ALL
+                .iter()
+                .filter(|a| **a != axis && **a != Axis3::Z)
+                .flat_map(|a| Sign::ALL.iter().map(move |sign| Dir3(*a, *sign)));
+
+            for dir in button_dirs {
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: scaling.y / 2.0,
+                        length: button_length,
+                        size: 0.25,
+                        color: block_color(&button_color(), alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
+        }
+        Block::DetectorWindSource { axis } => {
+            let pos_dir = Dir3(axis, Sign::Pos);
+            let left_dir = Dir3(
+                match axis {
+                    Axis3::X => Axis3::Y,
+                    Axis3::Y => Axis3::X,
+                    Axis3::Z => Axis3::X,
+                },
+                Sign::Pos,
+            );
+            let right_dir = left_dir.invert();
+            let down_dir = Dir3(Axis3::Z, Sign::Neg);
+
+            let offset = 0.225;
+            let size = 0.4;
+
+            let side_scaling = na::Vector3::new(0.9, 0.04, size);
+            let down_scaling = na::Vector3::new(0.9, size, 0.04);
+
+            let left_offset: na::Vector3<f32> = na::convert(left_dir.to_vector());
+            let right_offset: na::Vector3<f32> = na::convert(right_dir.to_vector());
+            let down_offset: na::Vector3<f32> = na::convert(down_dir.to_vector());
+            let left_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&(left_offset * offset))
+                * pos_dir.to_rotation_mat_x();
+            let right_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&(right_offset * offset))
+                * pos_dir.to_rotation_mat_x();
+            let down_transform = translation
+                * transform
+                * na::Matrix4::new_translation(&(down_offset * offset))
+                * pos_dir.to_rotation_mat_x();
+
+            let activation = anim_state.and_then(|s| s.activation);
+            let render_list = if activation.is_some() {
+                &mut out.solid_glow
+            } else {
+                out.solid()
+            };
+            render_list[BasicObj::Cube].add(basic_obj::Instance {
+                transform: left_transform * na::Matrix4::new_nonuniform_scaling(&side_scaling),
+                color: block_color(&wind_source_color(), 1.0),
+                ..Default::default()
+            });
+            render_list[BasicObj::Cube].add(basic_obj::Instance {
+                transform: right_transform * na::Matrix4::new_nonuniform_scaling(&side_scaling),
+                color: block_color(&wind_source_color(), 1.0),
+                ..Default::default()
+            });
+            render_list[BasicObj::Cube].add(basic_obj::Instance {
+                transform: down_transform * na::Matrix4::new_nonuniform_scaling(&down_scaling),
+                color: block_color(&wind_source_color(), 1.0),
+                ..Default::default()
+            });
+
+            render_outline(&left_transform, &side_scaling, alpha, out);
+            render_outline(&right_transform, &side_scaling, alpha, out);
+            render_outline(&down_transform, &down_scaling, alpha, out);
+
+            let detector_transform = translation
+                * transform
+                * pos_dir.to_rotation_mat_x()
+                * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(0.005, size, size));
+            let detector_color = block_color(
+                &activation.map_or_else(button_color, blip_color),
+                alpha * 0.5,
+            );
+
+            out.solid_dither[BasicObj::Cube].add(basic_obj::Instance {
+                transform: detector_transform,
+                color: detector_color,
+            });
+
+            let pipe_color = block_color(&pipe_color(), alpha);
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(axis, Sign::Neg),
+                &pipe_color,
+                out.solid(),
+            );
+            render_half_pipe(
+                center,
+                transform,
+                Dir3(axis, Sign::Pos),
+                &pipe_color,
+                out.solid(),
+            );
+
+            render_wind_mills(
+                &WindMills {
+                    center: *center,
+                    offset,
+                    length: 0.1,
+                    color: block_color(&wind_mill_color(), alpha),
+                },
+                placed_block,
+                tick_time,
+                anim_state,
+                transform,
+                out,
+            );
+
+            if activation.is_some() {
+                render_wind_source_light(&center, out);
+            }
+        }
+        Block::BlipDeleter { out_dirs } => {
+            let cube_transform = translation * transform * out_dirs.0.to_rotation_mat_x();
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
+
+            let scaling_anim = blip_spawn_scaling_anim(activation);
+            let size_anim =
+                scaling_anim.as_ref() * pareen::constant(na::Vector3::new(0.45, 0.6, 0.6));
+            let size = size_anim.eval(tick_time.tick_progress());
+
+            out.solid()[BasicObj::Cube].add(basic_obj::Instance {
+                transform: cube_transform * na::Matrix4::new_nonuniform_scaling(&size),
+                color: block_color(&inactive_blip_duplicator_color(), alpha),
+                ..Default::default()
+            });
+            render_outline(&cube_transform, &size, alpha, out);
+
+            let bridge_length =
+                bridge_length_anim(0.05, 0.3, activation.is_some()).eval(tick_time.tick_progress());
+            let button_size = (scaling_anim.as_ref() * 0.25).eval(tick_time.tick_progress());
+
+            for &dir in &[out_dirs.0, out_dirs.1] {
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: size.x / 2.0,
+                        length: bridge_length,
+                        size: button_size,
+                        color: block_color(&deleter_bridge_color(), alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
+
+            let button_length = button_length_anim(&activation, &next_activation, size.y)
+                .eval(tick_time.tick_progress());
+            let button_color = button_color();
+
+            for &dir in &Dir3::ALL {
+                if dir == out_dirs.0 || dir == out_dirs.1 {
+                    continue;
+                }
+
+                render_bridge(
+                    &Bridge {
+                        center: *center,
+                        dir,
+                        offset: size.y / 2.0,
+                        length: button_length,
+                        size: button_size,
+                        color: block_color(&button_color, alpha),
+                    },
+                    transform,
+                    out,
+                );
+            }
+        }
+        Block::Delay { flow_dir } => {
+            let prev_activation = anim_state.and_then(|s| s.prev_activation);
+            let activation = anim_state.and_then(|s| s.activation);
+            let next_activation = anim_state.and_then(|s| s.next_activation);
+
+            let part_size = 0.3;
+            let part_padding = 0.1;
+
+            let part_transform = translation * transform * flow_dir.invert().to_rotation_mat_x();
+            let part_1_transform = part_transform
+                * na::Matrix4::new_translation(&na::Vector3::new(
+                    (part_size + part_padding) / 2.0,
+                    0.0,
+                    0.0,
+                ));
+            let part_2_transform = part_transform
+                * na::Matrix4::new_translation(&na::Vector3::new(
+                    -(part_size + part_padding) / 2.0,
+                    0.0,
+                    0.0,
+                ));
+
+            let part_1_color = activation.map_or_else(inactive_blip_duplicator_color, blip_color);
+            let part_2_color =
+                prev_activation.map_or_else(inactive_blip_duplicator_color, blip_color);
+
+            let part_1_pulsate =
+                pulsator_size_anim(activation.is_some()).eval(tick_time.tick_progress());
+            let part_2_pulsate =
+                pulsator_size_anim(prev_activation.is_some()).eval(tick_time.tick_progress());
+
+            let part_1_scaling = na::Vector3::new(part_size, 0.7, 0.7) * part_1_pulsate;
+            let part_2_scaling = na::Vector3::new(part_size, 0.6, 0.6) * part_2_pulsate;
+
+            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+                transform: part_1_transform * na::Matrix4::new_nonuniform_scaling(&part_1_scaling),
+                color: block_color(&part_1_color, alpha),
+                ..Default::default()
+            });
+            out.solid[BasicObj::Cube].add(basic_obj::Instance {
+                transform: part_2_transform * na::Matrix4::new_nonuniform_scaling(&part_2_scaling),
+                color: block_color(&part_2_color, alpha),
+                ..Default::default()
+            });
+
+            render_outline(&part_1_transform, &part_1_scaling, alpha, out);
+            render_outline(&part_2_transform, &part_2_scaling, alpha, out);
+
+            let pipe_color = block_color(&pipe_color(), alpha);
+
+            render_half_pipe(center, transform, flow_dir, &pipe_color, out.solid());
+            render_half_pipe(
+                center,
+                transform,
+                flow_dir.invert(),
+                &pipe_color,
+                out.solid(),
+            );
+
+            let button_length =
+                button_length_anim(&activation, &next_activation, part_size + part_padding)
+                    .eval(tick_time.tick_progress());
+
+            render_bridge(
+                &Bridge {
+                    center: *center,
+                    dir: flow_dir.invert(),
+                    offset: part_1_scaling.x + part_padding / 2.0,
+                    length: button_length,
+                    size: 0.4 * part_1_pulsate,
+                    color: block_color(&button_color(), alpha),
+                },
+                transform,
+                out,
+            );
+        }
     }
 }
 
@@ -1074,14 +1383,14 @@ pub fn render_pillar(machine: &Machine, pos: &grid::Point3, alpha: f32, out: &mu
                     na::Vector4::new(0.0, 0.0, 0.0, 1.0),
                 ])
                 * na::Matrix4::new_nonuniform_scaling(&na::Vector3::new(
-                    -height as f32,
-                    0.05,
-                    0.05,
+                    -height as f32 - 1.0,
+                    0.03,
+                    0.03,
                 ));
 
             out.solid()[basic_obj::BasicObj::TessellatedCylinder].add(basic_obj::Instance {
                 transform,
-                color: na::Vector4::new(0.25, 0.25, 0.25, alpha),
+                color: block_color(&pillar_color(), alpha),
             })
         }
 
