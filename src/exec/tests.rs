@@ -59,12 +59,12 @@ fn test_funnel_wind_propagation() {
             exec.update();
 
             // Pipes up to the funnel get outgoing wind (after some time).
-            for x in 1..i.min(4) {
+            for x in 1..i.min(5) {
                 assert!(next_wind_out(exec, t * (x, 0, 0), t * Dir3::X_POS));
             }
 
             // The funnel and pipes to the right never have any outgoing wind.
-            for x in 4..=10 {
+            for x in 5..=10 {
                 for &d in &Dir3::ALL {
                     assert!(!next_wind_out(exec, t * (x, 0, 0), d));
                 }
@@ -133,39 +133,18 @@ fn test_wind_sliver_propagation() {
             for x in 1..=10 {
                 // Note that the blip wind source is at x=1, where wind flows
                 // out at i=1.
-                assert_eq!(
-                    next_wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS),
-                    i == x,
-                );
+                assert_eq!(next_wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS), i == x,);
             }
 
             // Flow up starts after 8 updates.
-            assert_eq!(
-                next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG),
-                i == 8
-            );
-            assert_eq!(
-                next_wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG),
-                i == 9
-            );
-            assert_eq!(
-                next_wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG),
-                i == 10
-            );
+            assert_eq!(next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG), i == 8);
+            assert_eq!(next_wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG), i == 9);
+            assert_eq!(next_wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG), i == 10);
 
             // Flow down starts after 8 updates.
-            assert_eq!(
-                next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS),
-                i == 8
-            );
-            assert_eq!(
-                next_wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS),
-                i == 9
-            );
-            assert_eq!(
-                next_wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS),
-                i == 10
-            );
+            assert_eq!(next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS), i == 8);
+            assert_eq!(next_wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS), i == 9);
+            assert_eq!(next_wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS), i == 10);
         }
     });
 }
