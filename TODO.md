@@ -14,6 +14,7 @@
 - Highlight wind-wind interactions
 - Improve pillars
 - Handle shadow mapping on large maps
+- Line rendering does not correctly account for FOV!
 
 ## Gameplay
 - Campaign mode
