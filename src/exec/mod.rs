@@ -14,7 +14,7 @@ use coarse_prof::profile;
 use log::info;
 use rand::Rng;
 
-use crate::machine::grid::{Axis3, Dir3, DirMap3, Point3, Vector3};
+use crate::machine::grid::{Dir3, DirMap3, Point3, Vector3};
 use crate::machine::{BlipKind, Block, BlockIndex, Machine, PlacedBlock, TickNum};
 use crate::util::vec_option::VecOption;
 

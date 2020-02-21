@@ -183,8 +183,9 @@ fn test_blip_duplicator_and_single_blip_movement() {
 #[test]
 fn test_blip_duplicator_inversion_and_blip_movement() {
     // A stream of blips is spawned and moved into the blip duplicator at (8,1).
-    // Then, the blip duplicator will flip the blip status at (7,1) and (9,1)
-    // once per update.
+    // Then, the blip duplicator will spawn two blips once.
+    // (This test used to ensure that blip duplicators _negate_ blips, but this
+    // behavior was later disabled.)
     let m = "
 ◉-------┐
  ┻     -┿-
@@ -217,14 +218,14 @@ fn test_blip_duplicator_inversion_and_blip_movement() {
             assert_eq!(right_blip.is_some(), i >= 9);
 
             if i >= 9 {
-                if (i - 9) % 2 == 0 {
-                    let status = BlipStatus::Spawning(BlipSpawnMode::Bridge);
-
-                    assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
-                    assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
+                let status = if i == 9 {
+                    BlipStatus::Spawning(BlipSpawnMode::Bridge)
+                } else {
+                    BlipStatus::Existing
                 };
 
-                // TODO: Test the rest of BlipStatus
+                assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
+                assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
             }
         }
     });
