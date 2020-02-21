@@ -178,16 +178,24 @@ impl Mode {
         }
     }
 
-    pub fn is_layer_bound(&self) -> bool {
+    pub fn impacts_layer(&self, current_layer: isize, target_layer: isize) -> bool {
         match self {
-            Mode::Select { selection, .. } => selection.is_layer_bound(),
-            Mode::SelectClickedOnBlock { selection, .. } => selection.is_layer_bound(),
-            Mode::DragAndDrop { selection, .. } => selection.is_layer_bound(),
+            Mode::Select { selection, .. } => selection.impacts_layer(current_layer, target_layer),
+            Mode::SelectClickedOnBlock { selection, .. } => {
+                selection.impacts_layer(current_layer, target_layer)
+            }
+            Mode::DragAndDrop { piece, .. } => {
+                target_layer >= current_layer + piece.min_pos().z
+                    && target_layer <= current_layer + piece.max_pos().z
+            }
             Mode::RectSelect {
                 existing_selection, ..
-            } => existing_selection.is_layer_bound(),
-            Mode::PlacePiece { .. } => true,
-            Mode::PipeTool { .. } => true,
+            } => existing_selection.impacts_layer(current_layer, target_layer),
+            Mode::PlacePiece { piece, .. } => {
+                target_layer >= current_layer + piece.min_pos().z
+                    && target_layer <= current_layer + piece.max_pos().z
+            }
+            Mode::PipeTool { .. } => current_layer == target_layer,
         }
     }
 }
@@ -224,6 +232,14 @@ impl SelectionMode {
 
     pub fn is_layer_bound(&self) -> bool {
         self.is_layer_bound
+    }
+
+    pub fn impacts_layer(&self, current_layer: isize, target_layer: isize) -> bool {
+        if self.is_layer_bound {
+            current_layer == target_layer
+        } else {
+            true
+        }
     }
 
     pub fn contains(&self, p: &grid::Point3) -> bool {

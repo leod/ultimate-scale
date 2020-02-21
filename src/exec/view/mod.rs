@@ -31,7 +31,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            particle_budget_per_tick: 500000,
+            particle_budget_per_tick: 500_000,
             close_particle_budget_fraction: 0.3,
         }
     }
@@ -391,8 +391,8 @@ impl ExecView {
                 ));
             let scaling = anim_value
                 .scaling
-                .component_mul(&na::Vector3::new(1.0, 0.8, 0.8))
-                * 0.22;
+                .component_mul(&na::Vector3::new(1.1, 0.8, 0.8))
+                * 0.21;
 
             // Shift transform to the blip's position
             let mut transform = anim_value.isometry_mat;

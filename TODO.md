@@ -2,18 +2,18 @@
 ## Editor
 - Show some info on mouse over of blocks
 - Fast scrolling when zoomed out
-- Fix undo when extending pipes
 - Reconsider combining pipes when dragging/dropping/placing
 - No red outline when placing same object
 - Smooth camera movement
 - Don't allow deleting in multiple layers without moving the mouse
 - Don't scroll on C-s or C-a
-- Don't force layer change unnecessarily when pasting
 
 ## Rendering
 - Highlight wind-wind interactions
 - Improve pillars
 - Handle shadow mapping on large maps
+- Line rendering does not correctly account for FOV!
+- Have pipes show the difference between wind in/out holes somehow
 
 ## Gameplay
 - Campaign mode
@@ -29,6 +29,19 @@
 - Better streaming of instance and particle data
     - Persistent mapping + triple buffering?
 - Precompute inverse transform for normals
+
+## Execution
+- Bug when flinging a blip up
+- Disallow blip moving through blip
+
+### Block ideas
+- Fixed-size blip buffer
+- Stateful left/right pipe 
+- Explicit block for falling blips
+- Perhaps make funnel properties part of the pipe
+
+### UI
+- Replace imgui
 
 ## Sound
  - _Anything at all_!

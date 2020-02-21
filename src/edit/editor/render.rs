@@ -37,11 +37,13 @@ impl Editor {
         };
 
         let unfocus = |pos: &grid::Point3| {
-            if self.mode.is_layer_bound() {
-                pos.z != self.current_layer
+            let tentative_die = if let Mode::DragAndDrop { selection, .. } = &self.mode {
+                selection.contains(pos)
             } else {
                 false
-            }
+            };
+
+            tentative_die || !self.mode.impacts_layer(self.current_layer, pos.z)
         };
 
         render::machine::render_machine(
@@ -129,7 +131,8 @@ impl Editor {
 
                 if let Some(mouse_grid_pos) = mouse_grid_pos {
                     // Preview the available connections at the mouse position.
-                    let show_outgoing = self.machine.is_block_at(&mouse_grid_pos) || last_pos.is_some();
+                    let show_outgoing =
+                        self.machine.is_block_at(&mouse_grid_pos) || last_pos.is_some();
                     let available_dirs = grid::DirMap3::from_fn(|dir| {
                         let neighbor_pos = mouse_grid_pos + dir.to_vector();
 
@@ -143,10 +146,15 @@ impl Editor {
                             .get(&neighbor_pos)
                             .map_or(true, |block| block.block.can_connect_by_pipe(dir.invert()));
 
-                         show_outgoing && is_valid_neighbor && can_connect_mouse && can_connect_neighbor
+                        show_outgoing
+                            && is_valid_neighbor
+                            && can_connect_mouse
+                            && can_connect_neighbor
                     });
 
-                    if available_dirs.values().any(|b| *b) || !self.machine.is_block_at(&mouse_grid_pos) {
+                    if available_dirs.values().any(|b| *b)
+                        || !self.machine.is_block_at(&mouse_grid_pos)
+                    {
                         let placed_block = PlacedBlock {
                             block: Block::GeneralPipe(available_dirs),
                         };
@@ -251,13 +259,19 @@ impl Editor {
             // TODO: Render tentative blocks as non-shadowed?
 
             let is_valid = self.machine.is_valid_pos(&pos);
-            let can_place = !self.machine.is_block_at(&pos);
-            let can_combine = self.machine.get(&pos).map_or(false, |old_placed_block| {
-                old_placed_block
-                    .block
-                    .combine(&placed_block.block)
-                    .is_some()
-            });
+            let tentative_die = if let Mode::DragAndDrop { selection, .. } = &self.mode {
+                selection.contains(&pos)
+            } else {
+                false
+            };
+            let can_place = tentative_die || !self.machine.is_block_at(&pos);
+            let can_combine = !tentative_die
+                && self.machine.get(&pos).map_or(false, |old_placed_block| {
+                    old_placed_block
+                        .block
+                        .combine(&placed_block.block)
+                        .is_some()
+                });
 
             if show_invalid {
                 if !is_valid || (!can_place && !can_combine) {

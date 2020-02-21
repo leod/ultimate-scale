@@ -132,40 +132,19 @@ fn test_wind_sliver_propagation() {
             // i=2: Wind starts flowing out.
             for x in 1..=10 {
                 // Note that the blip wind source is at x=1, where wind flows
-                // out at i=2.
-                assert_eq!(
-                    next_wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS),
-                    i == x + 1
-                );
+                // out at i=1.
+                assert_eq!(next_wind_out(exec, t * (x, 2, 0), t * Dir3::X_POS), i == x,);
             }
 
-            // Flow up starts after 10 updates.
-            assert_eq!(
-                next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG),
-                i == 8 + 1
-            );
-            assert_eq!(
-                next_wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG),
-                i == 9 + 1
-            );
-            assert_eq!(
-                next_wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG),
-                i == 10 + 1
-            );
+            // Flow up starts after 8 updates.
+            assert_eq!(next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_NEG), i == 8);
+            assert_eq!(next_wind_out(exec, t * (8, 1, 0), t * Dir3::Y_NEG), i == 9);
+            assert_eq!(next_wind_out(exec, t * (8, 0, 0), t * Dir3::Y_NEG), i == 10);
 
-            // Flow down starts after 10 updates.
-            assert_eq!(
-                next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS),
-                i == 8 + 1
-            );
-            assert_eq!(
-                next_wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS),
-                i == 9 + 1
-            );
-            assert_eq!(
-                next_wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS),
-                i == 10 + 1
-            );
+            // Flow down starts after 8 updates.
+            assert_eq!(next_wind_out(exec, t * (8, 2, 0), t * Dir3::Y_POS), i == 8);
+            assert_eq!(next_wind_out(exec, t * (8, 3, 0), t * Dir3::Y_POS), i == 9);
+            assert_eq!(next_wind_out(exec, t * (8, 4, 0), t * Dir3::Y_POS), i == 10);
         }
     });
 }
@@ -204,8 +183,9 @@ fn test_blip_duplicator_and_single_blip_movement() {
 #[test]
 fn test_blip_duplicator_inversion_and_blip_movement() {
     // A stream of blips is spawned and moved into the blip duplicator at (8,1).
-    // Then, the blip duplicator will flip the blip status at (7,1) and (9,1)
-    // once per update.
+    // Then, the blip duplicator will spawn two blips once.
+    // (This test used to ensure that blip duplicators _negate_ blips, but this
+    // behavior was later disabled.)
     let m = "
 ◉-------┐
  ┻     -┿-
@@ -238,14 +218,14 @@ fn test_blip_duplicator_inversion_and_blip_movement() {
             assert_eq!(right_blip.is_some(), i >= 9);
 
             if i >= 9 {
-                if (i - 9) % 2 == 0 {
-                    let status = BlipStatus::Spawning(BlipSpawnMode::Bridge);
-
-                    assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
-                    assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
+                let status = if i == 9 {
+                    BlipStatus::Spawning(BlipSpawnMode::Bridge)
+                } else {
+                    BlipStatus::Existing
                 };
 
-                // TODO: Test the rest of BlipStatus
+                assert_eq!(exec.blips()[left_blip.unwrap()].status, status);
+                assert_eq!(exec.blips()[right_blip.unwrap()].status, status);
             }
         }
     });

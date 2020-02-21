@@ -1,0 +1,3491 @@
+{
+  "size": [
+    38,
+    38,
+    5
+  ],
+  "block_data": [
+    [
+      [
+        16,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        1,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "Input": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "index": 0
+          }
+        }
+      }
+    ],
+    [
+      [
+        1,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "FunnelXY": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        0,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "B",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        23,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        28,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "Output": {
+            "in_dir": [
+              "X",
+              "Neg"
+            ],
+            "index": 0
+          }
+        }
+      }
+    ],
+    [
+      [
+        1,
+        7,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        11,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        5,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "Y",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        18,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "DetectorWindSource": {
+            "axis": "X"
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        11,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        5,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        20,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        11,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        18,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        9,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        19,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        2,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "DetectorWindSource": {
+            "axis": "X"
+          }
+        }
+      }
+    ],
+    [
+      [
+        3,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        9,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        24,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        3,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "Y",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        11,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        22,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        9,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        18,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        9,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        19,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        12,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        10,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        26,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        20,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        22,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        10,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        6,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        10,
+        1
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        16,
+        8,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        9,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        20,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        25,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        11,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        13,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        23,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        22,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        8,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        12,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        21,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        23,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        5,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        8,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        24,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        6,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        4,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        4,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        27,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        25,
+        4,
+        0
+      ],
+      {
+        "block": "WindSource"
+      }
+    ],
+    [
+      [
+        24,
+        11,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        6,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        24,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        5,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        22,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        7,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        16,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "Y",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        9,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "X",
+              "Pos"
+            ],
+            "kind": "A",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        21,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        8,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        14,
+        25,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "Y",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        3,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "Y",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        5,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "X",
+                "Neg"
+              ],
+              [
+                "X",
+                "Pos"
+              ]
+            ],
+            "kind": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        3,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "Y",
+              "Pos"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        17,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        14,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        10,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        17,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        24,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Neg"
+            ],
+            "kind": "A",
+            "num_spawns": null
+          }
+        }
+      }
+    ],
+    [
+      [
+        7,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        25,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        15,
+        25,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": "A"
+          }
+        }
+      }
+    ],
+    [
+      [
+        17,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "BlipWindSource": {
+            "button_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        18,
+        25,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        14,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        22,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        18,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        6,
+        23,
+        1
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            true
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        12,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        4,
+        7,
+        0
+      ],
+      {
+        "block": {
+          "BlipSpawn": {
+            "out_dir": [
+              "Y",
+              "Pos"
+            ],
+            "kind": "B",
+            "num_spawns": 1
+          }
+        }
+      }
+    ],
+    [
+      [
+        4,
+        15,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        13,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        21,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        26,
+        4,
+        0
+      ],
+      {
+        "block": {
+          "FunnelXY": {
+            "flow_dir": [
+              "Y",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ],
+    [
+      [
+        26,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        19,
+        3,
+        0
+      ],
+      {
+        "block": {
+          "GeneralPipe": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      }
+    ],
+    [
+      [
+        16,
+        16,
+        0
+      ],
+      {
+        "block": {
+          "BlipDuplicator": {
+            "out_dirs": [
+              [
+                "Y",
+                "Pos"
+              ],
+              [
+                "Y",
+                "Neg"
+              ]
+            ],
+            "kind": "B"
+          }
+        }
+      }
+    ],
+    [
+      [
+        15,
+        23,
+        0
+      ],
+      {
+        "block": {
+          "Delay": {
+            "flow_dir": [
+              "X",
+              "Neg"
+            ]
+          }
+        }
+      }
+    ]
+  ],
+  "level": {
+    "size": [
+      19,
+      19,
+      2
+    ],
+    "spec": {
+      "MultiplyByN": {
+        "n": 3,
+        "max": 15
+      }
+    }
+  }
+}
